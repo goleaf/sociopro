@@ -1196,21 +1196,6 @@ class AdminCrudController extends Controller
         return redirect()->route('admin.users');
     }
 
-    // public function server_side_users_data(Request $request)
-    // {
-
-    //     if ($request->ajax()) {
-    //         $data = User::where('user_role', '!=', 'admin')->limit(5000)->get();
-    //         return Datatables::of($data)->addIndexColumn()
-    //             ->addColumn('action', function($row){
-    //                 $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
-    //                 return $btn;
-    //             })
-    //             ->rawColumns(['action'])
-    //             ->make(true);
-    //     }
-    // }
-
     public function server_side_users_data(Request $request)
     {
         // echo $total_number_of_row = User::where('user_role', '!=', 'admin')->count();

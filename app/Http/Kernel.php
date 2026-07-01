@@ -4,7 +4,6 @@ namespace App\Http;
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\Authenticate;
-use App\Http\Middleware\DisableFileUpload;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
@@ -40,7 +39,6 @@ class Kernel extends HttpKernel
      * @var array<int, class-string|string>
      */
     protected $middleware = [
-        // \App\Http\Middleware\TrustHosts::class,
         TrustProxies::class,
         HandleCors::class,
         PreventRequestsDuringMaintenance::class,
@@ -94,6 +92,5 @@ class Kernel extends HttpKernel
         'admin' => AdminMiddleware::class,
         'user' => UserMiddleware::class,
         'prevent-back-history' => PreventBackHistory::class,
-        'fileUploadDisabled' => DisableFileUpload::class,
     ];
 }

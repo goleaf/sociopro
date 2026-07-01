@@ -267,7 +267,6 @@ return [
          */
         AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
-        // App\Providers\BroadcastServiceProvider::class,
         EventServiceProvider::class,
         RouteServiceProvider::class,
         App\Providers\ViewServiceProvider::class,

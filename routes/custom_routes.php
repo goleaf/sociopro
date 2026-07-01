@@ -62,7 +62,6 @@ Route::controller(MarketplaceController::class)->middleware('auth', 'user', 'ver
     Route::get('/load_product_by_scrolling', 'load_product_by_scrolling')->name('load_product_by_scrolling');
     Route::get('product/view/{id}', 'single_product')->name('single.product');
 
-    // Route::get('/product/filter/{category?}/{max?}/{min?}/{brand?}/{location?}', 'filter')->name('filter.product');
     Route::get('/product/filter/{max?}/{min?}/{location?}', 'filter')->name('filter.product');
 
     Route::get('/product/saved/', 'saved_product')->name('product.saved');
@@ -296,15 +295,6 @@ Route::controller(AdminCrudController::class)->group(function () {
     Route::get('admin/users/acActiveReqApp/{id}/{user_id}', 'acActiveReqApp')->name('admin.users.acActiveReqApp')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
     Route::get('admin/users/acActiveReDlt/{id}', 'acActiveReDlt')->name('admin.users.acActiveReDlt')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
-
-    // Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => ['auth']], function() {
-    //     Route::get('/users', 'AdminController@user_index')->name('admin.users.index');
-    //     Route::get('/users/create', 'AdminController@user_create')->name('admin.users.create');
-    //     Route::post('/users', 'AdminController@user_store')->name('admin.users.store');
-    //     Route::get('/users/{user}/edit', 'AdminController@user_edit')->name('admin.users.edit');
-    //     Route::put('/users/{user}', 'AdminController@user_update')->name('admin.users.update');
-    //     Route::delete('/users/{user}', 'AdminController@user_destroy')->name('admin.users.destroy');
-    // });
 
     Route::get('admin/change/password', 'admin_change_password')->name('admin.change.password')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
     Route::get('admin/profile/', 'admin_profile')->name('admin.profile')->middleware('auth', 'verified', 'admin', 'prevent-back-history');

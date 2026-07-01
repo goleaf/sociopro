@@ -86,20 +86,6 @@ class UserController extends Controller
         return redirect()->route('user.ads');
     }
 
-    // function ad_status($id){
-    //     $query = Sponsor::where('id', $id)->where('user_id', auth()->user()->id);
-
-    //     if($query->first()->status == 1){
-    //         $query->update(['status' => 0]);
-    //         flash()->addSuccess('Ad has been deactivated');
-    //     }else{
-    //         $query->update(['status' => 1]);
-    //         flash()->addSuccess('Ad activated successfully');
-    //     }
-
-    //     return redirect()->back();
-    // }
-
     public function ad_delete($id)
     {
         $query = Sponsor::where('id', $id)->where('user_id', auth()->user()->id);

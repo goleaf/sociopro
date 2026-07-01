@@ -70,22 +70,6 @@
     });
    });
 
-  // $(function () {
-  //   var table = $('#server_side_users_data').DataTable({
-  //       processing: true,
-  //       serverSide: true,
-  //       ajax: "{{ route('admin.server_side_users_data') }}",
-  //       columns: [
-  //           {data: 'id', name: 'id'},
-  //           {data: 'name', name: 'name'},
-  //           {data: 'email', name: 'email'},
-  //           {data: 'email', name: 'email'},
-  //           {data: 'email', name: 'email'},
-  //           {data: 'action', name: 'action', orderable: false, searchable: false},
-  //       ]
-  //   });
-  // });
-
   function refreshServersideTable(tableId){
     $('#'+tableId).DataTable().ajax.reload();
   }

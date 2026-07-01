@@ -97,46 +97,6 @@ class CustomUserController extends Controller
         return json_encode($response);
     }
 
-    // public function unfriend($id)
-    // {
-    //     $response = array();
-    //     Friendships::where(function ($query) use ($id) {
-    //         $query->where('accepter', $id)->where('requester', auth()->user()->id);
-    //     })->orWhere(function ($query) use ($id) {
-    //         $query->where('requester', $id)->where('accepter', auth()->user()->id);
-    //     })->delete();
-
-    //     //remove my id from this user table
-    //     $unfriended_user_friends = User::where('id', $id)->value('friends');
-    //     $unfriended_user_friends = json_decode($unfriended_user_friends, true);
-    //     if (is_array($unfriended_user_friends)) {
-    //         $array_key = array_search(auth()->user()->id, $unfriended_user_friends, true);
-    //         unset($unfriended_user_friends[$array_key]);
-    //     } else {
-    //         $unfriended_user_friends = [];
-    //     }
-    //     $unfriended_user_friends = json_encode($unfriended_user_friends);
-    //     User::where('id', $id)->update(['friends' => $unfriended_user_friends]);
-
-    //     //remove user id from my user friend list
-    //     $unfriended_user_friends = User::where('id', auth()->user()->id)->value('friends');
-    //     $unfriended_user_friends = json_decode($unfriended_user_friends, true);
-    //     if (is_array($unfriended_user_friends)) {
-    //         $array_key = array_search($id, $unfriended_user_friends, true);
-    //         unset($unfriended_user_friends[$array_key]);
-    //     } else {
-    //         $unfriended_user_friends = [];
-    //     }
-    //     $unfriended_user_friends = json_encode($unfriended_user_friends);
-    //     User::where('id', auth()->user()->id)->update(['friends' => $unfriended_user_friends]);
-
-    //     $notify = Notification::where('sender_user_id', auth()->user()->id)->where('reciver_user_id', $id)->delete();
-
-    //     Session::flash('success_message', get_phrase('Removed from friend list'));
-    //     $response = array('reload' => 1);
-    //     return json_encode($response);
-    // }
-
     public function unfriend($id)
     {
         $response = [];

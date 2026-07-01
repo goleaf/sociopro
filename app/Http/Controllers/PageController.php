@@ -285,13 +285,6 @@ class PageController extends Controller
         return json_encode($response);
     }
 
-    // public function dislike($id){
-    //     $response = array();
-    //     $pagelike = Page_like::where('page_id',$id)->delete();
-    //     Session::flash('success_message', get_phrase('Page Disliked'));
-    //     $response = array('reload' => 1);
-    //     return json_encode($response);
-    // }
     public function dislike($id)
     {
         $response = [];
