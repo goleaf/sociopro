@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\HasApiTokens;
-use Cache;
+
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -66,9 +68,14 @@ class User extends Authenticatable implements MustVerifyEmail
     // ];
 
 
+    public function scopeAdmins(Builder $query): Builder
+    {
+        return $query->where('user_role', 'admin');
+    }
 
-    public function isOnline(){
-        return Cache::has('user-is-online-'.$this->id);
+    public function isOnline(): bool
+    {
+        return Cache::has('user-is-online-' . $this->id);
     }
 
     public static function get_user_image($file_name = "", $optimized = ""){

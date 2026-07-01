@@ -253,7 +253,7 @@ class InstallController extends Controller
 
         $admin = User::query()
             ->select(['id', 'email'])
-            ->where('user_role', 'admin')
+            ->admins()
             ->oldest('id')
             ->first();
 
