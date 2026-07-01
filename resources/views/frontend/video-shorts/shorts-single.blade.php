@@ -1,4 +1,5 @@
 @foreach ($shorts as $short)
+    @continue(! $viewData->videoPost($short))
         <div class="video-shorts n_video_short shorts-fixed-hight video-poster card single-item-countable" id="shorts-{{ $short->id }}">
             <div class="position-relative shorts-height">
                 <video class="plyr-js shorts_custom_height w-100" onpause="onPause(this)" onplay="pauseOtherVideos(this)" id="{{ 'shorts_'.$short->id }}">
@@ -15,36 +16,22 @@
                                     <span class="small-text">{{ $short->created_at->timezone(Auth::user()->timezone)->format("M d") }} at {{ date('H:i A', strtotime($short->created_at)); }}</span>
                                 </div>
                             </div>
-                            @php
-                                $follow = \App\Models\Follower::where('user_id',auth()->user()->id)->where('follow_id',$short->getUser->id)->count();
-                            @endphp
-                            @if ($follow>0)
+                            @if ($viewData->isFollowing($short->getUser->id, auth()->user()))
                                 <a href="javascript:void(0)" onclick="event.stopPropagation(); ajaxAction('{{ route('user.unfollow',$short->getUser->id) }}')" class="btn common_btn_2">{{ get_phrase('Unfollow') }}</a> 
                             @else
                                 <a href="javascript:void(0)" onclick="event.stopPropagation(); ajaxAction('{{ route('user.follow',$short->getUser->id) }}')" class="btn common_btn">{{ get_phrase('Follow') }}</a> 
                             @endif
                         </div>
                     </div>
-                    @php
-                        $post = \App\Models\Posts::where('publisher', 'video_and_shorts')->where('publisher_id',$short->id)->first();
-                        $total_comments = DB::table('comments')->where('comments.is_type', 'post')->where('comments.id_of_type', $post->post_id)->where('comments.parent_id', 0)->get()->count();
-                        $reply_comments = \App\Models\Comments::where('is_type', 'post')->where('id_of_type', $post->post_id)->whereNotNull('parent_id')->get()->count();
-                        $total_comments = $total_comments + $reply_comments;
-                        $totalreact = count(json_decode($post->user_reacts,true));
-                        $user_reacts = json_decode($post->user_reacts, true);
-                    @endphp
                     <div class="video-share  fs-4">
-                        @php
-                            $user_info = \App\Models\User::find($short->getUser->id);
-                        @endphp
                         <span class="entry-react post-react eFont custom-text-shadow">
-                            <a href="#" onclick="event.stopPropagation(); myReact('post', 'like', 'toggle', {{$post->post_id}}, 'number')" id="reactNumber{{ $post->post_id }}">
-                                @include('frontend.main_content.post_reacts', ['my_react' => true,'user_reacts'=>$user_reacts,'user_info'=>$user_info,'type'=>'shorts']) 
-                                <span class="fs-6 custom-text-shadow appendNumber"> {{ $totalreact }}</span>
+                            <a href="#" onclick="event.stopPropagation(); myReact('post', 'like', 'toggle', {{ $viewData->videoPost($short)->post_id }}, 'number')" id="reactNumber{{ $viewData->videoPost($short)->post_id }}">
+                                @include('frontend.main_content.post_reacts', ['my_react' => true,'user_reacts'=>$viewData->reacts($viewData->videoPost($short)),'user_info'=>$short->getUser,'type'=>'shorts']) 
+                                <span class="fs-6 custom-text-shadow appendNumber"> {{ $viewData->videoReactCount($short) }}</span>
                             </a>
                         </span>
-                        <a href="#" onclick="event.stopPropagation();" data-bs-toggle="modal" data-bs-target="#ShortChat{{ $short->id }}"> <i class="fa-solid fa-comment custom-texts"></i> <br> <span class="fs-6">{{ $total_comments }}</span></a>
-                        <a href="#" onclick="event.stopPropagation(); showCustomModal('{{route('load_modal_content', ['view_path' => 'frontend.main_content.share_post_modal', 'post_id' => $post->post_id] )}}', '{{get_phrase('Share post')}}');"> <i class="fa-solid fa-share custom-texts"></i><span class="fs-6 custom-text-shadow">{{get_phrase('Share')}}</span></a>
+                        <a href="#" onclick="event.stopPropagation();" data-bs-toggle="modal" data-bs-target="#ShortChat{{ $short->id }}"> <i class="fa-solid fa-comment custom-texts"></i> <br> <span class="fs-6">{{ $viewData->videoCommentCount($short) }}</span></a>
+                        <a href="#" onclick="event.stopPropagation(); showCustomModal('{{route('load_modal_content', ['view_path' => 'frontend.main_content.share_post_modal', 'post_id' => $viewData->videoPost($short)->post_id] )}}', '{{get_phrase('Share post')}}');"> <i class="fa-solid fa-share custom-texts"></i><span class="fs-6 custom-text-shadow">{{get_phrase('Share')}}</span></a>
                     </div>
                 </div>
             </div>
@@ -52,6 +39,7 @@
     @endforeach
 
     @foreach ($shorts as $short)
+        @continue(! $viewData->videoPost($short))
         <div class="modal fade chat-box" id="ShortChat{{ $short->id }}" tabindex="-1"  aria-labelledby="videoChatLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -64,24 +52,20 @@
                                     class="fa fa-close fa-xl"></i></button>
                         </div>
                     </div>
-                    @php
-                        $post = \App\Models\Posts::where('publisher_id',$short->id)->where('publisher','video_and_shorts')->first();
-                        $comments = \App\Models\Comments::where('is_type','post')->where('id_of_type',$post->post_id)->get();
-                    @endphp
                     <div class="modal-body">
-                        <div class="user-comments bg-white" id="user-comments-{{$post->post_id}}" >
+                        <div class="user-comments bg-white" id="user-comments-{{ $viewData->videoPost($short)->post_id }}" >
                             <div class="comment-form d-flex p-3 bg-secondary">
                                 <img src="{{get_user_image(Auth()->user()->photo, 'optimized')}}" alt="" class="rounded-circle img-fluid h-39" width="40px">
                                 <form action="javascript:void(0)" class="w-100 ms-2" method="post">
-                                    <input class="form-control py-3" onkeypress="postComment(this, 0, {{$post->post_id}}, 0,'post');" rows="1" placeholder="Write Comments">
+                                    <input class="form-control py-3" onkeypress="postComment(this, 0, {{ $viewData->videoPost($short)->post_id }}, 0,'post');" rows="1" placeholder="Write Comments">
                                 </form>
                             </div>
-                            <ul class="comment-wrap p-3 pb-0 list-unstyled eList" id="comments{{$post->post_id}}">
-                                @include('frontend.main_content.comments',['comments'=>$comments,'post_id'=>$post->post_id,'type'=>"post"])
+                            <ul class="comment-wrap p-3 pb-0 list-unstyled eList" id="comments{{ $viewData->videoPost($short)->post_id }}">
+                                @include('frontend.main_content.comments',['comments'=>$viewData->videoRootComments($short),'post_id'=>$viewData->videoPost($short)->post_id,'type'=>"post"])
                             </ul>
                 
-                            @if($comments->count() < $total_comments)
-                                <a class="btn eColor p-3 pt-0" onclick="loadMoreComments(this, {{$post->post_id}}, 0, {{$total_comments}},'post')">{{get_phrase('View more')}}</a>
+                            @if($viewData->videoRootComments($short)->count() < $viewData->videoCommentCount($short))
+                                <a class="btn eColor p-3 pt-0" onclick="loadMoreComments(this, {{ $viewData->videoPost($short)->post_id }}, 0, {{ $viewData->videoCommentCount($short) }},'post')">{{get_phrase('View more')}}</a>
                             @endif
                         </div>
                     </div>                              

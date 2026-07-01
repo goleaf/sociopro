@@ -22,9 +22,7 @@
     </div>
     @if(count($videos)>0)
     @foreach ( $videos as $video )
-        @if(DB::table('videos')->where('id', $video->video_id)->get()->count() == 0)
-            @php  continue; @endphp
-        @endif
+        @continue(! $video->getVideo || ! $viewData->videoPost($video->getVideo))
         <article class="single-entry svideo-entry bg-white p-3">
             <div class="row">
                 <div class="col-md-6 col-lg-6 col-sm-12">
@@ -43,10 +41,7 @@
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                                     <li>
-                                        @php
-                                            $saved = \App\Models\Saveforlater::where('video_id',$video->video_id)->where('user_id',auth()->user()->id)->count();
-                                        @endphp
-                                        @if ($saved>0)
+                                        @if ($viewData->isVideoSaved($video->getVideo, auth()->user()))
                                         <a href="javascript:void(0)" onclick="ajaxAction('{{ route('unsave.video.later',$video->video_id) }}')" class="dropdown-item btn btn-primary btn-sm"> <img src="{{ asset('assets/frontend/images/save.png') }}" alt=""> {{get_phrase('Unsave Video')}}</a>
                                         @else
                                         <a href="javascript:void(0)" onclick="ajaxAction('{{ route('save.video.later',$video->video_id) }}')" class="dropdown-item btn btn-primary btn-sm"> <img src="{{ asset('assets/frontend/images/save.png') }}" alt=""> {{get_phrase('Save Video')}}</a>
@@ -66,20 +61,13 @@
                                 <div class="activity-time">{{ date('M d ', strtotime($video->getVideo->created_at)); }} at {{ date('H:i A', strtotime($video->getVideo->created_at)); }}</div>
                             </div>
                         </div>
-                        @php
-                            $post = \App\Models\Posts::where('publisher','video_and_shorts')->where('publisher_id',$video->video_id)->first();
-                            $user_reacts = json_decode($post->user_reacts,true);
-                            $user_reacts = count($user_reacts);
-                            $comment = \App\Models\Comments::where('id_of_type',$post->id)->count();
-                            $view = count(json_decode($video->getVideo->view,true));
-                        @endphp
                         <div class="entry-footer">
                             <div class="footer-share pt-3 d-flex justify-content-between w-100">
                                 <span class="entry-react post-react"><img src="{{ asset('assets/frontend/images/l-react.png') }}"
-                                            alt=""> {{ $user_reacts }}
+                                            alt=""> {{ $viewData->videoReactCount($video->getVideo) }}
                                 </span>
-                                <span class="entry-react">{{ $comment }} {{ get_phrase('Comments') }}</span>
-                                <span class="entry-react">{{ $view }} {{ get_phrase('Views') }}</span>
+                                <span class="entry-react">{{ $viewData->videoCommentCount($video->getVideo) }} {{ get_phrase('Comments') }}</span>
+                                <span class="entry-react">{{ $viewData->videoViewCount($video->getVideo) }} {{ get_phrase('Views') }}</span>
                             </div>
                         </div>
                     </div>
@@ -120,4 +108,3 @@
     @endif
 
 </div>
-

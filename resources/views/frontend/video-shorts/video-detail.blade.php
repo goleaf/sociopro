@@ -16,10 +16,7 @@
                             </div>
                             <div class="ava-desc ms-2">
                                 <h3 class="mb-0">{{ $video->getUser->name }} 
-                                    @php
-                                        $follow = \App\Models\Follower::where('user_id',$video->getUser->id)->where('follow_id',$video->getUser->id)->count();
-                                    @endphp
-                                    @if ($follow>0)
+                                    @if ($viewData->isFollowing($video->getUser->id, auth()->user()))
                                         <a href="javascript:void(0)" onclick="ajaxAction('{{ route('user.unfollow',$video->getUser->id) }}')">{{ get_phrase('Unfollow') }}</a> 
                                     @else
                                         <a href="javascript:void(0)" onclick="ajaxAction('{{ route('user.follow',$video->getUser->id) }}')">{{ get_phrase('Follow') }}</a> 
@@ -39,10 +36,7 @@
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                                 <li>
-                                    @php
-                                        $saved = \App\Models\Saveforlater::where('video_id',$video->id)->where('user_id',auth()->user()->id)->count();
-                                    @endphp
-                                    @if ($saved>0)
+                                    @if ($viewData->isVideoSaved($video, auth()->user()))
                                     <a href="javascript:void(0)" onclick="ajaxAction('{{ route('unsave.video.later',$video->id) }}')" class="dropdown-item btn btn-primary btn-sm"> <img src="{{ asset('assets/frontend/images/save.png') }}" alt=""> {{get_phrase('Unsave Video')}}</a>
                                     @else
                                     <a href="javascript:void(0)" onclick="ajaxAction('{{ route('save.video.later',$video->id) }}')" class="dropdown-item btn btn-primary btn-sm"> <img src="{{ asset('assets/frontend/images/save.png') }}" alt=""> {{get_phrase('Save Video')}}</a>
@@ -53,33 +47,18 @@
                         </div>
                     </div>
                    
-                    @php
-                        $user_info = \App\Models\User::find($video->getUser->id);
-                        $total_comments = DB::table('comments')->where('comments.is_type', 'post')->where('comments.id_of_type', $post->post_id)->where('comments.parent_id', 0)->get()->count();
-
-                        $comments = DB::table('comments')
-                            ->join('users', 'comments.user_id', '=', 'users.id')
-                            ->where('comments.is_type', 'post')
-                            ->where('comments.id_of_type', $post->post_id)
-                            ->where('comments.parent_id', 0)
-                            ->select('comments.*', 'users.name', 'users.photo')
-                            ->orderBy('comment_id', 'DESC')->take(1)->get();
-                        $tagged_user_ids = json_decode($post->tagged_user_ids);
-                        $user_reacts = json_decode($post->user_reacts, true);
-                    @endphp
-
                     <div class="entry-content pt-2">
                        <p><strong> {{ $video->title }} </strong></p>
                     </div>
                     <div class="entry-meta py-4 d-flex border-bottom justify-content-between align-items-center" >
                         <a href="javascript:void(0)" id="post_reacts{{ $post->post_id }}">
-                            @include('frontend.main_content.post_reacts', ['post_react' => true,'user_info'=>$user_info])
+                            @include('frontend.main_content.post_reacts', ['post_react' => true,'user_info'=>$video->getUser, 'user_reacts' => $viewData->reacts($post)])
                         </a>
         
                         <div class="post-comment">
                             <ul>
-                                <li><a href="javascript:void(0)"><span id="post_comment_count{{ $post->post_id }}">{{$total_comments}}</span>{{get_phrase('Comments')}}</a></li>
-                                <li><a href="javascript:void(0)"><span>0</span>{{get_phrase('Share')}}</a></li>
+                                <li><a href="javascript:void(0)"><span id="post_comment_count{{ $post->post_id }}">{{ $viewData->postCommentCount($post) }}</span>{{get_phrase('Comments')}}</a></li>
+                                <li><a href="javascript:void(0)"><span>{{ $viewData->postShareCount($post) }}</span>{{get_phrase('Share')}}</a></li>
                             </ul>
                         </div>
                     </div>
@@ -88,7 +67,7 @@
                             <span class="entry-react post-react">
         
                                 <a href="javascript:void(0)" onclick="myReact('post', 'like', 'toggle', {{$post->post_id}})" id="my_post_reacts{{ $post->post_id }}">
-                                    @include('frontend.main_content.post_reacts', ['my_react' => true,'user_info'=>$user_info])
+                                    @include('frontend.main_content.post_reacts', ['my_react' => true,'user_info'=>$video->getUser, 'user_reacts' => $viewData->reacts($post)])
                                 </a>
         
                                 <ul class="react-list">
@@ -117,11 +96,11 @@
                         </form>
                     </div>
                     <ul class="comment-wrap p-3 pb-0 list-unstyled" id="comments{{$post->post_id}}">
-                        @include('frontend.main_content.comments',['comments'=>$comments,'post_id'=>$post->post_id,'type'=>"post"])
+                        @include('frontend.main_content.comments',['comments'=>$viewData->rootComments($post),'post_id'=>$post->post_id,'type'=>"post"])
                     </ul>
         
-                    @if($comments->count() < $total_comments)
-                        <a class="btn p-3 pt-0" onclick="loadMoreComments(this, {{$post->post_id}}, 0, {{$total_comments}},'post')">{{get_phrase('View more')}}</a>
+                    @if($viewData->rootComments($post)->count() < $viewData->postCommentCount($post))
+                        <a class="btn p-3 pt-0" onclick="loadMoreComments(this, {{$post->post_id}}, 0, {{ $viewData->postCommentCount($post) }},'post')">{{get_phrase('View more')}}</a>
                     @endif
                 </div>
             </div>
@@ -157,10 +136,7 @@
                                                 
                                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                                                     <li>
-                                                        @php
-                                                            $saved = \App\Models\Saveforlater::where('video_id',$letestvideo->id)->where('user_id',auth()->user()->id)->count();
-                                                        @endphp
-                                                        @if ($saved>0)
+                                                        @if ($viewData->isVideoSaved($letestvideo, auth()->user()))
                                                         <a href="javascript:void(0)" onclick="ajaxAction('{{ route('unsave.video.later',$video->id) }}')" class="dropdown-item btn btn-primary btn-sm"> <img src="{{ asset('assets/frontend/images/save.png') }}" alt=""> {{get_phrase('Unsave Video')}}</a>
                                                         @else
                                                         <a href="javascript:void(0)" onclick="ajaxAction('{{ route('save.video.later',$video->id) }}')" class="dropdown-item btn btn-primary btn-sm"> <img src="{{ asset('assets/frontend/images/save.png') }}" alt=""> {{get_phrase('Save Video')}}</a>
