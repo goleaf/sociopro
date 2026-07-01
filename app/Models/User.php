@@ -67,7 +67,6 @@ class User extends Authenticatable implements MustVerifyEmail
     //     'email_verified_at' => 'datetime',
     // ];
 
-
     public function scopeAdmins(Builder $query): Builder
     {
         return $query->where('user_role', 'admin');
@@ -75,14 +74,15 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isOnline(): bool
     {
-        return Cache::has('user-is-online-' . $this->id);
+        return Cache::has('user-is-online-'.$this->id);
     }
 
-    public static function get_user_image($file_name = "", $optimized = ""){
+    public static function get_user_image($file_name = '', $optimized = '')
+    {
         $optimized = $optimized.'/';
-        if(base_path('public/storage/userimage/'.$optimized.$file_name) && is_file('public/storage/userimage/'.$optimized.$file_name)){
+        if (base_path('public/storage/userimage/'.$optimized.$file_name) && is_file('public/storage/userimage/'.$optimized.$file_name)) {
             return asset('storage/userimage/'.$optimized.$file_name);
-        }else{
+        } else {
             return asset('storage/userimage/default.png');
         }
     }

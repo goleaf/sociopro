@@ -13,7 +13,6 @@ class CommonServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        
     }
 
     /**

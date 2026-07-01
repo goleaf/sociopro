@@ -17,19 +17,16 @@ class Friendships extends Model
      * @var array
      */
     protected $fillable = [
-        'requester', 'accepter', 'importance', 'is_accepted', 'accepted_at', 'created_at', 'updated_at'
+        'requester', 'accepter', 'importance', 'is_accepted', 'accepted_at', 'created_at', 'updated_at',
     ];
 
-
-
-    public function getFriend(){
-        return $this->belongsTo(User::class,'requester');
+    public function getFriend()
+    {
+        return $this->belongsTo(User::class, 'requester');
     }
 
-    public function getFriendAccepter(){
-        return $this->belongsTo(User::class,'accepter');
+    public function getFriendAccepter()
+    {
+        return $this->belongsTo(User::class, 'accepter');
     }
-
-   
-
 }

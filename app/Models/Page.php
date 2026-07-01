@@ -9,11 +9,13 @@ class Page extends Model
 {
     use HasFactory;
 
-    public function getCategory(){
-        return $this->belongsTo(Pagecategory::class,'category_id');
+    public function getCategory()
+    {
+        return $this->belongsTo(Pagecategory::class, 'category_id');
     }
-    
-    public function getUser(){
+
+    public function getUser()
+    {
         return $this->belongsTo(User::class, 'user_id');
     }
 }

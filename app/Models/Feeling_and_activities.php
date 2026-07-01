@@ -17,6 +17,6 @@ class Feeling_and_activities extends Model
      * @var array
      */
     protected $fillable = [
-        'feeling_and_activity_id', 'type', 'title', 'icon', 'created_at', 'updated_at'
+        'feeling_and_activity_id', 'type', 'title', 'icon', 'created_at', 'updated_at',
     ];
 }

@@ -13,7 +13,6 @@ class CustomServiceProvider extends ServiceProvider
      */
     public function register()
     {
-       
     }
 
     /**

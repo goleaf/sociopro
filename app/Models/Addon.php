@@ -10,6 +10,6 @@ class Addon extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'parent_id', 'features', 'unique_identifier', 'version', 'status'
+        'title', 'parent_id', 'features', 'unique_identifier', 'version', 'status',
     ];
 }

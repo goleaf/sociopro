@@ -2,34 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Comments;
-
+use App\Models\BlockUser;
 //used models
-use App\Models\Album_image;
+use App\Models\Comments;
 use App\Models\FileUploader;
+use App\Models\Friendships;
 use App\Models\Live_streamings;
 use App\Models\Media_files;
-use App\Models\Posts;
 use App\Models\Post_share;
+use App\Models\Posts;
 use App\Models\Report;
+use App\Models\Setting;
 use App\Models\Stories;
 use App\Models\User;
-use App\Models\Setting;
-use App\Models\BlockUser;
-use App\Models\Friendships;
 use App\Traits\ZoomMeetingTrait;
 use DB;
 use Illuminate\Database\Query\JoinClause;
-use Str;
-use Intervention\Image\Facades\Image;
-
-use Carbon\Carbon;
-
-//For used ZOOM
 use Illuminate\Http\Request;
+//For used ZOOM
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Intervention\Image\Facades\Image;
 
 //Used for Form data validation
 
@@ -38,8 +32,11 @@ class MainController extends Controller
     use ZoomMeetingTrait;
 
     const MEETING_TYPE_INSTANT = 1;
+
     const MEETING_TYPE_SCHEDULE = 2;
+
     const MEETING_TYPE_RECURRING = 3;
+
     const MEETING_TYPE_FIXED_RECURRING_FIXED = 8;
 
     private $user;
@@ -48,14 +45,13 @@ class MainController extends Controller
     {
         $this->middleware(function ($request, $next) {
             $this->user = Auth()->user();
+
             return $next($request);
         });
-
     }
 
     public function timeline()
     {
-
         //First 10 stories
         $stories = Stories::where(function ($query) {
             $query->whereJsonContains('users.friends', [$this->user->id])
@@ -73,8 +69,6 @@ class MainController extends Controller
             $query->whereJsonContains('users.friends', [$this->user->id])
                 ->where('posts.privacy', '!=', 'private')
                 ->orWhere('posts.user_id', $this->user->id)
-
-
 
                 //if folowing any users, pages, groups and others if not friend listed
                 ->orWhere(function ($query3) {
@@ -128,28 +122,27 @@ class MainController extends Controller
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->take(15)->orderBy('posts.post_id', 'DESC')->get();
 
+        // New
+        $friendships = Friendships::where(function ($query) {
+            $query->where('accepter', auth()->user()->id)
+                ->orWhere('requester', auth()->user()->id);
+        })
+            ->where('is_accepted', 1)
+            ->orderBy('friendships.importance', 'desc')
+            ->get();
 
-            // New
-            $friendships = Friendships::where(function ($query) {
-                $query->where('accepter', auth()->user()->id)
-                    ->orWhere('requester', auth()->user()->id);
-            })
-                ->where('is_accepted', 1)
-                ->orderBy('friendships.importance', 'desc')
-                ->get();
+        $page_data['friendships'] = $friendships;
+        //new
 
-            $page_data['friendships'] = $friendships;
-          //new
-        
         $page_data['stories'] = $stories;
         $page_data['posts'] = $posts;
         $page_data['view_path'] = 'frontend.main_content.index';
+
         return view('frontend.index', $page_data);
     }
 
     public function load_post_by_scrolling(Request $request)
     {
-     
         $posts = Posts::where(function ($query) {
             $query->whereJsonContains('users.friends', [$this->user->id])
                 ->where('posts.privacy', '!=', 'private')
@@ -194,75 +187,75 @@ class MainController extends Controller
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->skip($request->offset)->take(3)->orderBy('posts.post_id', 'DESC')->get();
-           // New
-            $friendships = Friendships::where(function ($query) {
-                $query->where('accepter', auth()->user()->id)
-                    ->orWhere('requester', auth()->user()->id);
-            })
-                ->where('is_accepted', 1)
-                ->orderBy('friendships.importance', 'desc')
-                ->get();
+        // New
+        $friendships = Friendships::where(function ($query) {
+            $query->where('accepter', auth()->user()->id)
+                ->orWhere('requester', auth()->user()->id);
+        })
+            ->where('is_accepted', 1)
+            ->orderBy('friendships.importance', 'desc')
+            ->get();
 
-            $page_data['friendships'] = $friendships;
-          //new    
-          
+        $page_data['friendships'] = $friendships;
+        //new
+
         $page_data['user_info'] = $this->user;
         $page_data['posts'] = $posts;
         $page_data['type'] = 'user_post';
+
         return view('frontend.main_content.posts', $page_data);
     }
 
     public function create_post(Request $request)
     {
-
         //Data validation
 
-        $rules = array('privacy' => ['required', Rule::in(['private', 'public', 'friends'])]);
+        $rules = ['privacy' => ['required', Rule::in(['private', 'public', 'friends'])]];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+            return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
 
         if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
             //Data validation
 
-            $rules = array('multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000');
+            $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
             // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 $validation_errors = $validator->getMessageBag()->toArray();
                 foreach ($validation_errors as $key => $validation_error) {
                     $fileIndex = explode('.', $key);
-                    if (array_key_exists('multiple_files.' . $fileIndex[1], $validation_errors)) {
-                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.' . $fileIndex[1]];
+                    if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
+                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
                     }
-                    unset($validation_errors['multiple_files.' . $fileIndex[1]]);
+                    unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                 }
 
-                return json_encode(array('validationError' => $validation_errors));
+                return json_encode(['validationError' => $validation_errors]);
             }
         }
 
         $data['user_id'] = $this->user->id;
         $data['privacy'] = $request->privacy;
 
-        if (isset($request->publisher) && !empty($request->publisher)) {
+        if (isset($request->publisher) && ! empty($request->publisher)) {
             $data['publisher'] = $request->publisher;
         } else {
             $data['publisher'] = 'post';
         }
 
-        if (isset($request->event_id) && !empty($request->event_id)) {
+        if (isset($request->event_id) && ! empty($request->event_id)) {
             $data['publisher_id'] = $request->event_id;
-        } elseif (isset($request->page_id) && !empty($request->page_id)) {
+        } elseif (isset($request->page_id) && ! empty($request->page_id)) {
             $data['publisher_id'] = $request->page_id;
-        } elseif (isset($request->group_id) && !empty($request->group_id)) {
+        } elseif (isset($request->group_id) && ! empty($request->group_id)) {
             $data['publisher_id'] = $request->group_id;
         } else {
             $data['publisher_id'] = $this->user->id;
         }
         //post type
-        if (isset($request->post_type) && !empty($request->post_type)) {
+        if (isset($request->post_type) && ! empty($request->post_type)) {
             $data['post_type'] = $request->post_type;
         } else {
             $data['post_type'] = 'general';
@@ -271,44 +264,41 @@ class MainController extends Controller
         if (isset($request->tagged_users_id) && is_array($request->tagged_users_id)) {
             $tagged_users = $request->tagged_users_id;
         } else {
-            $tagged_users = array();
+            $tagged_users = [];
         }
         $data['tagged_user_ids'] = json_encode($tagged_users);
 
-        if (isset($request->feeling_and_activity_id) && !empty($request->feeling_and_activity_id)) {
+        if (isset($request->feeling_and_activity_id) && ! empty($request->feeling_and_activity_id)) {
             $data['activity_id'] = $request->feeling_and_activity_id;
         } else {
             $data['activity_id'] = 0;
         }
 
-        if (isset($request->address) && !empty($request->address)) {
+        if (isset($request->address) && ! empty($request->address)) {
             $data['location'] = $request->address;
         } else {
             $data['location'] = '';
         }
 
-
-        if (isset($request->description) && !empty($request->description)) {
+        if (isset($request->description) && ! empty($request->description)) {
             preg_match_all('/#(\w+)/', $request->description, $matchesHashtags); // Extract hashtags
             preg_match_all('/\b(?:https?|ftp):\/\/\S+/', $request->description, $matchesUrls); // Extract URLs
-        
+
             $data['description'] = nl2br($request->description);
-        
-            
-        
-            if (!empty($matchesUrls[0])) {
+
+            if (! empty($matchesUrls[0])) {
                 foreach ($matchesUrls[0] as $url) {
-                    $urlLink = '<a href="' . $url . '" class="url-link hashtag-link" target="_blank">' . $url . '</a>';
+                    $urlLink = '<a href="'.$url.'" class="url-link hashtag-link" target="_blank">'.$url.'</a>';
                     $data['description'] = str_replace($url, $urlLink, $data['description']);
                 }
             }
 
-            if (!empty($matchesHashtags[1])) {
-                $hashtags = '#' . implode(', #', $matchesHashtags[1]);
+            if (! empty($matchesHashtags[1])) {
+                $hashtags = '#'.implode(', #', $matchesHashtags[1]);
                 $data['hashtag'] = $hashtags;
-        
+
                 foreach ($matchesHashtags[1] as $tag) {
-                    $tagLink = '<a href="' . route('search', ['search' => $tag]) . '" class="hashtag-link">#' . $tag . '</a>';
+                    $tagLink = '<a href="'.route('search', ['search' => $tag]).'" class="hashtag-link">#'.$tag.'</a>';
                     $data['description'] = str_replace("#$tag", $tagLink, $data['description']);
                 }
             } else {
@@ -319,86 +309,82 @@ class MainController extends Controller
             $data['hashtag'] = '';
         }
         // Mobile App View Image
-        $mobile_app_image = FileUploader::upload($request->mobile_app_image,'public/storage/post/images/');
+        $mobile_app_image = FileUploader::upload($request->mobile_app_image, 'public/storage/post/images/');
         $data['mobile_app_image'] = $mobile_app_image;
 
-
         $data['status'] = 'active';
-        $data['user_reacts'] = json_encode(array());
-        $data['shared_user'] = json_encode(array());
+        $data['user_reacts'] = json_encode([]);
+        $data['shared_user'] = json_encode([]);
         $data['created_at'] = time();
         $data['updated_at'] = $data['created_at'];
 
         $post_id = Posts::insertGetId($data);
 
-        
         if ($request->ai_image) {
             $ai_image = $request->ai_image;
-        
-            
+
             $imageData = base64_decode($ai_image);
-            $tempImagePath = sys_get_temp_dir() . '/' . uniqid() . '.png';
+            $tempImagePath = sys_get_temp_dir().'/'.uniqid().'.png';
             file_put_contents($tempImagePath, $imageData);
-        
-            $fileName = uniqid('ai_image_') . '.png';
+
+            $fileName = uniqid('ai_image_').'.png';
             $folderPath = 'public/storage/post/images/';
-            if (!is_dir(public_path($folderPath))) {
+            if (! is_dir(public_path($folderPath))) {
                 mkdir(public_path($folderPath), 0755, true);
             }
-        
-            $image = Image::make($tempImagePath); 
-            $image->orientate() 
+
+            $image = Image::make($tempImagePath);
+            $image->orientate()
                 ->resize(1000, null, function ($constraint) {
-                    $constraint->upsize(); 
-                    $constraint->aspectRatio(); 
+                    $constraint->upsize();
+                    $constraint->aspectRatio();
                 });
 
-            $image->save('public/storage/post/images/' . $fileName);
-            
-            $ai_media_file_data = array('user_id' => auth()->user()->id, 'post_id' => $post_id, 'file_name' => $fileName, 'file_type' => 'image', 'privacy' => $request->privacy);
+            $image->save('public/storage/post/images/'.$fileName);
+
+            $ai_media_file_data = ['user_id' => auth()->user()->id, 'post_id' => $post_id, 'file_name' => $fileName, 'file_type' => 'image', 'privacy' => $request->privacy];
             $ai_media_file_data['created_at'] = time();
             $ai_media_file_data['updated_at'] = time();
             Media_files::create($ai_media_file_data);
             unlink($tempImagePath);
         }
 
-
         //add media files
         if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
             //Data validation
 
-            $rules = array('multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000');
+            $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 $validation_errors = $validator->getMessageBag()->toArray();
                 foreach ($validation_errors as $key => $validation_error) {
                     $fileIndex = explode('.', $key);
-                    if (array_key_exists('multiple_files.' . $fileIndex[1], $validation_errors)) {
-                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.' . $fileIndex[1]];
+                    if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
+                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
                     }
-                    unset($validation_errors['multiple_files.' . $fileIndex[1]]);
+                    unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                 }
 
-                return json_encode(array('validationError' => $validation_errors));
+                return json_encode(['validationError' => $validation_errors]);
             }
 
             foreach ($request->multiple_files as $key => $media_file) {
                 $file_name = random(40);
                 $file_extention = strtolower($media_file->getClientOriginalExtension());
                 if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                    $file_name = FileUploader::upload($media_file, 'public/storage/post/videos/' . $file_name . '.' . $file_extention);
+                    $file_name = FileUploader::upload($media_file, 'public/storage/post/videos/'.$file_name.'.'.$file_extention);
                     $file_type = 'video';
                 } else {
-                    $file_name = FileUploader::upload($media_file, 'public/storage/post/images/' . $file_name . '.' . $file_extention, 1000, null, 300);
+                    $file_name = FileUploader::upload($media_file, 'public/storage/post/images/'.$file_name.'.'.$file_extention, 1000, null, 300);
                     $file_type = 'image';
                 }
                 // $file_name = $file_name . '.' . $file_extention;
 
-                $media_file_data = array('user_id' => auth()->user()->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy);
+                $media_file_data = ['user_id' => auth()->user()->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy];
 
-                if (isset($request->page_id) && !empty($request->page_id)) {
+                if (isset($request->page_id) && ! empty($request->page_id)) {
                     $media_file_data['page_id'] = $request->page_id;
-                } elseif (isset($request->group_id) && !empty($request->group_id)) {
+                } elseif (isset($request->group_id) && ! empty($request->group_id)) {
                     $media_file_data['group_id'] = $request->group_id;
                 } else {
                 }
@@ -413,17 +399,18 @@ class MainController extends Controller
             $live['publisher'] = $data['publisher'];
             $live['publisher_id'] = $post_id;
             $live['user_id'] = auth()->user()->id;
-            $live['details'] = json_encode(['link' => url('/streaming/live/' . $post_id), 'status' => TRUE]);
+            $live['details'] = json_encode(['link' => url('/streaming/live/'.$post_id), 'status' => true]);
             $live['created_at'] = date('Y-m-d H:i:s', time());
             $live['updated_at'] = $live['created_at'];
-  
+
             Live_streamings::insert($live);
-            $response = array('open_new_tab' => url('/streaming/live/' . $post_id), 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline'));
+            $response = ['open_new_tab' => url('/streaming/live/'.$post_id), 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline')];
         } else {
             //Ajax flush message
             Session::flash('success_message', get_phrase('Your post has been published'));
-            $response = array('reload' => 1);
+            $response = ['reload' => 1];
         }
+
         return json_encode($response);
     }
 
@@ -431,20 +418,22 @@ class MainController extends Controller
     {
         $user_id = Posts::where('post_id', $post_id)->value('user_id');
         $user = User::where('id', $user_id)->first();
-        $make_pass = str_shuffle($user->name . $user->email);
+        $make_pass = str_shuffle($user->name.$user->email);
         $make_pass = explode(' ', $make_pass);
         $join_pass = implode('', $make_pass);
 
         Live_streamings::where('publisher_id', $user_id)->update(['details->join_pass' => $join_pass]);
 
-       // $room = get_settings('system_name') . $user->name . $user->email;
+        // $room = get_settings('system_name') . $user->name . $user->email;
         $room = get_settings('system_name');
+
         return view('frontend.main_content.jitsi_streaming', compact('user', 'join_pass', 'room'));
     }
 
     public function edit_post_form($id)
     {
         $page_data['post'] = Posts::where('post_id', $id)->first();
+
         return view('frontend.main_content.edit_post_modal', $page_data);
     }
 
@@ -452,29 +441,29 @@ class MainController extends Controller
     {
         //$posts = Posts::where('id', $id)->first();
 
-        $rules = array('privacy' => ['required', Rule::in(['private', 'public', 'friends'])]);
+        $rules = ['privacy' => ['required', Rule::in(['private', 'public', 'friends'])]];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+            return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
 
         if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
             //Data validation
 
-            $rules = array('multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480');
+            $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
             // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 $validation_errors = $validator->getMessageBag()->toArray();
                 foreach ($validation_errors as $key => $validation_error) {
                     $fileIndex = explode('.', $key);
-                    if (array_key_exists('multiple_files.' . $fileIndex[1], $validation_errors)) {
-                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.' . $fileIndex[1]];
+                    if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
+                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
                     }
-                    unset($validation_errors['multiple_files.' . $fileIndex[1]]);
+                    unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                 }
 
-                return json_encode(array('validationError' => $validation_errors));
+                return json_encode(['validationError' => $validation_errors]);
             }
         }
 
@@ -485,33 +474,29 @@ class MainController extends Controller
             $data['tagged_user_ids'] = json_encode($tagged_users);
         }
 
-        if (isset($request->feeling_and_activity_id) && !empty($request->feeling_and_activity_id)) {
+        if (isset($request->feeling_and_activity_id) && ! empty($request->feeling_and_activity_id)) {
             $data['activity_id'] = $request->feeling_and_activity_id;
         }
 
-
-        
-        if (isset($request->description) && !empty($request->description)) {
+        if (isset($request->description) && ! empty($request->description)) {
             preg_match_all('/#(\w+)/', $request->description, $matchesHashtags); // Extract hashtags
             preg_match_all('/\b(?:https?|ftp):\/\/\S+/', $request->description, $matchesUrls); // Extract URLs
-        
+
             $data['description'] = nl2br($request->description);
-        
-            
-        
-            if (!empty($matchesUrls[0])) {
+
+            if (! empty($matchesUrls[0])) {
                 foreach ($matchesUrls[0] as $url) {
-                    $urlLink = '<a href="' . $url . '" class="url-link hashtag-link" target="_blank">' . $url . '</a>';
+                    $urlLink = '<a href="'.$url.'" class="url-link hashtag-link" target="_blank">'.$url.'</a>';
                     $data['description'] = str_replace($url, $urlLink, $data['description']);
                 }
             }
 
-            if (!empty($matchesHashtags[1])) {
-                $hashtags = '#' . implode(', #', $matchesHashtags[1]);
+            if (! empty($matchesHashtags[1])) {
+                $hashtags = '#'.implode(', #', $matchesHashtags[1]);
                 $data['hashtag'] = $hashtags;
-        
+
                 foreach ($matchesHashtags[1] as $tag) {
-                    $tagLink = '<a href="' . route('search', ['search' => $tag]) . '" class="hashtag-link">#' . $tag . '</a>';
+                    $tagLink = '<a href="'.route('search', ['search' => $tag]).'" class="hashtag-link">#'.$tag.'</a>';
                     $data['description'] = str_replace("#$tag", $tagLink, $data['description']);
                 }
             } else {
@@ -522,10 +507,8 @@ class MainController extends Controller
             $data['hashtag'] = '';
         }
 
-
-
         // Mobile Preview Upload Image
-        $mobile_app_image = FileUploader::upload($request->mobile_app_image,'public/storage/post/images/');
+        $mobile_app_image = FileUploader::upload($request->mobile_app_image, 'public/storage/post/images/');
         $data['mobile_app_image'] = $mobile_app_image;
 
         $data['updated_at'] = time();
@@ -536,38 +519,38 @@ class MainController extends Controller
         if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
             //Data validation
 
-            $rules = array('multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480');
+            $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
                 $validation_errors = $validator->getMessageBag()->toArray();
                 foreach ($validation_errors as $key => $validation_error) {
                     $fileIndex = explode('.', $key);
-                    if (array_key_exists('multiple_files.' . $fileIndex[1], $validation_errors)) {
-                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.' . $fileIndex[1]];
+                    if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
+                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
                     }
-                    unset($validation_errors['multiple_files.' . $fileIndex[1]]);
+                    unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                 }
 
-                return json_encode(array('validationError' => $validation_errors));
+                return json_encode(['validationError' => $validation_errors]);
             }
 
             foreach ($request->multiple_files as $key => $media_file) {
                 $file_name = random(40);
                 $file_extention = strtolower($media_file->getClientOriginalExtension());
                 if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                    $media_file->move('public/storage/post/videos/', $file_name . '.' . $file_extention);
+                    $media_file->move('public/storage/post/videos/', $file_name.'.'.$file_extention);
                     $file_type = 'video';
                 } else {
-                    FileUploader::upload($media_file, 'public/storage/post/images/' . $file_name . '.' . $file_extention, 1000, null, 300);
+                    FileUploader::upload($media_file, 'public/storage/post/images/'.$file_name.'.'.$file_extention, 1000, null, 300);
                     $file_type = 'image';
                 }
-                $file_name = $file_name . '.' . $file_extention;
+                $file_name = $file_name.'.'.$file_extention;
 
-                $media_file_data = array('user_id' => auth()->user()->id, 'post_id' => $id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy);
+                $media_file_data = ['user_id' => auth()->user()->id, 'post_id' => $id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy];
 
-                if (isset($request->page_id) && !empty($request->page_id)) {
+                if (isset($request->page_id) && ! empty($request->page_id)) {
                     $media_file_data['page_id'] = $request->page_id;
-                } elseif (isset($request->group_id) && !empty($request->group_id)) {
+                } elseif (isset($request->group_id) && ! empty($request->group_id)) {
                     $media_file_data['group_id'] = $request->group_id;
                 } else {
                 }
@@ -579,7 +562,8 @@ class MainController extends Controller
 
         //Ajax flush message
         Session::flash('success_message', get_phrase('Your post has been updated'));
-        $response = array('reload' => 1);
+        $response = ['reload' => 1];
+
         return json_encode($response);
     }
 
@@ -596,16 +580,16 @@ class MainController extends Controller
         if ($live_streaming->count() > 0) {
             //Update
             $meeting_details = json_decode($live_streaming->value('details'), true);
-            if (!empty($post_details->description)) {
+            if (! empty($post_details->description)) {
                 $live_topic = ellipsis($post_details->description, 200);
             } else {
-                $live_topic = "Live";
+                $live_topic = 'Live';
             }
 
             $meeting_details['topic'] = $live_topic;
             $meeting_details['start_time'] = $this->toZoomTimeFormat(time());
 
-            $path = 'meetings/' . $meeting_details['id'];
+            $path = 'meetings/'.$meeting_details['id'];
             $response = $this->zoomPatch($path, [
                 'topic' => $meeting_details['topic'],
                 'type' => self::MEETING_TYPE_SCHEDULE,
@@ -625,10 +609,10 @@ class MainController extends Controller
             $data['updated_at'] = time();
             Live_streamings::where('streaming_id', $live_streaming->value('streaming_id'))->update($data);
         } else {
-            if (!empty($post_details->description)) {
+            if (! empty($post_details->description)) {
                 $live_topic = ellipsis($post_details->description, 200);
             } else {
-                $live_topic = "Live";
+                $live_topic = 'Live';
             }
 
             //Create
@@ -646,7 +630,7 @@ class MainController extends Controller
                 ],
             ]);
 
-            $var = array('success' => $response->status() === 201, 'data' => $response->body());
+            $var = ['success' => $response->status() === 201, 'data' => $response->body()];
 
             $data['publisher'] = $publisher;
             $data['publisher_id'] = $publisher_id;
@@ -660,7 +644,6 @@ class MainController extends Controller
 
     public function live($post_id)
     {
-
         $post_details = Posts::where(function ($query) {
             $query->whereJsonContains('users.friends', [$this->user->id])
                 ->where('posts.privacy', '!=', 'private')
@@ -671,7 +654,6 @@ class MainController extends Controller
             ->join('users', 'posts.user_id', '=', 'users.id');
 
         if ($post_details->count() > 0) {
-
             $post_details = $post_details->first();
 
             $live_streaming = Live_streamings::where('publisher', 'post')
@@ -707,16 +689,18 @@ class MainController extends Controller
     public function live_ended($post_id)
     {
         Posts::where('post_id', $post_id)->update(['description' => json_encode(['live_video_ended' => 'yes'])]);
+
         return redirect()->route('timeline');
     }
 
     public function search_friends_for_tagging(Request $request)
     {
         $friends = DB::table('users')->whereJsonContains('friends', [$this->user->id])
-            ->where('name', 'like', '%' . $request->search_value . '%')
+            ->where('name', 'like', '%'.$request->search_value.'%')
             ->take(30)->get();
 
         $data['friends'] = $friends;
+
         return view('frontend.main_content.friend_list_for_tagging', $data);
     }
 
@@ -786,6 +770,7 @@ class MainController extends Controller
         $page_data['ajax_call'] = true;
         $page_data['my_react'] = true;
         $page_data['comment_react'] = true;
+
         return view('frontend.main_content.comment_reacts', $page_data);
     }
 
@@ -809,9 +794,11 @@ class MainController extends Controller
         $page_data['post_id'] = $request->post_id;
         if ($request->parent_id == 0) {
             $page_data['comments'] = $comments;
+
             return view('frontend.main_content.comments', $page_data);
         } else {
             $page_data['child_comments'] = $comments;
+
             return view('frontend.main_content.child_comments', $page_data);
         }
     }
@@ -831,7 +818,7 @@ class MainController extends Controller
             $data['user_id'] = $this->user->id;
             $data['is_type'] = $form_data['type'];
             $data['id_of_type'] = $form_data['post_id'];
-            $data['user_reacts'] = json_encode(array());
+            $data['user_reacts'] = json_encode([]);
             $data['created_at'] = time();
             $data['updated_at'] = $data['created_at'];
             $comment_id = Comments::insertGetId($data);
@@ -854,16 +841,17 @@ class MainController extends Controller
 
         if ($request->parent_id == 0) {
             $page_data['comments'] = $comments;
+
             return view('frontend.main_content.comments', $page_data);
         } else {
             $page_data['child_comments'] = $comments;
+
             return view('frontend.main_content.child_comments', $page_data);
         }
     }
 
     public function preview_post(Request $request)
     {
-
         //Previw post
         $posts = Posts::where(function ($query) {
             $query->where('posts.privacy', '!=', 'private')
@@ -875,54 +863,56 @@ class MainController extends Controller
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->take(1)->orderBy('posts.post_id', 'DESC')->get();
 
-             // New
-             $friendships = Friendships::where(function ($query) {
-                $query->where('accepter', auth()->user()->id)
-                    ->orWhere('requester', auth()->user()->id);
-            })
-                ->where('is_accepted', 1)
-                ->orderBy('friendships.importance', 'desc')
-                ->take(15)->get();
+        // New
+        $friendships = Friendships::where(function ($query) {
+            $query->where('accepter', auth()->user()->id)
+                ->orWhere('requester', auth()->user()->id);
+        })
+           ->where('is_accepted', 1)
+           ->orderBy('friendships.importance', 'desc')
+           ->take(15)->get();
 
-            $page_data['friendships'] = $friendships;
-        //new   
-        
+        $page_data['friendships'] = $friendships;
+        //new
+
         $page_data['posts'] = $posts;
         $page_data['file_name'] = $request->file_name;
         $page_data['user_info'] = $this->user;
+
         return view('frontend.main_content.preview_post', $page_data);
     }
 
     public function post_comment_count(Request $request)
     {
         $form_data = $request->all();
+
         return $total_child_comments = Comments::where('is_type', $form_data['type'])->where('id_of_type', $form_data['post_id'])->get()->count();
     }
 
     public function single_post($id, $type = null)
     {
-
         $post = Posts::where('post_id', $id)->first();
-        if (!empty($post)) {
+        if (! empty($post)) {
             $page_data['post'] = $post;
             $page_data['user_info'] = auth()->user();
             $page_data['type'] = 'user_post';
             $page_data['image_id'] = $type;
             $page_data['view_path'] = 'frontend.main_content.single-post';
-     
+
             if (isset($_GET['shared'])) {
                 return view('frontend.main_content.custom_shared_view', $page_data);
             } else {
                 return view('frontend.index', $page_data);
             }
         } else {
-
             if (isset($_GET['shared'])) {
                 $page_data['post'] = '';
+
                 return view('frontend.main_content.custom_shared_view', $page_data);
             } else {
                 $page_data['post'] = '';
                 $page_data['view_path'] = 'frontend.main_content.custom_shared_view';
+
                 return view('frontend.index', $page_data);
             }
         }
@@ -930,7 +920,6 @@ class MainController extends Controller
 
     public function save_post_report(Request $request)
     {
-
         $report = new Report();
 
         $report->user_id = auth()->user()->id;
@@ -938,17 +927,19 @@ class MainController extends Controller
         $report->report = $request->report;
         $report->save();
         Session::flash('success_message', get_phrase('Report Done Successfully'));
-        return json_encode(array('reload' => 1));
+
+        return json_encode(['reload' => 1]);
     }
 
     public function comment_delete()
     {
-        $response = array();
+        $response = [];
         $comment_id = $_GET['comment_id'];
         $done = Comments::where('comment_id', $comment_id)->delete();
         if ($done) {
-            $response = array('alertMessage' => get_phrase('Comment Deleted Successfully'), 'fadeOutElem' => "#comment_" . $_GET['comment_id']);
+            $response = ['alertMessage' => get_phrase('Comment Deleted Successfully'), 'fadeOutElem' => '#comment_'.$_GET['comment_id']];
         }
+
         return json_encode($response);
     }
 
@@ -964,24 +955,25 @@ class MainController extends Controller
         $post->user_id = auth()->user()->id;
         $post->publisher = 'group';
         $post->publisher_id = $request->group_id;
-        $post->post_type = "share";
-        $post->privacy = "public";
-        $post->tagged_user_ids = json_encode(array());
-        if (isset($request->shared_post_id) && !empty($request->shared_post_id)) {
+        $post->post_type = 'share';
+        $post->privacy = 'public';
+        $post->tagged_user_ids = json_encode([]);
+        if (isset($request->shared_post_id) && ! empty($request->shared_post_id)) {
             $post->description = $request->message;
         }
-        if (isset($request->shared_product_id) && !empty($request->shared_product_id)) {
+        if (isset($request->shared_product_id) && ! empty($request->shared_product_id)) {
             $post->description = $request->productUrl;
         }
         $post->status = 'active';
-        $post->user_reacts = json_encode(array());
-        $post->shared_user = json_encode(array());
+        $post->user_reacts = json_encode([]);
+        $post->shared_user = json_encode([]);
         $time = time();
         $post->created_at = $time;
         $post->updated_at = $time;
         $done = $post->save();
 
-        $response = array('alertMessage' => get_phrase('Posted On Group Successfully'));
+        $response = ['alertMessage' => get_phrase('Posted On Group Successfully')];
+
         return json_encode($response);
     }
 
@@ -997,47 +989,48 @@ class MainController extends Controller
         $post->user_id = auth()->user()->id;
         $post->publisher = 'post';
         $post->publisher_id = auth()->user()->id;
-        $post->post_type = "share";
-        $post->privacy = "public";
-        $post->tagged_user_ids = json_encode(array());
-        if (isset($request->shared_post_id) && !empty($request->shared_post_id)) {
+        $post->post_type = 'share';
+        $post->privacy = 'public';
+        $post->tagged_user_ids = json_encode([]);
+        if (isset($request->shared_post_id) && ! empty($request->shared_post_id)) {
             $post->description = $request->postUrl;
         }
-        if (isset($request->shared_product_id) && !empty($request->shared_product_id)) {
+        if (isset($request->shared_product_id) && ! empty($request->shared_product_id)) {
             $post->description = $request->productUrl;
         }
         $post->status = 'active';
-        $post->user_reacts = json_encode(array());
-        $post->shared_user = json_encode(array());
+        $post->user_reacts = json_encode([]);
+        $post->shared_user = json_encode([]);
         $time = time();
         $post->created_at = $time;
         $post->updated_at = $time;
 
         if (isset($request->is_memory)) {
-            $post->publisher = "memory";
+            $post->publisher = 'memory';
         }
-        
+
         $done = $post->save();
 
         Session::flash('success_message', get_phrase('Posted On My Timeline Successfully'));
-        return json_encode(array('url' => route('profile')));
+
+        return json_encode(['url' => route('profile')]);
     }
 
     // post delete
 
     public function post_delete()
     {
-        $response = array();
+        $response = [];
         $done = Posts::where('post_id', $_GET['post_id'])->delete();
         if ($done) {
-            $response = array('alertMessage' => get_phrase('Post Deleted Successfully'), 'fadeOutElem' => "#postIdentification" . $_GET['post_id']);
+            $response = ['alertMessage' => get_phrase('Post Deleted Successfully'), 'fadeOutElem' => '#postIdentification'.$_GET['post_id']];
         }
+
         return json_encode($response);
     }
 
     public function custom_shared_post_view($id)
     {
-
         $post = Posts::where(function ($query) {
             $query->whereJsonContains('users.friends', [$this->user->id])
                 ->where('posts.privacy', '!=', 'private')
@@ -1051,6 +1044,7 @@ class MainController extends Controller
 
         $page_data['post'] = $post;
         $page_data['type'] = 'user_post';
+
         return view('frontend.main_content.custom_shared_view', $page_data);
     }
 
@@ -1058,11 +1052,11 @@ class MainController extends Controller
     {
         $media_file = Media_files::where('id', $id)->where('user_id', auth()->user()->id);
         if ($media_file->count() > 0) {
-            remove_file('public/storage/post/images/' . $media_file->first()->file_name);
+            remove_file('public/storage/post/images/'.$media_file->first()->file_name);
             Media_files::find($id)->delete();
-            $response = array('alertMessage' => get_phrase('Image deleted successfully'), 'fadeOutElem' => "#previous-uploaded-img-" . $id);
+            $response = ['alertMessage' => get_phrase('Image deleted successfully'), 'fadeOutElem' => '#previous-uploaded-img-'.$id];
         } else {
-            $response = array('alertMessage' => get_phrase('Image not found'));
+            $response = ['alertMessage' => get_phrase('Image not found')];
         }
 
         return json_encode($response);
@@ -1080,6 +1074,7 @@ class MainController extends Controller
             'view_path' => 'frontend.addons.index',
             'content_view' => 'frontend.addons.addon_layout',
         ];
+
         return view('frontend.index', $page_data);
     }
 
@@ -1122,9 +1117,9 @@ class MainController extends Controller
             'view_path' => 'frontend.addons.index',
             'content_view' => 'frontend.addons.user_settings',
         ];
+
         return view('frontend.index', $page_data);
     }
- 
 
     public function save_user_settings(Request $request)
     {
@@ -1138,85 +1133,87 @@ class MainController extends Controller
         User::where('id', auth()->user()->id)->update(['payment_settings' => $data]);
 
         Session::flash('success_message', 'Settings saved.');
+
         return redirect()->back();
     }
-
-
-
 
    // Theme Color
     public function updateThemeColor(Request $request)
     {
         $themeColor = $request->input('themeColor');
         Session::put('theme_color', $themeColor);
+
         return response()->json(['success' => true]);
     }
 
-
       //New Album Page  Details
-      public function details_album($id){
-        $posts = Posts::where('post_id', $id)->get();
-        $post_album = Posts::where('post_id', $id)->first();
-        $user_info = $this->user;  
+      public function details_album($id)
+      {
+          $posts = Posts::where('post_id', $id)->get();
+          $post_album = Posts::where('post_id', $id)->first();
+          $user_info = $this->user;
 
           // New
           $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
+              $query->where('accepter', auth()->user()->id)
+                  ->orWhere('requester', auth()->user()->id);
+          })
             ->where('is_accepted', 1)
             ->orderBy('friendships.importance', 'desc')
             ->take(15)->get();
 
-        // $page_data['friendships'] = $friendships;
-    //new  
+          // $page_data['friendships'] = $friendships;
+          //new
 
-        $page_data = [
-            'post_id' => $id,
-            'post_album' => $post_album,
-            'posts' => $posts,
-            'user_info' => $user_info,
-            'friendships' => $friendships,
-            'layout' => 'album_details',
-            'view_path' => 'frontend.album_details.album_details'
-        ];
-         return view('frontend.index', $page_data);
-     }
-     
-    
-   
+          $page_data = [
+              'post_id' => $id,
+              'post_album' => $post_album,
+              'posts' => $posts,
+              'user_info' => $user_info,
+              'friendships' => $friendships,
+              'layout' => 'album_details',
+              'view_path' => 'frontend.album_details.album_details',
+          ];
+
+          return view('frontend.index', $page_data);
+      }
+
      public function block_user($id)
      {
          $page_data['post'] = Posts::where('post_id', $id)->first();
+
          return view('frontend.main_content.block_modal', $page_data);
      }
 
      public function block_user_post($id)
      {
-        $block_post = Posts::find($id);
-        $user_block = User::where('id', $block_post->user_id)->first();
-        $user_block = new BlockUser();
-        $user_block->user_id = auth()->user()->id;
-        $user_block->block_user = $block_post->user_id;
-        $user_block->save();
-        Session::flash('success_message', get_phrase('Block Successfully'));
-       return redirect()->route('timeline');
+         $block_post = Posts::find($id);
+         $user_block = User::where('id', $block_post->user_id)->first();
+         $user_block = new BlockUser();
+         $user_block->user_id = auth()->user()->id;
+         $user_block->block_user = $block_post->user_id;
+         $user_block->save();
+         Session::flash('success_message', get_phrase('Block Successfully'));
+
+         return redirect()->route('timeline');
      }
-     
+
     //  UnBlock User
-    public function unblock_user($id){
+    public function unblock_user($id)
+    {
         $unblock = BlockUser::find($id)->delete();
         Session::flash('success_message', get_phrase('Unblock Successfully'));
+
         return redirect()->back();
     }
-    
+
     public function save_post($id)
     {
         $user = Auth()->user();
-    
+
         $savedPosts = $user->save_post ? json_decode($user->save_post, true) : [];
 
-        if (!in_array($id, $savedPosts)) {
+        if (! in_array($id, $savedPosts)) {
             $savedPosts[] = $id;
         }
         $user->save_post = json_encode($savedPosts);
@@ -1224,6 +1221,7 @@ class MainController extends Controller
         $user->save();
 
         Session::flash('success_message', get_phrase('Post Save Successfully'));
+
         return redirect()->back();
     }
 
@@ -1240,14 +1238,16 @@ class MainController extends Controller
         }
 
         Session::flash('success_message', get_phrase('Post Unsave Successfully'));
+
         return redirect()->back();
     }
-    
+
     public function imageGenerator()
     {
         $page_data['hugging_face_auth_key'] = Setting::where('type', 'hugging_face_auth_key')->value('description');
         $page_data['user_info'] = $this->user;
         $page_data['view_path'] = 'frontend.ai_image.image_generator';
+
         return view('frontend.index', $page_data);
     }
 
@@ -1258,8 +1258,6 @@ class MainController extends Controller
         ]);
 
         $prompt = $request->input('prompt');
-
-        
 
         try {
             // Hugging Face API Call
@@ -1287,6 +1285,4 @@ class MainController extends Controller
             return response()->json(['error' => 'Server error'], 500);
         }
     }
-
-
 }

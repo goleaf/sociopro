@@ -16,18 +16,19 @@ class Posts extends Model
      *
      * @var array
      */
+    protected $primaryKey = 'post_id';
 
-     protected $primaryKey = 'post_id';
     protected $fillable = [
-        'post_id', 'user_id', 'publisher', 'publisher_id', 'post_type', 'privacy', 'tagged_user_ids', 'feel_and_activity', 'location', 'description', 'user_reacts', 'status', 'created_at', 'updated_at','album_image_id'
+        'post_id', 'user_id', 'publisher', 'publisher_id', 'post_type', 'privacy', 'tagged_user_ids', 'feel_and_activity', 'location', 'description', 'user_reacts', 'status', 'created_at', 'updated_at', 'album_image_id',
     ];
 
-    public function getUser(){
-        return $this->belongsTo(User::class,'user_id');
+    public function getUser()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function media_files(){
+    public function media_files()
+    {
         return $this->hasMany(Media_files::class, 'post_id', 'post_id');
     }
-    
 }

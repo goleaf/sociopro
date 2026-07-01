@@ -1,13 +1,12 @@
 <?php
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{UserController};
-use App\Http\Controllers\{PaymentHistory};
 
+use App\Http\Controllers\{PaymentHistory};
+use App\Http\Controllers\{UserController};
+use Illuminate\Support\Facades\Route;
 
 //User controllers group routing
 Route::controller(UserController::class)->middleware('auth', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {
     Route::get('user/dashboard', 'dashboard')->name('user.dashboard');
-
 
     Route::get('user/ads', 'ads')->name('user.ads');
     Route::get('user/ad/create', 'ad_create')->name('user.ad.create');
@@ -20,7 +19,6 @@ Route::controller(UserController::class)->middleware('auth', 'user', 'verified',
     Route::get('user/ad/ad_charge_by_daterange', 'ad_charge_by_daterange')->name('user.ad.ad_charge_by_daterange');
     Route::post('user/ad/payment_configuration/{id}', 'payment_configuration')->name('user.ad.payment_configuration');
     Route::get('user/ad/payment_success/{identifier}', 'payment_success')->name('user.ad.payment_success');
-
 });
 
 Route::controller(PaymentHistory::class)->middleware('auth', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {

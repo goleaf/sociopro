@@ -22,8 +22,7 @@ class InstallController extends Controller
 
     public function __construct(
         private ConfigureDatabase $configureDatabase
-    )
-    {
+    ) {
     }
 
     /**
@@ -31,20 +30,22 @@ class InstallController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
-    public  function index()
+    public function index()
     {
         if (DB::connection()->getDatabaseName() != 'db_name') {
-           return redirect('/login');
+            return redirect('/login');
         } else {
             return redirect()->route('install.step0');
         }
     }
 
-    public function step0() {
+    public function step0()
+    {
         return view('install.step0');
     }
 
-    public function step1(Request $request, CheckInstallRequirements $checkInstallRequirements) {
+    public function step1(Request $request, CheckInstallRequirements $checkInstallRequirements)
+    {
         $isLocalInstall = $this->isLocalInstall($request);
         $requirements = $checkInstallRequirements->handle($isLocalInstall);
         $valid = collect($requirements)->every(fn ($requirement) => $requirement['passed']);
@@ -58,29 +59,31 @@ class InstallController extends Controller
         ]);
     }
 
-    function step2($param1 = '') {
+    public function step2($param1 = '')
+    {
         if ($param1 == 'error') {
             $error = 'Purchase Code Verification Failed';
         } else {
-            $error = "";
+            $error = '';
         }
+
         return view('install.step2', ['error' => $error]);
     }
 
     public function validatePurchaseCode(ValidatePurchaseCodeRequest $request)
     {
         $purchase_code = $request->validated('purchase_code');
-		session(['purchase_code' => $purchase_code]);
-		session(['purchase_code_verified' => 1]);
-		//move to step 3
-		return redirect()->route('install.step3');
+        session(['purchase_code' => $purchase_code]);
+        session(['purchase_code_verified' => 1]);
+        //move to step 3
+        return redirect()->route('install.step3');
     }
 
     public function step3(
         PrepareDatabaseConnectionRequest $request,
         PrepareDatabaseConnection $prepareDatabaseConnection
     ) {
-        $databaseError = "";
+        $databaseError = '';
 
         $purchaseCodeRedirect = $this->redirectIfPurchaseCodeUnverified($request);
 
@@ -127,7 +130,6 @@ class InstallController extends Controller
         return view('install.step4');
     }
 
-
     public function confirmImport($param1 = '')
     {
         if (! in_array($param1, ['confirm_import', 'confirm_install'], true)) {
@@ -164,7 +166,6 @@ class InstallController extends Controller
         FinalizeInstallationRequest $request,
         FinalizeInstallation $finalizeInstallation
     ) {
-
         if ($request->isMethod('post')) {
             $finalizeInstallation->handle($request->validated(), session('purchase_code'));
 
@@ -177,7 +178,8 @@ class InstallController extends Controller
         ]);
     }
 
-    public function success($param1 = '') {
+    public function success($param1 = '')
+    {
         $this->configureRoutes();
 
         if ($param1 === 'login') {

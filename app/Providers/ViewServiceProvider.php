@@ -2,9 +2,9 @@
 
 namespace App\Providers;
 
-use App\Models\Setting;
 use App\Models\Chat;
 use App\Models\Notification as UserNotification;
+use App\Models\Setting;
 use App\ViewModels\BladeViewData;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;

@@ -8,10 +8,10 @@ use Illuminate\Http\Request;
 
 class BadgeController extends Controller
 {
-    public function badge(){
-    
+    public function badge()
+    {
         $currentDate = Carbon::now();
-    
+
         // $page_data['badge'] = Badge::whereDate('start_date', '<=', $currentDate)
         //     ->whereDate('end_date', '>=', $currentDate)
         //     ->orderBy('id', 'DESC')
@@ -22,18 +22,16 @@ class BadgeController extends Controller
             ->get();
 
         $page_data['view_path'] = 'frontend.badge.badge';
+
         return view('frontend.index', $page_data);
     }
 
-    public function badge_info(){
+    public function badge_info()
+    {
         $page_data['view_path'] = 'frontend.badge.badge_info';
+
         return view('frontend.index', $page_data);
     }
-
-
-
-
-
 
     public function payment_configuration($id, Request $request)
     {
@@ -41,26 +39,25 @@ class BadgeController extends Controller
             'title' => 'required',
             'description' => 'required',
         ]);
-       
 
-        $badge_pay =  get_settings('badge_price');
+        $badge_pay = get_settings('badge_price');
         $title = $request->title;
         $description = $request->description;
-        $start_timestamp = strtotime($request->start_date . ' ' . date('H:i:s'));
+        $start_timestamp = strtotime($request->start_date.' '.date('H:i:s'));
         $end_timestamp = strtotime('+30 days', $start_timestamp);
         $start_date = date('Y-m-d H:i:s', $start_timestamp);
         $end_date = date('Y-m-d H:i:s', $end_timestamp);
-        
+
         $payment_details = [
             'items' => [
                 [
                     'id' => $id,
                     'title' => $title,
                     'subtitle' => $description,
-                    'price' => $badge_pay, 
+                    'price' => $badge_pay,
                     'discount_price' => 0,
                     'discount_percentage' => 0,
-                ]
+                ],
             ],
             'custom_field' => [
                 'start_date' => date('Y-m-d H:i:s', $start_timestamp),
@@ -74,16 +71,12 @@ class BadgeController extends Controller
             ],
             'tax' => 0,
             'coupon' => null,
-            'payable_amount' => $badge_pay, 
+            'payable_amount' => $badge_pay,
             'cancel_url' => route('badge'),
             'success_url' => route('payment.success', ''),
         ];
         session(['payment_details' => $payment_details]);
+
         return redirect()->route('payment');
     }
-
-
-
-
-
 }

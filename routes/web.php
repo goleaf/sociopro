@@ -1,15 +1,15 @@
 <?php
 
+use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\MemoriesController;
-use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\ModalController;
 use App\Http\Controllers\Profile;
 use App\Http\Controllers\StoryController;
 use App\Http\Controllers\Updater;
-use Illuminate\Http\Request;
 use App\Models\Account_active_request;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,10 +55,11 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 Route::get('language/switch/{language}', function (Request $request, $language) {
     $request->session()->put('active_language', $language);
+
     return redirect()->back();
 })->name('language.switch');
 
@@ -67,20 +68,19 @@ Route::get('/account-disable', function () {
 })->name('frontend.disable_view');
 
 Route::get('/account-enble-req/{id}', function (Request $request, $id) {
-
     $data['user_id'] = $id;
     $data['status'] = 'pending';
     Account_active_request::create($data);
     flash()->addSuccess('Account enable request successfully');
-        return redirect()->back();
-})->name('frontend.account_enble_req');
 
+    return redirect()->back();
+})->name('frontend.account_enble_req');
 
 //Modal controllers group routing
 Route::controller(ModalController::class)->middleware('auth', 'user', 'verified', 'activity')->group(function () {
     Route::any('/load_modal_content/{view_path}', 'common_view_function')->name('load_modal_content');
 });
- 
+
 //Home controllers group routing
 Route::controller(MainController::class)->middleware('auth', 'user', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {
     Route::get('/', 'timeline')->name('timeline');
@@ -128,23 +128,18 @@ Route::controller(MainController::class)->middleware('auth', 'user', 'user', 've
     // live streaming
     Route::get('/streaming/live/{id}', 'live_streaming')->name('go.live');
 
-   
-
     // Theme Controller
     Route::post('/update-theme-color', 'updateThemeColor')->name('update-theme-color');
 
-
     Route::get('album/details/page_show/{id}', 'details_album')->name('album.details.page_show');
-    
+
     // Block User from frontend
     Route::get('/block_user/{id}', 'block_user')->name('block_user');
     Route::post('/block_user_post/{id}', 'block_user_post')->name('block_user_post');
     Route::get('/unblock_user/{id}', 'unblock_user')->name('unblock_user');
 
     Route::get('/ai/image-generator', 'imageGenerator')->name('ai_image.image_generator');
-
 });
-
 
 // Memories Controller
 Route::controller(MemoriesController::class)->middleware('auth', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {
@@ -153,16 +148,11 @@ Route::controller(MemoriesController::class)->middleware('auth', 'user', 'verifi
 });
 
 // Badge  Controller
-Route::controller(BadgeController::class)->middleware('auth', 'user', 'verified', 'activity','prevent-back-history')->group(function () {
+Route::controller(BadgeController::class)->middleware('auth', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {
     Route::get('/badge', 'badge')->name('badge');
     Route::get('/badge/info', 'badge_info')->name('badge.info');
     Route::post('badge/payment_configuration/{id}', 'payment_configuration')->name('badge.payment_configuration');
 });
-
-
-
-
-
 
 //Story controllers group routing
 Route::controller(StoryController::class)->middleware('auth', 'user', 'verified', 'activity')->group(function () {
@@ -211,12 +201,10 @@ Route::controller(Profile::class)->middleware('auth', 'verified', 'user', 'activ
     Route::get('/profile/profile-unlock', 'profileUnlock')->name('profile.profileUnlock');
 
     Route::get('/profile/check-ins', 'checkinsView')->name('profile.checkins_list');
-
 });
 
 //Updater routes are here
 Route::controller(Updater::class)->middleware('auth', 'verified', 'activity')->group(function () {
-
     Route::post('admin/addon/create', 'update')->name('admin.addon.create');
     Route::post('admin/addon/update', 'update')->name('admin.addon.update');
     Route::post('admin/product/update', 'update')->name('admin.product.update');

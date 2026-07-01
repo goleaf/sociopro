@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\FileUploader;
-use App\Models\Sponsor;use Illuminate\Http\Request;
+use App\Models\Sponsor;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
     public function dashboard()
     {
         $page_data['view_path'] = 'dashboard';
+
         return view('backend.index', $page_data);
     }
 
@@ -17,13 +19,17 @@ class UserController extends Controller
     {
         $page_data['ads'] = Sponsor::where('user_id', auth()->user()->id)->get();
         $page_data['view_path'] = 'ads';
+
         return view('backend.index', $page_data);
     }
+
     public function ad_create()
     {
         $page_data['view_path'] = 'ad_create';
+
         return view('backend.index', $page_data);
     }
+
     public function ad_store(Request $request)
     {
         $validated = $request->validate([
@@ -36,19 +42,23 @@ class UserController extends Controller
         $data['name'] = $request->name;
         $data['description'] = $request->description;
         $data['ext_url'] = $request->ext_url;
-        $data['image'] = random(40) . '.' . $request->image->extension();
+        $data['image'] = random(40).'.'.$request->image->extension();
         Sponsor::insert($data);
-        FileUploader::upload($request->image, 'public/storage/sponsor/thumbnail/' . $data['image'], 300);
+        FileUploader::upload($request->image, 'public/storage/sponsor/thumbnail/'.$data['image'], 300);
 
         flash()->addSuccess('New ad created successfully');
+
         return redirect(route('user.ads'));
     }
+
     public function ad_edit($id)
     {
         $page_data['ad'] = Sponsor::where('id', $id)->where('user_id', auth()->user()->id)->first();
         $page_data['view_path'] = 'ad_edit';
+
         return view('backend.index', $page_data);
     }
+
     public function ad_update($id, Request $request)
     {
         $validated = $request->validate([
@@ -60,17 +70,18 @@ class UserController extends Controller
         $data['ext_url'] = $request->ext_url;
 
         if ($request->image) {
-            $data['image'] = random(40) . '.' . $request->image->extension();
-            remove_file('public/storage/sponsor/thumbnail/' . $query->first()->image);
+            $data['image'] = random(40).'.'.$request->image->extension();
+            remove_file('public/storage/sponsor/thumbnail/'.$query->first()->image);
         }
 
         $query->update($data);
 
         if ($request->image) {
-            FileUploader::upload($request->image, 'public/storage/sponsor/thumbnail/' . $data['image'], 300);
+            FileUploader::upload($request->image, 'public/storage/sponsor/thumbnail/'.$data['image'], 300);
         }
 
         flash()->addSuccess('Ad updated successfully');
+
         return redirect(route('user.ads'));
     }
 
@@ -92,10 +103,11 @@ class UserController extends Controller
     {
         $query = Sponsor::where('id', $id)->where('user_id', auth()->user()->id);
 
-        remove_file('public/storage/sponsor/thumbnail/' . $query->first()->image);
+        remove_file('public/storage/sponsor/thumbnail/'.$query->first()->image);
 
         $query->delete();
         flash()->addSuccess('Ad deleted successfully');
+
         return redirect()->back();
     }
 
@@ -103,6 +115,7 @@ class UserController extends Controller
     {
         $page_data['ad'] = Sponsor::where('id', $id)->where('user_id', auth()->user()->id)->first();
         $page_data['view_path'] = 'ad_edit';
+
         return view('backend.index', $page_data);
     }
 
@@ -111,7 +124,7 @@ class UserController extends Controller
         $total_days = \Carbon\Carbon::parse($request->start_date)->diffInDays($request->end_date);
 
         if (strtotime($request->start_date) < strtotime($request->end_date)) {
-            return ($total_days * get_settings('ad_charge_per_day'));
+            return $total_days * get_settings('ad_charge_per_day');
         } else {
             return 0;
         }
@@ -126,8 +139,8 @@ class UserController extends Controller
 
         $total_days = \Carbon\Carbon::parse($request->start_date)->diffInDays($request->end_date);
         $payable_amount = ($total_days * get_settings('ad_charge_per_day')) + get_settings('ad_charge_per_day');
-        $start_timestamp = strtotime($request->start_date . ' ' . date('H:i:s'));
-        $end_timestamp = strtotime($request->end_date . ' ' . date('H:i:s'));
+        $start_timestamp = strtotime($request->start_date.' '.date('H:i:s'));
+        $end_timestamp = strtotime($request->end_date.' '.date('H:i:s'));
 
         $payment_details = [
             'items' => [
@@ -156,7 +169,7 @@ class UserController extends Controller
             'success_url' => route('payment.success', ''),
         ];
         session(['payment_details' => $payment_details]);
+
         return redirect()->route('payment');
     }
-
 }

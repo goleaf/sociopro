@@ -37,7 +37,7 @@ class Paystack extends Model
             $response = Http::acceptJson()
                 ->withToken($secretKey)
                 ->timeout(10)
-                ->get('https://api.paystack.co/transaction/verify/' . rawurlencode($reference));
+                ->get('https://api.paystack.co/transaction/verify/'.rawurlencode($reference));
         } catch (Throwable) {
             return false;
         }

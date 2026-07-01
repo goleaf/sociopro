@@ -9,7 +9,8 @@ class SavedProduct extends Model
 {
     use HasFactory;
 
-    public function productData(){
-        return $this->belongsTo(Marketplace::class,'product_id');
+    public function productData()
+    {
+        return $this->belongsTo(Marketplace::class, 'product_id');
     }
 }

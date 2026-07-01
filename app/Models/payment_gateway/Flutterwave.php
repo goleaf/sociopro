@@ -14,7 +14,10 @@ class Flutterwave extends Model
         if ($transaction_keys != '') {
             array_shift($transaction_keys);
             session(['keys' => $transaction_keys]);
+
             return true;
-        }return false;
+        }
+
+return false;
     }
 }

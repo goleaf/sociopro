@@ -32,7 +32,7 @@ class Paypal extends Model
                 ->acceptJson()
                 ->withBasicAuth($clientId, $secretKey)
                 ->timeout(10)
-                ->post($paypalUrl . 'oauth2/token', [
+                ->post($paypalUrl.'oauth2/token', [
                     'grant_type' => 'client_credentials',
                 ]);
 
@@ -45,7 +45,7 @@ class Paypal extends Model
             $paymentResponse = Http::acceptJson()
                 ->withToken($accessToken)
                 ->timeout(10)
-                ->get($paypalUrl . 'payments/payment/' . $transaction_keys['payment_id']);
+                ->get($paypalUrl.'payments/payment/'.$transaction_keys['payment_id']);
         } catch (Throwable) {
             return false;
         }

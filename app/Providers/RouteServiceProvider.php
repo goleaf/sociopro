@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
-
 class RouteServiceProvider extends ServiceProvider
 {
     /**
@@ -63,14 +62,11 @@ class RouteServiceProvider extends ServiceProvider
                 ->namespace($this->namespace)
                 ->group(base_path('routes/payment.php'));
 
-
-
             if ($this->shouldLoadFundraiserRoutes()) {
                 Route::middleware('web')
                     ->namespace($this->namespace)
                     ->group(base_path('routes/fundraiser.php'));
             }
-
         });
     }
 

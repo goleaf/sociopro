@@ -7,6 +7,7 @@ use App\Http\Controllers\CustomUserController;
 use App\Http\Controllers\Event\EventController;
 use App\Http\Controllers\FollowController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\JobController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\NotificationController;
@@ -17,7 +18,6 @@ use App\Http\Controllers\Report\SearchController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SponsorController;
 use App\Http\Controllers\VideoController;
-use App\Http\Controllers\JobController;
 use Illuminate\Support\Facades\Route;
 
 // events route
@@ -60,7 +60,7 @@ Route::controller(MarketplaceController::class)->middleware('auth', 'user', 'ver
     Route::get('product/delete', 'product_delete')->name('product.delete');
     Route::get('/load_product_by_scrolling', 'load_product_by_scrolling')->name('load_product_by_scrolling');
     Route::get('product/view/{id}', 'single_product')->name('single.product');
-    
+
     //Route::get('/product/filter/{category?}/{max?}/{min?}/{brand?}/{location?}', 'filter')->name('filter.product');
     Route::get('/product/filter/{max?}/{min?}/{location?}', 'filter')->name('filter.product');
 
@@ -84,9 +84,6 @@ Route::controller(BlogController::class)->middleware('auth', 'user', 'verified',
     Route::get('blog/view/{id}', 'single_blog')->name('single.blog');
     Route::get('/blog/category/{category}', 'category_blog')->name('category.blog');
     Route::get('/blog/search/', 'search')->name('search.blog');
-
-    
-
 });
 
 //  FrontEnd Jobs Route
@@ -124,7 +121,6 @@ if (class_exists(JobController::class)) {
     });
 }
 
-
 //  page
 Route::controller(PageController::class)->middleware('auth', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {
     Route::get('/pages', 'pages')->name('pages');
@@ -140,9 +136,6 @@ Route::controller(PageController::class)->middleware('auth', 'user', 'verified',
 
     Route::get('page/like/{id}', 'like')->name('page.like');
     Route::get('page/dislike/{id}', 'dislike')->name('page.dislike');
-
-    
-
 });
 
 //  group
@@ -171,11 +164,6 @@ Route::controller(GroupController::class)->middleware('auth', 'user', 'verified'
     Route::get('album/details/list/{identifire}/{album_id}', 'album_details_list')->name('album.details.list');
 
     Route::get('album/details/page/list/{album_id}/{id}', 'album_details_page_list')->name('album.details.page.list');
-
-    
-    
-
-
 });
 
 //  video
@@ -206,7 +194,6 @@ Route::controller(ChatController::class)->middleware('auth', 'user', 'verified',
 
     Route::get('/chat/inbox/load/data/ajax/', 'chat_load')->name('chat.load');
     Route::get('/chat/inbox/read/message/ajax/', 'chat_read_option')->name('chat.read');
-    
 });
 
 //  follow
@@ -279,20 +266,16 @@ Route::controller(SettingController::class)->group(function () {
     Route::get('admin/settings/amazon_s3', 'amazon_s3')->name('admin.settings.amazon_s3');
     Route::post('admin/settings/amazon_s3/update', 'amazon_s3_update')->name('admin.settings.amazon_s3.update');
 
-
-
     // Admin Color Save
     Route::get('admin/system/settings/color/save/{themeColor}', 'system_settings_color_save')->name('admin.system.settings.color.save')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
     //Zitsi  Settings
-     Route::get('admin/zitsi-video/setting/view', 'zitsi_video_edit_form')->name('admin.zitsi-video.view')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
-     Route::post('admin/jitsi/live/settings/update', 'zitsi_live_video_update')->name('admin.zitsi.live.settings.update');
-
+    Route::get('admin/zitsi-video/setting/view', 'zitsi_video_edit_form')->name('admin.zitsi-video.view')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
+    Route::post('admin/jitsi/live/settings/update', 'zitsi_live_video_update')->name('admin.zitsi.live.settings.update');
 });
 
 //  admin all crud
 Route::controller(AdminCrudController::class)->group(function () {
-
     Route::get('admin/dashboard/', 'admin_dashboard')->name('admin.dashboard')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
     Route::get('admin/users/', 'users')->name('admin.users')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
@@ -338,33 +321,26 @@ Route::controller(AdminCrudController::class)->group(function () {
     Route::post('admin/blog/created/', 'blog_created')->name('admin.blog.created')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
     Route::post('admin/blog/updated/{id}', 'blog_updated')->name('admin.blog.updated')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
+    //  Admin Manage Group Route
+    Route::get('admin/group', 'groups')->name('admin.group')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
+    Route::get('admin/group/create', 'group_create')->name('admin.group.create')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
+    Route::post('admin/group/created', 'group_created')->name('admin.group.created')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
+    Route::get('admin/group/delete/{id}', 'deleteGroup')->name('admin.group.delete')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
+    Route::get('admin/group/edit/{id}', 'group_edit')->name('admin.group.edit')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
+    Route::post('admin/group/updated/{id}', 'group_updated')->name('admin.group.updated')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
-   //  Admin Manage Group Route 
-   Route::get('admin/group', 'groups')->name('admin.group')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
-   Route::get('admin/group/create', 'group_create')->name('admin.group.create')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
-   Route::post('admin/group/created', 'group_created')->name('admin.group.created')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
-   Route::get('admin/group/delete/{id}', 'deleteGroup')->name('admin.group.delete')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
-   Route::get('admin/group/edit/{id}', 'group_edit')->name('admin.group.edit')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
-   Route::post('admin/group/updated/{id}', 'group_updated')->name('admin.group.updated')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
+    // Badge Raoute Here
+    Route::get('admin/badge', 'badge')->name('admin.badge')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
+    Route::get('admin/badge/delete/{id}', 'delete_badge_history')->name('admin.badge.delete')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
+    Route::POST('admin/badge/price/save/', 'badge_settings_save')->name('admin.badge.price.save')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
+    // Badge Raoute Here
 
-
-
-
-
-   // Badge Raoute Here
-   Route::get('admin/badge', 'badge')->name('admin.badge')->middleware('auth', 'verified', 'admin', 'prevent-back-history');  
-   Route::get('admin/badge/delete/{id}', 'delete_badge_history')->name('admin.badge.delete')->middleware('auth', 'verified', 'admin', 'prevent-back-history');  
-
-   Route::POST('admin/badge/price/save/', 'badge_settings_save')->name('admin.badge.price.save')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
-
-   // Badge Raoute Here
-
-   //Job Route Start Here
-   if (class_exists(\App\Models\Job::class)) {
-       // Admin Control Route for job
-       Route::get('admin/job/category/view/', 'view_job_category')->name('admin.view.job.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
+    //Job Route Start Here
+    if (class_exists(\App\Models\Job::class)) {
+        // Admin Control Route for job
+        Route::get('admin/job/category/view/', 'view_job_category')->name('admin.view.job.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
         Route::get('admin/job/category/create/', 'create_job_category')->name('admin.create.job.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
         Route::POST('admin/job/category/save/', 'save_job_category')->name('admin.save.job.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
         Route::get('admin/job/category/edit/{id}', 'edit_job_category')->name('admin.edit.job.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
@@ -389,11 +365,8 @@ Route::controller(AdminCrudController::class)->group(function () {
 
         Route::get('admin/job/price/view/', 'settings_view')->name('admin.job.price.view')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
         Route::POST('admin/job/price/save/', 'settings_save')->name('admin.job.price.view.save')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
-   }
-   //Job Route End Here
-
-
-
+    }
+    //Job Route End Here
 
     Route::get('admin/page/category/view/', 'view_category')->name('admin.view.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
     Route::get('admin/page/category/create/', 'create_category')->name('admin.create.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
@@ -446,9 +419,7 @@ Route::controller(SponsorController::class)->group(function () {
     Route::get('admin/sponsor/edit/{id}', 'edit_sponsor')->name('admin.edit.sponsor')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
     Route::POST('admin/sponsor/update/{id}', 'update_sponsor')->name('admin.update.sponsor')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
     Route::get('admin/sponsor/delete/{id}', 'delete_sponsor')->name('admin.delete.sponsor')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
-
 });
-
 
 Route::controller(NotificationController::class)->middleware('auth', 'verified', 'activity')->group(function () {
     Route::get('/all/notification', 'notifications')->name('notifications');
@@ -478,7 +449,6 @@ Route::controller(LanguageController::class)->middleware('auth', 'verified', 'ac
 Route::controller(PaymentHistory::class)->middleware('auth', 'verified', 'activity', 'admin', 'prevent-back-history')->group(function () {
     Route::get('admin/payment-histories', 'index')->name('admin.payment_histories');
 });
-
 
 //  paid content
 if (class_exists(PaidContent::class)) {

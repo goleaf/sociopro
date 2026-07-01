@@ -11,7 +11,7 @@ class Account_active_request extends Model
 
     protected $fillable = [
         'user_id',
-        'status'
+        'status',
     ];
 
     public function user()

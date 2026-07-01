@@ -14,12 +14,14 @@ class SponsorController extends Controller
     {
         $page_data['sponsors'] = Sponsor::orderBy('id', 'DESC')->paginate(10);
         $page_data['view_path'] = 'sponsor.index';
+
         return view('backend.index', $page_data);
     }
 
     public function create_sponsor()
     {
         $page_data['view_path'] = 'sponsor.create';
+
         return view('backend.index', $page_data);
     }
 
@@ -31,7 +33,7 @@ class SponsorController extends Controller
         ]);
 
         $file_ext = $request->file('image')->extension();
-        $filename = rand(0, 1000) . '.' . $file_ext;
+        $filename = rand(0, 1000).'.'.$file_ext;
 
         $sponsor = new Sponsor();
         $sponsor->user_id = auth()->user()->id;
@@ -42,10 +44,10 @@ class SponsorController extends Controller
         $sponsor->status = 1;
         $done = $sponsor->save();
         if ($done) {
-
-            FileUploader::upload($request->image, 'public/storage/sponsor/thumbnail/' . $filename, 300);
+            FileUploader::upload($request->image, 'public/storage/sponsor/thumbnail/'.$filename, 300);
 
             flash()->addSuccess('Sponsored Post added successfully!');
+
             return redirect()->back();
         }
     }
@@ -54,6 +56,7 @@ class SponsorController extends Controller
     {
         $page_data['sponsor'] = Sponsor::find($id);
         $page_data['view_path'] = 'sponsor.edit';
+
         return view('backend.index', $page_data);
     }
 
@@ -68,7 +71,7 @@ class SponsorController extends Controller
         $sponsor->name = $request->name;
         if ($request->hasFile('image')) {
             $file_ext = $request->file('image')->extension();
-            $filename = rand(0, 1000) . '.' . $file_ext;
+            $filename = rand(0, 1000).'.'.$file_ext;
             $sponsor->image = $filename;
         }
         $sponsor->description = $request->description;
@@ -78,10 +81,11 @@ class SponsorController extends Controller
         $done = $sponsor->save();
         if ($done) {
             if ($request->hasFile('image')) {
-                FileUploader::upload($request->image, 'public/storage/sponsor/thumbnail/' . $filename, 300);
+                FileUploader::upload($request->image, 'public/storage/sponsor/thumbnail/'.$filename, 300);
             }
 
             flash()->addSuccess('Sponsored Post Updated successfully!');
+
             return redirect()->route('admin.view.sponsor');
         }
     }
@@ -97,6 +101,7 @@ class SponsorController extends Controller
             flash()->addSuccess('Sponsored Post Deleted successfully!');
             // just put the file name and folder name nothing more :)
             removeFile('sponsor', $imagename);
+
             return redirect()->back();
         }
     }
@@ -124,12 +129,7 @@ class SponsorController extends Controller
                 flash()->addSuccess('Ad date expired.');
             }
         }
+
         return redirect()->back();
     }
-
-
-
-
-
-
 }

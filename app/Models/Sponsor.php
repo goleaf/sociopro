@@ -5,7 +5,6 @@ namespace App\Models;
 use DB;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Session;
 
 class Sponsor extends Model
 {
@@ -36,8 +35,9 @@ class Sponsor extends Model
         $payment_data['updated_at'] = date('Y-m-d H:i:s');
         DB::table('payment_histories')->insert($payment_data);
 
-        session(['payment_details' => array()]);
+        session(['payment_details' => []]);
         flash()->addSuccess('Payment successfully done!');
+
         return redirect()->route('user.ads');
     }
 }

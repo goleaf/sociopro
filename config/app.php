@@ -4,19 +4,19 @@ $hostname = $_SERVER['HTTP_HOST'] ?? null;
 $script_name = $_SERVER['SCRIPT_NAME'] ?? '';
 
 if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
-    $host_type = "https://";
+    $host_type = 'https://';
 } else {
-    $host_type = "http://";
+    $host_type = 'http://';
 }
 
 //check is it valet server or laravel inbuilt server
 if (! $hostname || $hostname == '127.0.0.1:8000' || str_contains($script_name, 'valet/')) {
     $asset_url = env('ASSET_URL');
 } else {
-    $asset_url = str_replace("index.php", "", $script_name) . 'public';
+    $asset_url = str_replace('index.php', '', $script_name).'public';
 }
 
-$app_url = $hostname ? $host_type . $hostname : env('APP_URL', 'http://localhost');
+$app_url = $hostname ? $host_type.$hostname : env('APP_URL', 'http://localhost');
 
 return [
 
@@ -86,7 +86,7 @@ return [
      */
 
     // 'timezone' => env('APP_TIMEZONE'),
-    'timezone' => "Asia/Dhaka",
+    'timezone' => 'Asia/Dhaka',
 
     /*
     |--------------------------------------------------------------------------

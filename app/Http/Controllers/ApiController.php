@@ -2,101 +2,92 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\Comments;
-use App\Models\Job;
-use App\Models\JobCategory;
-use App\Models\JobApply;
-use App\Models\JobWishlist;
-use App\Models\Media_files;
-use App\Models\Posts;
-use App\Models\Stories;
-use Illuminate\Database\Query\JoinClause;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\File;
-use Illuminate\Validation\Rule;
-use App\Models\FileUploader;
-use App\Models\Group;
-use App\Models\Group_member;
-use App\Models\Event;
-use App\Models\Message_thrade;
-use App\Models\Chat;
-use App\Models\Follower;
-use Session;
-use DB;
-use Image;
-use App\Models\Live_streamings;
-use App\Models\Users;
 use App\Models\Album_image;
-use App\Models\Page;
-use App\Models\Pagecategory;
-use App\Models\Page_like;
-use App\Models\Marketplace;
-use App\Models\SavedProduct;
-use App\Models\Brand;
-use App\Models\Currency;
-use App\Models\Video;
+use App\Models\Albums;
 use App\Models\Blog;
 use App\Models\Blogcategory;
-use App\Models\Sponsor;
-use App\Models\Share;
-use App\Models\Setting;
-use App\Models\Invite;
-use App\Models\Notification;
-use App\Models\Saveforlater;
-use App\Models\Report;
-use App\Models\Albums;
-use App\Models\Post_share;
-use App\Models\Payment_gateway;
-use App\Models\PaidContentSubscription;
-use App\Models\PaidContentCreator;
-use App\Models\PaidContentPackages;
-use App\Models\PaidContentPayout;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Chat;
+use App\Models\Comments;
+use App\Models\Currency;
+use App\Models\Event;
+use App\Models\FileUploader;
+use App\Models\Follower;
 use App\Models\Friendships;
 use App\Models\Fundraiser;
 use App\Models\Fundraiser_category;
 use App\Models\Fundraiser_donation;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use App\Models\Group;
+use App\Models\Group_member;
+use App\Models\Invite;
+use App\Models\Job;
+use App\Models\JobApply;
+use App\Models\JobCategory;
+use App\Models\JobWishlist;
+use App\Models\Live_streamings;
+use App\Models\Marketplace;
+use App\Models\Media_files;
+use App\Models\Message_thrade;
+use App\Models\Notification;
+use App\Models\Page;
+use App\Models\Page_like;
+use App\Models\Pagecategory;
+use App\Models\PaidContentCreator;
+use App\Models\PaidContentPackages;
+use App\Models\Posts;
+use App\Models\Report;
+use App\Models\SavedProduct;
+use App\Models\Saveforlater;
+use App\Models\Setting;
+use App\Models\Stories;
+use App\Models\User;
+use App\Models\Users;
+use App\Models\Video;
 use App\Providers\RouteServiceProvider;
+use Carbon\Carbon;
+use DB;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\Query\JoinClause;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules;
+use Image;
 
 require 'vendor/autoload.php'; // Include Composer's autoloader
 
-use Carbon\Carbon; // Import Carbon for date comparisons
+use Session; // Import Carbon for date comparisons
 
 class ApiController extends Controller
 {
-
     public function login(Request $request)
     {
         $fields = $request->validate([
             'email' => 'required|string',
-            'password' => 'required|string'
+            'password' => 'required|string',
         ]);
 
-        // email checking 
+        // email checking
         $user = User::where('email', $fields['email'])->first();
 
         // Check password
-        if (!$user || !Hash::check($fields['password'], $user->password)) {
+        if (! $user || ! Hash::check($fields['password'], $user->password)) {
             if (isset($user) && $user->count() > 0) {
                 return response([
-                    'message' => 'Invalid credentials!'
+                    'message' => 'Invalid credentials!',
                 ], 401);
             } else {
                 return response([
-                    'message' => 'User not found!'
+                    'message' => 'User not found!',
                 ], 401);
             }
-        } else if ($user->user_role == 'general') {
-
+        } elseif ($user->user_role == 'general') {
             // $user->tokens()->delete();
 
             $token = $user->createToken('auth-token')->plainTextToken;
@@ -109,24 +100,22 @@ class ApiController extends Controller
                 'user_id' => $user->id,
                 'user_image' => get_user_images($user->id),
                 'cover_photo' => get_cover_photos($user->id),
-                'token' => $token
+                'token' => $token,
             ];
 
             return response($response, 201);
-
         } else {
-
             //user not authorized
             return response()->json([
                 'message' => 'User not found!',
             ], 400);
         }
-
     }
+
     public function signup(Request $request)
     {
         // return $request->all();
-        $response = array();
+        $response = [];
 
         // $request->validate([
         //     'name' => ['required', 'string', 'max:255'],
@@ -139,14 +128,14 @@ class ApiController extends Controller
         //     'password' => ['required', 'confirmed', Rules\Password::defaults()],
         // ]);
 
-        $rules = array(
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()]
-        );
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+            return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
         // return $response;
         $user = User::create([
@@ -154,13 +143,13 @@ class ApiController extends Controller
             'username' => rand(100000, 999999),
             'name' => $request->name,
             'email' => $request->email,
-            'friends' => json_encode(array()),
-            'followers' => json_encode(array()),
+            'friends' => json_encode([]),
+            'followers' => json_encode([]),
             'timezone' => $request->timezone,
             'password' => Hash::make($request->password),
             'status' => 0,
             'lastActive' => Carbon::now(),
-            'created_at' => time()
+            'created_at' => time(),
         ]);
         if ($user) {
             $response['success'] = true;
@@ -205,7 +194,7 @@ class ApiController extends Controller
 
     public function forgot_password(Request $request)
     {
-        $response = array();
+        $response = [];
 
         $request->validate([
             'email' => ['required', 'email'],
@@ -228,18 +217,18 @@ class ApiController extends Controller
         //                     ->withErrors(['email' => __($status)]);
         return $response;
     }
+
     // Update password
     public function update_password(Request $request)
     {
-
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $auth = auth('sanctum')->user();
 
             // The passwords matches
-            if (!Hash::check($request->get('current_password'), $auth->password)) {
+            if (! Hash::check($request->get('current_password'), $auth->password)) {
                 $response['status'] = 'failed';
                 $response['message'] = 'Current Password is Invalid';
 
@@ -269,9 +258,7 @@ class ApiController extends Controller
             $response['status'] = 'success';
             $response['message'] = 'Password Changed Successfully';
 
-
             return $response;
-
         } else {
             $response['status'] = 'failed';
             $response['message'] = 'Please login first';
@@ -293,7 +280,7 @@ class ApiController extends Controller
                 $friends = json_decode($user->friends);
 
                 // return $userDetails;
-                if (!empty($friends)) {
+                if (! empty($friends)) {
                     $friendList = [];
                     foreach ($friends as $userId) {
                         $user = User::find($userId);
@@ -306,11 +293,10 @@ class ApiController extends Controller
                     foreach ($friendList as $friend) {
                         $userDetails = get_user_info($friend->id);
 
-
                         $friendData = [
                             'friend_name' => $userDetails->name,
                             'friend_id' => $userDetails->id,
-                            'posts' => []
+                            'posts' => [],
                         ];
                         $posts = Posts::where('user_id', $userDetails->id)->get();
                         foreach ($posts as $post) {
@@ -324,25 +310,24 @@ class ApiController extends Controller
                                 'post_user_name' => $postUser->name,
                                 'post_user_image' => get_user_images($postUser->id),
                                 'user_id' => $postUser->id,
-                                'post_image' => !empty($media->file_name) ? get_post_images($media->file_name) : '',
+                                'post_image' => ! empty($media->file_name) ? get_post_images($media->file_name) : '',
                             ];
                         }
 
                         $data[] = $friendData;
                     }
-
                 }
             }
-
         }
 
         return ['post' => $data];
     }
+
     public function user_post(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
-        $data = array();
+        $response = [];
+        $data = [];
         // if (isset($token) && $token != '') {
         // $user_id = auth('sanctum')->user()->id;
         $users = User::where('id', 4)->first();
@@ -353,7 +338,6 @@ class ApiController extends Controller
         // $data[$key]['username'] = $user->username;
         // $data[$key]['email'] = $user->email;
         // $data[$key]['name'] = $user->name;
-
 
         // $friend = json_decode($users->friends);
         // print($user->friends);
@@ -383,8 +367,6 @@ class ApiController extends Controller
         //     $response = $res;
 
         //     return response($response, 200);
-
-
 
         //     foreach ($friend_list as $key1 => $friends) {
         //         $user_details = get_user_info($friends->id);
@@ -424,7 +406,7 @@ class ApiController extends Controller
         $data = $users;
         // }
         return $data;
-        // } 
+        // }
         // else {
         // }
         // return $data;
@@ -460,11 +442,10 @@ class ApiController extends Controller
     //     ]);
     // }
 
-
     public function timeline(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -497,7 +478,7 @@ class ApiController extends Controller
 
                 // Loop through the media files and add them to the postImages array
                 foreach ($mediaFiles as $media) {
-                    $storyImages = $media->file_type == "image" ? get_story_images($media->file_name, "optimized") : get_story_videos($media->file_name);
+                    $storyImages = $media->file_type == 'image' ? get_story_images($media->file_name, 'optimized') : get_story_videos($media->file_name);
                     $filetype = $media->file_type;
                 }
                 // Extract color, bg-color, and text from the story description
@@ -514,7 +495,7 @@ class ApiController extends Controller
                     'story_id' => $story->story_id,
                     'user_id' => $story->user_id,
                     'name' => $user->name,
-                    'photo' => get_user_images($user->id, "optimized"),
+                    'photo' => get_user_images($user->id, 'optimized'),
                     'publisher' => $story->publisher,
                     'fileType' => $filetype,
                     'privacy' => $story->privacy,
@@ -530,7 +511,6 @@ class ApiController extends Controller
             //    }else{
             //     $timeline_story = [];
             //    }
-
 
             //First 10 posts
             $posts = Posts::where(function ($query) use ($user_id) {
@@ -604,17 +584,15 @@ class ApiController extends Controller
 
                 // Loop through the media files and add them to the postImages array
                 foreach ($mediaFiles as $media) {
-                    if ($media->file_type == "image") {
-                        $postImages[] = get_post_images($media->file_name, "optimized");
+                    if ($media->file_type == 'image') {
+                        $postImages[] = get_post_images($media->file_name, 'optimized');
                     } else {
                         $postImages[] = get_post_videos($media->file_name);
                     }
                     $file = $media->file_type;
                 }
 
-
-
-                // comment count 
+                // comment count
                 $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
                 // user react of each post
                 $userReacts = json_decode($post->user_reacts, true);
@@ -643,7 +621,6 @@ class ApiController extends Controller
                     // Example format: 'Mon, Jan 1, 2024 12:00 AM'
                 }
 
-
                 $followers = Follower::where('user_id', $user_id)->get();
                 $follow = 'Follow';
                 foreach ($followers as $follo) {
@@ -658,7 +635,7 @@ class ApiController extends Controller
                 foreach ($taggedUsers as $tags) {
                     $taggedUserList[] = [
                         'id' => $tags->id,
-                        'name' => $tags->name
+                        'name' => $tags->name,
                     ];
                 }
 
@@ -667,17 +644,17 @@ class ApiController extends Controller
                     'post_id' => $post->post_id,
                     'user_id' => $post->user_id,
                     'name' => $user->name,
-                    'photo' => get_user_images($user->id, "optimized"),
+                    'photo' => get_user_images($user->id, 'optimized'),
                     'publisher' => $post->publisher,
                     'publisherId' => $post->publisher_id,
                     'post_type' => $post->post_type,
                     'fileType' => $file,
                     'privacy' => $post->privacy,
-                    'location' => $post->location != null ? $post->location : "",
+                    'location' => $post->location != null ? $post->location : '',
                     'post_images' => $postImages,
-                    'thumbnail' => $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : "",
+                    'thumbnail' => $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : '',
                     'userReaction' => isset($userReacts[$user_id]) ? $userReacts[$user_id] : null,
-                    'description' => $post->description != null ? $post->description : "",
+                    'description' => $post->description != null ? $post->description : '',
                     'commentsCount' => $commentsCount,
                     'reaction_counts' => $reactionsCount,
                     'total' => $totalReacts,
@@ -690,9 +667,10 @@ class ApiController extends Controller
         }
         $response['stories'] = $timeline_story;
         $response['post'] = $timeline;
+
         return $response;
     }
-    
+
     // public function timeline(Request $request)
     // {
     //     $token = $request->bearerToken();
@@ -758,7 +736,6 @@ class ApiController extends Controller
     //         //    }else{
     //         //     $timeline_story = [];
     //         //    }
-
 
     //         //First 10 posts
     //         $posts = Posts::where(function ($query) use ($user_id) {
@@ -836,7 +813,7 @@ class ApiController extends Controller
     //                 }
     //             }
 
-    //             // comment count 
+    //             // comment count
     //             $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
 
     //             // user react of each post
@@ -854,7 +831,6 @@ class ApiController extends Controller
 
     //             // Convert the Unix timestamp to a formatted date string
     //             $formattedDate = date('M d \a\t H:i A', strtotime($post->created_at));
-
 
     //             // Calculate the total reactions
     //             $totalReacts = array_sum($reactionsCount);
@@ -879,8 +855,6 @@ class ApiController extends Controller
     //             ];
     //         }
 
-
-
     //     }
     //     $response['stories'] = $timeline_story;
     //     $response['post'] = $timeline;
@@ -890,7 +864,7 @@ class ApiController extends Controller
     public function stories(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
@@ -919,7 +893,7 @@ class ApiController extends Controller
 
                 // Loop through the media files and add them to the postImages array
                 foreach ($mediaFiles as $media) {
-                    $storyImages = $media->file_type == "image" ? get_story_images($media->file_name, "optimized") : get_story_videos($media->file_name);
+                    $storyImages = $media->file_type == 'image' ? get_story_images($media->file_name, 'optimized') : get_story_videos($media->file_name);
                     $filetype = $media->file_type;
                 }
                 // Convert the Unix timestamp to a formatted date string
@@ -936,7 +910,7 @@ class ApiController extends Controller
                     'story_id' => $story->story_id,
                     'user_id' => $story->user_id,
                     'name' => $user->name,
-                    'photo' => get_user_images($user->id, "optimized"),
+                    'photo' => get_user_images($user->id, 'optimized'),
                     'publisher' => $story->publisher,
                     'fileType' => $filetype,
                     'privacy' => $story->privacy,
@@ -952,6 +926,7 @@ class ApiController extends Controller
 
             $response['stories'] = $timeline_story;
         }
+
         return $response;
     }
 
@@ -959,13 +934,13 @@ class ApiController extends Controller
     {
         // return $request->story_files;
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
             $all_data = $request->all();
 
-            $data['publisher'] = "user";
+            $data['publisher'] = 'user';
             $data['content_type'] = $request->content_type;
 
             if ($request->publisher == 'user') {
@@ -975,10 +950,9 @@ class ApiController extends Controller
             }
 
             if ($request->content_type == 'text') {
-
-                if (!empty($request->description)) {
+                if (! empty($request->description)) {
                     $data['description'] = json_encode(
-                        array('color' => $all_data['color'], 'bg-color' => $all_data['bg-color'], 'text' => $all_data['description'])
+                        ['color' => $all_data['color'], 'bg-color' => $all_data['bg-color'], 'text' => $all_data['description']]
                     );
                 }
             }
@@ -990,15 +964,12 @@ class ApiController extends Controller
             $data['status'] = 'active';
             $story_id = Stories::insertGetId($data);
 
-
             if ($request->content_type != 'text') {
-
                 //add media files
                 // foreach ($request->story_files as $key => $media_file) {
                 // Check if media file is not empty and handle file upload
                 $media_file = $request->story_files;
-                if (!empty($media_file)):
-
+                if (! empty($media_file)) {
                     $file_extention = $media_file->getClientOriginalExtension();
                     if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
                         $file_name = FileUploader::upload($media_file, 'public/storage/story/videos');
@@ -1007,7 +978,7 @@ class ApiController extends Controller
                         $file_name = FileUploader::upload($media_file, 'public/storage/story/images', 800);
                         $file_type = 'image';
                     }
-                    $media_file_data = array('user_id' => $user_id, 'story_id' => $story_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy);
+                    $media_file_data = ['user_id' => $user_id, 'story_id' => $story_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy];
                     $media_file_data['created_at'] = time();
                     $media_file_data['updated_at'] = $media_file_data['created_at'];
                     $media = Media_files::create($media_file_data);
@@ -1018,10 +989,10 @@ class ApiController extends Controller
                         $response['success'] = false;
                         $response['message'] = 'media is not uploaded';
                     }
-                endif;
+                }
             }
 
-            // }
+        // }
         } else {
             $response['success'] = false;
             $response['message'] = 'Invalid token.';
@@ -1033,8 +1004,8 @@ class ApiController extends Controller
     public function load_timeline(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
-        if (!$request->offset) {
+        $response = [];
+        if (! $request->offset) {
             $offset = 0;
         } else {
             $offset = $request->offset;
@@ -1099,14 +1070,14 @@ class ApiController extends Controller
 
                 // Loop through the media files and add them to the postImages array
                 foreach ($mediaFiles as $media) {
-                    if ($media->file_type == "image") {
+                    if ($media->file_type == 'image') {
                         $postImages[] = get_post_images($media->file_name);
                     } else {
                         $postImages[] = get_post_videos($media->file_name);
                     }
                 }
 
-                // comment count 
+                // comment count
                 $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
 
                 // user react of each post
@@ -1124,7 +1095,6 @@ class ApiController extends Controller
 
                 // Convert the Unix timestamp to a formatted date string
                 $formattedDate = date('M d \a\t H:i A', strtotime($post->created_at));
-
 
                 // Calculate the total reactions
                 $totalReacts = array_sum($reactionsCount);
@@ -1149,17 +1119,18 @@ class ApiController extends Controller
                 ];
             }
 
-
             // $page_data['user_info'] = $this->user;
         }
         // $response['offset'] = $offset + 10;
         $response['post'] = $timeline;
+
         return $response;
     }
+
     public function friends(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
         // $data = array();
 
         if (isset($token) && $token != '') {
@@ -1174,11 +1145,9 @@ class ApiController extends Controller
                 ->get();
             // $user = User::where('id', $user_id)->first();
 
-
             $response['friendsList'] = [];
             // $friend_list = User::whereIn('id', $friend)->get();
             foreach ($friendships as $key => $friend) {
-
                 $profile_id = $friend->requester == $user_id ? $friend->accepter : $friend->requester;
                 $user = User::find($profile_id);
 
@@ -1193,11 +1162,9 @@ class ApiController extends Controller
                 // $user = User::where('id', $friend->id)->first();
                 $response['friendsList'][$key]['friend_id'] = $user->id;
                 $response['friendsList'][$key]['name'] = $user->name;
-                $response['friendsList'][$key]['photo'] = get_user_images($user->id, "optimized");
-                $response['friendsList'][$key]['cover_photo'] = get_cover_photos($user->id, "optimized");
-
+                $response['friendsList'][$key]['photo'] = get_user_images($user->id, 'optimized');
+                $response['friendsList'][$key]['cover_photo'] = get_cover_photos($user->id, 'optimized');
             }
-
 
             // $response['status'] = 'success';
             // $response['error_reason'] = 'None';
@@ -1214,7 +1181,7 @@ class ApiController extends Controller
     public function add_friend(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
         // $data = array();
 
         if (isset($token) && $token != '') {
@@ -1245,7 +1212,7 @@ class ApiController extends Controller
     public function unfriend(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
         // $data = array();
 
         if (isset($token) && $token != '') {
@@ -1269,7 +1236,6 @@ class ApiController extends Controller
             $unfriended_user_friends = json_encode($unfriended_user_friends);
             User::where('id', $id)->update(['friends' => $unfriended_user_friends]);
 
-
             //remove user id from my user friend list
             $unfriended_user_friends = User::where('id', $user_id)->value('friends');
             $unfriended_user_friends = json_decode($unfriended_user_friends, true);
@@ -1290,13 +1256,14 @@ class ApiController extends Controller
             $response['status'] = false;
             $response['message'] = 'unauthorised access';
         }
+
         return $response;
     }
 
     public function friend_request(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
         // $data = array();
 
         if (isset($token) && $token != '') {
@@ -1314,7 +1281,6 @@ class ApiController extends Controller
                 ->get();
             $response['friendsList'] = [];
             foreach ($friend_requests as $key => $friend) {
-
                 $profile_id = $friend->requester == $user_id ? $friend->accepter : $friend->requester;
                 $user = User::find($profile_id);
 
@@ -1323,12 +1289,10 @@ class ApiController extends Controller
                 $response['friendsList'][$key]['name'] = $user->name;
                 $response['friendsList'][$key]['photo'] = get_user_images($user->id);
                 $response['friendsList'][$key]['cover_photo'] = get_cover_photos($user->id);
-
             }
 
-            // $page_data['friendships'] = $friendships;
-            // $page_data['friend_requests'] = $friend_requests;
-
+        // $page_data['friendships'] = $friendships;
+        // $page_data['friend_requests'] = $friend_requests;
         } else {
             $response['status'] = false;
             $response['message'] = 'unauthorised access';
@@ -1336,10 +1300,11 @@ class ApiController extends Controller
         // $response = $page_data;
         return $response;
     }
+
     public function follow(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
         // $data = array();
 
         if (isset($token) && $token != '') {
@@ -1357,13 +1322,14 @@ class ApiController extends Controller
                 $response['message'] = 'does not find out';
             }
         }
+
         return $response;
     }
 
     public function unfollow(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
         // $data = array();
 
         if (isset($token) && $token != '') {
@@ -1378,18 +1344,18 @@ class ApiController extends Controller
                 $response['status'] = false;
                 $response['message'] = 'does not find out';
             }
-
         }
+
         return $response;
     }
+
     public function create_post(Request $request)
     {
         // return $request->all();
 
         $token = $request->bearerToken();
-        $response = array();
-        $data = array();
-
+        $response = [];
+        $data = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -1403,20 +1369,20 @@ class ApiController extends Controller
             if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
                 //Data validation
 
-                $rules = array('multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000');
+                $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
                 // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
                 $validator = Validator::make($request->all(), $rules);
                 if ($validator->fails()) {
                     $validation_errors = $validator->getMessageBag()->toArray();
                     foreach ($validation_errors as $key => $validation_error) {
                         $fileIndex = explode('.', $key);
-                        if (array_key_exists('multiple_files.' . $fileIndex[1], $validation_errors)) {
-                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.' . $fileIndex[1]];
+                        if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
+                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
                         }
-                        unset($validation_errors['multiple_files.' . $fileIndex[1]]);
+                        unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                     }
 
-                    return json_encode(array('validationError' => $validation_errors));
+                    return json_encode(['validationError' => $validation_errors]);
                 }
             }
 
@@ -1424,23 +1390,23 @@ class ApiController extends Controller
             $data['privacy'] = $request->privacy;
             // $data['privacy'] = 'public';
 
-            if (isset($request->publisher) && !empty($request->publisher)) {
+            if (isset($request->publisher) && ! empty($request->publisher)) {
                 $data['publisher'] = $request->publisher;
             } else {
                 $data['publisher'] = 'post';
             }
 
-            if (isset($request->event_id) && !empty($request->event_id)) {
+            if (isset($request->event_id) && ! empty($request->event_id)) {
                 $data['publisher_id'] = $request->event_id;
-            } elseif (isset($request->page_id) && !empty($request->page_id)) {
+            } elseif (isset($request->page_id) && ! empty($request->page_id)) {
                 $data['publisher_id'] = $request->page_id;
-            } elseif (isset($request->group_id) && !empty($request->group_id)) {
+            } elseif (isset($request->group_id) && ! empty($request->group_id)) {
                 $data['publisher_id'] = $request->group_id;
             } else {
                 $data['publisher_id'] = $user_id;
             }
             //post type
-            if (isset($request->post_type) && !empty($request->post_type)) {
+            if (isset($request->post_type) && ! empty($request->post_type)) {
                 $data['post_type'] = $request->post_type;
             } else {
                 $data['post_type'] = 'general';
@@ -1449,29 +1415,29 @@ class ApiController extends Controller
             if (isset($request->tagged_users_id) && is_array($request->tagged_users_id)) {
                 $tagged_users = $request->tagged_users_id;
             } else {
-                $tagged_users = array();
+                $tagged_users = [];
             }
             $data['tagged_user_ids'] = json_encode($tagged_users);
 
-            if (isset($request->feeling_and_activity_id) && !empty($request->feeling_and_activity_id)) {
+            if (isset($request->feeling_and_activity_id) && ! empty($request->feeling_and_activity_id)) {
                 $data['activity_id'] = $request->feeling_and_activity_id;
             } else {
                 $data['activity_id'] = 0;
             }
 
-            if (isset($request->address) && !empty($request->address)) {
+            if (isset($request->address) && ! empty($request->address)) {
                 $data['location'] = $request->address;
             } else {
                 $data['location'] = '';
             }
 
-            if (isset($request->description) && !empty($request->description)) {
+            if (isset($request->description) && ! empty($request->description)) {
                 $data['description'] = $request->description;
             } else {
                 $data['description'] = '';
             }
 
-            if (isset($request->address) && !empty($request->address)) {
+            if (isset($request->address) && ! empty($request->address)) {
                 $data['location'] = $request->address;
             }
             // else {
@@ -1483,8 +1449,8 @@ class ApiController extends Controller
             $data['mobile_app_image'] = $mobile_app_image;
 
             $data['status'] = 'active';
-            $data['user_reacts'] = json_encode(array());
-            $data['shared_user'] = json_encode(array());
+            $data['user_reacts'] = json_encode([]);
+            $data['shared_user'] = json_encode([]);
             $data['created_at'] = time();
             $data['updated_at'] = $data['created_at'];
 
@@ -1498,41 +1464,38 @@ class ApiController extends Controller
             if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
                 //Data validation
                 // $response['message'] = 'check image for upload';
-                $rules = array('multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000');
+                $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
                 $validator = Validator::make($request->all(), $rules);
                 if ($validator->fails()) {
                     $validation_errors = $validator->getMessageBag()->toArray();
                     foreach ($validation_errors as $key => $validation_error) {
                         $fileIndex = explode('.', $key);
-                        if (array_key_exists('multiple_files.' . $fileIndex[1], $validation_errors)) {
-                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.' . $fileIndex[1]];
+                        if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
+                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
                         }
-                        unset($validation_errors['multiple_files.' . $fileIndex[1]]);
+                        unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                     }
 
-                    return json_encode(array('validationError' => $validation_errors));
+                    return json_encode(['validationError' => $validation_errors]);
                 }
 
                 foreach ($request->multiple_files as $key => $media_file) {
-
                     $file_name = random(40);
                     $file_extention = strtolower($media_file->getClientOriginalExtension());
                     if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                        FileUploader::upload($media_file, 'public/storage/post/videos/' . $file_name . '.' . $file_extention);
+                        FileUploader::upload($media_file, 'public/storage/post/videos/'.$file_name.'.'.$file_extention);
                         $file_type = 'video';
-
                     } else {
-                        FileUploader::upload($media_file, 'public/storage/post/images/' . $file_name . '.' . $file_extention, 1000, null, 300);
+                        FileUploader::upload($media_file, 'public/storage/post/images/'.$file_name.'.'.$file_extention, 1000, null, 300);
                         $file_type = 'image';
-
                     }
-                    $file_name = $file_name . '.' . $file_extention;
+                    $file_name = $file_name.'.'.$file_extention;
                     //    return [$file_name];
-                    $media_file_data = array('user_id' => auth('sanctum')->user()->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy);
+                    $media_file_data = ['user_id' => auth('sanctum')->user()->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy];
 
-                    if (isset($request->page_id) && !empty($request->page_id)) {
+                    if (isset($request->page_id) && ! empty($request->page_id)) {
                         $media_file_data['page_id'] = $request->page_id;
-                    } elseif (isset($request->group_id) && !empty($request->group_id)) {
+                    } elseif (isset($request->group_id) && ! empty($request->group_id)) {
                         $media_file_data['group_id'] = $request->group_id;
                     } else {
                     }
@@ -1547,34 +1510,29 @@ class ApiController extends Controller
                 $live['publisher'] = $data['publisher'];
                 $live['publisher_id'] = $post_id;
                 $live['user_id'] = $user_id;
-                $live['details'] = json_encode(['link' => url('/streaming/live/' . $post_id), 'status' => TRUE]);
+                $live['details'] = json_encode(['link' => url('/streaming/live/'.$post_id), 'status' => true]);
                 $live['created_at'] = date('Y-m-d H:i:s', time());
                 $live['updated_at'] = $live['created_at'];
 
                 Live_streamings::insert($live);
-                $response = array('open_new_tab' => url('/streaming/live/' . $post_id), 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline'));
+                $response = ['open_new_tab' => url('/streaming/live/'.$post_id), 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline')];
             } else {
                 //Ajax flush message
                 // Session::flash('success_message', get_phrase('Your post has been published'));
                 // $response = array('reload' => 1);
             }
+
             return $response;
-
-
         }
 
         //Data validation
-
-
     }
 
     public function edit_post($id, Request $request)
     {
-
         $token = $request->bearerToken();
-        $response = array();
-        $data = array();
-
+        $response = [];
+        $data = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -1589,20 +1547,20 @@ class ApiController extends Controller
             if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
                 //Data validation
 
-                $rules = array('multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480');
+                $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
                 // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
                 $validator = Validator::make($request->all(), $rules);
                 if ($validator->fails()) {
                     $validation_errors = $validator->getMessageBag()->toArray();
                     foreach ($validation_errors as $key => $validation_error) {
                         $fileIndex = explode('.', $key);
-                        if (array_key_exists('multiple_files.' . $fileIndex[1], $validation_errors)) {
-                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.' . $fileIndex[1]];
+                        if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
+                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
                         }
-                        unset($validation_errors['multiple_files.' . $fileIndex[1]]);
+                        unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                     }
 
-                    return json_encode(array('validationError' => $validation_errors));
+                    return json_encode(['validationError' => $validation_errors]);
                 }
             }
 
@@ -1613,11 +1571,11 @@ class ApiController extends Controller
                 $data['tagged_user_ids'] = json_encode($tagged_users);
             }
 
-            if (isset($request->feeling_and_activity_id) && !empty($request->feeling_and_activity_id)) {
+            if (isset($request->feeling_and_activity_id) && ! empty($request->feeling_and_activity_id)) {
                 $data['activity_id'] = $request->feeling_and_activity_id;
             }
 
-            if (isset($request->description) && !empty($request->description)) {
+            if (isset($request->description) && ! empty($request->description)) {
                 $data['description'] = $request->description;
             }
 
@@ -1633,38 +1591,38 @@ class ApiController extends Controller
             if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
                 //Data validation
 
-                $rules = array('multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480');
+                $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
                 $validator = Validator::make($request->all(), $rules);
                 if ($validator->fails()) {
                     $validation_errors = $validator->getMessageBag()->toArray();
                     foreach ($validation_errors as $key => $validation_error) {
                         $fileIndex = explode('.', $key);
-                        if (array_key_exists('multiple_files.' . $fileIndex[1], $validation_errors)) {
-                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.' . $fileIndex[1]];
+                        if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
+                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
                         }
-                        unset($validation_errors['multiple_files.' . $fileIndex[1]]);
+                        unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                     }
 
-                    return json_encode(array('validationError' => $validation_errors));
+                    return json_encode(['validationError' => $validation_errors]);
                 }
 
                 foreach ($request->multiple_files as $key => $media_file) {
                     $file_name = random(40);
                     $file_extention = strtolower($media_file->getClientOriginalExtension());
                     if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                        $media_file->move('public/storage/post/videos/', $file_name . '.' . $file_extention);
+                        $media_file->move('public/storage/post/videos/', $file_name.'.'.$file_extention);
                         $file_type = 'video';
                     } else {
-                        FileUploader::upload($media_file, 'public/storage/post/images/' . $file_name . '.' . $file_extention, 1000, null, 300);
+                        FileUploader::upload($media_file, 'public/storage/post/images/'.$file_name.'.'.$file_extention, 1000, null, 300);
                         $file_type = 'image';
                     }
-                    $file_name = $file_name . '.' . $file_extention;
+                    $file_name = $file_name.'.'.$file_extention;
 
-                    $media_file_data = array('user_id' => $user_id, 'post_id' => $id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy);
+                    $media_file_data = ['user_id' => $user_id, 'post_id' => $id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy];
 
-                    if (isset($request->page_id) && !empty($request->page_id)) {
+                    if (isset($request->page_id) && ! empty($request->page_id)) {
                         $media_file_data['page_id'] = $request->page_id;
-                    } elseif (isset($request->group_id) && !empty($request->group_id)) {
+                    } elseif (isset($request->group_id) && ! empty($request->group_id)) {
                         $media_file_data['group_id'] = $request->group_id;
                     } else {
                     }
@@ -1678,30 +1636,31 @@ class ApiController extends Controller
 
             //Ajax flush message
         }
+
         return $response;
     }
+
     public function delete_post($id, Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
-        $data = array();
-
+        $response = [];
+        $data = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
             $done = Posts::where('post_id', $id)->delete();
             if ($done) {
-                $response = array('alertMessage' => get_phrase('Post Deleted Successfully'), 'fadeOutElem' => "#postIdentification" . $id);
+                $response = ['alertMessage' => get_phrase('Post Deleted Successfully'), 'fadeOutElem' => '#postIdentification'.$id];
             }
         }
+
         return $response;
     }
 
     public function save_post_report(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
-
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -1712,19 +1671,20 @@ class ApiController extends Controller
             $report->report = $request->report;
             $done = $report->save();
             if ($done) {
-                $response = array('alertMessage' => 'Post Report saved Successfully');
+                $response = ['alertMessage' => 'Post Report saved Successfully'];
             } else {
-                $response = array('alertMessage' => 'Something is error');
+                $response = ['alertMessage' => 'Something is error'];
             }
         }
+
         return $response;
     }
 
     public function post_media_file($id, Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
-        $postImages = array(); // Initialize an array to store post images
+        $response = [];
+        $postImages = []; // Initialize an array to store post images
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -1732,50 +1692,51 @@ class ApiController extends Controller
 
             // Loop through the media files and add them to the postImages array
             foreach ($mediaFiles as $media) {
-                $mediaData = array();
-                if ($media->file_type == "image") {
-                    $mediaData["id"] = $media->id;
-                    $mediaData["file_type"] = "image";
-                    $mediaData["file_url"] = get_post_images($media->file_name, "optimized");
+                $mediaData = [];
+                if ($media->file_type == 'image') {
+                    $mediaData['id'] = $media->id;
+                    $mediaData['file_type'] = 'image';
+                    $mediaData['file_url'] = get_post_images($media->file_name, 'optimized');
                 } else {
-                    $mediaData["id"] = $media->id;
-                    $mediaData["file_type"] = "video";
-                    $mediaData["file_url"] = get_post_videos($media->file_name);
+                    $mediaData['id'] = $media->id;
+                    $mediaData['file_type'] = 'video';
+                    $mediaData['file_url'] = get_post_videos($media->file_name);
                 }
                 $postImages[] = $mediaData; // Add media data to the postImages array
             }
         }
 
         $response = $postImages;
+
         return $response;
     }
 
     public function delete_media_file($id, Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
-        $data = array();
-
+        $response = [];
+        $data = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
             $media_file = Media_files::where('id', $id)->where('user_id', $user_id);
             if ($media_file->count() > 0) {
-                remove_file('public/storage/post/images/' . $media_file->first()->file_name);
+                remove_file('public/storage/post/images/'.$media_file->first()->file_name);
                 Media_files::find($id)->delete();
-                $response = array('alertMessage' => get_phrase('Image deleted successfully'), 'fadeOutElem' => "#previous-uploaded-img-" . $id);
+                $response = ['alertMessage' => get_phrase('Image deleted successfully'), 'fadeOutElem' => '#previous-uploaded-img-'.$id];
             } else {
-                $response = array('alertMessage' => get_phrase('Image not found'));
+                $response = ['alertMessage' => get_phrase('Image not found')];
             }
         }
+
         return $response;
     }
 
     public function profile(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
-        $data = array();
+        $response = [];
+        $data = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -1801,8 +1762,8 @@ class ApiController extends Controller
             $response['phone'] = $user->phone;
             $response['date_of_birth'] = date('Y-m-d', $user->date_of_birth);
             $response['about'] = $user->about;
-            $response['photo'] = get_user_images($user->id, "optimized");
-            $response['cover_photo'] = get_cover_photos($user->id, "optimized");
+            $response['photo'] = get_user_images($user->id, 'optimized');
+            $response['cover_photo'] = get_cover_photos($user->id, 'optimized');
             $response['status'] = $user->status;
             $response['lastActive'] = $user->lastActive;
             $response['timezone'] = $user->timezone;
@@ -1818,10 +1779,10 @@ class ApiController extends Controller
                 $response['posts'][$key1]['post_id'] = $post->post_id;
                 $response['posts'][$key1]['user_id'] = $post->user_id;
                 $response['posts'][$key1]['name'] = $user->name;
-                $response['posts'][$key1]['photo'] = get_user_images($user->id, "optimized");
+                $response['posts'][$key1]['photo'] = get_user_images($user->id, 'optimized');
                 $response['posts'][$key1]['publisher'] = $post->publisher;
                 $response['posts'][$key1]['publisherId'] = $post->publisher_id;
-                $response['posts'][$key1]['location'] = $post->location != null ? $post->location : "";
+                $response['posts'][$key1]['location'] = $post->location != null ? $post->location : '';
                 $response['posts'][$key1]['description'] = $post->description;
                 $response['posts'][$key1]['post_type'] = $post->post_type;
                 $response['posts'][$key1]['privacy'] = $post->privacy;
@@ -1870,7 +1831,6 @@ class ApiController extends Controller
                             // Do nothing or handle unexpected reactions
                             break;
                     }
-
                 }
                 // Calculate the total reactions
                 $totalReacts = $likeCount + $loveCount + $sadCount + $hahaCount + $angryCount;
@@ -1880,7 +1840,7 @@ class ApiController extends Controller
                     'sad' => $sadCount,
                     'haha' => $hahaCount,
                     'angry' => $angryCount,
-                    'total' => $totalReacts // Include total reactions count
+                    'total' => $totalReacts, // Include total reactions count
                 ];
 
                 $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
@@ -1898,21 +1858,20 @@ class ApiController extends Controller
                 $response['posts'][$key1]['fileType'] = 'text';
                 // Loop through the media files and add them to the postImages array
                 foreach ($mediaFiles as $media) {
-
-                    if ($media->file_type == "image") {
-                        $response['posts'][$key1]['post_images'][] = get_post_images($media->file_name, "optimized");
+                    if ($media->file_type == 'image') {
+                        $response['posts'][$key1]['post_images'][] = get_post_images($media->file_name, 'optimized');
                     } else {
                         $response['posts'][$key1]['post_images'][] = get_post_videos($media->file_name);
                     }
                     $response['posts'][$key1]['fileType'] = $media->file_type;
                 }
-                $response['posts'][$key1]['thumbnail'] = $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : "";
+                $response['posts'][$key1]['thumbnail'] = $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : '';
 
                 $createdDate = Carbon::createFromTimestamp(strtotime($post->posted_on));
                 $daysDifference = $createdDate->diffInDays(Carbon::now());
                 if ($daysDifference < 7) {
                     // Show "time ago" format
-                   $response['posts'][$key1]['created_at']  = $createdDate->diffForHumans();
+                    $response['posts'][$key1]['created_at'] = $createdDate->diffForHumans();
                 } else {
                     // Show the exact date and time
                     $response['posts'][$key1]['created_at'] = $createdDate->toDayDateTimeString();
@@ -1936,11 +1895,6 @@ class ApiController extends Controller
                     $response['posts'][$key1]['taggedUserList'][$key2]['id'] = $tags->id;
                     $response['posts'][$key1]['taggedUserList'][$key2]['name'] = $tags->name;
                 }
-
-
-
-
-
             }
 
             $friendships = Friendships::where(function ($query) use ($user_id) {
@@ -1956,7 +1910,6 @@ class ApiController extends Controller
 
             // $friend_list = User::whereIn('id', $friend)->get();
             foreach ($friendships as $key => $friend) {
-
                 $profile_id = $friend->requester == $user_id ? $friend->accepter : $friend->requester;
                 $user = User::find($profile_id);
 
@@ -1970,11 +1923,9 @@ class ApiController extends Controller
                 // $user = User::where('id', $friend->id)->first();
                 $response['friends'][$key]['friend_id'] = $user->id;
                 $response['friends'][$key]['name'] = $user->name;
-                $response['friends'][$key]['photo'] = get_user_images($user->id, "optimized");
-                $response['friends'][$key]['cover_photo'] = get_cover_photos($user->id, "optimized");
-
+                $response['friends'][$key]['photo'] = get_user_images($user->id, 'optimized');
+                $response['friends'][$key]['cover_photo'] = get_cover_photos($user->id, 'optimized');
             }
-
 
             return response($response, 200);
         } else {
@@ -1982,11 +1933,12 @@ class ApiController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
     }
+
     public function other_profile(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
-        $data = array();
+        $response = [];
+        $data = [];
 
         if (isset($token) && $token != '') {
             $my_id = auth('sanctum')->user()->id;
@@ -2005,7 +1957,7 @@ class ApiController extends Controller
             foreach ($chats as $chat) {
                 if ($chat->reciver_id == $my_id || $chat->sender_id == $my_id) {
                     // Set the profile ID to the matching user ID
-                    $is_chat = "chat";
+                    $is_chat = 'chat';
                     $msgthread_id = $chat->id;
                     // Break the loop once a match is found
                     break;
@@ -2013,17 +1965,16 @@ class ApiController extends Controller
             }
 
             $frnd_id = 0;
-            $requested = "Add Friend";
+            $requested = 'Add Friend';
             $req = Friendships::whereIn('accepter', [$my_id, $user_id])
                 ->WhereIn('requester', [$my_id, $user_id])
                 ->get();
             foreach ($req as $chat) {
                 if ($chat->accepter == $my_id || $chat->requester == $my_id) {
                     // Set the profile ID to the matching user ID
-                    $is_chat = "chat";
+                    $is_chat = 'chat';
                     $frnd_id = $chat->id;
-                    $requested = $chat->is_accepted == 0 ? ($chat->requester == $my_id ? 'Requested' : "Confirm") : "Friend";
-
+                    $requested = $chat->is_accepted == 0 ? ($chat->requester == $my_id ? 'Requested' : 'Confirm') : 'Friend';
 
                     // Break the loop once a match is found
                     break;
@@ -2063,8 +2014,8 @@ class ApiController extends Controller
             $response['phone'] = $user->phone;
             $response['date_of_birth'] = date('Y-m-d', $user->date_of_birth);
             $response['about'] = $user->about;
-            $response['photo'] = get_user_images($user->id, "optimized");
-            $response['cover_photo'] = get_cover_photos($user->id, "optimized");
+            $response['photo'] = get_user_images($user->id, 'optimized');
+            $response['cover_photo'] = get_cover_photos($user->id, 'optimized');
             $response['status'] = $user->status;
             $response['lastActive'] = $user->lastActive;
             $response['timezone'] = $user->timezone;
@@ -2080,10 +2031,10 @@ class ApiController extends Controller
                 $response['posts'][$key1]['post_id'] = $post->post_id;
                 $response['posts'][$key1]['user_id'] = $post->user_id;
                 $response['posts'][$key1]['name'] = $user->name;
-                $response['posts'][$key1]['photo'] = get_user_images($user->id, "optimized");
+                $response['posts'][$key1]['photo'] = get_user_images($user->id, 'optimized');
                 $response['posts'][$key1]['publisher'] = $post->publisher;
                 $response['posts'][$key1]['publisherId'] = $post->publisher_id;
-                $response['posts'][$key1]['location'] = $post->location != null ? $post->location : "";
+                $response['posts'][$key1]['location'] = $post->location != null ? $post->location : '';
                 $response['posts'][$key1]['description'] = $post->description;
                 $response['posts'][$key1]['post_type'] = $post->post_type;
                 $response['posts'][$key1]['privacy'] = $post->privacy;
@@ -2132,7 +2083,6 @@ class ApiController extends Controller
                             // Do nothing or handle unexpected reactions
                             break;
                     }
-
                 }
                 // Calculate the total reactions
                 $totalReacts = $likeCount + $loveCount + $sadCount + $hahaCount + $angryCount;
@@ -2142,7 +2092,7 @@ class ApiController extends Controller
                     'sad' => $sadCount,
                     'haha' => $hahaCount,
                     'angry' => $angryCount,
-                    'total' => $totalReacts // Include total reactions count
+                    'total' => $totalReacts, // Include total reactions count
                 ];
 
                 $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
@@ -2160,15 +2110,14 @@ class ApiController extends Controller
                 $response['posts'][$key1]['fileType'] = 'text';
                 // Loop through the media files and add them to the postImages array
                 foreach ($mediaFiles as $media) {
-
-                    if ($media->file_type == "image") {
-                        $response['posts'][$key1]['post_images'][] = get_post_images($media->file_name, "optimized");
+                    if ($media->file_type == 'image') {
+                        $response['posts'][$key1]['post_images'][] = get_post_images($media->file_name, 'optimized');
                     } else {
                         $response['posts'][$key1]['post_images'][] = get_post_videos($media->file_name);
                     }
                     $response['posts'][$key1]['fileType'] = $media->file_type;
                 }
-                $response['posts'][$key1]['thumbnail'] = $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : "";
+                $response['posts'][$key1]['thumbnail'] = $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : '';
 
                 // $response['posts'][$key1]['created_at'] = date('M d \a\t H:i A', strtotime($post->created_at));
                 $createdDate = Carbon::createFromTimestamp(strtotime($post->posted_on));
@@ -2178,7 +2127,7 @@ class ApiController extends Controller
                     $response['posts'][$key1]['created_at'] = $createdDate->diffForHumans();
                 } else {
                     // Show the exact date and time
-                   $response['posts'][$key1]['created_at'] = $createdDate->toDayDateTimeString();
+                    $response['posts'][$key1]['created_at'] = $createdDate->toDayDateTimeString();
                     // Example format: 'Mon, Jan 1, 2024 12:00 AM'
                 }
 
@@ -2197,9 +2146,6 @@ class ApiController extends Controller
                     $response['posts'][$key1]['taggedUserList'][$key2]['id'] = $tags->id;
                     $response['posts'][$key1]['taggedUserList'][$key2]['name'] = $tags->name;
                 }
-
-
-
             }
 
             $friendships = Friendships::where(function ($query) use ($user_id) {
@@ -2226,15 +2172,12 @@ class ApiController extends Controller
                     }
                 }
 
-
                 // $user = User::where('id', $friend->id)->first();
                 $response['friends'][$key]['friend_id'] = $user->id;
                 $response['friends'][$key]['name'] = $user->name;
-                $response['friends'][$key]['photo'] = get_user_images($user->id, "optimized");
-                $response['friends'][$key]['cover_photo'] = get_cover_photos($user->id, "optimized");
-
+                $response['friends'][$key]['photo'] = get_user_images($user->id, 'optimized');
+                $response['friends'][$key]['cover_photo'] = get_cover_photos($user->id, 'optimized');
             }
-
 
             return response($response, 200);
         } else {
@@ -2243,14 +2186,13 @@ class ApiController extends Controller
         }
     }
 
-    function edit_profile(Request $request)
+    public function edit_profile(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-
 
             $data['name'] = $request->name;
             $data['nickname'] = $request->nickname;
@@ -2277,28 +2219,28 @@ class ApiController extends Controller
             $response['status'] = 500;
             $response['message'] = ' unauthorised access';
         }
+
         return $response;
     }
 
-    function update_profile_pic(Request $request)
+    public function update_profile_pic(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $rules = array(
+            $rules = [
                 'profile_photo' => 'nullable',
 
-            );
+            ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
-            if ($request->profile_photo && !empty($request->profile_photo)) {
-
+            if ($request->profile_photo && ! empty($request->profile_photo)) {
                 $file_name = FileUploader::upload($request->profile_photo, 'public/storage/userimage', 800);
 
                 //Create post for updating profile photo
@@ -2317,47 +2259,48 @@ class ApiController extends Controller
                 $response['message'] = 'Failed to Profile pic updated ';
             }
         }
+
         return $response;
     }
 
-    function create_profile_photo_post($image, $file_name)
+    public function create_profile_photo_post($image, $file_name)
     {
-        FileUploader::upload($image, 'public/storage/post/images/' . $file_name, 800);
+        FileUploader::upload($image, 'public/storage/post/images/'.$file_name, 800);
 
         $data['user_id'] = auth('sanctum')->user()->id;
         $data['privacy'] = 'public';
         $data['publisher'] = 'post';
         $data['publisher_id'] = auth('sanctum')->user()->id;
         $data['post_type'] = 'profile_picture';
-        $data['tagged_user_ids'] = json_encode(array());
+        $data['tagged_user_ids'] = json_encode([]);
         $data['activity_id'] = 0;
         $data['location'] = '';
         $data['description'] = '';
         $data['status'] = 'active';
-        $data['user_reacts'] = json_encode(array());
+        $data['user_reacts'] = json_encode([]);
         $data['created_at'] = time();
         $data['updated_at'] = $data['created_at'];
         $post_id = Posts::insertGetId($data);
 
-        //Stored to media files table 
-        $media_file_data = array('user_id' => auth('sanctum')->user()->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => 'public');
+        //Stored to media files table
+        $media_file_data = ['user_id' => auth('sanctum')->user()->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => 'public'];
         $media_file_data['created_at'] = time();
         $media_file_data['updated_at'] = $media_file_data['created_at'];
         Media_files::create($media_file_data);
     }
 
-    function update_cover_pic(Request $request)
+    public function update_cover_pic(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
             // Validate the input and return correct response
-            $rules = array('cover_photo' => 'required');
+            $rules = ['cover_photo' => 'required'];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             $file_name = FileUploader::upload($request->cover_photo, 'public/storage/cover_photo', 1120);
@@ -2373,12 +2316,14 @@ class ApiController extends Controller
                 $response['message'] = 'Failed to Cover pic updated ';
             }
         }
+
         return $response;
     }
-    function profile_photos(Request $request)
+
+    public function profile_photos(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -2394,7 +2339,7 @@ class ApiController extends Controller
             foreach ($all_photos as $photo) {
                 $photoArray[] = [
                     'post_id' => $photo->post_id,
-                    'photo' => get_post_images($photo->file_name, "optimized"),
+                    'photo' => get_post_images($photo->file_name, 'optimized'),
                 ];
             }
             $page_data['all_photos'] = $photoArray;
@@ -2435,12 +2380,14 @@ class ApiController extends Controller
 
             $response = $page_data;
         }
+
         return response()->json($response);
     }
-    function other_profile_photos(Request $request, $id)
+
+    public function other_profile_photos(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             // $user_id = auth('sanctum')->user()->id;
@@ -2457,7 +2404,7 @@ class ApiController extends Controller
             foreach ($all_photos as $photo) {
                 $photoArray[] = [
                     'post_id' => $photo->post_id,
-                    'photo' => get_post_images($photo->file_name, "optimized"),
+                    'photo' => get_post_images($photo->file_name, 'optimized'),
                 ];
             }
             $page_data['all_photos'] = $photoArray;
@@ -2498,19 +2445,21 @@ class ApiController extends Controller
 
             $response = $page_data;
         }
+
         return $response;
     }
-    function single_post(Request $request, $post_id)
+
+    public function single_post(Request $request, $post_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
             $post = Posts::where('post_id', $post_id)->first();
             // foreach ($posts as $post) {
-            $user = User::where("id", $post->user_id)->first();
+            $user = User::where('id', $post->user_id)->first();
 
             // Fetch media files associated with the post
             $mediaFiles = Media_files::where('post_id', $post->post_id)->get();
@@ -2521,15 +2470,15 @@ class ApiController extends Controller
 
             // Loop through the media files and add them to the postImages array
             foreach ($mediaFiles as $media) {
-                if ($media->file_type == "image") {
-                    $postImages[] = get_post_images($media->file_name, "optimized");
+                if ($media->file_type == 'image') {
+                    $postImages[] = get_post_images($media->file_name, 'optimized');
                 } else {
                     $postImages[] = get_post_videos($media->file_name);
                 }
                 $file = $media->file_type;
             }
 
-            // comment count 
+            // comment count
             $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
 
             // user react of each post
@@ -2558,7 +2507,6 @@ class ApiController extends Controller
                 // Example format: 'Mon, Jan 1, 2024 12:00 AM'
             }
 
-
             // Calculate the total reactions
             $totalReacts = array_sum($reactionsCount);
             $followers = Follower::where('user_id', $user_id)->get();
@@ -2575,26 +2523,25 @@ class ApiController extends Controller
             foreach ($taggedUsers as $tags) {
                 $taggedUserList[] = [
                     'id' => $tags->id,
-                    'name' => $tags->name
+                    'name' => $tags->name,
                 ];
             }
-
 
             // Construct the response array for the current post
             $timeline = [
                 'post_id' => $post->post_id,
                 'user_id' => $post->user_id,
                 'name' => $user->name,
-                'photo' => get_user_images($user->id, "optimized"),
+                'photo' => get_user_images($user->id, 'optimized'),
                 'publisher' => $post->publisher,
-                'location' => $post->location != null ? $post->location : "",
+                'location' => $post->location != null ? $post->location : '',
                 'post_type' => $post->post_type,
                 'fileType' => $file,
                 'privacy' => $post->privacy,
                 'post_images' => $postImages, // Array of post images
-                'thumbnail' => $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : "",
+                'thumbnail' => $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : '',
                 'userReaction' => isset($userReacts[$user_id]) ? $userReacts[$user_id] : null,
-                'description' => $post->description != null ? $post->description : "",
+                'description' => $post->description != null ? $post->description : '',
                 'commentsCount' => $commentsCount,
                 'reaction_counts' => $reactionsCount,
                 'total' => $totalReacts,
@@ -2607,15 +2554,14 @@ class ApiController extends Controller
 
             $response = $timeline;
         }
+
         return response()->json($response);
     }
-
-
 
     public function reaction(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             try {
@@ -2632,7 +2578,7 @@ class ApiController extends Controller
                     $userReacts = json_decode($post->user_reacts, true);
 
                     // Remove the user's reaction if the reaction is "none"
-                    if ($reactionValue === "none") {
+                    if ($reactionValue === 'none') {
                         unset($userReacts[$user_id]);
                     } else {
                         // Update the user's reaction
@@ -2644,6 +2590,7 @@ class ApiController extends Controller
 
                     // Return the updated array
                     $response = $userReacts;
+
                     return response()->json($response, 200);
                 } else {
                     // Handle the case where the post does not exist
@@ -2661,12 +2608,10 @@ class ApiController extends Controller
 
     public function post_comment(Request $request)
     {
-
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
-
             $user_id = auth('sanctum')->user()->id;
             // $form_data = $request->all();
             if ($request->comment == 'comment') {
@@ -2675,7 +2620,7 @@ class ApiController extends Controller
                 $data['is_type'] = $request->is_type;
                 $data['id_of_type'] = $request->id_of_type;
                 $data['description'] = $request->description;
-                $data['user_reacts'] = json_encode(array());
+                $data['user_reacts'] = json_encode([]);
                 $data['created_at'] = time();
                 $data['updated_at'] = $data['created_at'];
                 $comment_id = Comments::insertGetId($data);
@@ -2697,7 +2642,7 @@ class ApiController extends Controller
                     $userReacts = json_decode($comment->user_reacts, true);
 
                     // Remove the user's reaction if the reaction is "none"
-                    if ($reactionValue === "none") {
+                    if ($reactionValue === 'none') {
                         unset($userReacts[$user_id]);
                     } else {
                         // Update the user's reaction
@@ -2709,18 +2654,16 @@ class ApiController extends Controller
 
                     // Return the updated array
                     $response = $userReacts;
+
                     return response()->json($response, 200);
                 } else {
                     // Handle the case where the post does not exist
                     return response()->json(['error' => 'Comment not found'], 404);
                 }
             }
-
-
         }
 
         return $response;
-
     }
 
     // public function comment_reaction(Request $request)
@@ -2769,7 +2712,6 @@ class ApiController extends Controller
     //         return response()->json(['error' => 'Unauthorized'], 401);
     //     }
     // }
-
 
     // public function get_comment(Request $request)
     // {
@@ -2820,7 +2762,7 @@ class ApiController extends Controller
     public function get_comment(Request $request, $postId)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -2886,18 +2828,18 @@ class ApiController extends Controller
                     // $response['posts'][$key1]['userReacts'] = $userReacts;
                     // 'user_react' => $userReacts,
                     'userReaction' => isset($userReacts[$user_id]) ? $userReacts[$user_id] : null,
-                    
+
                     'reaction_counts' => [
                         'like' => $likeCount,
                         'love' => $loveCount,
                         'sad' => $sadCount,
                         'haha' => $hahaCount,
                         'angry' => $angryCount,
-                        'total' => $totalReacts // Include total reactions count
+                        'total' => $totalReacts, // Include total reactions count
                     ],
                     'created' => $formattedDate,
-                    
-                    'replies' => []
+
+                    'replies' => [],
                 ];
 
                 $replies = Comments::where('parent_id', $comment->comment_id)->get();
@@ -2937,13 +2879,13 @@ class ApiController extends Controller
                     }
                     // Calculate the total reactions
                     $totalReacts = $likeCount + $loveCount + $sadCount + $hahaCount + $angryCount;
-                     // Format the created_at date for replies
-                     $replyCreatedOn = Carbon::createFromTimestamp($reply->created_at);
-                     if (Carbon::now()->diffInDays($replyCreatedOn) < 7) {
-                         $replyFormattedDate = $replyCreatedOn->diffForHumans();
-                     } else {
-                         $replyFormattedDate = $replyCreatedOn->toDayDateTimeString();
-                     }
+                    // Format the created_at date for replies
+                    $replyCreatedOn = Carbon::createFromTimestamp($reply->created_at);
+                    if (Carbon::now()->diffInDays($replyCreatedOn) < 7) {
+                        $replyFormattedDate = $replyCreatedOn->diffForHumans();
+                    } else {
+                        $replyFormattedDate = $replyCreatedOn->toDayDateTimeString();
+                    }
 
                     $replyData = [
                         'reply_id' => $reply->comment_id,
@@ -2961,7 +2903,7 @@ class ApiController extends Controller
                             'sad' => $sadCount,
                             'haha' => $hahaCount,
                             'angry' => $angryCount,
-                            'total' => $totalReacts // Include total reactions count
+                            'total' => $totalReacts, // Include total reactions count
                         ],
                         'created' => $replyFormattedDate,
                     ];
@@ -2981,24 +2923,24 @@ class ApiController extends Controller
     public function comment_delete(Request $request, $comment_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
             $done = Comments::where('comment_id', $comment_id)->delete();
             if ($done) {
-                $response = array('alertMessage' => get_phrase('Comment Deleted Successfully'), 'fadeOutElem' => "#comment_" . $comment_id);
+                $response = ['alertMessage' => get_phrase('Comment Deleted Successfully'), 'fadeOutElem' => '#comment_'.$comment_id];
             }
         }
+
         return $response;
     }
-
 
     public function groups(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -3055,12 +2997,12 @@ class ApiController extends Controller
                         'title' => $group->title,
                         'privacy' => $group->privacy,
                         'subtitle' => $group->subtitle,
-                        'location' => $group->location != null ? $group->location : "",
+                        'location' => $group->location != null ? $group->location : '',
                         'status' => $group->status,
                         'about' => $group->about,
                         'group_type' => $group->group_type,
-                        'logo' => get_group_logos($group->logo, "logo"),
-                        'coverPhoto' => get_group_cover_photos($group->banner, "coverphoto"),
+                        'logo' => get_group_logos($group->logo, 'logo'),
+                        'coverPhoto' => get_group_cover_photos($group->banner, 'coverphoto'),
                         // 'created_at' => $group->created_at,
                         // 'updated_at' => $group->updated_at,
                         'group_members_count' => $group_members_count,
@@ -3075,17 +3017,18 @@ class ApiController extends Controller
 
         return response()->json($response);
     }
+
     public function groups_details(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
             $group = Group::where('id', $id)->first();
             // $group = $groups->id;
-            if (!$group) {
+            if (! $group) {
                 $response['success'] = false;
                 $response['message'] = 'No groups found';
             } else {
@@ -3134,13 +3077,13 @@ class ApiController extends Controller
                     'user_id' => $group->user_id,
                     'title' => $group->title,
                     'privacy' => $group->privacy,
-                    'subtitle' => $group->subtitle != null ? $group->subtitle : "",
-                    'location' => $group->location != null ? $group->location : "",
-                    'status' => $group->status != null ? $group->status : "",
-                    'about' => $group->about != null ? $group->about : "",
-                    'group_type' => $group->group_type != null ? $group->group_type : "",
-                    'logo' => get_group_logos($group->logo, "logo"),
-                    'coverPhoto' => get_group_cover_photos($group->banner, "coverphoto"),
+                    'subtitle' => $group->subtitle != null ? $group->subtitle : '',
+                    'location' => $group->location != null ? $group->location : '',
+                    'status' => $group->status != null ? $group->status : '',
+                    'about' => $group->about != null ? $group->about : '',
+                    'group_type' => $group->group_type != null ? $group->group_type : '',
+                    'logo' => get_group_logos($group->logo, 'logo'),
+                    'coverPhoto' => get_group_cover_photos($group->banner, 'coverphoto'),
                     // 'created_at' => $group->created_at,
                     // 'updated_at' => $group->updated_at,
                     'group_members_count' => $group_members_count,
@@ -3159,22 +3102,21 @@ class ApiController extends Controller
     public function create_group(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
-
             $user_id = auth('sanctum')->user()->id;
-            $rules = array(
+            $rules = [
                 'image' => 'mimes:jpeg,jpg,png,gif|nullable',
                 'name' => 'required|max:255',
                 'privacy' => 'required|max:255',
-            );
+            ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
-            if ($request->image && !empty($request->image)) {
+            if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/groups/logo', 300);
             }
 
@@ -3185,7 +3127,7 @@ class ApiController extends Controller
             $group->about = $request->about;
             $group->privacy = $request->privacy;
             $group->status = $request->status;
-            if ($request->image && !empty($request->image)) {
+            if ($request->image && ! empty($request->image)) {
                 $group->logo = $file_name;
             }
             $done = $group->save();
@@ -3208,30 +3150,30 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
-        return response()->json($response);
 
+        return response()->json($response);
     }
+
     public function update_group(Request $request, $group_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
-
             $user_id = auth('sanctum')->user()->id;
-            $rules = array(
+            $rules = [
                 // 'image' => 'mimes:jpeg,jpg,png,gif|nullable',
                 // 'name' => 'required|max:255',
-            );
+            ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             $group = Group::find($group_id);
             //previous image name
             $imagename = $group->logo;
-            if ($request->image && !empty($request->image)) {
+            if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/groups/logo', 300);
             }
             // $group->user_id = auth()->user()->id;
@@ -3243,15 +3185,15 @@ class ApiController extends Controller
             $group->location = $request->location;
             $group->group_type = $request->group_type;
 
-            if ($request->image && !empty($request->image)) {
+            if ($request->image && ! empty($request->image)) {
                 $group->logo = $file_name;
             }
             $done = $group->save();
             if ($done) {
-                // just put the file name and folder name nothing more :) 
-                if (!empty($request->image)) {
-                    if (File::exists(public_path('storage/groups/logo/' . $imagename))) {
-                        File::delete(public_path('storage/groups/logo/' . $imagename));
+                // just put the file name and folder name nothing more :)
+                if (! empty($request->image)) {
+                    if (File::exists(public_path('storage/groups/logo/'.$imagename))) {
+                        File::delete(public_path('storage/groups/logo/'.$imagename));
                     }
                 }
                 $response['success'] = true;
@@ -3260,18 +3202,18 @@ class ApiController extends Controller
                 $response['success'] = false;
                 $response['message'] = 'Failed to group page';
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function updatecoverphoto_group(Request $request, $group_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -3279,24 +3221,24 @@ class ApiController extends Controller
             $group = Group::find($group_id);
             $imagename = $group->coverphoto;
 
-            if ($request->cover_photo && !empty($request->cover_photo)) {
+            if ($request->cover_photo && ! empty($request->cover_photo)) {
                 //Upload image
-                $file_name = rand(1, 35000) . '.' . $request->cover_photo->getClientOriginalExtension();
+                $file_name = rand(1, 35000).'.'.$request->cover_photo->getClientOriginalExtension();
                 //logo
                 $img = Image::make($request->cover_photo);
                 $img->resize(1120, null, function ($constraint) {
                     $constraint->aspectRatio();
                     $constraint->upsize();
                 });
-                $img->save(uploadTo('groups/coverphoto') . $file_name);
+                $img->save(uploadTo('groups/coverphoto').$file_name);
                 $group->banner = $file_name;
             }
             $done = $group->save();
             if ($done) {
-                // just put the file name and folder name nothing more :) 
-                if (!empty($request->cover_photo)) {
-                    if (File::exists(public_path('storage/groups/coverphoto/' . $imagename))) {
-                        File::delete(public_path('storage/groups/coverphoto/' . $imagename));
+                // just put the file name and folder name nothing more :)
+                if (! empty($request->cover_photo)) {
+                    if (File::exists(public_path('storage/groups/coverphoto/'.$imagename))) {
+                        File::delete(public_path('storage/groups/coverphoto/'.$imagename));
                     }
                 }
                 $response['success'] = true;
@@ -3305,18 +3247,18 @@ class ApiController extends Controller
                 $response['success'] = false;
                 $response['message'] = 'Failed to group page';
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function groups_join(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             try {
@@ -3340,11 +3282,10 @@ class ApiController extends Controller
                     $response['success'] = true;
                     $response['message'] = 'User joined the group successfully';
                 }
-
             } catch (\Exception $e) {
                 // Handle any exceptions
                 $response['success'] = false;
-                $response['message'] = 'Error joining the group: ' . $e->getMessage();
+                $response['message'] = 'Error joining the group: '.$e->getMessage();
             }
         } else {
             $response['success'] = false;
@@ -3353,10 +3294,11 @@ class ApiController extends Controller
 
         return $response;
     }
+
     public function groups_discussion(Request $request, $group_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -3389,17 +3331,15 @@ class ApiController extends Controller
 
                     // Loop through the media files and add them to the postImages array
                     foreach ($mediaFiles as $media) {
-
-                        if ($media->file_type == "image") {
+                        if ($media->file_type == 'image') {
                             $postImages[] = get_post_images($media->file_name);
                         } else {
                             $postImages[] = get_post_videos($media->file_name);
                         }
                         $file = $media->file_type;
-
                     }
 
-                    // comment count 
+                    // comment count
                     $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
 
                     // user react of each posts
@@ -3464,7 +3404,7 @@ class ApiController extends Controller
                     foreach ($taggedUsers as $tags) {
                         $taggedUserList[] = [
                             'id' => $tags->id,
-                            'name' => $tags->name
+                            'name' => $tags->name,
                         ];
                     }
 
@@ -3474,13 +3414,13 @@ class ApiController extends Controller
                         'name' => $user1->name,
                         'photo' => get_user_images($user1->id),
                         'publisher' => $post->publisher,
-                        'location' => $post->location != null ? $post->location : "",
+                        'location' => $post->location != null ? $post->location : '',
                         'postType' => $post->post_type,
                         'fileType' => $file,
                         'publisher_id' => $post->publisher_id,
                         'privacy' => $post->privacy,
                         'post_images' => $postImages,
-                        'thumbnail' => $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : "",
+                        'thumbnail' => $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : '',
                         'userReaction' => isset($userReacts[$user_id]) ? $userReacts[$user_id] : null,
                         'description' => $post->description,
                         'commentsCount' => $commentsCount,
@@ -3490,7 +3430,7 @@ class ApiController extends Controller
                             'sad' => $sadCount,
                             'haha' => $hahaCount,
                             'angry' => $angryCount,
-                            'total' => $totalReacts // Include total reactions count
+                            'total' => $totalReacts, // Include total reactions count
                         ],
                         'created_at' => $formattedDate,
                         'follow' => $follow,
@@ -3499,7 +3439,6 @@ class ApiController extends Controller
                         // Add other fields as needed
                     ];
                 }
-
             } else {
                 $response['success'] = false;
                 $response['message'] = 'No group found';
@@ -3508,10 +3447,11 @@ class ApiController extends Controller
 
         return response()->json($response);
     }
+
     public function groups_people(Request $request, $group_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -3519,7 +3459,6 @@ class ApiController extends Controller
             $group = Group::where('id', $group_id)->first();
 
             $groupArray = [];
-
 
             $group_members_count = Group_member::where('group_id', $group->id)->count();
             $group_members = Group_member::where('group_id', $group->id)->get();
@@ -3537,23 +3476,21 @@ class ApiController extends Controller
 
                     $isFriend = in_array($member->user_id, $friendsList) ? 1 : 0;
 
-                    $requested = "Add Friend";
+                    $requested = 'Add Friend';
                     $req = Friendships::whereIn('accepter', [$user_id, $member->user_id])
                         ->WhereIn('requester', [$user_id, $member->user_id])
                         ->get();
                     foreach ($req as $chat) {
                         if ($chat->accepter == $user_id || $chat->requester == $user_id) {
                             // Set the profile ID to the matching user ID
-                            $is_chat = "chat";
+                            $is_chat = 'chat';
                             $frnd_id = $chat->id;
-                            $requested = $chat->is_accepted == 0 ? ($chat->requester == $user_id ? 'Requested' : "Confirm") : "Friend";
-
+                            $requested = $chat->is_accepted == 0 ? ($chat->requester == $user_id ? 'Requested' : 'Confirm') : 'Friend';
 
                             // Break the loop once a match is found
                             // break;
                         }
                     }
-
 
                     // $mutualFriendsCount = $this->countMutualFriends($friendsList, $member->user_id);
 
@@ -3568,7 +3505,6 @@ class ApiController extends Controller
                             $matchingFriendsCount++;
                         }
                     }
-
 
                     // foreach ($user_id as $userId) {
                     if ($user_id == $member->user_id) {
@@ -3609,15 +3545,15 @@ class ApiController extends Controller
             ];
 
             $response = $groupArray;
-
         }
 
         return response()->json($response);
     }
+
     public function groups_event(Request $request, $group_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -3635,25 +3571,22 @@ class ApiController extends Controller
                     $response1[] = [
                         'id' => $event->id,
                         'user_id' => $event->user_id,
-                        'my_event' => $event->user_id == $user_id ? "my_event" : "not_my_event",
+                        'my_event' => $event->user_id == $user_id ? 'my_event' : 'not_my_event',
                         // 'group_id' = $event->group_id,
                         'title' => $event->title,
                         'description' => $event->description,
                         'event_date' => date_create($event->event_date)->format('l,j F Y'),
                         'date' => $event->event_date,
                         'event_time' => $event->event_time,
-                        'location' => $event->location != null ? $event->location : "",
+                        'location' => $event->location != null ? $event->location : '',
                         'privacy' => $event->privacy,
-                        'banner' => get_group_event_photos($event->banner, "coverphoto", "event"),
-
+                        'banner' => get_group_event_photos($event->banner, 'coverphoto', 'event'),
 
                         'going_user_id' => count($going_user_id),
-                        'going' => in_array($user_id, $going_user_id) ? "going" : "not_going",
-
+                        'going' => in_array($user_id, $going_user_id) ? 'going' : 'not_going',
 
                         'interested_user_id' => count($interested_user_id),
-                        'interest' => in_array($user_id, $interested_user_id) ? "interested" : "not_interested",
-
+                        'interest' => in_array($user_id, $interested_user_id) ? 'interested' : 'not_interested',
 
                         'user_name' => $user->name,
                         'user_photo' => get_user_images($user->id),
@@ -3673,12 +3606,14 @@ class ApiController extends Controller
                 $response = $response1;
             }
         }
+
         return response()->json($response);
     }
+
     public function group_photos(Request $request, $group_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -3717,13 +3652,14 @@ class ApiController extends Controller
             $page_data['all_albums'] = $albumArray;
             $response = $page_data;
         }
+
         return response()->json($response);
     }
 
     public function pages(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -3749,14 +3685,14 @@ class ApiController extends Controller
                         'category' => $category->name,
                         'like_count' => $like_count,
                         'is_Liked' => $is_Liked ? 'Liked' : 'Suggested',
-                        'my_page' => $page->user_id == $user_id ? "my_page" : "not_my_page",
-                        'owner' => $page->user_id == $user_id ? "me" : "others",
+                        'my_page' => $page->user_id == $user_id ? 'my_page' : 'not_my_page',
+                        'owner' => $page->user_id == $user_id ? 'me' : 'others',
                         'description' => $page->description,
                         'job' => $page->job,
                         'lifestyle' => $page->lifestyle,
-                        'location' => $page->location != null ? $page->location : "",
-                        'logo' => get_group_event_photos($page->logo, "logo", "pages"),
-                        'coverPhoto' => get_group_event_photos($page->coverphoto, "coverphoto", "pages"),
+                        'location' => $page->location != null ? $page->location : '',
+                        'logo' => get_group_event_photos($page->logo, 'logo', 'pages'),
+                        'coverPhoto' => get_group_event_photos($page->coverphoto, 'coverphoto', 'pages'),
 
                         // 'created_at' => $group->created_at,
                         // 'updated_at' => $group->updated_at,
@@ -3772,14 +3708,14 @@ class ApiController extends Controller
     public function pages_details(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
             $page = Page::where('id', $id)->first();
 
-            if (!$page) {
+            if (! $page) {
                 $response['success'] = false;
                 $response['message'] = 'No Pages found';
             } else {
@@ -3798,14 +3734,14 @@ class ApiController extends Controller
                     'category' => $category->name,
                     'like_count' => $like_count,
                     'is_Liked' => $is_Liked ? 'Liked' : 'Suggested',
-                    'my_page' => $page->user_id == $user_id ? "my_page" : "not_my_page",
-                    'owner' => $page->user_id == $user_id ? "me" : "others",
+                    'my_page' => $page->user_id == $user_id ? 'my_page' : 'not_my_page',
+                    'owner' => $page->user_id == $user_id ? 'me' : 'others',
                     'description' => $page->description,
                     'job' => $page->job,
                     'lifestyle' => $page->lifestyle,
-                    'location' => $page->location != null ? $page->location : "",
-                    'logo' => get_group_event_photos($page->logo, "logo", "pages"),
-                    'coverPhoto' => get_group_event_photos($page->coverphoto, "coverphoto", "pages"),
+                    'location' => $page->location != null ? $page->location : '',
+                    'logo' => get_group_event_photos($page->logo, 'logo', 'pages'),
+                    'coverPhoto' => get_group_event_photos($page->coverphoto, 'coverphoto', 'pages'),
 
                     // 'created_at' => $group->created_at,
                     // 'updated_at' => $group->updated_at,
@@ -3817,32 +3753,31 @@ class ApiController extends Controller
 
         return response()->json($response);
     }
+
     public function pages_update(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
-
             $user_id = auth('sanctum')->user()->id;
 
-            $rules = array(
+            $rules = [
                 // 'image' => 'mimes:jpeg,jpg,png,gif|nullable',
                 // 'name' => 'required|max:255',
                 // 'category' => 'required',
-            );
+            ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             $page = Page::find($id);
             //previous image name
             $imagename = $page->logo;
-            if ($request->image && !empty($request->image)) {
+            if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
             }
-
 
             $page->user_id = $user_id;
             $page->title = $request->name;
@@ -3851,15 +3786,15 @@ class ApiController extends Controller
             $page->location = $request->location;
             $page->category_id = $request->category;
             $page->description = $request->description;
-            if ($request->image && !empty($request->image)) {
+            if ($request->image && ! empty($request->image)) {
                 $page->logo = $file_name;
             }
             $done = $page->save();
             if ($done) {
-                // just put the file name and folder name nothing more :) 
-                if (!empty($request->image)) {
-                    if (File::exists(public_path('storage/pages/logo/' . $imagename))) {
-                        File::delete(public_path('storage/pages/logo/' . $imagename));
+                // just put the file name and folder name nothing more :)
+                if (! empty($request->image)) {
+                    if (File::exists(public_path('storage/pages/logo/'.$imagename))) {
+                        File::delete(public_path('storage/pages/logo/'.$imagename));
                     }
                 }
                 $response['success'] = true;
@@ -3874,20 +3809,22 @@ class ApiController extends Controller
 
             // return json_encode(array('reload' => 1));
         }
+
         return response()->json($response);
     }
 
     public function page_delete(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             // Check if the page exists
             $page = Page::find($id);
-            if (!$page) {
+            if (! $page) {
                 $response['success'] = false;
                 $response['message'] = 'Page not found';
+
                 return response()->json($response);
             }
 
@@ -3904,12 +3841,12 @@ class ApiController extends Controller
                     $imagename = $page->coverphoto;
                     $logoname = $page->logo;
 
-                    if ($imagename && File::exists(public_path('storage/pages/coverphoto/' . $imagename))) {
-                        File::delete(public_path('storage/pages/coverphoto/' . $imagename));
+                    if ($imagename && File::exists(public_path('storage/pages/coverphoto/'.$imagename))) {
+                        File::delete(public_path('storage/pages/coverphoto/'.$imagename));
                     }
 
-                    if ($logoname && File::exists(public_path('storage/pages/logo/' . $logoname))) {
-                        File::delete(public_path('storage/pages/logo/' . $logoname));
+                    if ($logoname && File::exists(public_path('storage/pages/logo/'.$logoname))) {
+                        File::delete(public_path('storage/pages/logo/'.$logoname));
                     }
 
                     $response['success'] = true;
@@ -3933,10 +3870,9 @@ class ApiController extends Controller
     public function page_like(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
-
             $user_id = auth('sanctum')->user()->id;
             $pagelike = new Page_like();
             $pagelike->page_id = $id;
@@ -3945,7 +3881,6 @@ class ApiController extends Controller
 
             $member = Page_like::where('user_id', $user_id)->where('page_id', $id)->first();
             if ($member) {
-
                 Page_like::where('user_id', $user_id)->where('page_id', $id)->delete();
 
                 $response['success'] = false;
@@ -3955,7 +3890,6 @@ class ApiController extends Controller
                 $response['success'] = true;
                 $response['message'] = 'User like the Page';
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
@@ -3987,26 +3921,23 @@ class ApiController extends Controller
     public function pages_create(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
-
             $user_id = auth('sanctum')->user()->id;
 
-            $rules = array(
+            $rules = [
                 'image' => 'nullable',
                 'name' => 'required|max:255',
                 'category' => 'required',
-            );
+            ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
-            if ($request->image && !empty($request->image)) {
-
+            if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
-
             }
 
             $page = new Page();
@@ -4014,7 +3945,7 @@ class ApiController extends Controller
             $page->title = $request->name;
             $page->category_id = $request->category;
             $page->description = $request->description;
-            if ($request->image && !empty($request->image)) {
+            if ($request->image && ! empty($request->image)) {
                 $page->logo = $file_name;
             }
             $done = $page->save();
@@ -4029,16 +3960,16 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
-        return response()->json($response);
 
+        return response()->json($response);
     }
+
     public function update_page_coverphoto(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
-
             $page = Page::find($id);
             $imagename = $page->coverphoto;
 
@@ -4050,9 +3981,9 @@ class ApiController extends Controller
             $done = $page->save();
             if ($done) {
                 // Remove the old cover photo if a new one was uploaded
-                if (!empty($request->cover_photo) && $request->hasFile('cover_photo')) {
-                    if (File::exists(public_path('storage/pages/coverphoto/' . $imagename))) {
-                        File::delete(public_path('storage/pages/coverphoto/' . $imagename));
+                if (! empty($request->cover_photo) && $request->hasFile('cover_photo')) {
+                    if (File::exists(public_path('storage/pages/coverphoto/'.$imagename))) {
+                        File::delete(public_path('storage/pages/coverphoto/'.$imagename));
                     }
                 }
                 $response['success'] = true;
@@ -4067,12 +3998,12 @@ class ApiController extends Controller
         }
         // return json_encode(array('reload' => 1));
         return response()->json($response);
-
     }
+
     public function page_category(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -4086,12 +4017,10 @@ class ApiController extends Controller
                 $blogArray = [];
 
                 foreach ($blogs as $blog) {
-
                     $blogArray[] = [
 
                         'category' => $blog->name,
                         'category_id' => $blog->id,
-
 
                     ];
                 }
@@ -4105,17 +4034,16 @@ class ApiController extends Controller
     public function pages_timeline(Request $request, $page_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
             $page = Page::where('id', $page_id)->first();
 
-            $response = array(); // Initialize the response array
+            $response = []; // Initialize the response array
 
             if ($page) {
-
                 // Fetch posts for the current member
                 $page_posts = Posts::orderBy('created_at', 'desc')->where('publisher_id', $page->id)->where('publisher', 'page')->where('privacy', 'public')->get();
 
@@ -4131,8 +4059,7 @@ class ApiController extends Controller
 
                     // Loop through the media files and add them to the postImages array
                     foreach ($mediaFiles as $media) {
-
-                        if ($media->file_type == "image") {
+                        if ($media->file_type == 'image') {
                             $postImages[] = get_post_images($media->file_name);
                         } else {
                             $postImages[] = get_post_videos($media->file_name);
@@ -4140,7 +4067,7 @@ class ApiController extends Controller
                         $file = $media->file_type;
                     }
 
-                    // comment count 
+                    // comment count
                     $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
 
                     // user react of each posts
@@ -4204,7 +4131,7 @@ class ApiController extends Controller
                     foreach ($taggedUsers as $tags) {
                         $taggedUserList[] = [
                             'id' => $tags->id,
-                            'name' => $tags->name
+                            'name' => $tags->name,
                         ];
                     }
 
@@ -4215,12 +4142,12 @@ class ApiController extends Controller
                         'name' => $user1->name,
                         'photo' => get_user_images($user1->id),
                         'publisher' => $post->publisher,
-                        'location' => $post->location != null ? $post->location : "",
+                        'location' => $post->location != null ? $post->location : '',
                         'privacy' => $post->privacy,
                         'postType' => $post->post_type,
                         'fileType' => $file,
                         'post_images' => $postImages,
-                        'thumbnail' => $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : "",
+                        'thumbnail' => $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : '',
                         'userReaction' => isset($userReacts[$user_id]) ? $userReacts[$user_id] : null,
                         'description' => $post->description,
                         'commentsCount' => $commentsCount,
@@ -4230,7 +4157,7 @@ class ApiController extends Controller
                             'sad' => $sadCount,
                             'haha' => $hahaCount,
                             'angry' => $angryCount,
-                            'total' => $totalReacts // Include total reactions count
+                            'total' => $totalReacts, // Include total reactions count
                         ],
                         'created_at' => $formattedDate,
                         'follow' => $follow,
@@ -4240,8 +4167,7 @@ class ApiController extends Controller
                     ];
                 }
 
-
-                // }
+            // }
             } else {
                 $response['success'] = false;
                 $response['message'] = 'No page found';
@@ -4250,11 +4176,11 @@ class ApiController extends Controller
 
         return response()->json($response);
     }
+
     public function page_photos(Request $request, $id)
     {
-
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -4299,13 +4225,14 @@ class ApiController extends Controller
 
             $response = $page_data;
         }
+
         return $response;
     }
 
-    function create_album(Request $request)
+    public function create_album(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -4321,15 +4248,14 @@ class ApiController extends Controller
             $data['title'] = $request->title;
             $data['sub_title'] = $request->sub_title;
             $data['privacy'] = $request->privacy;
-            if (isset($request->page_id) && !empty($request->page_id)) {
+            if (isset($request->page_id) && ! empty($request->page_id)) {
                 $data['page_id'] = $request->page_id;
             }
-            if (isset($request->group_id) && !empty($request->group_id)) {
+            if (isset($request->group_id) && ! empty($request->group_id)) {
                 $data['group_id'] = $request->group_id;
             }
             $data['created_at'] = time();
             $data['updated_at'] = $data['created_at'];
-
 
             if ($request->thumbnail) {
                 $file_name = FileUploader::upload($request->thumbnail, 'public/storage/thumbnails/album', 800);
@@ -4350,14 +4276,12 @@ class ApiController extends Controller
         }
 
         return $response;
-
     }
 
     public function delete_album(Request $request, $id)
     {
-
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -4373,16 +4297,15 @@ class ApiController extends Controller
                 $response['success'] = true;
                 $response['message'] = 'Album Not available';
             }
-
-
         }
+
         return $response;
     }
+
     public function album_photos(Request $request, $id)
     {
-
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -4401,22 +4324,23 @@ class ApiController extends Controller
 
             $response = $page_data;
         }
+
         return $response;
     }
+
     public function add_album_image(Request $request)
     {
-
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
             if (is_array($request->images) && $request->images[0] != null) {
                 //Data validation
-                $rules = array('multiple_files' => 'mimes:jpeg,jpg,png,gif');
+                $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
                 $validator = Validator::make($request->images, $rules);
                 if ($validator->fails()) {
-                    return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                    return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
                 }
                 foreach ($request->images as $key => $media_file) {
                     $file_name = FileUploader::upload($media_file, 'public/storage/album/images', 1000, null, 300);
@@ -4426,16 +4350,15 @@ class ApiController extends Controller
                     $albumimage->user_id = $user_id;
                     $albumimage->album_id = $request->album;
                     $albumimage->image = $file_name;
-                    if (isset($request->page_id) && !empty($request->page_id)) {
+                    if (isset($request->page_id) && ! empty($request->page_id)) {
                         $albumimage->page_id = $request->page_id;
-                    } elseif (isset($request->group_id) && !empty($request->group_id)) {
+                    } elseif (isset($request->group_id) && ! empty($request->group_id)) {
                         $albumimage->group_id = $request->group_id;
                     } else {
-
                     }
                     $done = $albumimage->save();
 
-                    if (isset($request->profile_id) && !empty($request->profile_id)) {
+                    if (isset($request->profile_id) && ! empty($request->profile_id)) {
                         $data['publisher_id'] = $user_id;
                         $data['user_id'] = $user_id;
                         $data['publisher'] = 'post';
@@ -4443,9 +4366,9 @@ class ApiController extends Controller
                         $data['privacy'] = 'public';
                         $data['privacy'] = 'public';
                         $data['status'] = 'active';
-                        $data['tagged_user_ids'] = json_encode(array());
-                        $data['user_reacts'] = json_encode(array());
-                        $data['shared_user'] = json_encode(array());
+                        $data['tagged_user_ids'] = json_encode([]);
+                        $data['user_reacts'] = json_encode([]);
+                        $data['shared_user'] = json_encode([]);
                         $data['created_at'] = time();
                         $data['updated_at'] = $data['created_at'];
 
@@ -4460,19 +4383,14 @@ class ApiController extends Controller
                                 $file_type = 'image';
                             }
 
-
-                            $media_file_data = array('user_id' => $user_id, 'post_id' => $post_id, 'album_id' => $request->album, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy);
+                            $media_file_data = ['user_id' => $user_id, 'post_id' => $post_id, 'album_id' => $request->album, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy];
                             $media_file_data['created_at'] = time();
                             $media_file_data['updated_at'] = $media_file_data['created_at'];
                             $done = Media_files::create($media_file_data);
                         }
                     }
-
-
-
                 }
                 if ($done) {
-
                     $response['success'] = true;
                     $response['message'] = 'Add photo successfully';
                 } else {
@@ -4480,18 +4398,18 @@ class ApiController extends Controller
                     $response['message'] = 'Failed to add photo';
                 }
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function marketplace(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -4523,7 +4441,7 @@ class ApiController extends Controller
                     foreach ($chats as $chat) {
                         if ($chat->reciver_id == $user_id || $chat->sender_id == $user_id) {
                             // Set the profile ID to the matching user ID
-                            $is_chat = "chat";
+                            $is_chat = 'chat';
                             $msgthread_id = $chat->id;
                             // Break the loop once a match is found
                             break;
@@ -4548,10 +4466,10 @@ class ApiController extends Controller
                         'brand' => $brand->name,
                         'currency' => $currency->name,
                         'is_Saved' => $is_Saved ? 'saved' : 'not_saved',
-                        'my_product' => $page->user_id == $user_id ? "my_product" : "not_my_product",
+                        'my_product' => $page->user_id == $user_id ? 'my_product' : 'not_my_product',
                         'description' => $page->description,
-                        'location' => $page->location != null ? $page->location : "",
-                        'coverphoto' => get_group_event_photos($page->image, "coverphoto", "marketplace"),
+                        'location' => $page->location != null ? $page->location : '',
+                        'coverphoto' => get_group_event_photos($page->image, 'coverphoto', 'marketplace'),
                         // 'coverPhoto' => get_group_event_photos($page->coverphoto, "coverphoto", "pages"),
 
                         // 'created_at' => date('d F Y', strtotime($page->created_at)),
@@ -4568,14 +4486,15 @@ class ApiController extends Controller
 
         return response()->json($response);
     }
+
     public function create_marketplace(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $rules = array(
+            $rules = [
                 'title' => 'required|max:255',
                 'price' => 'required',
                 'location' => 'required',
@@ -4583,10 +4502,10 @@ class ApiController extends Controller
                 'condition' => 'required',
                 'status' => 'required',
                 'brand' => 'required',
-            );
+            ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             $marketplace = new Marketplace();
@@ -4606,21 +4525,20 @@ class ApiController extends Controller
             if ($product_id) {
                 if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
                     //Data validation
-                    $rules = array('multiple_files' => 'mimes:jpeg,jpg,png,gif');
+                    $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
                     $validator = Validator::make($request->multiple_files, $rules);
                     if ($validator->fails()) {
-                        return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                        return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
                     }
 
                     foreach ($request->multiple_files as $key => $media_file) {
-
                         $file_name = FileUploader::upload($media_file, 'public/storage/marketplace/thumbnail', 315);
-                        FileUploader::upload($media_file, 'public/storage/marketplace/coverphoto/' . $file_name, 315);
+                        FileUploader::upload($media_file, 'public/storage/marketplace/coverphoto/'.$file_name, 315);
 
                         $file_type = 'image';
 
                         $productupdate = Marketplace::find($product_id);
-                        $media_file_data = array('user_id' => $user_id, 'product_id' => $product_id, 'file_name' => $file_name, 'file_type' => $file_type);
+                        $media_file_data = ['user_id' => $user_id, 'product_id' => $product_id, 'file_name' => $file_name, 'file_type' => $file_type];
                         $media_file_data['created_at'] = time();
                         $media_file_data['updated_at'] = $media_file_data['created_at'];
                         Media_files::create($media_file_data);
@@ -4645,15 +4563,15 @@ class ApiController extends Controller
         // return json_encode(array('reload' => 1));
         return response()->json($response);
     }
+
     public function update_marketplace(Request $request, $id)
     {
-
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $rules = array(
+            $rules = [
                 // 'title' => 'required|max:255',
                 // 'price' => 'required',
                 // 'location' => 'required',
@@ -4661,10 +4579,10 @@ class ApiController extends Controller
                 // 'condition' => 'required',
                 // 'status' => 'required',
                 // 'brand' => 'required',
-            );
+            ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             $marketplace = Marketplace::find($id);
@@ -4683,35 +4601,35 @@ class ApiController extends Controller
             if ($product_id) {
                 if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
                     //Data validation
-                    $rules = array('multiple_files' => 'mimes:jpeg,jpg,png,gif');
+                    $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
                     $validator = Validator::make($request->multiple_files, $rules);
                     if ($validator->fails()) {
-                        return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                        return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
                     }
 
                     if (isset($request->multiple_files)) {
-                        // this for deleting previous data file 
+                        // this for deleting previous data file
                         $previousfile = Media_files::where('product_id', $id)->get();
                         foreach ($previousfile as $previousfile) {
                             $market = Media_files::find($previousfile->id);
-                            // store image name for delete file operation 
+                            // store image name for delete file operation
                             $imagename = $market->banner;
                             $done = $market->delete();
                             if ($done) {
-                                // just put the file name and folder name nothing more :) 
+                                // just put the file name and folder name nothing more :)
                                 removeFile('marketplace', $imagename);
                             }
                         }
-                        // end code sec 
+                        // end code sec
                     }
 
                     foreach ($request->multiple_files as $key => $media_file) {
                         $file_name = FileUploader::upload($media_file, 'public/storage/marketplace/thumbnail', 315);
-                        FileUploader::upload($media_file, 'public/storage/marketplace/coverphoto/' . $file_name, 315);
+                        FileUploader::upload($media_file, 'public/storage/marketplace/coverphoto/'.$file_name, 315);
                         $file_type = 'image';
 
                         $productupdate = Marketplace::find($product_id);
-                        $media_file_data = array('user_id' => $user_id, 'product_id' => $product_id, 'file_name' => $file_name, 'file_type' => $file_type);
+                        $media_file_data = ['user_id' => $user_id, 'product_id' => $product_id, 'file_name' => $file_name, 'file_type' => $file_type];
                         $media_file_data['created_at'] = time();
                         $media_file_data['updated_at'] = $media_file_data['created_at'];
                         Media_files::create($media_file_data);
@@ -4735,10 +4653,11 @@ class ApiController extends Controller
         // return json_encode(array('reload' => 1));
         return response()->json($response);
     }
+
     public function delete_marketplace(Request $request, $product_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -4767,23 +4686,23 @@ class ApiController extends Controller
                     }
 
                     // Prepare the response
-                    $response = array(
+                    $response = [
                         'alertMessage' => get_phrase('Product Deleted Successfully'),
-                        'fadeOutElem' => "#product-" . $product_id
-                    );
+                        'fadeOutElem' => '#product-'.$product_id,
+                    ];
                 } else {
                     // If deletion fails
-                    $response = array(
+                    $response = [
                         'alertMessage' => get_phrase('Failed to delete product'),
-                        'fadeOutElem' => ''
-                    );
+                        'fadeOutElem' => '',
+                    ];
                 }
             } else {
                 // If the product with the given ID is not found
-                $response = array(
+                $response = [
                     'alertMessage' => get_phrase('Product not found'),
-                    'fadeOutElem' => ''
-                );
+                    'fadeOutElem' => '',
+                ];
             }
         } else {
             $response['success'] = false;
@@ -4792,10 +4711,11 @@ class ApiController extends Controller
 
         return $response;
     }
+
     public function marketplace_brand(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -4819,10 +4739,11 @@ class ApiController extends Controller
 
         return response()->json($response);
     }
+
     public function marketplace_category(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -4836,12 +4757,10 @@ class ApiController extends Controller
                 $categoriesArray = [];
 
                 foreach ($category as $categories) {
-
                     $categoriesArray[] = [
 
                         'category_id' => $categories->id,
                         'category' => $categories->name,
-
 
                     ];
                 }
@@ -4851,10 +4770,11 @@ class ApiController extends Controller
 
         return response()->json($response);
     }
+
     public function currencies(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -4868,12 +4788,10 @@ class ApiController extends Controller
                 $categoriesArray = [];
 
                 foreach ($category as $categories) {
-
                     $categoriesArray[] = [
 
                         'category_id' => $categories->id,
                         'category' => $categories->name,
-
 
                     ];
                 }
@@ -4886,9 +4804,8 @@ class ApiController extends Controller
 
     public function filter(Request $request)
     {
-
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -4901,44 +4818,41 @@ class ApiController extends Controller
             $brand = $_GET['brand'];
             $location = $_GET['location'];
 
-
             $query = Marketplace::where('status', 1)->orderBy('id', 'desc');
 
-
-
-            if (!empty($search) || !empty($location)) {
+            if (! empty($search) || ! empty($location)) {
                 $query->where(function ($query) use ($search, $location) {
-                    if (!empty ($search)) {
+                    if (! empty($search)) {
                         $query->where(function ($query) use ($search) {
-                            $query->where('title', 'like', '%' . $search . '%')
-                                ->orWhere('description', 'like', '%' . $search . '%');
+                            $query->where('title', 'like', '%'.$search.'%')
+                                ->orWhere('description', 'like', '%'.$search.'%');
                         });
                     }
-                    if (!empty ($location)) {
-                        $query->orWhere('location', 'like', '%' . $location . '%');
+                    if (! empty($location)) {
+                        $query->orWhere('location', 'like', '%'.$location.'%');
                     }
                 });
             }
-            if (!empty($min) || !empty($max)) {
+            if (! empty($min) || ! empty($max)) {
                 $query->where(function ($query) use ($min, $max) {
-                    if (!empty ($min)) {
+                    if (! empty($min)) {
                         $query->where('price', '>=', $min);
                     }
-                    if (!empty ($max)) {
+                    if (! empty($max)) {
                         $query->where('price', '<=', $max);
                     }
                 });
             }
 
-            if (isset($condition) && !empty($condition)) {
+            if (isset($condition) && ! empty($condition)) {
                 $query->where('condition', $condition);
             }
 
-            if (isset($category) && !empty($category)) {
+            if (isset($category) && ! empty($category)) {
                 $query->where('category', $category);
             }
 
-            if (isset($brand) && !empty($brand)) {
+            if (isset($brand) && ! empty($brand)) {
                 $query->where('brand', $brand);
             }
 
@@ -4964,7 +4878,7 @@ class ApiController extends Controller
                 foreach ($chats as $chat) {
                     if ($chat->reciver_id == $user_id || $chat->sender_id == $user_id) {
                         // Set the profile ID to the matching user ID
-                        $is_chat = "chat";
+                        $is_chat = 'chat';
                         $msgthread_id = $chat->id;
                         // Break the loop once a match is found
                         break;
@@ -4988,10 +4902,10 @@ class ApiController extends Controller
                     'brand' => $brand->name,
                     'currency' => $currency->name,
                     'is_Saved' => $is_Saved ? 'saved' : 'not_saved',
-                    'my_product' => $page->user_id == $user_id ? "my_product" : "not_my_product",
+                    'my_product' => $page->user_id == $user_id ? 'my_product' : 'not_my_product',
                     'description' => $page->description,
-                    'location' => $page->location != null ? $page->location : "",
-                    'coverphoto' => get_group_event_photos($page->image, "coverphoto", "marketplace"),
+                    'location' => $page->location != null ? $page->location : '',
+                    'coverphoto' => get_group_event_photos($page->image, 'coverphoto', 'marketplace'),
                     // 'coverPhoto' => get_group_event_photos($page->coverphoto, "coverphoto", "pages"),
 
                     // 'created_at' => date('d F Y', strtotime($page->created_at)),
@@ -5004,15 +4918,15 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
-
 
     //save for later in marketplace product
     public function save_for_later(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -5021,11 +4935,9 @@ class ApiController extends Controller
             $saveproduct->user_id = $user_id;
             $saveproduct->product_id = $id;
 
-
             $save = SavedProduct::where('product_id', $id)->first();
 
             if ($save) {
-
                 SavedProduct::where('product_id', $id)->delete();
 
                 $response['success'] = false;
@@ -5035,14 +4947,13 @@ class ApiController extends Controller
                 $response['success'] = true;
                 $response['message'] = 'User saved the product';
             }
-            // if ($save) {
+        // if ($save) {
             //     $response['success'] = true;
             //     $response['message'] = 'save successfully';
-            // } else {
+        // } else {
             //     $response['success'] = false;
             //     $response['message'] = 'Failed to save';
-            // }
-
+        // }
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
@@ -5077,7 +4988,7 @@ class ApiController extends Controller
     public function videos(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -5093,9 +5004,8 @@ class ApiController extends Controller
                 $response[$key]['title'] = $video->title;
                 $response[$key]['category'] = $video->category;
                 $response[$key]['privacy'] = $video->privacy;
-                $response[$key]['file'] = get_one_folder_files($video->file, "videos");
-                $response[$key]['thumbnail'] = $video->mobile_app_image != null ? get_one_folder_files($video->mobile_app_image, "videos") : "";
-
+                $response[$key]['file'] = get_one_folder_files($video->file, 'videos');
+                $response[$key]['thumbnail'] = $video->mobile_app_image != null ? get_one_folder_files($video->mobile_app_image, 'videos') : '';
 
                 // Fetch Posts by the User
                 $post = Posts::where('publisher_id', $video->id)->first();
@@ -5150,7 +5060,6 @@ class ApiController extends Controller
                             // Do nothing or handle unexpected reactions
                             break;
                     }
-
                 }
                 // Calculate the total reactions
                 $totalReacts = $likeCount + $loveCount + $sadCount + $hahaCount + $angryCount;
@@ -5160,7 +5069,7 @@ class ApiController extends Controller
                     'sad' => $sadCount,
                     'haha' => $hahaCount,
                     'angry' => $angryCount,
-                    'total' => $totalReacts // Include total reactions count
+                    'total' => $totalReacts, // Include total reactions count
                 ];
 
                 $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
@@ -5171,10 +5080,10 @@ class ApiController extends Controller
                 $daysDifference = $createdDate->diffInDays(Carbon::now());
                 if ($daysDifference < 7) {
                     // Show "time ago" format
-                    $response[$key]['created_at']  = $createdDate->diffForHumans();
+                    $response[$key]['created_at'] = $createdDate->diffForHumans();
                 } else {
                     // Show the exact date and time
-                    $response[$key]['created_at']  = $createdDate->toDayDateTimeString();
+                    $response[$key]['created_at'] = $createdDate->toDayDateTimeString();
                     // Example format: 'Mon, Jan 1, 2024 12:00 AM'
                 }
 
@@ -5194,20 +5103,19 @@ class ApiController extends Controller
                     $response[$key]['taggedUserList'][$key2]['name'] = $tags->name;
                 }
 
-
                 // // Media section of posts
                 // $media = Media_files::where('post_id', $post->post_id)->first();
                 // $response['posts'][$key1]['post_image'] = (!empty($media->file_name)) ? get_post_images($media->file_name) : '';
-
-
             }
         }
+
         return $response;
     }
+
     public function view_videos(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -5215,11 +5123,10 @@ class ApiController extends Controller
             $video = Video::find($id);
             $video_view_data = json_decode($video->view);
 
-            if (!in_array($user_id, $video_view_data)) {
+            if (! in_array($user_id, $video_view_data)) {
                 array_push($video_view_data, $user_id);
                 $video->view = json_encode($video_view_data);
                 $video->save();
-
 
                 $response['success'] = true;
                 $response['message'] = 'video view successfully';
@@ -5231,12 +5138,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return response()->json($response);
     }
+
     public function create_videos(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -5258,7 +5167,7 @@ class ApiController extends Controller
             $video->category = $request->category;
             $video->file = $file_name;
             $video->mobile_app_image = $mobile_app_image;
-            $video->view = json_encode(array());
+            $video->view = json_encode([]);
             $done = $video->save();
             if ($done) {
                 $post = new Posts();
@@ -5269,8 +5178,8 @@ class ApiController extends Controller
                 $post->privacy = $video->privacy;
                 $post->description = $video->title;
                 $post->mobile_app_image = $mobile_app_image;
-                $post->tagged_user_ids = json_encode(array());
-                $post->user_reacts = json_encode(array());
+                $post->tagged_user_ids = json_encode([]);
+                $post->user_reacts = json_encode([]);
                 $post->status = 'active';
                 $post->created_at = time();
                 $post->updated_at = time();
@@ -5286,13 +5195,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return response()->json($response);
     }
 
     public function save_for_later_videos(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -5311,13 +5221,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return response()->json($response);
     }
 
     public function unsave_for_later_videos(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -5333,12 +5244,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return response()->json($response);
     }
+
     public function delete_videos(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             // $user_id = auth('sanctum')->user()->id;
@@ -5358,27 +5271,28 @@ class ApiController extends Controller
                     $post = Posts::where('publisher_id', $id)->where('publisher', 'video_and_shorts')->first();
 
                     // Delete the entry from the post table
-                    if ($post)
+                    if ($post) {
                         $post->delete();
+                    }
 
                     // Prepare the response
-                    $response = array(
+                    $response = [
                         'alertMessage' => get_phrase('Video Deleted Successfully'),
-                        'fadeOutElem' => "#Video-" . $id
-                    );
+                        'fadeOutElem' => '#Video-'.$id,
+                    ];
                 } else {
                     // If deletion fails
-                    $response = array(
+                    $response = [
                         'alertMessage' => get_phrase('Failed to delete Video'),
-                        'fadeOutElem' => ''
-                    );
+                        'fadeOutElem' => '',
+                    ];
                 }
             } else {
                 // If the product with the given ID is not found
-                $response = array(
+                $response = [
                     'alertMessage' => get_phrase('Video not found'),
-                    'fadeOutElem' => ''
-                );
+                    'fadeOutElem' => '',
+                ];
             }
         } else {
             $response['success'] = false;
@@ -5387,55 +5301,58 @@ class ApiController extends Controller
 
         return $response;
     }
+
     public function events(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $events = Event::orderBy('id', 'desc')->whereNull("group_id")->get();
+            $events = Event::orderBy('id', 'desc')->whereNull('group_id')->get();
             foreach ($events as $key => $event) {
                 $response[$key]['id'] = $event->id;
                 $response[$key]['user_id'] = $event->user_id;
-                $response[$key]['my_event'] = $event->user_id == $user_id ? "my_event" : "not_my_event";
+                $response[$key]['my_event'] = $event->user_id == $user_id ? 'my_event' : 'not_my_event';
                 // $response[$key]['group_id'] = $event->group_id;
                 $response[$key]['title'] = $event->title;
-                $response[$key]['description'] = $event->description != null ? $event->description : "";
+                $response[$key]['description'] = $event->description != null ? $event->description : '';
                 $response[$key]['event_date'] = date_create($event->event_date)->format('l,j F Y');
                 $response[$key]['date'] = $event->event_date;
                 $response[$key]['event_time'] = $event->event_time;
                 $response[$key]['location'] = $event->location;
                 $response[$key]['privacy'] = $event->privacy;
-                $response[$key]['banner'] = get_group_event_photos($event->banner, "coverphoto", "event");
+                $response[$key]['banner'] = get_group_event_photos($event->banner, 'coverphoto', 'event');
 
                 $going_user_id = json_decode($event->going_users_id, true);
                 $response[$key]['going_user_id'] = count($going_user_id);
-                $response[$key]['going'] = in_array($user_id, $going_user_id) ? "going" : "not_going";
+                $response[$key]['going'] = in_array($user_id, $going_user_id) ? 'going' : 'not_going';
 
                 $interested_user_id = json_decode($event->interested_users_id, true);
                 $response[$key]['interested_user_id'] = count($interested_user_id);
-                $response[$key]['interest'] = in_array($user_id, $interested_user_id) ? "interested" : "not_interested";
+                $response[$key]['interest'] = in_array($user_id, $interested_user_id) ? 'interested' : 'not_interested';
 
                 $user = User::where('id', $event->user_id)->first();
                 $response[$key]['user_name'] = $user->name;
                 $response[$key]['user_photo'] = get_user_images($user->id);
             }
         }
+
         return $response;
     }
+
     public function events_details(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $events = Event::where('id', $id)->whereNull("group_id")->get();
+            $events = Event::where('id', $id)->whereNull('group_id')->get();
             foreach ($events as $key => $event) {
                 $response['id'] = $event->id;
                 $response['user_id'] = $event->user_id;
-                $response['my_event'] = $event->user_id == $user_id ? "my_event" : "not_my_event";
+                $response['my_event'] = $event->user_id == $user_id ? 'my_event' : 'not_my_event';
                 // $response['group_id'] = $event->group_id;
                 $response['title'] = $event->title;
                 $response['description'] = $event->description;
@@ -5444,21 +5361,22 @@ class ApiController extends Controller
                 $response['event_time'] = $event->event_time;
                 $response['location'] = $event->location;
                 $response['privacy'] = $event->privacy;
-                $response['banner'] = get_group_event_photos($event->banner, "coverphoto", "event");
+                $response['banner'] = get_group_event_photos($event->banner, 'coverphoto', 'event');
 
                 $going_user_id = json_decode($event->going_users_id, true);
                 $response['going_user_id'] = count($going_user_id);
-                $response['going'] = in_array($user_id, $going_user_id) ? "going" : "not_going";
+                $response['going'] = in_array($user_id, $going_user_id) ? 'going' : 'not_going';
 
                 $interested_user_id = json_decode($event->interested_users_id, true);
                 $response['interested_user_id'] = count($interested_user_id);
-                $response['interest'] = in_array($user_id, $interested_user_id) ? "interested" : "not_interested";
+                $response['interest'] = in_array($user_id, $interested_user_id) ? 'interested' : 'not_interested';
 
                 $user = User::where('id', $event->user_id)->first();
                 $response['user_name'] = $user->name;
                 $response['user_photo'] = get_user_images($user->id);
             }
         }
+
         return $response;
     }
 
@@ -5466,27 +5384,25 @@ class ApiController extends Controller
     public function create_event(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
-
             $user_id = auth('sanctum')->user()->id;
 
-            $rules = array(
+            $rules = [
                 'coverphoto' => 'mimes:jpeg,jpg,png,gif|nullable',
                 'eventname' => 'required|max:255',
                 'eventdate' => 'required',
                 'eventtime' => 'required',
                 'eventlocation' => 'required',
-            );
+            ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
             }
-            if ($request->coverphoto && !empty($request->coverphoto)) {
-
+            if ($request->coverphoto && ! empty($request->coverphoto)) {
                 //Upload image
-                $file_name = rand(1, 35000) . '.' . $request->coverphoto->getClientOriginalExtension();
+                $file_name = rand(1, 35000).'.'.$request->coverphoto->getClientOriginalExtension();
 
                 //thumbnail
                 $img = Image::make($request->coverphoto);
@@ -5494,15 +5410,15 @@ class ApiController extends Controller
                     $constraint->aspectRatio();
                     $constraint->upsize();
                 });
-                $img->save(uploadTo('event/thumbnail') . $file_name);
+                $img->save(uploadTo('event/thumbnail').$file_name);
 
-                // cover photo 
+                // cover photo
                 $img = Image::make($request->coverphoto);
                 $img->resize(1120, null, function ($constraint) {
                     $constraint->aspectRatio();
                     $constraint->upsize();
                 });
-                $img->save(uploadTo('event/coverphoto') . $file_name);
+                $img->save(uploadTo('event/coverphoto').$file_name);
             }
             $event = new Event();
 
@@ -5515,9 +5431,9 @@ class ApiController extends Controller
             if (isset($request->group_id)) {
                 $event->group_id = $request->group_id;
             }
-            !empty($request->coverphoto) ? $event->banner = $file_name : "";
-            $event->going_users_id = "[]";
-            $event->interested_users_id = "[]";
+            ! empty($request->coverphoto) ? $event->banner = $file_name : '';
+            $event->going_users_id = '[]';
+            $event->interested_users_id = '[]';
             $event->privacy = $request->privacy;
             $done = $event->save();
             if ($done) {
@@ -5525,12 +5441,12 @@ class ApiController extends Controller
                 $data['privacy'] = $request->privacy;
                 $data['publisher'] = 'event';
                 $data['publisher_id'] = $event->id;
-                $data['post_type'] = "event";
+                $data['post_type'] = 'event';
                 $data['status'] = 'active';
                 $data['description'] = $request->description;
-                $data['user_reacts'] = json_encode(array());
-                $data['user_reacts'] = json_encode(array());
-                $data['tagged_user_ids'] = json_encode(array());
+                $data['user_reacts'] = json_encode([]);
+                $data['user_reacts'] = json_encode([]);
+                $data['tagged_user_ids'] = json_encode([]);
                 $data['created_at'] = time();
                 $data['updated_at'] = $data['created_at'];
                 Posts::create($data);
@@ -5549,29 +5465,28 @@ class ApiController extends Controller
         return $response;
     }
 
-    //  update event 
+    //  update event
     public function update_event(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $rules = array(
+            $rules = [
                 'coverphoto' => 'mimes:jpeg,jpg,png,gif|nullable',
                 'eventname' => 'required|max:255',
                 'eventdate' => 'required',
                 'eventtime' => 'required',
                 'eventlocation' => 'required',
-            );
+            ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
             }
-            if ($request->coverphoto && !empty($request->coverphoto)) {
-
+            if ($request->coverphoto && ! empty($request->coverphoto)) {
                 //Upload image
-                $file_name = rand(1, 35000) . '.' . $request->coverphoto->getClientOriginalExtension();
+                $file_name = rand(1, 35000).'.'.$request->coverphoto->getClientOriginalExtension();
 
                 //thumbnail
                 $img = Image::make($request->coverphoto);
@@ -5579,20 +5494,20 @@ class ApiController extends Controller
                     $constraint->aspectRatio();
                     $constraint->upsize();
                 });
-                $img->save(uploadTo('event/thumbnail') . $file_name);
+                $img->save(uploadTo('event/thumbnail').$file_name);
 
-                // cover photo 
+                // cover photo
                 $img = Image::make($request->coverphoto);
                 $img->resize(1120, null, function ($constraint) {
                     $constraint->aspectRatio();
                     $constraint->upsize();
                 });
-                $img->save(uploadTo('event/coverphoto') . $file_name);
+                $img->save(uploadTo('event/coverphoto').$file_name);
             }
             $event = Event::find($id);
 
             $event->user_id = $user_id;
-            // store image name for delete file operation 
+            // store image name for delete file operation
             $imagename = $event->banner;
 
             $event->title = $request->eventname;
@@ -5600,11 +5515,11 @@ class ApiController extends Controller
             $event->event_date = $request->eventdate;
             $event->event_time = $request->eventtime;
             $event->location = $request->eventlocation;
-            !empty($request->coverphoto) ? $event->banner = $file_name : $event->banner;
+            ! empty($request->coverphoto) ? $event->banner = $file_name : $event->banner;
             $event->privacy = $request->privacy;
             $done = $event->save();
             if ($done) {
-                // just put the file name and folder name nothing more :) 
+                // just put the file name and folder name nothing more :)
                 removeFile('event', $imagename);
 
                 $response['success'] = true;
@@ -5617,33 +5532,35 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
-    // delete event 
+    // delete event
     public function delete_event(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
             $event = Event::find($id);
-            // store image name for delete file operation 
+            // store image name for delete file operation
             $imagename = $event->banner;
 
             $done = $event->delete();
             if ($done) {
                 // $response = array('alertMessage' => get_phrase('Event Deleted Successfully'), 'fadeOutElem' => "#event-" . $_GET['event_id']);
-                // just put the file name and folder name nothing more :) 
+                // just put the file name and folder name nothing more :)
 
                 removeFile('event', $imagename);
                 $post = Posts::where('publisher_id', $id)->where('publisher', 'event')->first();
 
                 // Delete the entry from the post table
-                if ($post)
+                if ($post) {
                     $post->delete();
+                }
 
                 $response['success'] = true;
                 $response['message'] = 'delete successfully';
@@ -5655,19 +5572,18 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
-    // event going 
+    // event going
     public function event_going(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-
-
 
             $going_user_id = $user_id;
             $event_id = $id;
@@ -5692,23 +5608,22 @@ class ApiController extends Controller
                 $response['success'] = false;
                 $response['message'] = 'event not found';
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
-    // event notgoing 
+    // event notgoing
     public function event_notgoing(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-
 
             $going_user_id = $user_id;
             $event_id = $id;
@@ -5720,11 +5635,12 @@ class ApiController extends Controller
 
             $event->going_users_id = $event_going_user;
             $event->save();
-            $response = array('alertMessage' => get_phrase('Cancle to Event Going'), 'showElem' => "#goingId$event_id", 'hideElem' => "#notGoingId$event_id");
+            $response = ['alertMessage' => get_phrase('Cancle to Event Going'), 'showElem' => "#goingId$event_id", 'hideElem' => "#notGoingId$event_id"];
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
@@ -5732,7 +5648,7 @@ class ApiController extends Controller
     public function event_interested(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -5747,7 +5663,6 @@ class ApiController extends Controller
             $event->interested_users_id = $event_going_user;
             $event->save();
 
-
             $response['alertMessage'] = get_phrase('Interested to Event');
             $response['showElem'] = "#dropdown_interest$event_id";
             $response['hideElem'] = "#btn_interest$event_id";
@@ -5760,6 +5675,7 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
@@ -5767,7 +5683,7 @@ class ApiController extends Controller
     public function event_notinterested(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -5782,11 +5698,12 @@ class ApiController extends Controller
 
             $event->interested_users_id = $event_going_user;
             $event->save();
-            $response = array('alertMessage' => get_phrase('Not Interested to Event'), 'showElem' => "#interestedId$event_id", 'hideElem' => "#notInterestedId$event_id");
+            $response = ['alertMessage' => get_phrase('Not Interested to Event'), 'showElem' => "#interestedId$event_id", 'hideElem' => "#notInterestedId$event_id"];
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
@@ -5794,7 +5711,7 @@ class ApiController extends Controller
     public function event_cancel(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -5802,7 +5719,6 @@ class ApiController extends Controller
             $going_user_id = $user_id;
             $event_id = $id;
             $event = Event::find($event_id);
-
 
             $event_going_user = json_decode($event->interested_users_id, true);
             $this_user_key = array_search($going_user_id, $event_going_user);
@@ -5825,6 +5741,7 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
     // public function events_discussion(Request $request, $event_id)
@@ -5849,7 +5766,7 @@ class ApiController extends Controller
     //                 // Media section of posts
     //                 $media = Media_files::where('post_id', $post->post_id)->first();
 
-    //                 // comment count 
+    //                 // comment count
     //                 $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
 
     //                 // user react of each posts
@@ -5913,8 +5830,6 @@ class ApiController extends Controller
     //                 ];
     //             }
 
-
-
     //             // }
     //         } else {
     //             $response['success'] = false;
@@ -5928,7 +5843,7 @@ class ApiController extends Controller
     public function events_discussion(Request $request, $event_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -5957,8 +5872,7 @@ class ApiController extends Controller
 
                     // Loop through the media files and add them to the postImages array
                     foreach ($mediaFiles as $media) {
-
-                        if ($media->file_type == "image") {
+                        if ($media->file_type == 'image') {
                             $postImages[] = get_post_images($media->file_name);
                         } else {
                             $postImages[] = get_post_videos($media->file_name);
@@ -5966,7 +5880,7 @@ class ApiController extends Controller
                         $file = $media->file_type;
                     }
 
-                    // comment count 
+                    // comment count
                     $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
 
                     // user react of each post
@@ -6010,7 +5924,7 @@ class ApiController extends Controller
                     foreach ($taggedUsers as $tags) {
                         $taggedUserList[] = [
                             'id' => $tags->id,
-                            'name' => $tags->name
+                            'name' => $tags->name,
                         ];
                     }
 
@@ -6022,16 +5936,16 @@ class ApiController extends Controller
                         'photo' => get_user_images($user->id),
                         'publisher' => $post->publisher,
                         'publisherId' => $post->publisher_id,
-                        'location' => $post->location != null ? $post->location : "",
+                        'location' => $post->location != null ? $post->location : '',
                         'post_type' => $post->post_type,
                         'fileType' => $file,
                         'privacy' => $post->privacy,
                         'post_images' => $postImages, // Array of post images
-                        'thumbnail' => $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : "",
+                        'thumbnail' => $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : '',
                         // 'post_images' => (!empty ($media->file_name)) ? get_post_images($media->file_name) : '',
                         'userReaction' => isset($userReacts[$user_id]) ? $userReacts[$user_id] : null,
                         // 'description' => $post->description ? $post->description : "",
-                        'description' => $post->description != null ? $post->description : "",
+                        'description' => $post->description != null ? $post->description : '',
                         'commentsCount' => $commentsCount,
                         'reaction_counts' => $reactionsCount,
                         'total' => $totalReacts,
@@ -6049,10 +5963,11 @@ class ApiController extends Controller
 
         return response()->json($response);
     }
+
     public function blogs(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6068,14 +5983,14 @@ class ApiController extends Controller
                 foreach ($blogs as $blog) {
                     $user = User::where('id', $blog->user_id)->first();
                     $category = Blogcategory::where('id', $blog->category_id)->first();
-                    // comment count 
+                    // comment count
                     $commentsCount = Comments::where('id_of_type', $blog->id)->count();
 
                     $view = json_decode($blog->view, true);
                     $view = count($view);
 
                     $tag = json_decode($blog->tag, true);
-                    $tags = implode(",", array_filter(json_decode($blog->tag, true)));
+                    $tags = implode(',', array_filter(json_decode($blog->tag, true)));
 
                     // Calculate the time difference
                     $createdAt = Carbon::parse($blog->created_at);
@@ -6089,9 +6004,9 @@ class ApiController extends Controller
                         'title' => $blog->title,
                         'category_id' => $blog->category_id,
                         'category' => $category->name ?? '',
-                        'my_blog' => $blog->user_id == $user_id ? "my_blog" : "not_my_blog",
+                        'my_blog' => $blog->user_id == $user_id ? 'my_blog' : 'not_my_blog',
                         'description' => $blog->description,
-                        'coverphoto' => get_group_event_photos($blog->thumbnail, "thumbnail", "blog"),
+                        'coverphoto' => get_group_event_photos($blog->thumbnail, 'thumbnail', 'blog'),
                         'created_at' => date('d M Y', strtotime($blog->created_at)),
                         'longago' => $timeDifference,
                         'view' => $view,
@@ -6107,10 +6022,11 @@ class ApiController extends Controller
 
         return response()->json($response);
     }
+
     public function blog_category(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6124,12 +6040,10 @@ class ApiController extends Controller
                 $blogArray = [];
 
                 foreach ($blogs as $blog) {
-
                     $blogArray[] = [
 
                         'category' => $blog->name,
                         'category_id' => $blog->id,
-
 
                     ];
                 }
@@ -6143,7 +6057,7 @@ class ApiController extends Controller
     public function create_blogs(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6152,10 +6066,9 @@ class ApiController extends Controller
                 'category' => 'required',
             ]);
 
-            if ($request->image && !empty($request->image)) {
-
+            if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
-                FileUploader::upload($request->image, 'public/storage/blog/coverphoto/' . $file_name, 900);
+                FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
             }
 
             $blog = new Blog();
@@ -6170,14 +6083,14 @@ class ApiController extends Controller
             //         $tag_array[$key] = $tag['value'];
             //     }
             // }
-            $blog->tag = json_encode(array_filter(explode(",", $request->tag)));
-            if ($request->description && !empty($request->description)) {
+            $blog->tag = json_encode(array_filter(explode(',', $request->tag)));
+            if ($request->description && ! empty($request->description)) {
                 $blog->description = $request->description;
             }
-            if ($request->image && !empty($request->image)) {
+            if ($request->image && ! empty($request->image)) {
                 $blog->thumbnail = $file_name;
             }
-            $blog->view = json_encode(array());
+            $blog->view = json_encode([]);
             $done = $blog->save();
             if ($done) {
                 $response['success'] = true;
@@ -6190,13 +6103,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function update_blogs(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6205,16 +6119,15 @@ class ApiController extends Controller
                 'category' => 'required',
             ]);
 
-            if ($request->image && !empty($request->image)) {
-
+            if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
-                FileUploader::upload($request->image, 'public/storage/blog/coverphoto/' . $file_name, 900);
+                FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
             }
 
             $blog = Blog::find($id);
 
             $blog->user_id = $user_id;
-            // store image name for delete file operation 
+            // store image name for delete file operation
             $imagename = $blog->thumbnail;
 
             $blog->user_id = $user_id;
@@ -6229,13 +6142,13 @@ class ApiController extends Controller
             //     }
             // }
             // $blog->tag = json_encode($tag_array);
-            $blog->tag = json_encode(array_filter(explode(",", $request->tag)));
+            $blog->tag = json_encode(array_filter(explode(',', $request->tag)));
             $blog->description = $request->description;
-            !empty($request->image) ? $blog->thumbnail = $file_name : $blog->thumbnail;
+            ! empty($request->image) ? $blog->thumbnail = $file_name : $blog->thumbnail;
             $done = $blog->save();
             if ($done) {
-                // just put the file name and folder name nothing more :) 
-                if (!empty($request->image)) {
+                // just put the file name and folder name nothing more :)
+                if (! empty($request->image)) {
                     removeFile('blog', $imagename);
                 }
 
@@ -6249,19 +6162,18 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
-    // blog view 
+    // blog view
     public function blog_view(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-
-
 
             //   $going_user_id = $user_id;
             $blog_id = $id;
@@ -6280,29 +6192,29 @@ class ApiController extends Controller
                 $response['success'] = false;
                 $response['message'] = 'blog not found';
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function blog_delete(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
             $blog = Blog::find($id);
-            // store image name for delete file operation 
+            // store image name for delete file operation
             $imagename = $blog->thumbnail;
 
             $done = $blog->delete();
             if ($done) {
-                // just put the file name and folder name nothing more :) 
+                // just put the file name and folder name nothing more :)
                 removeFile('blog', $imagename);
 
                 $response['success'] = true;
@@ -6315,19 +6227,21 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
+
     public function paid_content(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
             $blog = PaidContentCreator::orderBy('id', 'desc')->where('user_id', $user_id)->first();
 
-            if (!$blog) {
+            if (! $blog) {
                 $response['success'] = false;
                 $response['message'] = 'No paid_content_Creator found';
             } else {
@@ -6336,7 +6250,7 @@ class ApiController extends Controller
                 // foreach ($blogs as $blog) {
                 $user = User::where('id', $blog->user_id)->first();
                 $social_accounts = json_decode($blog->social_accounts, true);
-                $posts_data = array();
+                $posts_data = [];
 
                 // Fetch posts for the current member
                 $member_posts = Posts::orderBy('created_at', 'desc')->where('user_id', $blog->user_id)->where('publisher', 'paid_content')->get();
@@ -6347,7 +6261,7 @@ class ApiController extends Controller
                     // Media section of posts
                     $media = Media_files::where('post_id', $post->post_id)->first();
 
-                    // comment count 
+                    // comment count
                     $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
 
                     // user react of each posts
@@ -6393,7 +6307,7 @@ class ApiController extends Controller
                         'photo' => get_user_images($user1->id),
                         'publisher' => $post->publisher,
                         'privacy' => $post->privacy,
-                        'post_image' => (!empty($media->file_name)) ? get_post_images($media->file_name) : '',
+                        'post_image' => (! empty($media->file_name)) ? get_post_images($media->file_name) : '',
                         'userReaction' => isset($userReacts[$user_id]) ? $userReacts[$user_id] : null,
                         'description' => $post->description,
                         'commentsCount' => $commentsCount,
@@ -6403,7 +6317,7 @@ class ApiController extends Controller
                             'sad' => $sadCount,
                             'haha' => $hahaCount,
                             'angry' => $angryCount,
-                            'total' => $totalReacts // Include total reactions count
+                            'total' => $totalReacts, // Include total reactions count
                         ],
 
                         // Add other fields as needed
@@ -6423,12 +6337,9 @@ class ApiController extends Controller
                     'description' => $blog->description,
                     'bio' => $blog->bio,
                     'social_accounts' => $social_accounts,
-                    'coverphoto' => get_all_assets_photos($blog->cover_photo, "images"),
-                    'logo' => get_all_assets_photos($blog->logo, "images"),
+                    'coverphoto' => get_all_assets_photos($blog->cover_photo, 'images'),
+                    'logo' => get_all_assets_photos($blog->logo, 'images'),
                     'posts' => $posts_data,
-
-
-
 
                 ];
                 // }
@@ -6438,17 +6349,18 @@ class ApiController extends Controller
 
         return response()->json($response);
     }
+
     public function paid_content_package(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
             $paid_contents = PaidContentPackages::orderBy('id', 'desc')->where('user_id', $user_id)->get();
 
-            if (!$paid_contents) {
+            if (! $paid_contents) {
                 $response['success'] = false;
                 $response['message'] = 'No paid_content_Creator found';
             } else {
@@ -6474,10 +6386,11 @@ class ApiController extends Controller
 
         return response()->json($response);
     }
+
     public function jobs(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6500,7 +6413,6 @@ class ApiController extends Controller
                     $endDate = Carbon::parse($blog->end_date); // Parse end date from database
                     $isExpired = $endDate->isPast(); // Check if the end date is in the past
 
-
                     $blogArray[] = [
                         'id' => $blog->id,
                         'user_id' => $blog->user_id,
@@ -6516,16 +6428,14 @@ class ApiController extends Controller
                         'location' => $blog->location,
                         'status' => $blog->status,
                         'is_published' => $blog->is_published,
-                        'my_blog' => $blog->user_id == $user_id ? "my_job" : "not_my_job",
-                        'wishlist' => $wishlist ? "wishlist" : "not_wishlist",
+                        'my_blog' => $blog->user_id == $user_id ? 'my_job' : 'not_my_job',
+                        'wishlist' => $wishlist ? 'wishlist' : 'not_wishlist',
                         'description' => $blog->description,
-                        'thumbnail' => get_group_event_photos($blog->thumbnail, "thumbnail", "job"),
+                        'thumbnail' => get_group_event_photos($blog->thumbnail, 'thumbnail', 'job'),
                         // 'created_at' => date('d-m-Y', strtotime($blog->created_at)),
                         'start_date' => $blog->start_date,
                         'end_date' => $blog->end_date,
                         'is_expired' => $isExpired ? 'expired' : 'active', // Add field indicating if the job is expired
-
-
 
                     ];
                 }
@@ -6539,7 +6449,7 @@ class ApiController extends Controller
     public function create_jobs(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6572,18 +6482,18 @@ class ApiController extends Controller
                 $response['success'] = false;
                 $response['message'] = 'job not created';
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
-        return $response;
 
+        return $response;
     }
+
     public function update_jobs(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6604,13 +6514,12 @@ class ApiController extends Controller
 
             if ($job['status'] == '1') {
                 $job->status = 1;
-            } else if ($job['status'] == '0') {
+            } elseif ($job['status'] == '0') {
                 $job->status = 0;
             }
             $job->description = $request->description;
             $done = $job->save();
             if ($done) {
-
                 $response['success'] = true;
                 $response['message'] = 'jobs updated';
             } else {
@@ -6621,13 +6530,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function job_delete(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6646,7 +6556,6 @@ class ApiController extends Controller
             $done = $job->delete();
 
             if ($done) {
-
                 $response['success'] = true;
                 $response['message'] = 'Job Deleted Successfully';
             } else {
@@ -6657,6 +6566,7 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
@@ -6664,7 +6574,7 @@ class ApiController extends Controller
     public function job_add_wishlist(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6686,27 +6596,28 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function JobApply(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
             $request->validate([
                 'email' => 'required',
                 'phone' => 'required',
-                'image' => 'file|mimes:pdf|max:10240'
+                'image' => 'file|mimes:pdf|max:10240',
             ]);
 
             if ($request->hasFile('image') && $request->file('image')->isValid()) {
                 $file = $request->file('image');
                 $file_extension = $file->getClientOriginalExtension();
-                $file_name = Str::random(40) . '.' . $file_extension;
-                move_uploaded_file($file->getPathname(), 'public/storage/job/cv/' . $file_name);
+                $file_name = Str::random(40).'.'.$file_extension;
+                move_uploaded_file($file->getPathname(), 'public/storage/job/cv/'.$file_name);
             }
 
             $owner_id = Job::where('id', $id)->first()->user_id;
@@ -6716,7 +6627,7 @@ class ApiController extends Controller
             $apply->user_id = $user_id;
             $apply->email = $request->email;
             $apply->phone = $request->phone;
-            if ($request->image && !empty($request->image)) {
+            if ($request->image && ! empty($request->image)) {
                 $apply->attachment = $file_name;
             }
             $applies = $apply->save();
@@ -6731,12 +6642,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
+
     public function fundraisers(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6773,8 +6686,8 @@ class ApiController extends Controller
                         'goal_amount' => $fundraiser->goal_amount,
                         'raised_amount' => $fundraiser->raised_amount == null ? 0 : $fundraiser->raised_amount,
                         'percentage_raised' => $percentageRaised,
-                        'progress' => $fundraiser->goal_amount == $fundraiser->raised_amount ? "complete" : "in_progress",
-                        'fundraiser' => $fundraiser->user_id == $user_id ? 'my' : "not_my",
+                        'progress' => $fundraiser->goal_amount == $fundraiser->raised_amount ? 'complete' : 'in_progress',
+                        'fundraiser' => $fundraiser->user_id == $user_id ? 'my' : 'not_my',
                         'title' => $fundraiser->title,
                         'description' => $fundraiser->description,
                         'category_id' => $fundraiser->categories_id,
@@ -6782,10 +6695,8 @@ class ApiController extends Controller
                         'donar' => $donate,
                         'days' => $days_left,
                         'timestamp_end' => date('d F, Y', strtotime($fundraiser->timestamp_end)),
-                        'cover_photo' => get_all_assets_photos($fundraiser->cover_photo, "campaign", "images"),
+                        'cover_photo' => get_all_assets_photos($fundraiser->cover_photo, 'campaign', 'images'),
                         // 'created_at' => date('d-m-Y', strtotime($blog->created_at)),
-
-
 
                     ];
                 }
@@ -6799,7 +6710,7 @@ class ApiController extends Controller
     public function create_fundraiser(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6814,9 +6725,9 @@ class ApiController extends Controller
                 $image = '';
             } else {
                 $item = $request->file('cover_photo');
-                $image_name = strtotime('now') . random(4) . '.' . $item->getClientOriginalExtension();
+                $image_name = strtotime('now').random(4).'.'.$item->getClientOriginalExtension();
                 $path = public_path('assets/frontend/images/campaign');
-                if (!File::isDirectory($path)) {
+                if (! File::isDirectory($path)) {
                     File::makeDirectory($path, 0777, true, true);
                 } else {
                     $item->move(public_path('assets/frontend/images/campaign/'), $image_name);
@@ -6856,22 +6767,24 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
+
     public function update_fundraiser(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
             if ($request->cover_photo != '') {
                 $item = $request->file('cover_photo');
-                $image_name = strtotime('now') . random(4) . '.' . $item->getClientOriginalExtension();
+                $image_name = strtotime('now').random(4).'.'.$item->getClientOriginalExtension();
 
                 $path = public_path('assets/frontend/images/campaign');
-                if (!File::isDirectory($path)) {
+                if (! File::isDirectory($path)) {
                     File::makeDirectory($path, 0777, true, true);
                 } else {
                     $item->move(public_path('assets/frontend/images/campaign/'), $image_name);
@@ -6899,14 +6812,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
-        return $response;
 
+        return $response;
     }
 
     public function invited_fundraiser(Request $request, $invited_friend_id, $fundraiser_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6946,13 +6859,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function notifications(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -6963,38 +6877,37 @@ class ApiController extends Controller
             foreach ($new_notification as $post) {
                 $user = User::find($post->sender_user_id);
 
-
                 // Convert the Unix timestamp to a "time ago" format using Carbon
                 $createdDate = Carbon::createFromTimestamp(strtotime($post->created_at));
                 $formattedDate = $createdDate->diffForHumans();
-                $eventName = "";
+                $eventName = '';
 
                 // Check if event_id is not null
-                if (!is_null($post->event_id)) {
+                if (! is_null($post->event_id)) {
                     // Fetch event details based on event_id
                     $event = Event::find($post->event_id);
                     // If event is found, set the event name
-                    $eventName = $event ? $event->title : "";
+                    $eventName = $event ? $event->title : '';
                 }
                 // Initialize event name variable
-                $groupName = "";
+                $groupName = '';
 
                 // Check if event_id is not null
-                if (!is_null($post->group_id)) {
+                if (! is_null($post->group_id)) {
                     // Fetch event details based on event_id
                     $group = Group::find($post->group_id);
                     // If event is found, set the event name
-                    $groupName = $group ? $group->title : "";
+                    $groupName = $group ? $group->title : '';
                 }
                 // Initialize event name variable
-                $pageName = "";
+                $pageName = '';
 
                 // Check if event_id is not null
-                if (!is_null($post->page_id)) {
+                if (! is_null($post->page_id)) {
                     // Fetch event details based on event_id
                     $page = Page::find($post->page_id);
                     // If event is found, set the event name
-                    $pageName = $page ? $page->title : "";
+                    $pageName = $page ? $page->title : '';
                 }
                 // Construct the response array for the current post
                 $newnoti[] = [
@@ -7029,34 +6942,34 @@ class ApiController extends Controller
                 $formattedDate = $createdDate->diffForHumans();
 
                 // Initialize event name variable
-                $eventName = "";
+                $eventName = '';
 
                 // Check if event_id is not null
-                if (!is_null($post->event_id)) {
+                if (! is_null($post->event_id)) {
                     // Fetch event details based on event_id
                     $event = Event::find($post->event_id);
                     // If event is found, set the event name
-                    $eventName = $event ? $event->title : "";
+                    $eventName = $event ? $event->title : '';
                 }
                 // Initialize event name variable
-                $groupName = "";
+                $groupName = '';
 
                 // Check if event_id is not null
-                if (!is_null($post->group_id)) {
+                if (! is_null($post->group_id)) {
                     // Fetch event details based on event_id
                     $group = Group::find($post->group_id);
                     // If event is found, set the event name
-                    $groupName = $group ? $group->title : "";
+                    $groupName = $group ? $group->title : '';
                 }
                 // Initialize event name variable
-                $pageName = "";
+                $pageName = '';
 
                 // Check if event_id is not null
-                if (!is_null($post->page_id)) {
+                if (! is_null($post->page_id)) {
                     // Fetch event details based on event_id
                     $page = Page::find($post->page_id);
                     // If event is found, set the event name
-                    $pageName = $page ? $page->title : "";
+                    $pageName = $page ? $page->title : '';
                 }
 
                 // Construct the response array for the current post
@@ -7087,13 +7000,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function accept_friend_notification(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7125,13 +7039,12 @@ class ApiController extends Controller
                 $my_friends_of_friends = json_encode($my_friends_of_friends);
 
                 User::where('id', $id)->update(['friends' => $my_friends_of_friends]);
-
             }
 
             $notify = new Notification();
             $notify->sender_user_id = $user_id;
             $notify->reciver_user_id = $id;
-            $notify->type = "friend_request_accept";
+            $notify->type = 'friend_request_accept';
             $save = $notify->save();
             if ($save) {
                 $response['success'] = true;
@@ -7140,17 +7053,18 @@ class ApiController extends Controller
                 $response['success'] = false;
                 $response['message'] = 'not found request';
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
+
     public function decline_friend_notification(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7162,13 +7076,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function accept_group_notification(Request $request, $id, $group_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7178,7 +7093,7 @@ class ApiController extends Controller
             $notify = new Notification();
             $notify->sender_user_id = $user_id;
             $notify->reciver_user_id = $id;
-            $notify->type = "group_invitation_accept";
+            $notify->type = 'group_invitation_accept';
             $save = $notify->save();
             if ($save) {
                 $response['success'] = true;
@@ -7191,14 +7106,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
-        return $response;
 
+        return $response;
     }
 
     public function decline_group_notification(Request $request, $id, $group_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7211,13 +7126,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
-        return $response;
 
+        return $response;
     }
+
     public function accept_event_notification(Request $request, $id, $event_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7232,13 +7148,12 @@ class ApiController extends Controller
                 $going_users_id = json_encode($going_users_id);
 
                 Event::where('id', $event_id)->update(['going_users_id' => $going_users_id]);
-
             }
 
             $notify = new Notification();
             $notify->sender_user_id = $user_id;
             $notify->reciver_user_id = $id;
-            $notify->type = "event_invitation_accept";
+            $notify->type = 'event_invitation_accept';
             $save = $notify->save();
             if ($save) {
                 $response['success'] = true;
@@ -7247,18 +7162,18 @@ class ApiController extends Controller
                 $response['success'] = false;
                 $response['message'] = 'not request found ';
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function decline_event_notification(Request $request, $id, $event_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7275,13 +7190,14 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function mark_as_read(Request $request, $id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7293,11 +7209,11 @@ class ApiController extends Controller
                 $response['success'] = false;
                 $response['message'] = 'not found';
             }
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
@@ -7306,7 +7222,7 @@ class ApiController extends Controller
     public function accept_fundraiser_notification(Request $request, $id, $fundraiser_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7316,37 +7232,37 @@ class ApiController extends Controller
             $notify = new Notification();
             $notify->sender_user_id = $user_id;
             $notify->reciver_user_id = $id;
-            $notify->type = "fundraiser_request_accept";
+            $notify->type = 'fundraiser_request_accept';
             $notify->save();
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function decline_fundraiser_notification(Request $request, $id, $fundraiser_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
             $is_updated = Invite::where('invite_sender_id', $id)->where('invite_reciver_id', $user_id)->where('fundraiser_id', $fundraiser_id)->delete();
             $notify = Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->delete();
-
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
     public function chat(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7354,7 +7270,6 @@ class ApiController extends Controller
 
             $chatList = [];
             foreach ($previousChatList as $chat) {
-
                 $profile_id = $chat->reciver_id == $user_id ? $chat->sender_id : $chat->reciver_id;
                 $user = User::find($profile_id);
                 $last_chat = Chat::where('message_thrade', $chat->id)->orderBy('id', 'DESC')->first();
@@ -7370,19 +7285,18 @@ class ApiController extends Controller
                 // Set $read based on the conditions
                 $read = $last_chat ? ($last_chat->sender_id == $user_id ? 1 : 0) : 1;
 
-
                 $chatList[] = [
-                    "id" => $chat->id,
-                    "reciver_id" => $chat->reciver_id,
-                    "sender_id" => $chat->sender_id,
-                    "profile_id" => $profile_id,
-                    "profile_name" => $user->name,
-                    "profile_photo" => get_user_images($user->photo),
-                    "msg_sender" => $last_chat ? ($last_chat->sender_id == $user_id ? "You" : "") : "",
-                    "last_msg" => $last_chat ? $last_chat->message : "",
-                    "last_thumbs" => $last_chat ? $last_chat->thumbsup : 0,
-                    "msg_time" => $formattedDate,
-                    "read" => $read,
+                    'id' => $chat->id,
+                    'reciver_id' => $chat->reciver_id,
+                    'sender_id' => $chat->sender_id,
+                    'profile_id' => $profile_id,
+                    'profile_name' => $user->name,
+                    'profile_photo' => get_user_images($user->photo),
+                    'msg_sender' => $last_chat ? ($last_chat->sender_id == $user_id ? 'You' : '') : '',
+                    'last_msg' => $last_chat ? $last_chat->message : '',
+                    'last_thumbs' => $last_chat ? $last_chat->thumbsup : 0,
+                    'msg_time' => $formattedDate,
+                    'read' => $read,
                     // "rstatus" => $read,
                 ];
             }
@@ -7392,10 +7306,11 @@ class ApiController extends Controller
 
         return $response;
     }
+
     public function chat_msg(Request $request, $msg_thrade)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7403,7 +7318,6 @@ class ApiController extends Controller
 
             $chatList = [];
             foreach ($allchat as $chat) {
-
                 // $profile_id = $chat->reciver_id == $user_id ? $chat->sender_id : $chat->reciver_id;
                 $user = User::find($chat->sender_id);
                 // $last_chat = Chat::where('message_thrade', $chat->id)->orderBy('id', 'DESC')->first();
@@ -7412,18 +7326,18 @@ class ApiController extends Controller
                 $formattedDate = $createdDate->format('h:i A');
 
                 $chatList[] = [
-                    "id" => $chat->id,
-                    "message_thrade" => $chat->message_thrade,
-                    "reciver_id" => $chat->reciver_id,
-                    "sender_id" => $chat->sender_id,
-                    "sender" => $chat->sender_id == $user_id ? "my" : " not_mine",
-                    "profile_name" => $user->name,
-                    "profile_photo" => get_user_images($user->photo),
-                    "message" => $chat->message,
-                    "thumbs" => $chat->thumbsup,
-                    "react" => $chat->react,
-                    "msg_time" => $formattedDate,
-                    "read" => $chat->read_status,
+                    'id' => $chat->id,
+                    'message_thrade' => $chat->message_thrade,
+                    'reciver_id' => $chat->reciver_id,
+                    'sender_id' => $chat->sender_id,
+                    'sender' => $chat->sender_id == $user_id ? 'my' : ' not_mine',
+                    'profile_name' => $user->name,
+                    'profile_photo' => get_user_images($user->photo),
+                    'message' => $chat->message,
+                    'thumbs' => $chat->thumbsup,
+                    'react' => $chat->react,
+                    'msg_time' => $formattedDate,
+                    'read' => $chat->read_status,
                 ];
             }
         }
@@ -7436,7 +7350,7 @@ class ApiController extends Controller
     public function chat_save(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7451,7 +7365,6 @@ class ApiController extends Controller
                     ->where('reciver_id', $reciver);
             })
                 ->first();
-
 
             $messageThradeCount = Message_thrade::where(function ($query) use ($reciver, $user_id) {
                 $query->where('sender_id', $reciver)
@@ -7482,26 +7395,25 @@ class ApiController extends Controller
 
                     if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
                         //Data validation
-                        $rules = array('multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi');
+                        $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
                         $validator = Validator::make($request->multiple_files, $rules);
                         if ($validator->fails()) {
-                            return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                            return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
                         }
 
                         foreach ($request->multiple_files as $key => $media_file) {
                             $file_name = random(40);
                             $file_extention = strtolower($media_file->getClientOriginalExtension());
                             if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                                $media_file->move('storage/chat/videos/', $file_name . '.' . $file_extention);
+                                $media_file->move('storage/chat/videos/', $file_name.'.'.$file_extention);
                                 $file_type = 'video';
                             } else {
-                                FileUploader::upload($media_file, 'public/storage/chat/images/' . $file_name, 1000, null, 300);
+                                FileUploader::upload($media_file, 'public/storage/chat/images/'.$file_name, 1000, null, 300);
                                 $file_type = 'image';
                             }
-                            $file_name = $file_name . '.' . $file_extention;
+                            $file_name = $file_name.'.'.$file_extention;
 
-
-                            $media_file_data = array('user_id' => auth('sanctum')->user()->id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public');
+                            $media_file_data = ['user_id' => auth('sanctum')->user()->id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public'];
                             $media_file_data['created_at'] = time();
                             $media_file_data['updated_at'] = $media_file_data['created_at'];
                             Media_files::create($media_file_data);
@@ -7509,11 +7421,11 @@ class ApiController extends Controller
                     }
                     $page_data['message'] = Chat::where('message_thrade', $messageThrade->id)->orderBy('id', 'DESC')->limit('1')->get();
                     $message = view('frontend.chat.single-message', $page_data)->render();
-                    $url = url('/') . '/chat/inbox/' . $request->reciver_id;
-                    if (isset($request->product_id) && !empty($request->product_id)) {
-                        $response = array('appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox', 'replaceUrl' => '#message_body', 'url' => $url);
+                    $url = url('/').'/chat/inbox/'.$request->reciver_id;
+                    if (isset($request->product_id) && ! empty($request->product_id)) {
+                        $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox', 'replaceUrl' => '#message_body', 'url' => $url];
                     } else {
-                        $response = array('appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox');
+                        $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox'];
                     }
 
                     // return $response;
@@ -7532,26 +7444,25 @@ class ApiController extends Controller
 
                 if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
                     //Data validation
-                    $rules = array('multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi');
+                    $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
                     $validator = Validator::make($request->multiple_files, $rules);
                     if ($validator->fails()) {
-                        return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
+                        return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
                     }
 
                     foreach ($request->multiple_files as $key => $media_file) {
                         $file_name = random(40);
                         $file_extention = strtolower($media_file->getClientOriginalExtension());
                         if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                            $media_file->move('storage/chat/videos/', $file_name . '.' . $file_extention);
+                            $media_file->move('storage/chat/videos/', $file_name.'.'.$file_extention);
                             $file_type = 'video';
                         } else {
-                            FileUploader::upload($media_file, 'public/storage/chat/images/' . $file_name, 1000, null, 300);
+                            FileUploader::upload($media_file, 'public/storage/chat/images/'.$file_name, 1000, null, 300);
                             $file_type = 'image';
                         }
-                        $file_name = $file_name . '.' . $file_extention;
+                        $file_name = $file_name.'.'.$file_extention;
 
-
-                        $media_file_data = array('user_id' => auth('sanctum')->user()->id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public');
+                        $media_file_data = ['user_id' => auth('sanctum')->user()->id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public'];
 
                         $media_file_data['chat_id'] = $chat->id;
                         $media_file_data['created_at'] = time();
@@ -7559,16 +7470,16 @@ class ApiController extends Controller
                         Media_files::create($media_file_data);
                     }
                 }
-
-
             }
         }
+
         return $response;
     }
+
     public function thread_save(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7578,15 +7489,15 @@ class ApiController extends Controller
             $messageThrade->reciver_id = $request->reciver_id;
             $messageThrade->chatcenter = $request->messagecenter;
             $done = $messageThrade->save();
-
         }
+
         return $response;
     }
 
     public function remove_chat(Request $request, $chat_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7604,6 +7515,7 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
 
@@ -7673,7 +7585,7 @@ class ApiController extends Controller
     public function chat_read_option(Request $request, $user_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $authUserId = auth('sanctum')->user()->id;
@@ -7683,7 +7595,7 @@ class ApiController extends Controller
                 ->whereIn('reciver_id', [$authUserId, $user_id])
                 ->first();
 
-            if (!empty($messageThrade)) {
+            if (! empty($messageThrade)) {
                 // Mark messages as read
                 $done = Chat::where('message_thrade', $messageThrade->id)
                     ->where('read_status', '0')
@@ -7708,34 +7620,33 @@ class ApiController extends Controller
 
         return $response;
     }
+
     public function react_chat(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
-
             $form_data = $request->all();
             $chat = Chat::find($form_data['messageId']);
 
             $reactionValue = $chat->react;
 
-            if ($form_data['react'] == "none") {
+            if ($form_data['react'] == 'none') {
                 $chat->react = null;
             } else {
-
                 $chat->react = $form_data['react'];
             }
             $chat->save();
-
-
         }
+
         return $response;
     }
+
     public function all_user(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7755,7 +7666,7 @@ class ApiController extends Controller
                 foreach ($chats as $chat) {
                     if ($chat->reciver_id == $users->id || $chat->sender_id == $users->id) {
                         // Set the profile ID to the matching user ID
-                        $profile_id = "chat";
+                        $profile_id = 'chat';
                         $msgthread_id = $chat->id;
                         // Break the loop once a match is found
                         break;
@@ -7763,21 +7674,23 @@ class ApiController extends Controller
                 }
 
                 $all_user[] = [
-                    "id" => $users->id,
-                    "isChat" => $profile_id,
-                    "msgthread_id" => $msgthread_id,
-                    "name" => $users->name,
-                    "photo" => get_user_images($users->photo),
+                    'id' => $users->id,
+                    'isChat' => $profile_id,
+                    'msgthread_id' => $msgthread_id,
+                    'name' => $users->name,
+                    'photo' => get_user_images($users->photo),
                 ];
             }
             $response = $all_user;
         }
+
         return $response;
     }
+
     public function invite(Request $request, $group_event_id)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7794,7 +7707,7 @@ class ApiController extends Controller
 
                 // Check if the user is invited to the group
                 $group_invite = Invite::where('group_id', $group_event_id)
-                    ->where(function ($query) use ($user_id, $user) {
+                    ->where(function ($query) use ($user) {
                         $query->where('invite_reciver_id', $user->id)
                             ->orWhere('invite_sender_id', $user->id);
                     })
@@ -7808,7 +7721,7 @@ class ApiController extends Controller
 
                 // Check if the user is invited to the event
                 $event_invite = Invite::where('event_id', $group_event_id)
-                    ->where(function ($query) use ($user_id, $user) {
+                    ->where(function ($query) use ($user) {
                         $query->where('invite_reciver_id', $user->id)
                             ->orWhere('invite_sender_id', $user->id);
                     })
@@ -7822,13 +7735,13 @@ class ApiController extends Controller
 
                 // Store user details along with invitation status
                 $all_users[] = [
-                    "id" => $user->id,
-                    "group_id" => $group_id,
-                    "group" => $group_status,
-                    "event_id" => $event_id,
-                    "event" => $event_status,
-                    "name" => $user->name,
-                    "photo" => get_user_images($user->photo),
+                    'id' => $user->id,
+                    'group_id' => $group_id,
+                    'group' => $group_status,
+                    'event_id' => $event_id,
+                    'event' => $event_status,
+                    'name' => $user->name,
+                    'photo' => get_user_images($user->photo),
                 ];
             }
 
@@ -7842,7 +7755,7 @@ class ApiController extends Controller
     {
         // return $request->all();
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7869,13 +7782,15 @@ class ApiController extends Controller
             $response['success'] = true;
             $response['message'] = 'Invitations sent successfully';
         }
+
         return $response;
     }
+
     public function event_invition(Request $request)
     {
         // return $request->all();
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7902,13 +7817,14 @@ class ApiController extends Controller
             $response['success'] = true;
             $response['message'] = 'Invitations sent successfully';
         }
+
         return $response;
     }
 
     public function count_notification(Request $request)
     {
         $token = $request->bearerToken();
-        $response = array();
+        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7918,13 +7834,13 @@ class ApiController extends Controller
 
             $chats = Chat::where('reciver_id', $user_id)->where('read_status', 0)->count();
 
-            $response["notification"] = $new_notification;
-            $response["chat"] = $chats;
-
+            $response['notification'] = $new_notification;
+            $response['chat'] = $chats;
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         return $response;
     }
     // public function roomName(Request $request)
@@ -7944,8 +7860,6 @@ class ApiController extends Controller
     //         $roomName = $jitsis->jitsi_app_id + '/' + $room;
 
     //         $response = $roomName;
-
-
 
     //     } else {
     //         $response['success'] = false;
@@ -7968,8 +7882,7 @@ class ApiController extends Controller
             if ($jitsiConfig) {
                 $jitsiAppId = $jitsiConfig['jitsi_app_id'];
                 $jitsiToken = $jitsiConfig['jitsi_jwt'];
-                $roomName = $jitsiAppId . '/' . get_settings('system_name');
-
+                $roomName = $jitsiAppId.'/'.get_settings('system_name');
 
                 $response['jitsiAppId'] = $jitsiAppId;
                 $response['jitsiToken'] = $jitsiToken;
@@ -7987,6 +7900,7 @@ class ApiController extends Controller
 
         return $response;
     }
+
     public function about_policy(Request $request)
     {
         $token = $request->bearerToken();
@@ -8001,7 +7915,6 @@ class ApiController extends Controller
             // if ($setting) {
             $response['about'] = Setting::where('type', 'about')->value('description');
             $response['policy'] = Setting::where('type', 'policy')->value('description');
-
         }
         // else {
         //     // Error handling for unauthorized access
@@ -8011,14 +7924,4 @@ class ApiController extends Controller
 
         return $response;
     }
-
-
-
-
-
-
-
-
-
-
 }

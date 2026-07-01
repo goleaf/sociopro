@@ -9,8 +9,8 @@ class Report extends Model
 {
     use HasFactory;
 
-   
-    public function userData(){
-        return $this->belongsTo(User::class,'user_id');
+    public function userData()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

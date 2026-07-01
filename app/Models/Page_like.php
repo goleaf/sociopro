@@ -9,7 +9,8 @@ class Page_like extends Model
 {
     use HasFactory;
 
-     public function pageData(){
-        return $this->belongsTo(Page::class,'page_id');
+    public function pageData()
+    {
+        return $this->belongsTo(Page::class, 'page_id');
     }
 }

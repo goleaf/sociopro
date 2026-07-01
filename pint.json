@@ -1,0 +1,12 @@
+{
+    "preset": "laravel",
+    "paths": [
+        "app",
+        "bootstrap",
+        "config",
+        "database",
+        "resources/lang",
+        "routes",
+        "tests"
+    ]
+}

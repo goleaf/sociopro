@@ -17,6 +17,6 @@ class Stories extends Model
      * @var array
      */
     protected $fillable = [
-        'story_id', 'user_id', 'publisher', 'publisher_id', 'privacy', 'content_type', 'description', 'created_at', 'updated_at', 'status'
+        'story_id', 'user_id', 'publisher', 'publisher_id', 'privacy', 'content_type', 'description', 'created_at', 'updated_at', 'status',
     ];
 }

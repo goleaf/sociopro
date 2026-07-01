@@ -17,9 +17,13 @@ class Razorpay extends Model
         if ($transaction_keys != '') {
             array_shift($transaction_keys);
             session(['keys' => $transaction_keys]);
+
             return true;
-        }return false;
+        }
+
+return false;
     }
+
     public static function payment_create($identifier)
     {
         $payment_details = session('payment_details');
@@ -40,7 +44,6 @@ class Razorpay extends Model
             } elseif ($model == 'CampaignPayout') {
                 $description = 'Campaign payment.';
             }
-
         } elseif ($model == 'Subscription' || $model == 'Sponsor' || $model == 'Donation' || $model == 'Job' || 'Badge') {
             $payment_gateway = DB::table('payment_gateways')
                 ->where('identifier', $identifier)
@@ -67,11 +70,11 @@ class Razorpay extends Model
         $receipt_id = Str::random(20);
         $api = new Api($public_key, $secret_key);
 
-        $order = $api->order->create(array(
+        $order = $api->order->create([
             'receipt' => $receipt_id,
             'amount' => $payment_details['items'][0]['price'] * 100,
             'currency' => 'USD',
-        ));
+        ]);
 
         $page_data = [
             'order_id' => $order['id'],
@@ -91,6 +94,7 @@ class Razorpay extends Model
             'color' => $color,
             'payment_details' => $payment_details,
         ];
+
         return $data;
     }
 }

@@ -1,14 +1,8 @@
 <?php
+
 namespace App\Traits;
 
-use App\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-
-use GuzzleHttp\Client;
-
-
 
 /**
  * trait ZoomMeetingTrait
@@ -16,14 +10,13 @@ use GuzzleHttp\Client;
 trait ZoomMeetingTrait
 {
     public $zoom_api_key;
-    public $zoom_secret_key;
-    private $zoom_api_url;
 
+    public $zoom_secret_key;
+
+    private $zoom_api_url;
 
     private function get_zoom_keys()
     {
-
-
     }
 
     private function generateZoomToken()
@@ -32,28 +25,29 @@ trait ZoomMeetingTrait
 
         $zoom_api_key = $zoom_configuration['api_key'];
         $zoom_secret_key = $zoom_configuration['api_secret'];
-        $zoom_api_url = "https://api.zoom.us/v2/";
-
+        $zoom_api_url = 'https://api.zoom.us/v2/';
 
         $key = $zoom_api_key;
-        $secret =$zoom_secret_key;
+        $secret = $zoom_secret_key;
         $payload = [
             'iss' => $key,
             'exp' => strtotime('+1 minute'),
         ];
+
         return \Firebase\JWT\JWT::encode($payload, $secret, 'HS256');
     }
 
     private function retrieveZoomUrl()
     {
-        return  "https://api.zoom.us/v2/";
+        return  'https://api.zoom.us/v2/';
     }
 
     private function zoomRequest()
     {
         $jwt = $this->generateZoomToken();
+
         return \Illuminate\Support\Facades\Http::withHeaders([
-            'authorization' => 'Bearer ' . $jwt,
+            'authorization' => 'Bearer '.$jwt,
             'content-type' => 'application/json',
         ]);
     }
@@ -62,41 +56,45 @@ trait ZoomMeetingTrait
     {
         $url = $this->retrieveZoomUrl();
         $request = $this->zoomRequest();
-        return $request->get($url . $path, $query);
+
+        return $request->get($url.$path, $query);
     }
 
     public function zoomPost(string $path, array $body = [])
     {
         $url = $this->retrieveZoomUrl();
         $request = $this->zoomRequest();
-        return $request->post($url . $path, $body);
+
+        return $request->post($url.$path, $body);
     }
 
     public function zoomPatch(string $path, array $body = [])
     {
         $url = $this->retrieveZoomUrl();
         $request = $this->zoomRequest();
-        return $request->patch($url . $path, $body);
+
+        return $request->patch($url.$path, $body);
     }
 
     public function zoomDelete(string $path, array $body = [])
     {
         $url = $this->retrieveZoomUrl();
         $request = $this->zoomRequest();
-        return $request->delete($url . $path, $body);
+
+        return $request->delete($url.$path, $body);
     }
 
     public function toZoomTimeFormat(string $dateTime)
     {
-        $date = date('d-m-Y H:i:s', (int)$dateTime);
-
+        $date = date('d-m-Y H:i:s', (int) $dateTime);
 
         try {
             $date = new \DateTime($date);
+
             return $date->format('Y-m-d\TH:i:s');
-         
         } catch (\Exception $e) {
-            Log::error('ZoomJWT->toZoomTimeFormat : ' . $e->getMessage());
+            Log::error('ZoomJWT->toZoomTimeFormat : '.$e->getMessage());
+
             return '';
         }
     }
@@ -105,9 +103,11 @@ trait ZoomMeetingTrait
     {
         try {
             $date = new \DateTime($dateTime, new \DateTimeZone($timezone));
+
             return $date->getTimestamp();
         } catch (\Exception $e) {
-            Log::error('ZoomJWT->toUnixTimeStamp : ' . $e->getMessage());
+            Log::error('ZoomJWT->toUnixTimeStamp : '.$e->getMessage());
+
             return '';
         }
     }

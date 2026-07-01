@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Albums extends Model
 {
-     use HasFactory;
+    use HasFactory;
 
     public $timestamps = false;
 
@@ -17,6 +17,6 @@ class Albums extends Model
      * @var array
      */
     protected $fillable = [
-        'user_id', 'title', 'sub_title', 'thumbnail', 'privacy','page_id', 'created_at', 'updated_at'
+        'user_id', 'title', 'sub_title', 'thumbnail', 'privacy', 'page_id', 'created_at', 'updated_at',
     ];
 }

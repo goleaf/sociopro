@@ -36,7 +36,7 @@ class PaypalPaymentStatusTest extends TestCase
         Http::assertSentCount(2);
         Http::assertSent(fn (Request $request) => $request->method() === 'POST'
             && $request->url() === 'https://api.sandbox.paypal.com/v1/oauth2/token'
-            && $request->hasHeader('Authorization', 'Basic ' . base64_encode('sandbox-client:sandbox-secret'))
+            && $request->hasHeader('Authorization', 'Basic '.base64_encode('sandbox-client:sandbox-secret'))
             && $request->data() === ['grant_type' => 'client_credentials']);
         Http::assertSent(fn (Request $request) => $request->method() === 'GET'
             && $request->url() === 'https://api.sandbox.paypal.com/v1/payments/payment/PAY-123'

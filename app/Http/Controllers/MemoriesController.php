@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Posts;
 use App\Models\Friendships;
+use App\Models\Posts;
 use Illuminate\Http\Request;
 
 class MemoriesController extends Controller
@@ -14,10 +14,11 @@ class MemoriesController extends Controller
     {
         $this->middleware(function ($request, $next) {
             $this->user = Auth()->user();
+
             return $next($request);
         });
-
     }
+
     public function memories()
     {
         $memories_by_post = Posts::join('users', 'posts.user_id', '=', 'users.id')
@@ -42,14 +43,15 @@ class MemoriesController extends Controller
             ->where('is_accepted', 1)
             ->orderBy('friendships.importance', 'desc')->get();
         $page_data['friendships'] = $friendships;
-      //new
+        //new
 
         $page_data['has_memories'] = $memories_by_post->count();
         $page_data['view_path'] = 'frontend.main_content.memories';
+
         return view('frontend.index', $page_data);
     }
 
-    function load_memories(Request $request)
+    public function load_memories(Request $request)
     {
         $memories_by_post = Posts::join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends')
@@ -64,7 +66,7 @@ class MemoriesController extends Controller
             ->orderBy('posts.post_id', 'desc')
             ->skip($request->offset)->take(3)->get();
 
-           // New
+        // New
         $friendships = Friendships::where(function ($query) {
             $query->where('accepter', auth()->user()->id)
                 ->orWhere('requester', auth()->user()->id);
@@ -72,12 +74,13 @@ class MemoriesController extends Controller
             ->where('is_accepted', 1)
             ->orderBy('friendships.importance', 'desc')->get();
         $page_data['friendships'] = $friendships;
-      //new
-         
+        //new
+
         $page_data['posts'] = $memories_by_post;
         $page_data['has_memories'] = $memories_by_post->count();
         $page_data['user_info'] = $this->user;
         $page_data['type'] = 'user_post';
+
         return view('frontend.main_content.posts', $page_data);
     }
 }

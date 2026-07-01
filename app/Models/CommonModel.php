@@ -9,7 +9,8 @@ class CommonModel extends Model
 {
     use HasFactory;
 
-    function test(){
-    	return 'Test function access from another class';
+    public function test()
+    {
+        return 'Test function access from another class';
     }
 }

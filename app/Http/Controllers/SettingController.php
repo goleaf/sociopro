@@ -18,14 +18,16 @@ class SettingController extends Controller
     public function about_view()
     {
         $page_data['about'] = Setting::where('type', 'about')->value('description');
-        $page_data['view_path'] = "frontend.settings.about";
+        $page_data['view_path'] = 'frontend.settings.about';
+
         return view('frontend.index', $page_data);
     }
 
     public function policy_view()
     {
         $page_data['policy'] = Setting::where('type', 'policy')->value('description');
-        $page_data['view_path'] = "frontend.settings.policy";
+        $page_data['view_path'] = 'frontend.settings.policy';
+
         return view('frontend.index', $page_data);
     }
 
@@ -43,12 +45,14 @@ class SettingController extends Controller
         $details = $request->details;
 
         Mail::to($user->email)->send(new ContactMail($name, $email, $subject, $details));
+
         return redirect()->back();
     }
 
     public function term_view()
     {
         $page_data['term'] = Setting::where('type', 'term')->value('description');
+
         return view('frontend.settings.term', $page_data);
     }
 
@@ -61,6 +65,7 @@ class SettingController extends Controller
         $page_data['privacy'] = Setting::where('type', 'policy')->first();
         $page_data['about'] = Setting::where('type', 'about')->first();
         $page_data['view_path'] = 'setting.about';
+
         return view('backend.index', $page_data);
     }
 
@@ -71,6 +76,7 @@ class SettingController extends Controller
         ]);
         $setting = Setting::where('setting_id', $id)->update(['description' => $request->about]);
         flash()->addSuccess('About Page Information Updated successfully!');
+
         return redirect()->back();
     }
 
@@ -81,6 +87,7 @@ class SettingController extends Controller
         ]);
         $setting = Setting::where('setting_id', $id)->update(['description' => $request->privacy]);
         flash()->addSuccess('Privacy Page Information Updated successfully!');
+
         return redirect()->back();
     }
 
@@ -91,6 +98,7 @@ class SettingController extends Controller
         ]);
         $setting = Setting::where('setting_id', $id)->update(['description' => $request->term]);
         flash()->addSuccess('Term and Condition Page Information Updated successfully!');
+
         return redirect()->back();
     }
 
@@ -100,6 +108,7 @@ class SettingController extends Controller
     {
         $page_data['reported_post'] = Report::orderBy('id', 'DESC')->where('status', '0')->get();
         $page_data['view_path'] = 'reported_post.report';
+
         return view('backend.index', $page_data);
     }
 
@@ -120,12 +129,12 @@ class SettingController extends Controller
         $smptData = json_decode($smtp_settings->description);
         $page_data['smptData'] = $smptData;
         $page_data['view_path'] = 'setting.smtp';
+
         return view('backend.index', $page_data);
     }
 
     public function smtp_settings_save(Request $request, $id)
     {
-
         $data = $request->all();
 
         unset($data['_token']);
@@ -150,6 +159,7 @@ class SettingController extends Controller
         $description = json_encode($data);
         Setting::where('setting_id', $id)->update(['description' => $description]);
         flash()->addSuccess('This Smtp Settings Updated Successfully');
+
         return redirect()->back();
     }
 
@@ -177,14 +187,15 @@ class SettingController extends Controller
         $page_data['currencies'] = Currency::query()->select(['code'])->orderBy('code')->get();
         $page_data['languages'] = Language::query()->select(['name'])->groupBy('name')->orderBy('name')->get();
         $page_data['view_path'] = 'setting.system';
+
         return view('backend.index', $page_data);
     }
 
     public function system_settings_save(Request $request)
     {
-
         if ($request->commission_rate >= 100 || $request->commission_rate < 1) {
             flash()->addWarning('Commission rate has to between 1 - 100');
+
             return redirect()->back();
         }
 
@@ -208,6 +219,7 @@ class SettingController extends Controller
         Setting::where('type', 'commission_rate')->update(['description' => $request->commission_rate]);
         Setting::where('type', 'system_language')->update(['description' => strtolower($request->system_language)]);
         flash()->addSuccess('System Settings Updated Successfully');
+
         return redirect()->back();
     }
 
@@ -215,8 +227,10 @@ class SettingController extends Controller
     {
         $page_data['amazon_s3_data'] = get_settings('amazon_s3', true);
         $page_data['view_path'] = 'setting.amazon_s3_settings';
+
         return view('backend.index', $page_data);
     }
+
     public function amazon_s3_update(Request $request)
     {
         $data['active'] = $request->active;
@@ -226,46 +240,47 @@ class SettingController extends Controller
         $data['AWS_BUCKET'] = $request->AWS_BUCKET;
         Setting::where('type', 'amazon_s3')->update(['description' => json_encode($data)]);
         flash()->addSuccess('Amazon s3 settings updated successfully');
+
         return redirect()->back();
     }
 
     public function system_settings_logo_save(Request $request)
     {
         if ($request->hasFile('dark_logo')) {
-
             $dark_file_ext = $request->dark_logo->extension();
-            $dark_file_name = rand(0, 1000) . '.' . $dark_file_ext;
+            $dark_file_name = rand(0, 1000).'.'.$dark_file_ext;
             $done = Setting::where('type', 'system_dark_logo')->update(['description' => $dark_file_name]);
             if ($done) {
-                FileUploader::upload($request->dark_logo, 'public/storage/logo/dark/' . $dark_file_name);
+                FileUploader::upload($request->dark_logo, 'public/storage/logo/dark/'.$dark_file_name);
             }
         }
 
         if ($request->hasFile('light_logo')) {
             $light_file_ext = $request->light_logo->extension();
-            $light_file_name = rand(0, 1000) . '.' . $light_file_ext;
+            $light_file_name = rand(0, 1000).'.'.$light_file_ext;
             $done = Setting::where('type', 'system_light_logo')->update(['description' => $light_file_name]);
             if ($done) {
-                FileUploader::upload($request->light_logo, 'public/storage/logo/light/' . $light_file_name);
+                FileUploader::upload($request->light_logo, 'public/storage/logo/light/'.$light_file_name);
             }
         }
 
         if ($request->hasFile('favicon')) {
             $favicon_ext = $request->favicon->extension();
-            $favicon_file_name = rand(0, 1000) . '.' . $favicon_ext;
+            $favicon_file_name = rand(0, 1000).'.'.$favicon_ext;
             $done = Setting::where('type', 'system_fav_icon')->update(['description' => $favicon_file_name]);
             if ($done) {
-                FileUploader::upload($request->favicon, 'public/storage/logo/favicon/' . $favicon_file_name);
+                FileUploader::upload($request->favicon, 'public/storage/logo/favicon/'.$favicon_file_name);
             }
         }
         flash()->addSuccess('Logo Updated Successfully');
+
         return redirect()->back();
     }
 
     public function live_video_edit_form()
     {
-
         $page_data['view_path'] = 'setting.live_video';
+
         return view('backend.index', $page_data);
     }
 
@@ -274,48 +289,41 @@ class SettingController extends Controller
         $data['description'] = json_encode(['api_key' => $request->api_key, 'api_secret' => $request->api_secret]);
         Setting::where('type', 'zoom_configuration')->update($data);
         flash()->addSuccess('Live Settings Updated Successfully');
+
         return redirect()->route('admin.live-video.view');
     }
 
-
    // Admin Color Save
-
 
    public function system_settings_color_save(Request $request, $themeColor)
    {
-    Setting::where('type', 'theme_color')->update(['description' => $themeColor]);
-    flash()->addSuccess('System  Color Updated Successfully');
-     return redirect()->back();
+       Setting::where('type', 'theme_color')->update(['description' => $themeColor]);
+       flash()->addSuccess('System  Color Updated Successfully');
+
+       return redirect()->back();
    }
-   
+
  // Zitsi Live
-  public function zitsi_video_edit_form(){
-    $page_data['view_path'] = 'setting.zitsi_live_settings';
-    return view('backend.index', $page_data);
-  }    
+  public function zitsi_video_edit_form()
+  {
+      $page_data['view_path'] = 'setting.zitsi_live_settings';
+
+      return view('backend.index', $page_data);
+  }
 
   public function zitsi_live_video_update(Request $request)
-    {
-        $data['description'] = json_encode(['account_email' => $request->account_email, 'jitsi_app_id' => $request->jitsi_app_id, 'jitsi_jwt' => $request->jitsi_jwt ]);
-        Setting::where('type', 'zitsi_configuration')->update($data);
-        flash()->addSuccess('Zitsi Live Settings Updated Successfully');
-        return redirect()->route('admin.zitsi-video.view');
-    }
+  {
+      $data['description'] = json_encode(['account_email' => $request->account_email, 'jitsi_app_id' => $request->jitsi_app_id, 'jitsi_jwt' => $request->jitsi_jwt]);
+      Setting::where('type', 'zitsi_configuration')->update($data);
+      flash()->addSuccess('Zitsi Live Settings Updated Successfully');
 
-    public function all_settings_view(){
-        $page_data['view_path'] = "frontend.settings.all_settings";
+      return redirect()->route('admin.zitsi-video.view');
+  }
+
+    public function all_settings_view()
+    {
+        $page_data['view_path'] = 'frontend.settings.all_settings';
+
         return view('frontend.index', $page_data);
     }
-
-
-
-
-
-
-
-
-
-
-
-
 }

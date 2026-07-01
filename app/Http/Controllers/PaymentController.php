@@ -26,12 +26,14 @@ class PaymentController extends Controller
     public function index()
     {
         $payment_details = session('payment_details');
-        if (!$payment_details || !is_array($payment_details) || count($payment_details) <= 0) {
+        if (! $payment_details || ! is_array($payment_details) || count($payment_details) <= 0) {
             flash()->addError('Payment not configured yet');
+
             return redirect()->back();
         }
         if ($payment_details['payable_amount'] <= 0) {
-            flash()->addError("Payable amount cannot be less than 1");
+            flash()->addError('Payable amount cannot be less than 1');
+
             return redirect()->to($payment_details['cancel_url']);
         }
 
@@ -50,7 +52,7 @@ class PaymentController extends Controller
         $page_data['payment_gateway'] = $this->paymentGateway($identifier);
         $page_data += $this->paymentGatewayViewData($identifier, $page_data['payment_gateway'], $page_data['payment_details']);
 
-        return view('payment.' . $identifier . '.index', $page_data);
+        return view('payment.'.$identifier.'.index', $page_data);
     }
 
     public function payment_success($identifier, Request $request)
@@ -67,11 +69,12 @@ class PaymentController extends Controller
 
             $success_function = $payment_details['success_method']['function_name'];
 
-            $model_full_path = 'App\Models\\' . str_replace(' ', '', $success_model);
+            $model_full_path = 'App\Models\\'.str_replace(' ', '', $success_model);
 
             return $model_full_path::$success_function($identifier);
         } else {
             flash()->addError(get_phrase('Payment failed! Please try again.'));
+
             return redirect()->to($payment_details['cancel_url']);
         }
     }
@@ -81,6 +84,7 @@ class PaymentController extends Controller
         $payment_gateway = $this->paymentGateway($identifier);
         $model_full_path = $this->gatewayModelClass($payment_gateway);
         $created_payment_link = $model_full_path::payment_create($identifier);
+
         return redirect()->to($created_payment_link);
     }
 
@@ -102,13 +106,14 @@ class PaymentController extends Controller
         $user = Users::where('id', $request->user)->first();
         $payment = PaytmWallet::with('receive');
         $payment->prepare([
-            'order' => $user->phone . "_" . rand(1, 1000),
+            'order' => $user->phone.'_'.rand(1, 1000),
             'user' => auth()->user()->id,
             'mobile_number' => $user->phone,
             'email' => $user->email,
             'amount' => $request->amount,
             'callback_url' => route('payment.status', ['identifier' => 'paytm']),
         ]);
+
         return $payment->receive();
     }
 
@@ -122,15 +127,16 @@ class PaymentController extends Controller
         // update the db data as per result from api call
         if ($transaction->isSuccessful()) {
             Paytm::where('order_id', $order_id)->update(['status' => 1, 'transaction_id' => $transaction->getTransactionId()]);
-            return redirect(route('initiate.payment'))->with('message', "Your payment is successfull.");
 
-        } else if ($transaction->isFailed()) {
+            return redirect(route('initiate.payment'))->with('message', 'Your payment is successfull.');
+        } elseif ($transaction->isFailed()) {
             Paytm::where('order_id', $order_id)->update(['status' => 0, 'transaction_id' => $transaction->getTransactionId()]);
-            return redirect(route('initiate.payment'))->with('message', "Your payment is failed.");
 
-        } else if ($transaction->isOpen()) {
+            return redirect(route('initiate.payment'))->with('message', 'Your payment is failed.');
+        } elseif ($transaction->isOpen()) {
             Paytm::where('order_id', $order_id)->update(['status' => 2, 'transaction_id' => $transaction->getTransactionId()]);
-            return redirect(route('initiate.payment'))->with('message', "Your payment is processing.");
+
+            return redirect(route('initiate.payment'))->with('message', 'Your payment is processing.');
         }
         $transaction->getResponseMessage(); //Get Response Message If Available
 
@@ -147,7 +153,7 @@ class PaymentController extends Controller
 
     private function gatewayModelClass(Payment_gateway $paymentGateway): string
     {
-        return 'App\Models\payment_gateway\\' . str_replace(' ', '', $paymentGateway->model_name);
+        return 'App\Models\payment_gateway\\'.str_replace(' ', '', $paymentGateway->model_name);
     }
 
     private function paymentPageSettings(): array
