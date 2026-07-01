@@ -31,7 +31,7 @@
     <div class="row mt-12 ">
         <div class="col-lg-12">
             <div class="card border-none p-3 radius-8 nblog_details blog-details">
-                @php echo script_checker($blog->description, false); @endphp
+                {!! script_checker($blog->description, false) !!}
                 <div class="blog-footer">
                     <div class="post-share justify-content-between align-items-center border-bottom pb-3">
                         <div class="post-meta ">

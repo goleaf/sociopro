@@ -9,29 +9,26 @@
 	}
 </script>
 
-@if($message = Session::get('success_message'))
+@if($successMessage)
 	<script>
 		"use strict";
 
-		alert_message("{{$message}}");
+		alert_message("{{ $successMessage }}");
 	</script>
-	@php Session()->forget('success_message'); @endphp
 @endif
 
-@if($message = Session::get('info_message'))
+@if($infoMessage)
 	<script>
 		"use strict";
 
-		alert_message("{{$message}}");
+		alert_message("{{ $infoMessage }}");
 	</script>
-	@php Session()->forget('info_message'); @endphp
 @endif
 
-@if($message = Session::get('error_message'))
+@if($errorMessage)
 	<script>
 		"use strict";
 
-		alert_message("{{$message}}");
+		alert_message("{{ $errorMessage }}");
 	</script>
-	@php Session()->forget('error_message'); @endphp
 @endif

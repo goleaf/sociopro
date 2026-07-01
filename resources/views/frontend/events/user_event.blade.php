@@ -33,8 +33,8 @@
                     </a>
                     <div class="og_btn d-flex justify-content-between mt-2">
                         
-                        {{-- <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.interested',$event->id); ?>')" class="btn ni_btn btn-primary @if (in_array(auth()->user()->id, json_decode($event->interested_users_id))) displaynone @endif" id="interestedId{{ $event->id }}"> <i class="fa-solid fa-star me-2"></i>{{get_phrase('Interested')}}</a>
-                        <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.notinterested',$event->id); ?>')" class="btn ni_btn btn-secondary @if (!in_array(auth()->user()->id, json_decode($event->interested_users_id))) displaynone @endif" id="notInterestedId{{ $event->id }}"> {{get_phrase('NotInterested')}}</a> --}}
+                        {{-- <a href="javascript:void(0)" onclick="ajaxAction('{{ route('event.interested',$event->id) }}')" class="btn ni_btn btn-primary @if (in_array(auth()->user()->id, json_decode($event->interested_users_id))) displaynone @endif" id="interestedId{{ $event->id }}"> <i class="fa-solid fa-star me-2"></i>{{get_phrase('Interested')}}</a>
+                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('event.notinterested',$event->id) }}')" class="btn ni_btn btn-secondary @if (!in_array(auth()->user()->id, json_decode($event->interested_users_id))) displaynone @endif" id="notInterestedId{{ $event->id }}"> {{get_phrase('NotInterested')}}</a> --}}
                         
                         @if ($event->user_id==auth()->user()->id)
                         <div class="post-controls hover_drop dropdown">
@@ -48,7 +48,7 @@
                                             data-bs-target="#createEvent"><i class="fa fa-edit me-1"></i> {{get_phrase('Edit Event')}}</button>
                                     </li>
                                     <li>
-                                        <a href="javascript:void(0)" onclick="confirmAction('<?php echo route('event.delete', ['event_id' => $event->id]); ?>', true)" class="dropdown-item btn btn-primary btn-sm"><i class="fa fa-trash me-1"></i> {{get_phrase('Delete Event')}}</a>
+                                        <a href="javascript:void(0)" onclick="confirmAction('{{ route('event.delete', ['event_id' => $event->id]) }}', true)" class="dropdown-item btn btn-primary btn-sm"><i class="fa fa-trash me-1"></i> {{get_phrase('Delete Event')}}</a>
                                     </li>
 
                                     @if($postOfThisEvent != null)
@@ -91,8 +91,8 @@
                             </div>
                         </div>
                         {{-- <div class="og_go">
-                            <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.going',$event->id); ?>')" class="btn btn-primary @if (in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif" id="goingId{{ $event->id }}"> {{get_phrase('Going')}}</a>
-                            <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.notgoing',$event->id); ?>')" class="btn btn-secondary @if (!in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif" id="notGoingId{{ $event->id }}"> {{get_phrase('Cancel')}}</a>
+                            <a href="javascript:void(0)" onclick="ajaxAction('{{ route('event.going',$event->id) }}')" class="btn btn-primary @if (in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif" id="goingId{{ $event->id }}"> {{get_phrase('Going')}}</a>
+                            <a href="javascript:void(0)" onclick="ajaxAction('{{ route('event.notgoing',$event->id) }}')" class="btn btn-secondary @if (!in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif" id="notGoingId{{ $event->id }}"> {{get_phrase('Cancel')}}</a>
                         </div> --}}
                     </div>
                 </div>

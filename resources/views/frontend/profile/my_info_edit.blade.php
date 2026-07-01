@@ -14,10 +14,10 @@
   </div>
   <div class="mb-3">
     <label class="form-label">{{get_phrase('Gender')}}</label><br>
-    <input name="gender" value="male" type="radio" class="" <?php if($user_info->gender == 'male')echo 'checked'; ?> id="genderMale">
+    <input name="gender" value="male" type="radio" class="" @checked($user_info->gender == 'male') id="genderMale">
     <label class="form-label" for="genderMale">{{get_phrase('Male')}}</label>
     <br>
-    <input name="gender" value="female" type="radio" class="" <?php if($user_info->gender == 'female')echo 'checked'; ?> id="genderFemale">
+    <input name="gender" value="female" type="radio" class="" @checked($user_info->gender == 'female') id="genderFemale">
     <label class="form-label" for="genderFemale">{{get_phrase('Female')}}</label>
   </div>
   <div class="mb-3">

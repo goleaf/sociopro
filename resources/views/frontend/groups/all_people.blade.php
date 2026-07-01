@@ -30,7 +30,7 @@
                                         role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     </a>
                                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="ajaxAction('<?php echo route('group.rjoin',$group->id); ?>')">
+                                        <li><a class="dropdown-item" href="javascript:void(0)" onclick="ajaxAction('{{ route('group.rjoin',$group->id) }}')">
                                                 {{ get_phrase('Leave Group') }}</a></li>
                                     </ul>
                                 </div>

@@ -2,7 +2,7 @@
     "use strict";
 
     function createStoryForm(data) {
-        var url = "<?php echo url('/load_modal_content'); ?>/" + data;
+        var url = "{{ url('/load_modal_content') }}/" + data;
         $('#story-create-modal').modal('show');
 
         $.ajax({

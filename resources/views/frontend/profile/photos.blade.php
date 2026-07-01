@@ -35,7 +35,7 @@
                     <div class="grid_control">
                         <div class="col-create-album">
                             <div class="card album-create-card new_album min-auto">
-                                <a onclick="showCustomModal('<?php echo route('profile.album', ['action_type' => 'form']); ?>', '{{get_phrase('Create Album')}}')" class="create-album">
+                                <a onclick="showCustomModal('{{ route('profile.album', ['action_type' => 'form']) }}', '{{get_phrase('Create Album')}}')" class="create-album">
                                     <i class="fa-solid fa-plus"></i>
                                 </a>
                                 <h4 class="h6">{{get_phrase('Create Album')}}</h4>

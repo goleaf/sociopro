@@ -23,10 +23,10 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('accept.event.request.from.notification', ['id' => $newNotification->sender_user_id, 'event_id' => $newNotification->getEventData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('accept.event.request.from.notification', ['id' => $newNotification->sender_user_id, 'event_id' => $newNotification->getEventData->id]) }}')"
                                                         class="btn common_btn">{{ get_phrase('Accept') }}</a>
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('decline.event.request.from.notification', ['id' => $newNotification->sender_user_id, 'event_id' => $newNotification->getEventData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('decline.event.request.from.notification', ['id' => $newNotification->sender_user_id, 'event_id' => $newNotification->getEventData->id]) }}')"
                                                         class="btn btn-danger">{{ get_phrase('Decline') }}</a>
                                                 </div>
                                             @endif
@@ -60,10 +60,10 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('accept.fundraiser.request.from.notification', ['id' => $newNotification->sender_user_id, 'fundraiser_id' => $newNotification->getFundraiserData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('accept.fundraiser.request.from.notification', ['id' => $newNotification->sender_user_id, 'fundraiser_id' => $newNotification->getFundraiserData->id]) }}')"
                                                         class="btn common_btn">{{ get_phrase('Accept') }}</a>
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('decline.fundraiser.request.from.notification', ['id' => $newNotification->sender_user_id, 'fundraiser_id' => $newNotification->getFundraiserData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('decline.fundraiser.request.from.notification', ['id' => $newNotification->sender_user_id, 'fundraiser_id' => $newNotification->getFundraiserData->id]) }}')"
                                                         class="btn btn-danger">{{ get_phrase('Decline') }}</a>
                                                 </div>
                                             @endif
@@ -93,10 +93,10 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('accept.group.request.from.notification', ['id' => $newNotification->sender_user_id, 'group_id' => $newNotification->getGroupData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('accept.group.request.from.notification', ['id' => $newNotification->sender_user_id, 'group_id' => $newNotification->getGroupData->id]) }}')"
                                                         class="btn common_btn">{{ get_phrase('Accept') }}</a>
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('decline.group.request.from.notification', ['id' => $newNotification->sender_user_id, 'group_id' => $newNotification->getGroupData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('decline.group.request.from.notification', ['id' => $newNotification->sender_user_id, 'group_id' => $newNotification->getGroupData->id]) }}')"
                                                         class="btn btn-danger">{{ get_phrase('Decline') }}</a>
                                                 </div>
                                             @endif
@@ -123,10 +123,10 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('accept.friend.request.from.notification', $newNotification->sender_user_id); ?>')"
+                                                        onclick="ajaxAction('{{ route('accept.friend.request.from.notification', $newNotification->sender_user_id) }}')"
                                                         class="btn common_btn">{{ get_phrase('Accept') }}</a>
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('decline.friend.request.from.notification', $newNotification->sender_user_id); ?>')"
+                                                        onclick="ajaxAction('{{ route('decline.friend.request.from.notification', $newNotification->sender_user_id) }}')"
                                                         class="btn btn-danger">{{ get_phrase('Decline') }}</a>
                                                 </div>
                                             @endif
@@ -154,7 +154,7 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('mark.as.read.notification', $newNotification->id); ?>')"
+                                                        onclick="ajaxAction('{{ route('mark.as.read.notification', $newNotification->id) }}')"
                                                         class="btn common_btn">{{ get_phrase('Mark As Read') }}</a>
                                                 </div>
                                             @endif
@@ -183,7 +183,7 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('mark.as.read.notification', $newNotification->id); ?>')"
+                                                        onclick="ajaxAction('{{ route('mark.as.read.notification', $newNotification->id) }}')"
                                                         class="btn common_btn">{{ get_phrase('Mark As Read') }}</a>
                                                 </div>
                                             @endif
@@ -211,7 +211,7 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('mark.as.read.notification', $newNotification->id); ?>')"
+                                                        onclick="ajaxAction('{{ route('mark.as.read.notification', $newNotification->id) }}')"
                                                         class="btn common_btn">{{ get_phrase('Mark As Read') }}</a>
                                                 </div>
                                             @endif
@@ -238,7 +238,7 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('mark.as.read.notification', $newNotification->id); ?>')"
+                                                        onclick="ajaxAction('{{ route('mark.as.read.notification', $newNotification->id) }}')"
                                                         class="btn common_btn">{{ get_phrase('Mark As Read') }}</a>
                                                 </div>
                                             @endif
@@ -276,10 +276,10 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('accept.event.request.from.notification', ['id' => $newNotification->sender_user_id, 'event_id' => $newNotification->getEventData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('accept.event.request.from.notification', ['id' => $newNotification->sender_user_id, 'event_id' => $newNotification->getEventData->id]) }}')"
                                                         class="btn common_btn">{{ get_phrase('Accept') }}</a>
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('decline.event.request.from.notification', ['id' => $newNotification->sender_user_id, 'event_id' => $newNotification->getEventData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('decline.event.request.from.notification', ['id' => $newNotification->sender_user_id, 'event_id' => $newNotification->getEventData->id]) }}')"
                                                         class="btn btn-danger">{{ get_phrase('Decline') }}</a>
                                                 </div>
                                             @endif
@@ -311,10 +311,10 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('accept.fundraiser.request.from.notification', ['id' => $newNotification->sender_user_id, 'fundraiser_id' => $newNotification->getFundraiserData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('accept.fundraiser.request.from.notification', ['id' => $newNotification->sender_user_id, 'fundraiser_id' => $newNotification->getFundraiserData->id]) }}')"
                                                         class="btn common_btn">{{ get_phrase('Accept') }}</a>
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('decline.fundraiser.request.from.notification', ['id' => $newNotification->sender_user_id, 'fundraiser_id' => $newNotification->getFundraiserData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('decline.fundraiser.request.from.notification', ['id' => $newNotification->sender_user_id, 'fundraiser_id' => $newNotification->getFundraiserData->id]) }}')"
                                                         class="btn btn-danger">{{ get_phrase('Decline') }}</a>
                                                 </div>
                                             @endif
@@ -344,10 +344,10 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('accept.group.request.from.notification', ['id' => $newNotification->sender_user_id, 'group_id' => $newNotification->getGroupData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('accept.group.request.from.notification', ['id' => $newNotification->sender_user_id, 'group_id' => $newNotification->getGroupData->id]) }}')"
                                                         class="btn common_btn">{{ get_phrase('Accept') }}</a>
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('decline.group.request.from.notification', ['id' => $newNotification->sender_user_id, 'group_id' => $newNotification->getGroupData->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('decline.group.request.from.notification', ['id' => $newNotification->sender_user_id, 'group_id' => $newNotification->getGroupData->id]) }}')"
                                                         class="btn btn-danger">{{ get_phrase('Decline') }}</a>
                                                 </div>
                                             @endif
@@ -374,10 +374,10 @@
                                             @if ($newNotification->status == '0')
                                                 <div class="btn-inline">
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('accept.friend.request.from.notification', $newNotification->sender_user_id); ?>')"
+                                                        onclick="ajaxAction('{{ route('accept.friend.request.from.notification', $newNotification->sender_user_id) }}')"
                                                         class="btn common_btn">{{ get_phrase('Accept') }}</a>
                                                     <a href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('decline.friend.request.from.notification', $newNotification->sender_user_id); ?>')"
+                                                        onclick="ajaxAction('{{ route('decline.friend.request.from.notification', $newNotification->sender_user_id) }}')"
                                                         class="btn btn-danger">{{ get_phrase('Decline') }}</a>
                                                 </div>
                                             @endif

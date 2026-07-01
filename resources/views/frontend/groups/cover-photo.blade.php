@@ -19,7 +19,6 @@
                 <div class="hero_discus">
                     <h3 class="mb-1">{{ $group->title }}</h3>
                     <div class="img_hero">
-                        @php $joined = \App\Models\Group_member::where('group_id',$group->id)->where('is_accepted','1')->count(); @endphp
                        
                         {{-- <div class="single_image">
                             @foreach ($recent_team_member as $recent_team_member)
@@ -29,7 +28,7 @@
                         </div> --}}
                        
                         
-                        <p>{{ $joined }} {{ get_phrase('Member') }}{{ $joined>1?"s":"" }}</p>
+                        <p>{{ $viewData->groupAcceptedMemberCount($group) }} {{ get_phrase('Member') }}{{ $viewData->groupAcceptedMemberCount($group)>1?"s":"" }}</p>
                     </div>
                 </div>
 
@@ -41,7 +40,6 @@
         </div>
     </div>
 </div>
-
 
 
 

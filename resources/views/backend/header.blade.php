@@ -30,7 +30,7 @@
         <div class="header-menu">
           <ul>
             <li class="user-profile pe-2">
-              <select class="form-control text-capitalize text-13px py-1 me-2" onchange="$(location).attr('href','<?php echo route('language.switch', ''); ?>/'+$(this).val());" style="margin-top: 7px;">
+              <select class="form-control text-capitalize text-13px py-1 me-2" onchange="$(location).attr('href','{{ route('language.switch', '') }}/'+$(this).val());" style="margin-top: 7px;">
                 @foreach(get_all_language() as $language)
                   <option value="{{$language->name}}" @if($language->name == Session('active_language')) selected @endif>{{$language->name}}</option>
                 @endforeach

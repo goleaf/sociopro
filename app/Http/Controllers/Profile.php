@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Query\JoinClause;
 
 use App\Models\{Stories, Posts, Comments, Feeling_and_activities, CommonModels, Live_streamings, Users, Friendships, Media_files, Albums, Notification, User, FileUploader, Album_image, Follower};
+use App\ViewModels\ProfileFollowList;
 
 use Session, Image;
 
@@ -114,6 +115,11 @@ class Profile extends Controller
 
         $page_data['friendships'] = $friendships;
         $page_data['friend_requests'] = $friend_requests;
+        $followList = ProfileFollowList::forUser($this->user);
+        $page_data['followers'] = $followList['followers']['items'];
+        $page_data['followersCount'] = $followList['followers']['count'];
+        $page_data['following'] = $followList['following']['items'];
+        $page_data['followingCount'] = $followList['following']['count'];
         
 
         $page_data['user_info'] = $this->user;

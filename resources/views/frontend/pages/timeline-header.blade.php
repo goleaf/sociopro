@@ -27,10 +27,10 @@
                         
                         @if ($likecount>0)
             
-                            <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('page.dislike',$page->id); ?>')"  class="btn common_btn_3" ><img class="mb-1 me-1" src="{{ asset('assets/frontend/images/like-i.png') }}" alt=""><span class="d-sm-inline-block  d-xl-inline-block">{{ get_phrase('Liked') }}</a>
+                            <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.dislike',$page->id) }}')"  class="btn common_btn_3" ><img class="mb-1 me-1" src="{{ asset('assets/frontend/images/like-i.png') }}" alt=""><span class="d-sm-inline-block  d-xl-inline-block">{{ get_phrase('Liked') }}</a>
                             
                         @else
-                            <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('page.like',$page->id); ?>')" class="btn common_btn"><i class="me-1 fa-regular fa-thumbs-up"></i><span class="d-sm-inline-block  d-xl-inline-block">{{ get_phrase('Like') }}</a>
+                            <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.like',$page->id) }}')" class="btn common_btn"><i class="me-1 fa-regular fa-thumbs-up"></i><span class="d-sm-inline-block  d-xl-inline-block">{{ get_phrase('Like') }}</a>
                         @endif
                         <a class="btn common_btn" href="{{ route('pages') }}"><img src="{{ asset('assets/frontend/images/page.svg') }}" class="w-20 height-20-css" alt=""> <span class="d-sm-inline-block  d-xl-inline-block">{{ get_phrase('Pages') }}</a>
                     </div>

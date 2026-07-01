@@ -1,13 +1,9 @@
 <div class="sidebar">
     <div class="logo-details mt-4">
         <div class="img_wrapper">
-            @php
-                $system_light_logo = \App\Models\Setting::where('type', 'system_light_logo')->value('description');
-                $system_fav_icon = \App\Models\Setting::where('type', 'system_fav_icon')->value('description');
-            @endphp
-            <img class="logo-lg" height="34px" src="{{ get_system_logo_favicon($system_light_logo, 'light') }}"
+            <img class="logo-lg" height="34px" src="{{ get_system_logo_favicon($viewData->setting('system_light_logo'), 'light') }}"
                 alt="" />
-            <img class="logo-sm" height="34px" src="{{ get_system_logo_favicon($system_fav_icon, 'favicon') }}"
+            <img class="logo-sm" height="34px" src="{{ get_system_logo_favicon($viewData->setting('system_fav_icon'), 'favicon') }}"
                 alt="" />
         </div>
     </div>
@@ -55,15 +51,11 @@
                 <li><a class="@if (Route::currentRouteName() == 'admin.user.add') Active @endif"
                         href="{{ route('admin.user.add') }}">{{ get_phrase('Create new user') }}</a></li>
                 <li class="user_req_notification_root">
-                    @php
-                $pending_count = DB::table('account_active_requests')->where('status', 'pending')->count();
-              @endphp
-            
-            @if ($pending_count > 0)
+            @if ($viewData->pendingAccountActivationCount() > 0)
                 
                 <a class="@if (Route::currentRouteName() == 'admin.users.accountActiveReq') Active @endif"
                 href="{{ route('admin.users.accountActiveReq') }}">{{ get_phrase('Id Active Request') }}</a>
-                <span class="user_req_notification"><h5>{{ $pending_count }}</h5></span>
+                <span class="user_req_notification"><h5>{{ $viewData->pendingAccountActivationCount() }}</h5></span>
             </li>
                 
             @else
@@ -178,9 +170,6 @@
          
         {{-- paid content --}}
         @if (addon_status('paid_content') == 1)
-            @php
-               $list = App\Models\PaidContentPayout::where('status', false)->get();
-            @endphp
             <li class="nav-links-li @if (Route::currentRouteName() == 'author.list' ||
                     Route::currentRouteName() == 'admin.users' ||
                     Route::currentRouteName() == 'payout.report' ||
@@ -207,8 +196,8 @@
                             href="{{ route('payout.report') }}">{{ get_phrase('Payout report') }}</a></li>
                     <li><a class="@if (Route::currentRouteName() == 'pending.report') Active @endif"
                             href="{{ route('pending.report') }}">{{ get_phrase('Pending report') }}
-                            @if(count($list) > 0)
-                              <span class="span">{{count($list)}}</span>
+                            @if($viewData->pendingPaidContentPayoutCount() > 0)
+                              <span class="span">{{ $viewData->pendingPaidContentPayoutCount() }}</span>
                             @endif
                         </a></li>
                 </ul>
@@ -217,9 +206,6 @@
 
         {{-- fundraiser --}}
         @if (addon_status('fundraiser') == 1)
-          @php
-              $list = App\Models\Fundraiser_payout::where('status', false)->get();
-          @endphp
             <li class="nav-links-li @if (Route::currentRouteName() == 'backend.fundraiser.report' ||
                     Route::currentRouteName() == 'backend.fundraiser.pending') showMenu @endif">
                 <div class="iocn-link">
@@ -246,9 +232,9 @@
                     </li>
                     <li><a class="@if (Route::currentRouteName() == 'backend.fundraiser.pending') Active @endif"
                             href="{{ route('backend.fundraiser.pending') }}">{{ get_phrase('Pending payout') }}
-                            @if(count($list) > 0)
-                              <span class="span">{{count($list)}}</span>
-                           @endif
+                            @if($viewData->pendingFundraiserPayoutCount() > 0)
+                              <span class="span">{{ $viewData->pendingFundraiserPayoutCount() }}</span>
+                            @endif
                         </a>
                     </li>
                 </ul>
@@ -314,9 +300,6 @@
         </li>
         {{-- Job Start Here --}}
         @if (addon_status('job') == 1)
-          @php
-               $status = App\Models\Job::where('status', 0)->get();
-            @endphp
         <li class="nav-links-li  @if (Route::currentRouteName() == 'admin.job' ||
                 Route::currentRouteName() == 'admin.view.job.category' ||
                 Route::currentRouteName() == 'admin.pending.job' ||
@@ -349,8 +332,8 @@
                         href="{{ route('admin.job.create') }}">{{ get_phrase('Create Job') }}</a></li>
                 <li><a class="@if (Route::currentRouteName() == 'admin.pending.job') Active @endif"
                             href="{{ route('admin.pending.job') }}">{{ get_phrase('Pending Job') }}
-                            @if(count($status) > 0)
-                            <span class="span">{{count($status)}}</span>
+                            @if($viewData->pendingJobCount() > 0)
+                            <span class="span">{{ $viewData->pendingJobCount() }}</span>
                           @endif
                         </a> 
                  </li>

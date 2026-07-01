@@ -1,16 +1,15 @@
 {{-- <div class="col-lg-5">
     <aside class="sidebar group-sidebar plain-sidebar"> --}}
         <div class="widget intro-widget">
-            @php $join = \App\Models\Group_member::where('group_id',$group->id)->where('user_id',auth()->user()->id)->count(); @endphp
-            @if ($join>0)
+            @if ($viewData->userJoinedGroup($group, auth()->user()))
                 @if ($group->user_id==auth()->user()->id)
                 <a href="javascript:void(0)" class="btn common_btn me-2 my-1 w-100"><i  class="fa-solid fa-users me-2"></i> {{ get_phrase('Joined') }}</a>
                 @else
-                <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('group.rjoin',$group->id); ?>')" class="btn common_btn_2 me-2 my-1 w-100"><i
+                <a href="javascript:void(0)" onclick="ajaxAction('{{ route('group.rjoin',$group->id) }}')" class="btn common_btn_2 me-2 my-1 w-100"><i
                     class="fa-solid fa-users me-2"></i>{{ get_phrase('Joined') }}</a>
                 @endif
             @else
-            <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('group.join',$group->id); ?>')" class="btn common_btn my-1 w-100"><i
+            <a href="javascript:void(0)" onclick="ajaxAction('{{ route('group.join',$group->id) }}')" class="btn common_btn my-1 w-100"><i
                 class="fa-solid fa-users me-2"></i>{{ get_phrase('Join') }}</a>
             @endif
             {{-- <a data-bs-toggle="modal" data-bs-target="#newGroup" href="#" class="btn btn-primary my-1"><i class="fa fa-circle-plus"></i> {{ get_phrase('Invite') }}</a> --}}
@@ -18,7 +17,7 @@
             
             <h3 class="widget-title mt-3">{{ get_phrase('About') }}</h3>
             <div class="intro_t">
-                <p>@php echo script_checker($group->about, false); @endphp</p>
+                <p>{!! script_checker($group->about, false) !!}</p>
             </div>
         </div>
 
@@ -40,11 +39,7 @@
             <h4 class="widget-title">{{ get_phrase('Recent Media') }}</h4>
           
             <div class="row row-cols-3 g-1 mt-3">
-                @foreach(\App\Models\Media_files::where('group_id', $group->id)
-                    ->whereNull('album_id')
-                    ->whereNull('product_id')
-                    ->whereNull('page_id')
-                    ->take(10)->orderBy('id', 'DESC')->get(); as $media_file)
+                @foreach($viewData->groupMediaFiles($group) as $media_file)
                     @if($media_file->file_type == 'video')
                         <div class="single-item-countable col">
                             <video muted controlsList="nodownload" class="img-thumbnail w-100 user_info_custom_height">
@@ -67,7 +62,7 @@
                 <h4 class="widget-title mb-0">{{ get_phrase('Recent Members') }}</h4>
             </div>
             <div class="row row-cols-3 g-1 mt-3">
-            @foreach ( \App\Models\Group_member::where('group_id',$group->id)->where('is_accepted','1')->orderBy('id','DESC')->limit('8')->get(); as $key => $groupmember )
+            @foreach ($viewData->recentGroupMembers($group) as $key => $groupmember)
                 <div class="col">
                     <a href="{{ route('user.profile.view',$groupmember->getUser->id) }}" class="friend image_hight d-block">
                         <img width="100%" class="rounded" src="{{ get_user_image($groupmember->getUser->photo,'optimized') }}" alt="">

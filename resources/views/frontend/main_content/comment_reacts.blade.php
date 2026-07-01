@@ -1,8 +1,7 @@
 @if(isset($comment_react) && $comment_react == true)
 
-    @php $comment_unique_values = array_unique($user_comment_reacts); @endphp
     <span>
-        @foreach($comment_unique_values as $user_comment_react)
+        @foreach(array_unique($user_comment_reacts) as $user_comment_react)
             @if($user_comment_react == 'like')
                 <img class="w-17px" src="{{asset('storage/images/like.svg')}}" alt="">
             @endif

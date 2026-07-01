@@ -35,7 +35,7 @@
                     <tr>
                         <td>{{++$key}}</td>
                         <td>{{$payment_gateway->title}}</td>
-                        <td><?php echo ellipsis(script_checker($payment_gateway->currency), 50); ?></td>
+                        <td>{{ ellipsis(script_checker($payment_gateway->currency), 50) }}</td>
                         <td>
                         	@if($payment_gateway->test_mode == 1)
 	                            <span class="badge bg-warning">{{get_phrase('Test Mode')}}</span>

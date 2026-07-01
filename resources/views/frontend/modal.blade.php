@@ -24,7 +24,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title text-center"><i class="fa fa-plus-circle me-2"></i><?php echo get_phrase('Create new story'); ?></h5>
+                <h5 class="modal-title text-center"><i class="fa fa-plus-circle me-2"></i>{{ get_phrase('Create new story') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                     aria-label="Close"><i class="fa fa-close"></i></button>
             </div>

@@ -1,8 +1,5 @@
 
 <div id="jitsiMeet"></div>
-<?php
-    $jitsis = json_decode(get_settings('zitsi_configuration'), true);
-?>
 
 <script src="{{ asset('assets/frontend/js/jquery-3.6.0.min.js') }}" charset="utf-8"></script>
 {{-- <script src="{{ asset('assets/frontend/js/jitsi.js') }}"></script> --}}
@@ -10,12 +7,7 @@
 <script>
     const domain = "8x8.vc";
 </script>
-<script src='https://8x8.vc/<?php echo get_settings('jitsi_app_id'); ?>/external_api.js' async></script>
-
-@php
-  $leaveUrl = route('timeline');
-
-@endphp
+<script src='https://8x8.vc/{{ $jitsiAppId }}/external_api.js' async></script>
 
 
 <!-- check moderator or Auidence -->
@@ -26,8 +18,8 @@
             var name = "{{ $user->name }}";
             var join_pass = "{{ $join_pass }}";
             var room = "{{ $room }}";
-            var jitsi_app_id = "<?php echo $jitsis['jitsi_app_id']; ?>";
-            var jitsi_jwt = "<?php echo $jitsis['jitsi_jwt']; ?>";
+            var jitsi_app_id = "{{ $jitsis['jitsi_app_id'] }}";
+            var jitsi_jwt = "{{ $jitsis['jitsi_jwt'] }}";
            
            
                 const api = new JitsiMeetExternalAPI(domain, {
@@ -97,13 +89,13 @@
                     displayName: name
                 },
                 interfaceConfig: {
-                    CONNECTION_DISCONNECTED_URL: '<?php echo $leaveUrl; ?>',
+                    CONNECTION_DISCONNECTED_URL: '{{ $leaveUrl }}',
                 },
 
             });
             // Redirect users to $leaveUrl upon closing the meeting
             api.on('readyToClose', () => {
-                window.location.href = '<?php echo $leaveUrl; ?>';
+                window.location.href = '{{ $leaveUrl }}';
             });
         }
         //var api = new JitsiMeetExternalAPI(domain, options);
@@ -128,7 +120,7 @@
         var name = "{{  auth()->user()->name }}";
         var join_pass = "{{ $join_pass }}";
         var room = "{{ $room }}";
-        var jitsi_app_id = "<?php echo $jitsis['jitsi_app_id']; ?>";
+        var jitsi_app_id = "{{ $jitsis['jitsi_app_id'] }}";
        
 
         window.onload = () => {
@@ -189,12 +181,12 @@
                     displayName: name
                 },
                 interfaceConfig: {
-                    CONNECTION_DISCONNECTED_URL: '<?php echo $leaveUrl; ?>', 
+                    CONNECTION_DISCONNECTED_URL: '{{ $leaveUrl }}', 
                 },
             });
             // Redirect users to $leaveUrl upon closing the meeting
             api.on('readyToClose', () => {
-                window.location.href = '<?php echo $leaveUrl; ?>';
+                window.location.href = '{{ $leaveUrl }}';
             });
         }
        // var api = new JitsiMeetExternalAPI(domain, options);

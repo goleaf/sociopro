@@ -1,8 +1,7 @@
 @if(isset($post_react) && $post_react == true)
 <div class="post-react d-flex align-items-center">
-    <?php $unique_values = array_unique($user_reacts); ?>
     <ul class="react-icons">
-        @foreach($unique_values as $user_react)
+        @foreach(array_unique($user_reacts) as $user_react)
             @if($user_react == 'like')
                 {{-- <li><img class="w-17px" src="{{asset('storage/images/like.svg')}}" alt=""></li> --}}
                 <li class="like-color h-22"><svg width="20" class="me-0" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -94,4 +93,3 @@
         @endif
     @endif
 @endif
-

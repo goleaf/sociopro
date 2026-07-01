@@ -4,6 +4,6 @@
         <img src="{{asset('storage/images/location.png')}}">
         <span>{{$post->location}}</span>
         <hr>
-        <small>@php echo DB::table('posts')->where('location', $post->location)->get()->count() @endphp {{get_phrase('visits')}}</small>
+        <small>{{ $viewData->locationVisitCount($post->location) }} {{ get_phrase('visits') }}</small>
     </a>
 </div> 

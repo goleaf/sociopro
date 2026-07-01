@@ -13,14 +13,14 @@
                      </div>
                      <div class="ev_right">
                         @if (in_array(auth()->user()->id, json_decode($event->going_users_id)))
-                          <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.going',$event->id); ?>')" class="w-100 mb-2 btn btn-primary @if (in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif" id="goingId{{ $event->id }}"> {{get_phrase('Going')}}</a>
+                          <a href="javascript:void(0)" onclick="ajaxAction('{{ route('event.going',$event->id) }}')" class="w-100 mb-2 btn btn-primary @if (in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif" id="goingId{{ $event->id }}"> {{get_phrase('Going')}}</a>
                         @endif
-                        {{-- <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.notgoing',$event->id); ?>')" class="w-100 mb-2 btn btn-secondary @if (!in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif" id="notGoingId{{ $event->id }}"> {{get_phrase('Cancel')}}</a> --}}
+                        {{-- <a href="javascript:void(0)" onclick="ajaxAction('{{ route('event.notgoing',$event->id) }}')" class="w-100 mb-2 btn btn-secondary @if (!in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif" id="notGoingId{{ $event->id }}"> {{get_phrase('Cancel')}}</a> --}}
 
                           @if(in_array(auth()->user()->id, json_decode($event->interested_users_id)))
-                           <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.interested',$event->id); ?>')" class="w-100 mb-2 no_btn btn btn-primary @if (in_array(auth()->user()->id, json_decode($event->interested_users_id))) displaynone @endif" id="interestedId{{ $event->id }}"><i class="fa-solid fa-star me-2"></i> {{get_phrase('Interested')}}</a>
+                           <a href="javascript:void(0)" onclick="ajaxAction('{{ route('event.interested',$event->id) }}')" class="w-100 mb-2 no_btn btn btn-primary @if (in_array(auth()->user()->id, json_decode($event->interested_users_id))) displaynone @endif" id="interestedId{{ $event->id }}"><i class="fa-solid fa-star me-2"></i> {{get_phrase('Interested')}}</a>
                           @endif
-                        {{-- <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.notinterested',$event->id); ?>')" class="w-100 mb-2 btn no_btn btn-secondary @if (!in_array(auth()->user()->id, json_decode($event->interested_users_id))) displaynone @endif" id="notInterestedId{{ $event->id }}"> {{get_phrase('Not Interested')}}</a> --}}
+                        {{-- <a href="javascript:void(0)" onclick="ajaxAction('{{ route('event.notinterested',$event->id) }}')" class="w-100 mb-2 btn no_btn btn-secondary @if (!in_array(auth()->user()->id, json_decode($event->interested_users_id))) displaynone @endif" id="notInterestedId{{ $event->id }}"> {{get_phrase('Not Interested')}}</a> --}}
                      </div>
                    </div>
 
@@ -70,7 +70,7 @@
                         aria-labelledby="about-tab">
                         <h2 class="h6">{{ get_phrase('Details') }}</h2>
                         <p>
-                            @php echo script_checker($event->description, false); @endphp
+                            {!! script_checker($event->description, false) !!}
                         </p>
                     </div> <!-- Tab Pane End -->
 

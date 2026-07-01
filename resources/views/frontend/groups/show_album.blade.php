@@ -1,9 +1,6 @@
-@php
-    $images = \App\Models\Album_image::where('album_id',$album_id)->get();
-@endphp
 <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
   <div class="carousel-inner">
-    @foreach ($images as $image )
+    @foreach ($viewData->albumImages($album_id) as $image )
       <div class="carousel-item {{ $loop->index=="0" ? "active":"" }}">
           <img src="{{ asset('storage/album/images/'.$image->image) }}" class="d-block w-100" alt="...">
       </div>

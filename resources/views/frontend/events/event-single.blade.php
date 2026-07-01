@@ -70,18 +70,18 @@
                             <ul class="dropdown-menu">
                                 <li class="btn-interested @if (in_array(auth()->user()->id, json_decode($event->interested_users_id))) displaynone @endif">
                                     <a class="dropdown-item " href="#"
-                                        onclick="ajaxAction('<?php echo route('event.interested', $event->id); ?>')">
+                                        onclick="ajaxAction('{{ route('event.interested', $event->id) }}')">
                                         <i class="fa-solid fa-star me-1"></i>
                                         {{get_phrase('Interested')}}
                                     </a>
                                 </li>
                                 <li class="btn-going @if (in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif">
-                                    <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.going', $event->id); ?>')"
+                                    <a href="javascript:void(0)" onclick="ajaxAction('{{ route('event.going', $event->id) }}')"
                                         class="dropdown-item"> <i class="fa-solid fa-circle-check me-1"></i>
                                         {{ get_phrase('Going') }}</a>
                                 </li>
                                 <li>
-                                    <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.cancel', $event->id); ?>')"
+                                    <a href="javascript:void(0)" onclick="ajaxAction('{{ route('event.cancel', $event->id) }}')"
                                         class="dropdown-item"><i class="fa-solid fa-circle-xmark"></i>
                                         {{ get_phrase('Cancel') }}
                                     </a>
@@ -91,7 +91,7 @@
                     </div>
 
 
-                    <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.interested', $event->id); ?>')"
+                    <a href="javascript:void(0)" onclick="ajaxAction('{{ route('event.interested', $event->id) }}')"
                         class="btn ni_btn btn-primary @if (in_array(auth()->user()->id, json_decode($event->interested_users_id)) || in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif"
                         id="btn_interest{{ $event->id }}">
                         <i class="fa-solid fa-star me-2"></i>{{ get_phrase('Interest') }}
@@ -115,7 +115,7 @@
                                     </li>
                                     <li>
                                         <a href="javascript:void(0)"
-                                            onclick="confirmAction('<?php echo route('event.delete', ['event_id' => $event->id]); ?>', true)"
+                                            onclick="confirmAction('{{ route('event.delete', ['event_id' => $event->id]) }}', true)"
                                             class="dropdown-item  ed_ve btn-primary btn-sm"><i
                                                 class="fa fa-trash me-1"></i> {{ get_phrase('Delete Event') }}</a>
                                     </li>

@@ -63,7 +63,7 @@
       </div>
       <div class="col-lg-6">
             <div class="new_alert alert alert-info" role="alert">
-                <h4 class="alert-heading"><?php echo get_phrase('How to configure Jitsi API?'); ?></h4>
+                <h4 class="alert-heading">{{ get_phrase('How to configure Jitsi API?') }}</h4>
                 <p>1. Login to <a href="https://jaas.8x8.vc" target="_blank">Jitsi as a Service</a></p>
                 <p>2. Go to the <a href="https://jaas.8x8.vc/#/apikeys" target="_blank">API Keys</a>. Copy your Your AppID and generate a JWT from here.</p>
             </div>

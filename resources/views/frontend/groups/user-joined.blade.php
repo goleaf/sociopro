@@ -17,13 +17,11 @@
                                 <div class="card p-2 rounded">
                                     <div class="mb-2"> <img class="img-fluid img-radisu" src="{{ get_group_logo($group->getGroup->logo,'logo') }}" ></div>
                                     <a href="{{ route('single.group',$group->getGroup->id) }}"><h4>{{ $group->getGroup->title }}</h4></a>
-                                    @php $joined = \App\Models\Group_member::where('group_id',$group->getGroup->id)->where('is_accepted','1')->count(); @endphp
-                                    <span class="small text-muted">{{ $joined }} Member @if($joined>1) s @endif</span>
-                                    @php $join = \App\Models\Group_member::where('group_id',$group->getGroup->id)->where('user_id',auth()->user()->id)->count(); @endphp
-                                    @if ($join>0)
-                                    <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('group.rjoin',$group->getGroup->id); ?>')" class="btn btn-primary">{{ get_phrase('Joined') }}</a>
+                                    <span class="small text-muted">{{ $viewData->groupAcceptedMemberCount($group->getGroup) }} Member @if($viewData->groupAcceptedMemberCount($group->getGroup)>1) s @endif</span>
+                                    @if ($viewData->userJoinedGroup($group->getGroup, auth()->user()))
+                                    <a href="javascript:void(0)" onclick="ajaxAction('{{ route('group.rjoin',$group->getGroup->id) }}')" class="btn btn-primary">{{ get_phrase('Joined') }}</a>
                                     @else
-                                        <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('group.join',$group->getGroup->id); ?>')" class="btn btn-primary">{{ get_phrase('Join') }}</a>
+                                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('group.join',$group->getGroup->id) }}')" class="btn btn-primary">{{ get_phrase('Join') }}</a>
                                     @endif
                                 </div>
                             </div>

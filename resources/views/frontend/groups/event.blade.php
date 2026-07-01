@@ -17,21 +17,16 @@
                             <h5 class="h6">{{get_phrase('Upcoming Events')}}</h5>
                             <a href="javascript:void(0)" onclick="showCustomModal('{{route('load_modal_content', ['view_path' => 'frontend.events.create_event','group_id'=>$group->id])}}', '{{get_phrase('Create Event')}}');"  data-bs-toggle="modal" data-bs-target="#createEvent" class="btn btn-sm common_btn d-block">{{get_phrase('Create Event')}}</a>
                         </div>
-                        @php
-                            $query = DB::table('events')->where('group_id',$group->id)->where('privacy','public')
-                            ->whereDate('event_date', '>', now());
-                            $number_of_upcoming_events = $query->get()->count();
-                        @endphp
-                        @if($number_of_upcoming_events > 0)
+                        @if($viewData->upcomingPublicGroupEvents($group)->count() > 0)
                             <i class="fa-solid fa-calendar text-primary"></i>
-                            <p class="p-0 m-0 near_text">{{get_phrase('Nearest event')}}, <b>{{date_formatter($query->first()->event_date.' '.$query->first()->event_time, 3)}}</b></p>
+                            <p class="p-0 m-0 near_text">{{get_phrase('Nearest event')}}, <b>{{date_formatter($viewData->upcomingPublicGroupEvents($group)->first()->event_date.' '.$viewData->upcomingPublicGroupEvents($group)->first()->event_time, 3)}}</b></p>
                         @else
                             <i class="fa-solid fa-calendar-xmark"></i>
                         @endif
                         
                         <p class="mute mute_text">
-                            @if($number_of_upcoming_events > 0)
-                                {{ get_phrase('Total ____ Upcoming events', [$number_of_upcoming_events]) }}
+                            @if($viewData->upcomingPublicGroupEvents($group)->count() > 0)
+                                {{ get_phrase('Total ____ Upcoming events', [$viewData->upcomingPublicGroupEvents($group)->count()]) }}
                             @else
                                 {{ get_phrase('No upcoming events') }}
                             @endif
@@ -66,7 +61,7 @@
                                                                     data-bs-target="#createEvent"><i class="fa fa-edit me-1"></i> {{get_phrase('Edit Event')}}</button>
                                                             </li>
                                                             <li>
-                                                                <a href="javascript:void(0)" onclick="confirmAction('<?php echo route('event.delete', ['event_id' => $event->id]); ?>', true)" class="dropdown-item btn btn-primary btn-sm"><i class="fa fa-trash me-1"></i> {{get_phrase('Delete Event')}}</a>
+                                                                <a href="javascript:void(0)" onclick="confirmAction('{{ route('event.delete', ['event_id' => $event->id]) }}', true)" class="dropdown-item btn btn-primary btn-sm"><i class="fa fa-trash me-1"></i> {{get_phrase('Delete Event')}}</a>
                                                             </li>
                                                         </ul>
                                                         

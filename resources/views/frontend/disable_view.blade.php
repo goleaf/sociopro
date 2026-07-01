@@ -4,11 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    @php
-        $system_name = \App\Models\Setting::where('type', 'system_name')->value('description');
-        $system_favicon = \App\Models\Setting::where('type', 'system_fav_icon')->value('description');
-    @endphp
-    <title>{{ $system_name }}</title>
+    <title>{{ $systemName }}</title>
 
     <!-- CSRF Token for ajax for submission -->
     <meta name="csrf_token" content="{{ csrf_token() }}" />
@@ -16,7 +12,7 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="shortcut icon" href="{{ get_system_logo_favicon($system_favicon, 'favicon') }}" />
+    <link rel="shortcut icon" href="{{ get_system_logo_favicon($systemFavicon, 'favicon') }}" />
 
     <!-- Font Awesome CSS -->
     <link rel="stylesheet" href="{{ asset('assets/frontend/css/fontawesome/all.min.css') }}">
@@ -84,28 +80,7 @@
 
 
 </head>
-    @if(Session::get('theme_color'))
-        @php
-            $theme_color = Session::get('theme_color');
-            if ($theme_color === 'dark') {
-                $image = asset('assets/frontend/images/white_sun.svg');
-            } else {
-               
-                $image = asset('assets/frontend/images/white_moon.svg');
-            }
-        @endphp
-  @else
-        @php
-            $theme_color = 'default';
-            $image = asset('assets/frontend/images/white_moon.svg');
-        @endphp
- @endif
-
-@php
-    $themeColor = App\Models\Setting::where('type', 'theme_color')->value('description');
-@endphp
 <body class="{{$themeColor}} {{$theme_color}}">
-    @php $user_info = Auth()->user() @endphp
 
     <div class="custom-progress-bar">
         <div class="custom-progress"></div>
@@ -120,11 +95,8 @@
                                 data-bs-target="#offcanvasRight" aria-controls="offcanvasRight"><i
                                     class="fw-bold fa-solid fa-sliders-h"></i></button>
                             <!-- logo -->
-                            @php
-                                $system_light_logo = \App\Models\Setting::where('type', 'system_light_logo')->value('description');
-                            @endphp
                             <a class="navbar-brand mt-2" href="{{ route('timeline') }}"><img
-                                    src="{{ get_system_logo_favicon($system_light_logo, 'light') }}"
+                                    src="{{ get_system_logo_favicon($systemLightLogo, 'light') }}"
                                     class="logo_height_width" alt="logo" /></a>
                         </div>
                     </div>
@@ -164,24 +136,6 @@
                                     <a href="{{ route('profile.friends') }}" class="notification-button"><i
                                             class="fa-solid fa-user-group"></i></a>
                                 </div>
-                                @php
-                                    $last_msg = \App\Models\Chat::where('sender_id', auth()->user()->id)
-                                        ->orWhere('reciver_id', auth()->user()->id)
-                                        ->orderBy('id', 'DESC')
-                                        ->limit('1')
-                                        ->first();
-                                    if (!empty($last_msg)) {
-                                        if ($last_msg->sender_id == auth()->user()->id) {
-                                            $msg_to = $last_msg->reciver_id;
-                                        } else {
-                                            $msg_to = $last_msg->sender_id;
-                                        }
-                                    }
-                                    
-                                    $unread_msg = \App\Models\Chat::where('reciver_id', auth()->user()->id)
-                                        ->where('read_status', '0')
-                                        ->count();
-                                @endphp
                                 <div class="inbox-control">
                                     <a href="@if(isset($msg_to)) {{ route('chat', $msg_to) }} @else {{route('chat','all')}} @endif"
                                         class="message_custom_button position-relative">
@@ -194,11 +148,6 @@
                                         @endif
                                     </a>
                                 </div>
-                                @php
-                                    $unread_notification = \App\Models\Notification::where('reciver_user_id', auth()->user()->id)
-                                        ->where('status', '0')
-                                        ->count();
-                                @endphp
                                 <div class="notify-control ">
                                     <a class="notification-button position-relative" href="{{ route('notifications') }}">
                                         <i class="fa-solid fa-bell"></i>
@@ -249,7 +198,7 @@
                                                 class="dropdown-item">{{ get_phrase('Account Deactivate') }}</a>
     
                                                 {{-- <a class="dropdown-item" href="javascript:void(0)"
-                                        onclick="confirmAction('<?php echo route('post.delete', ['post_id' => $post->post_id]); ?>', true)"> <i
+                                        onclick="confirmAction('{{ route('post.delete', ['post_id' => $post->post_id]) }}', true)"> <i
                                             class="fa-solid fa-trash-can"></i> {{ get_phrase('Delete') }}</a> --}}
                                             </li>
                                         @endif
@@ -423,7 +372,7 @@
         dark.onclick = function(){
             document.body.classList.toggle('dark');
             var themeColor = document.body.classList.contains('dark') ? 'dark' : 'default';
-            var url = "<?php echo route('update-theme-color') ?>";
+            var url = "{{ route('update-theme-color') }}";
             $.ajax({
                 type: 'POST',
                 url: url,

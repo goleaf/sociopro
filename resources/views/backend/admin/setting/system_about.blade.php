@@ -9,8 +9,6 @@
         </div>
     </div>
 
-    <?php $curl_enabled = function_exists('curl_version'); ?>
-
     <div class="row justify-content-center mt-4">
         <div class="col-xl-8">
             <div class="eSection-wrap">
@@ -19,7 +17,7 @@
 
                         <p class="border-bottom mb-2 pb-2 text-13px">
                             <i class="bi bi-arrow-right-square me-3"></i> {{ get_phrase('Software version') }}
-                            <span class="float-end">{{ get_settings('version') }}</span>
+                            <span class="float-end">{{ $softwareVersion }}</span>
                         </p>
                         <p class="border-bottom mb-2 pb-2 text-13px">
                             <i class="bi bi-arrow-right-square me-3"></i> {{ get_phrase('PHP version') }}
@@ -28,60 +26,64 @@
                         <p class="border-bottom mb-2 pb-2 text-13px">
                             <i class="bi bi-arrow-right-square me-3"></i> {{ get_phrase('Curl enable') }}
                             <span class="float-end">
-                                <?php echo $curl_enabled ? '<span class="badge bg-success">' . get_phrase('Enabled') . '</span>' : '<span class="badge badge-danger">' . get_phrase('disabled') . '</span>'; ?>
+                                @if ($curlEnabled)
+                                    <span class="badge bg-success">{{ get_phrase('Enabled') }}</span>
+                                @else
+                                    <span class="badge badge-danger">{{ get_phrase('disabled') }}</span>
+                                @endif
                             </span>
                         </p>
 
                         <p class="border-bottom mb-2 pb-2 text-13px">
                             <i class="bi bi-arrow-right-square me-3"></i> {{ get_phrase('Purchase code') }}
-                            <span class="float-end">{{ get_settings('purchase_code') }}</span>
+                            <span class="float-end">{{ $purchaseCode }}</span>
                         </p>
 
                         <p class="border-bottom mb-2 pb-2 text-13px">
                             <i class="bi bi-arrow-right-square me-3"></i> {{ get_phrase('Product license') }}
-                            <?php if($application_details['product_license'] == 'valid'): ?>
+                            @if ($application_details['product_license'] == 'valid')
                             <span
                                 class="float-end badge bg-success text-capitalize">{{ get_phrase($application_details['product_license']) }}</span>
-                            <?php else: ?>
+                            @else
                             <span
                                 class="float-end badge bg-danger mt-1 text-capitalize">{{ get_phrase($application_details['product_license']) }}</span>
                             <button class="btn btn-primary float-end me-2 py-0 text-13px" data-bs-toggle="modal"
                                 data-bs-target="#purchasecodeModal">{{ get_phrase('Enter valid purchase code') }}</button>
-                            <?php endif; ?>
+                            @endif
                         </p>
                         <p class="border-bottom mb-2 pb-2 text-13px">
                             <i class="bi bi-arrow-right-square me-3"></i> {{ get_phrase('Customer support status') }}
                             <span class="float-end">
-                                <?php if (strtolower($application_details['purchase_code_status']) == 'expired'): ?>
+                                @if (strtolower($application_details['purchase_code_status']) == 'expired')
                                 <span
                                     class="badge bg-danger float-end mt-1 text-capitalize">{{ get_phrase($application_details['purchase_code_status']) }}</span>
-                                <?php elseif (strtolower($application_details['purchase_code_status']) == 'valid'): ?>
+                                @elseif (strtolower($application_details['purchase_code_status']) == 'valid')
                                 <span
                                     class="badge bg-success text-capitalize">{{ get_phrase($application_details['purchase_code_status']) }}</span>
-                                <?php else: ?>
+                                @else
                                 <span
                                     class="badge bg-danger text-capitalize">{{ get_phrase($application_details['purchase_code_status']) }}</span>
-                                <?php endif; ?>
+                                @endif
                             </span>
                         </p>
                         <p class="border-bottom mb-2 pb-2 text-13px">
                             <i class="bi bi-arrow-right-square me-3"></i> {{ get_phrase('Support expiry date') }}
 
-                            <?php if ($application_details['support_expiry_date'] != "invalid"): ?>
+                            @if ($application_details['support_expiry_date'] != "invalid")
                             <span class="float-end">{{ $application_details['support_expiry_date'] }}</span>
-                            <?php else: ?>
+                            @else
                             <span class="float-end"><span
                                     class="badge bg-danger">{{ ucfirst($application_details['support_expiry_date']) }}</span></span>
-                            <?php endif; ?>
+                            @endif
                         </p>
                         <p class="border-bottom mb-2 pb-2 text-13px">
                             <i class="bi bi-arrow-right-square me-3"></i> {{ get_phrase('Customer name') }}
-                            <?php if ($application_details['customer_name'] != "invalid"): ?>
+                            @if ($application_details['customer_name'] != "invalid")
                             <span class="float-end">{{ $application_details['customer_name'] }}</span>
-                            <?php else: ?>
+                            @else
                             <span class="float-end"><span
                                     class="badge bg-danger">{{ ucfirst($application_details['customer_name']) }}</span></span>
-                            <?php endif; ?>
+                            @endif
                         </p>
                     </div>
                 </div>

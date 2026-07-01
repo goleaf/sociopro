@@ -17,27 +17,13 @@
                         <div class="avatar avatar-xl"><img class="rounded-circle"
                                 src="{{ get_user_image($user_info->photo, 'optimized') }}" alt=""></div>
                         <div class="avatar-details">
-                            @php
-                                $user_name = \App\Models\Users::where('id', auth()->user()->id)->first()->name;
-                            @endphp
-                            <h3 class="n_font">{{ $user_name }}</h3>
+                            <h3 class="n_font">{{ $user_info->name }}</h3>
                             @if(auth()->user()->profile_status == 'lock')
                             <span class="lock_shield"><i class="fa-solid fa-shield"></i> {{get_phrase('You locked your profile')}}</span>
                             @endif
                         </div>
                     </div>
-                    <div class="n_tab_follow ">
-                        @php
-                        $friends = DB::table('friendships')
-                            ->where(function ($query) {
-                                $query->where('accepter', Auth()->user()->id)->orWhere('requester', Auth()->user()->id);
-                            })
-                            ->where('is_accepted', 1)
-                            ->orderBy('friendships.importance', 'desc');
-                    @endphp
-                        {{-- <p><span>{{ $friends->get()->count() }}</span>{{get_phrase('Friends')}}</p> --}}
-                        {{-- <p><span>50 </span>{{get_phrase('followers')}}</p> --}}
-                    </div>
+                    <div class="n_tab_follow "></div>
                  </div>
                 <nav class="profile-nav">
                     <ul class="nav align-items-center justify-content-start">

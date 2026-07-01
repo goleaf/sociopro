@@ -32,7 +32,7 @@
                                 <a href="{{ route('single.product',$product->id) }}" class="btn common_btn">{{ $product->getCurrency->symbol }} {{ $product->price }}</a>
                                 <a href="javascript:void(0)"  onclick="showCustomModal('{{route('load_modal_content', ['view_path' => 'frontend.marketplace.edit_product', 'product_id' => $product->id] )}}', '{{get_phrase('Edit Product')}}');" class="" data-bs-toggle="modal"
                                     data-bs-target="#editEvent"><i class="fa fa-edit"></i></button>
-                                <a href="javascript:void(0)" onclick="confirmAction('<?php echo route('product.delete', ['product_id' => $product->id]); ?>', true)" class="del_btn2"><i class="fa fa-trash-can "></i> </a>
+                                <a href="javascript:void(0)" onclick="confirmAction('{{ route('product.delete', ['product_id' => $product->id]) }}', true)" class="del_btn2"><i class="fa fa-trash-can "></i> </a>
                             </div>
                        </div>
                     </div>

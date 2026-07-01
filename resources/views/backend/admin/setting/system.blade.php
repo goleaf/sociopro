@@ -66,10 +66,8 @@
                                     <label for="system_currency"
                                         class="eForm-label">{{ get_phrase('System currency') }}</label>
                                     <select class="form-select select2" name="system_currency" id="system_currency">
-                                        @foreach (DB::table('currencies')->get() as $currency)
-                                            <option value="{{ $currency->code }}" <?php if (get_settings('system_currency') == $currency->code) {
-                                                echo 'selected';
-                                            } ?>>
+                                        @foreach ($currencies as $currency)
+                                            <option value="{{ $currency->code }}" @selected($system_currency == $currency->code)>
                                                 {{ $currency->code }}</option>
                                         @endforeach
                                     </select>
@@ -79,11 +77,9 @@
                                     <label for="system_language"
                                         class="eForm-label">{{ get_phrase('System language') }}</label>
                                     <select class="form-select select2" name="system_language" id="system_language">
-                                        @foreach (DB::table('languages')->select('name')->groupBy('name')->get() as $language)
+                                        @foreach ($languages as $language)
                                             <option class="text-capitalize" value="{{ $language->name }}"
-                                                <?php if (get_settings('system_language') == $language->name) {
-                                                    echo 'selected';
-                                                } ?>>{{ ucfirst($language->name) }}</option>
+                                                @selected($system_language == $language->name)>{{ ucfirst($language->name) }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -92,12 +88,8 @@
                                     <label for="system_address"
                                         class="eForm-label">{{ get_phrase('Public signup') }}</label>
                                     <select class="form-select eForm-control select2" name="public_signup">
-                                        <option value="1" <?php if (get_settings('public_signup') == 1) {
-                                            echo 'selected';
-                                        } ?>>{{ get_phrase('enabled') }}</option>
-                                        <option value="0" <?php if (get_settings('public_signup') != 1) {
-                                            echo 'selected';
-                                        } ?>>{{ get_phrase('disabled') }}
+                                        <option value="1" @selected($public_signup == 1)>{{ get_phrase('enabled') }}</option>
+                                        <option value="0" @selected($public_signup != 1)>{{ get_phrase('disabled') }}
                                         </option>
                                     </select>
                                 </div>
@@ -357,9 +349,6 @@
                         <p class="column-title">{{ get_phrase('SYSTEM Theme Color') }}</p>
                         <div class="eForm-file">
                             <div class="row active_color">
-                                @php
-                                  $storedColor = App\Models\Setting::where('type', 'theme_color')->value('description');
-                               @endphp
                                 <div class="col-md-2 text-center">
                                     <span class="box box-one"></span>
                                     <a href="{{ route('admin.system.settings.color.save', ['themeColor' => 'default']) }}" class="col-form-label eLabel {{ $storedColor == 'default' ?  'default': '' }}">

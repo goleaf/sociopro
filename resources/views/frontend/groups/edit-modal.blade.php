@@ -1,7 +1,5 @@
 <link rel="stylesheet" href="{{ asset('assets/frontend/css/nice-select.css') }}">
-@php
-    $group = \App\Models\Group::find($group_id);
-@endphp
+@props(['group' => $viewData->group($group_id)])
 <form class="ajaxForm ng_form_entry"  action="{{ route('group.update',$group->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="form-group">

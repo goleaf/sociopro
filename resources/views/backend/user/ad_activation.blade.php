@@ -36,7 +36,7 @@
       url: '{{route("user.ad.ad_charge_by_daterange")}}',
       data:{start_date:adStartDate, end_date:adEndDate},
       success: function(response){
-        $('.ad-total-charged-amount').text('<?php echo currency(''); ?>'+response);
+        $('.ad-total-charged-amount').text('{{ currency('') }}'+response);
         if(response > 0){
           $('.btn-payment-redirect').attr('disabled', false);
         }else{

@@ -27,10 +27,6 @@
 <body class="bg-white login">
 
 
-@php
-    $homeUrl = Auth::check() && Route::has('timeline') ? route('timeline') : route('login');
-@endphp
-
 <!-- header -->
     <header class="header header-default py-3">
     <nav class="navigation">

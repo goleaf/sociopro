@@ -32,7 +32,7 @@
                                     role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="ajaxAction('<?php echo route('group.rjoin',$group->id); ?>')">
+                                    <li><a class="dropdown-item" href="javascript:void(0)" onclick="ajaxAction('{{ route('group.rjoin',$group->id) }}')">
                                             {{ get_phrase('Leave Group') }}</a></li>
                                 </ul>
                             </div>
@@ -69,22 +69,10 @@
                                 <div class="avatar"><a href="#"><img class="img-fluid"
                                     src="{{ get_user_image($user->photo,'optimized') }}" alt=""></a></div>
                                 <h3><a href="#">{{ $user->name }}</a> <span>{{ $user->username }}</span></h3>
-                                @php
-                                    $user_id = $user->id;
-                                    $friend = \App\Models\Friendships::where(function($query) use ($user_id){
-                                        $query->where('requester', auth()->user()->id);
-                                        $query->where('accepter', $user_id);
-                                    })
-                                    ->orWhere(function($query) use ($user_id) {
-                                        $query->where('accepter', auth()->user()->id);
-                                        $query->where('requester', $user_id);
-                                    })
-                                    ->count();
-                                @endphp
-                                @if ($friend>0)
-                                    <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('user.unfriend',$user->id); ?>')" class="btn common_btn ms-auto"><i class="fa-solid fa-xmark"></i> {{ get_phrase('Cancel') }}</a>
+                                @if ($viewData->areFriends(auth()->user(), $user))
+                                    <a href="javascript:void(0)" onclick="ajaxAction('{{ route('user.unfriend',$user->id) }}')" class="btn common_btn ms-auto"><i class="fa-solid fa-xmark"></i> {{ get_phrase('Cancel') }}</a>
                                 @else   
-                                    <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('user.friend',$user->id); ?>')" class="btn common_btn ms-auto"><i class="fa-solid fa-plus"></i> {{ get_phrase('Add Friend') }} </a>
+                                    <a href="javascript:void(0)" onclick="ajaxAction('{{ route('user.friend',$user->id) }}')" class="btn common_btn ms-auto"><i class="fa-solid fa-plus"></i> {{ get_phrase('Add Friend') }} </a>
                                 @endif
                             </div> <!-- Add Friend End -->
                         @endforeach

@@ -1,33 +1,3 @@
-@php
-    $total_comment_main_comments = DB::table('comments')
-        ->where('comments.is_type', 'post')
-        ->where('comments.id_of_type', $post->post_id)
-        ->where('comments.parent_id', 0)
-        ->get()
-        ->count();
-    $total_comment_sub_comments = DB::table('comments')
-        ->where('comments.is_type', 'post')
-        ->where('comments.id_of_type', $post->post_id)
-        ->where('comments.parent_id', '>', 0)
-        ->get()
-        ->count();
-    $total_comments = $total_comment_main_comments + $total_comment_sub_comments;
-    
-    $comments = DB::table('comments')
-        ->join('users', 'comments.user_id', '=', 'users.id')
-        ->where('comments.is_type', 'post')
-        ->where('comments.id_of_type', $post->post_id)
-        ->where('comments.parent_id', 0)
-        ->select('comments.*', 'users.name', 'users.photo')
-        ->orderBy('comment_id', 'DESC')
-        ->take(1)
-        ->get();
-    
-    $tagged_user_ids = json_decode($post->tagged_user_ids);
-    
-@endphp
-@php $user_reacts = json_decode($post->user_reacts, true); @endphp
-
 <div class="single-item-countable single-entry" id="">
     <div class="entry-inner en_left">
         <div
@@ -111,34 +81,27 @@
                             <small class="text-muted">{{ get_phrase('is live now') }}</small>
                         @endif
 
-                        @if (count($tagged_user_ids) > 0 || $post->activity_id > 0)
+                        @if (count($viewData->taggedUserIds($post)) > 0 || $post->activity_id > 0)
                             <small class="text-muted">-</small>
 
                             <!-- Feeling and activity -->
-                            @if ($post->activity_id > 0)
-                                @php
-                                    $feeling_and_activities = DB::table('feeling_and_activities')
-                                        ->where('feeling_and_activity_id', $post->activity_id)
-                                        ->first();
-                                @endphp
-                                @if ($feeling_and_activities->type == 'activity')
-                                    {{ $feeling_and_activities->title }}
+                            @if ($viewData->feelingActivity($post->activity_id))
+                                @if ($viewData->feelingActivity($post->activity_id)->type == 'activity')
+                                    {{ $viewData->feelingActivity($post->activity_id)->title }}
                                 @else
                                     <spam class="text-muted">{{ get_phrase('feeling') }}</spam>
-                                    <b> {{ $feeling_and_activities->title }} </b>
+                                    <b> {{ $viewData->feelingActivity($post->activity_id)->title }} </b>
                                 @endif
                             @endif
 
-                            @if (count($tagged_user_ids) > 0)
+                            @if (count($viewData->taggedUserIds($post)) > 0)
                                 <small class="text-muted">{{ get_phrase('with') }}</small>
-                                @foreach ($tagged_user_ids as $key => $tagged_user_id)
-                                    <small class="text-muted">@php
-                                        if ($key > 0) {
-                                            echo ',';
-                                        }
-                                    @endphp</small>
+                                @foreach ($viewData->taggedUserIds($post) as $key => $tagged_user_id)
+                                    @if ($key > 0)
+                                        <small class="text-muted">,</small>
+                                    @endif
                                     <a class="text-black"
-                                        href="{{ route('profile') }}">{{ DB::table('users')->where('id', $tagged_user_id)->value('name') }}</a>
+                                        href="{{ route('profile') }}">{{ $viewData->userName($tagged_user_id) }}</a>
                                 @endforeach
 
                             @endif
@@ -187,92 +150,10 @@
         </div>
         <div class="entry-content pt-2">
             @if ($post->post_type == 'general' || $post->post_type == 'profile_picture' || $post->post_type == 'cover_photo')
-
-                
-                <div class="row" id="postMediaSection{{ $post->post_id }}">
-                    <div class="col-12">
-                        @php
-                            $media_files = DB::table('media_files')
-                                ->where('post_id', $post->post_id)
-                                ->get();
-                        @endphp
-                        @php $media_files_count = count($media_files); @endphp
-                        <div
-                            class="photoGallery visibility-hidden @if ($media_files_count == 1) initialized @endif">
-                            <!-- break after loaded 5 images -->
-                            @php $more_unloaded_images = $media_files_count - 5; @endphp
-                            @foreach ($media_files as $key => $media_file)
-                                @php
-                                    if ($key == 5) {
-                                        break;
-                                    }
-                                @endphp
-
-                                @if ($media_file->file_type == 'video')
-                                    @if (File::exists('public/storage/post/videos/' . $media_file->file_name))
-                                        @if ($media_files_count > 1)
-                                            <a class="position-relative"
-                                                onclick="showCustomModal('{{ route('preview_post', ['post_id' => $post->post_id, 'file_name' => $media_file->file_name]) }}', '{{ get_phrase('Preview') }}', 'xxl')"
-                                                href="javascript:void(0)">
-                                        @endif
-
-                                        <video muted controlsList="nodownload" controls
-                                            class="plyr-js w-100 rounded video-thumb @if ($media_files_count > 1) initialized @endif">
-                                            <source src="{{ get_post_video($media_file->file_name) }}"
-                                                type="">
-                                        </video>
-
-                                        @if ($more_unloaded_images > 0 && $key == 4)
-                                            <div class="more_image_overlap"><span><i class="fa-solid fa-plus"></i>
-                                                    {{ $more_unloaded_images }} </span></div>
-                                        @endif
-
-                                        @if ($media_files_count > 1)
-                                            </a>
-                                        @endif
-                                    @endif
-                                @else
-                                    <div class="picture text-center">
-                                        <a onclick="showCustomModal('{{ route('preview_post', ['post_id' => $post->post_id, 'file_name' => $media_file->file_name]) }}', '{{ get_phrase('Preview') }}', 'xxl')"
-                                            href="javascript:void(0)">
-
-                                            @if ($more_unloaded_images > 0 && $key == 4)
-                                                @php $opacity = 'opacity-7'; @endphp
-                                                <div class="more_image_overlap"><span><i class="fa-solid fa-plus"></i>
-                                                        {{ $more_unloaded_images }} </span></div>
-                                            @else
-                                                @php $opacity = ''; @endphp
-                                            @endif
-
-                                            <img src="{{ get_post_image($media_file->file_name) }}"
-                                                class="w-100 h-100 @if ($media_files_count == 1) single-image-ration @endif {{ $opacity }}"
-                                                alt="">
-                                        </a>
-                                    </div>
-                                @endif
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-
-
+                @include('frontend.main_content.media_type_post_view')
 
                 @if (!empty($post->location))
-                    <div class="text-center">
-                        <img width="200px" src="{{ asset('storage/images/map-pin.jpeg') }}"><br>
-                        <a class="location-post me-auto ms-auto"
-                            href="https://www.google.com/maps/place/{{ $post->location }}" target="_blanck">
-                            <img src="{{ asset('storage/images/location.png') }}">
-                            <span>{{ $post->location }}</span>
-                            <hr>
-                            <small>@php
-                                echo DB::table('posts')
-                                    ->where('location', $post->location)
-                                    ->get()
-                                    ->count();
-                            @endphp {{ get_phrase('visits') }}</small>
-                        </a>
-                    </div>
+                    @include('frontend.main_content.location_type_post_view')
                 @endif
             @elseif($post->post_type == 'live_streaming')
                 <div class="row">
@@ -292,10 +173,6 @@
                 <div class="py-1">
                     <div class="text-quote">
                         @if (\Illuminate\Support\Str::contains($post->description, 'http', 'https'))
-                            @php
-                                $explode_data = explode('/', $post->description);
-                                $shared_id = end($explode_data);
-                            @endphp
                             <iframe src="{{ $post->description }}?shared=yes" onload="resizeIframe(this)"
                                 scrolling="no" class="w-100" frameborder="0"></iframe>
                             <a class="ellipsis-line-1 ellipsis-line-2"
@@ -315,8 +192,11 @@
                     <span class="entry-react post-react">
 
                         <a href="javascript:void(0)" onclick="myReact('post', 'like', 'toggle', {{ $post->post_id }})"
-                            id="my_post_reacts<?php echo $post->post_id; ?>">
-                            @include('frontend.main_content.post_reacts', ['my_react' => true])
+                            id="my_post_reacts{{ $post->post_id }}">
+                            @include('frontend.main_content.post_reacts', [
+                                'my_react' => true,
+                                'user_reacts' => $viewData->reacts($post),
+                            ])
                         </a>
 
                         <ul class="react-list">
@@ -346,15 +226,18 @@
                     <!-- Post share modal -->
                 </div>
                 <div class="entry-meta py-4 d-flex border-bottom justify-content-between align-items-center ">
-                    <a href="javascript:void(0)" id="post_reacts<?php echo $post->post_id; ?>">
-                        @include('frontend.main_content.post_reacts', ['post_react' => true])
+                    <a href="javascript:void(0)" id="post_reacts{{ $post->post_id }}">
+                        @include('frontend.main_content.post_reacts', [
+                            'post_react' => true,
+                            'user_reacts' => $viewData->reacts($post),
+                        ])
                     </a>
                     
                     <div class="post-comment">
                         <ul>
                             <li><a onclick="$('#user-comments-{{ $post->post_id }}').toggle();"
                                     href="javascript:void(0)"><span
-                                        id="post_comment_count{{ $post->post_id }}">{{ $total_comments }}</span>{{ get_phrase('Comments') }}</a>
+                                        id="post_comment_count{{ $post->post_id }}">{{ $viewData->postCommentCount($post) }}</span>{{ get_phrase('Comments') }}</a>
                             </li>
                             <li><a href="javascript:void(0)"><span>0</span>{{ get_phrase('Share') }}</a></li>
                         </ul>
@@ -375,23 +258,25 @@
         </div>
         <ul class="comment-wrap p-3 pb-0 list-unstyled" id="comments{{ $post->post_id }}">
             @include('frontend.main_content.comments', [
-                'comments' => $comments,
+                'comments' => $viewData->rootComments($post),
                 'post_id' => $post->post_id,
                 'type' => 'post',
             ])
         </ul>
 
-        @if ($comments->count() < $total_comments)
+        @if ($viewData->rootComments($post)->count() < $viewData->postCommentCount($post))
             <a class="btn p-3 pt-0"
-                onclick="loadMoreComments(this, {{ $post->post_id }}, 0, {{ $total_comments }},'post')">{{ get_phrase('View more') }}</a>
+                onclick="loadMoreComments(this, {{ $post->post_id }}, 0, {{ $viewData->postCommentCount($post) }},'post')">{{ get_phrase('View more') }}</a>
         @endif
     </div>
 </div><!--  Single Entry End -->
 
-@include('frontend.main_content.scripts')
+@unless ($embeddedPostCard ?? false)
+    @include('frontend.main_content.scripts')
 
-<script src="{{ asset('assets/frontend/gallery/jquery.justifiedGallery.min.js') }}"></script>
-@include('frontend.initialize')
+    <script src="{{ asset('assets/frontend/gallery/jquery.justifiedGallery.min.js') }}"></script>
+    @include('frontend.initialize')
+@endunless
 
 
 

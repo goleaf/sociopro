@@ -1,17 +1,4 @@
 @foreach($comments as $comment)
-    @php
-        $total_child_comments = DB::table('comments')->where('comments.is_type', $type)->where('comments.parent_id', $comment->comment_id)->get()->count();
-
-        $child_comments = DB::table('comments')
-            ->join('users', 'comments.user_id', '=', 'users.id')
-            ->where('comments.parent_id', $comment->comment_id)
-            ->select('comments.*', 'users.name', 'users.photo')
-            ->orderBy('comment_id', 'DESC')->take(1)->get();
-
-        $user_comment_reacts = json_decode($comment->user_reacts, true);
-    @endphp
-
-
     <!-- Comment item START -->
     <li class="comment-item n_comment_item mb-0" id="comment_{{ $comment->comment_id }}">
         <div class="d-flex justify-content-between mb-8">
@@ -34,8 +21,11 @@
                         <div class="comment-content bg-secondary" >
                             <h4 class="ava-nave">{{$comment->name}}</h4>
                             <p>{{$comment->description}}</p>
-                            <a href="javascript:void(0)" id="comment_reacts<?php echo $comment->comment_id; ?>">
-                                @include('frontend.main_content.comment_reacts', ['comment_react' => true])
+                            <a href="javascript:void(0)" id="comment_reacts{{ $comment->comment_id }}">
+                                @include('frontend.main_content.comment_reacts', [
+                                    'comment_react' => true,
+                                    'user_comment_reacts' => $viewData->reacts($comment),
+                                ])
                             </a>
                         </div>
             
@@ -46,8 +36,11 @@
 
                             </li>
                             <li class="nav-item post-react">
-                                <a class="nav-link" href="javascript:void(0)" onclick="myCommentReact('like', 'toggle', {{$comment->comment_id}})" id="my_comment_reacts<?php echo $comment->comment_id; ?>">
-                                    @include('frontend.main_content.comment_reacts', ['my_react' => true])
+                                <a class="nav-link" href="javascript:void(0)" onclick="myCommentReact('like', 'toggle', {{$comment->comment_id}})" id="my_comment_reacts{{ $comment->comment_id }}">
+                                    @include('frontend.main_content.comment_reacts', [
+                                        'my_react' => true,
+                                        'user_comment_reacts' => $viewData->reacts($comment),
+                                    ])
                                 </a>
             
                                 <ul class="react-list">
@@ -82,7 +75,7 @@
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                     <li>
-                        <a href="javascript:void(0)" onclick="confirmAction('<?php echo route('comment.delete', ['comment_id' => $comment->comment_id]); ?>', true)" class="dropdown-item"><i class="fa fa-trash me-1"></i> {{get_phrase('Delete Comment')}}</a>
+                        <a href="javascript:void(0)" onclick="confirmAction('{{ route('comment.delete', ['comment_id' => $comment->comment_id]) }}', true)" class="dropdown-item"><i class="fa fa-trash me-1"></i> {{get_phrase('Delete Comment')}}</a>
                     </li>
 
                 </ul>
@@ -93,7 +86,9 @@
 
         <!-- Comment item nested START -->
         <ul class="comment-item-nested list-unstyled" id="child_comments{{$comment->comment_id}}">
-            @include('frontend.main_content.child_comments') 
+            @include('frontend.main_content.child_comments', [
+                'child_comments' => $viewData->childComments($comment),
+            ]) 
         </ul>
 
         <div class="pl-45px comment-form  d-hidden parent_comment_reply_fields" id="reply_field{{$comment->comment_id}}">
@@ -102,8 +97,8 @@
             </form>
         </div>
 
-        @if($child_comments->count() < $total_child_comments)
-            <a class="btn view_btn_text p-3 pt-0" onclick="loadMoreComments(this, {{$post_id}}, {{$comment->comment_id}}, {{$total_child_comments}},'{{ $type }}')">{{get_phrase('View more')}}</a>
+        @if($viewData->childComments($comment)->count() < $viewData->childCommentCount($comment, $type))
+            <a class="btn view_btn_text p-3 pt-0" onclick="loadMoreComments(this, {{$post_id}}, {{$comment->comment_id}}, {{$viewData->childCommentCount($comment, $type)}},'{{ $type }}')">{{get_phrase('View more')}}</a>
         @endif
     </li>
         

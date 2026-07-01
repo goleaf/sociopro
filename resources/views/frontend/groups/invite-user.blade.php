@@ -1,8 +1,5 @@
 @foreach ($users as $user )
-    @php
-        $is_invited = \App\Models\Invite::where('invite_reciver_id',$user->id)->where('group_id',$group_id)->count();
-    @endphp
-    @if ($is_invited=='0')
+    @if (! $viewData->isGroupInviteSent($user, $group_id))
         <div class="single-suggest nSuggest d-flex justify-content-between align-items-center" onclick="inviteGroupPeople('{{$user->id}}', '{{$user->name}}')">
             <div class="suggest-avatar d-flex justify-content-between align-items-center">
                 <img src="{{ get_user_image($user->photo,'optimized') }}" class="img-fluid rounded-circle user_image_show_on_modal" width="45" alt="Avatar">

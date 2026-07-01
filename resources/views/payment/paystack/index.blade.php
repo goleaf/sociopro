@@ -4,25 +4,6 @@
 <!-- Button to initiate payment -->
 <button type="button" class="btn btn-primary py-2 px-3" onclick="payWithPaystack()">{{ __('Pay by Paystack') }}</button>
 
-@php
-// Start common code of all payment gateway
-$keys = json_decode($payment_gateway->keys, true);
-$test_mode = $payment_gateway->test_mode == 1 ? 1 : 0;
-
-// Ended common code of all payment gateway
-if ($test_mode == 1) {
-    $key = $keys['public_test_key'];
-    // $secret_key = $keys['secret_test_key'];
-} else {
-    $key = $keys['public_live_key'];
-    // $secret_key = $keys['secret_live_key'];
-}
-
-$amount = $payment_details['items'][0]['price'];
-$user_details = Auth::user();
-
-@endphp
-
 <!-- JavaScript function to handle Paystack payment -->
 <script>
 

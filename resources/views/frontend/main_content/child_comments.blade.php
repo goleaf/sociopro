@@ -1,5 +1,4 @@
 @foreach($child_comments as $child_comment)
-@php $user_comment_reacts = json_decode($child_comment->user_reacts, true); @endphp
 <!-- Comment item START -->
 <li class="comment-item n_comment_item c_details mb-0" id="comment_{{ $child_comment->comment_id }}">
     <div class="d-flex justify-content-between">
@@ -17,8 +16,11 @@
                     <div class="comment-content bg-secondary">
                         <h4 class="ava-nave">{{$child_comment->name}}</h4>
                         <p>{{$child_comment->description}}</p>
-                        <a href="javascript:void(0)" id="comment_reacts<?php echo $child_comment->comment_id; ?>">
-                            @include('frontend.main_content.comment_reacts', ['comment_react' => true])
+                        <a href="javascript:void(0)" id="comment_reacts{{ $child_comment->comment_id }}">
+                            @include('frontend.main_content.comment_reacts', [
+                                'comment_react' => true,
+                                'user_comment_reacts' => $viewData->reacts($child_comment),
+                            ])
                         </a>
                     </div>
             
@@ -29,8 +31,11 @@
                             </p>
                         </li>
                         <li class="nav-item post-react">
-                            <a class="nav-link" href="javascript:void(0)" onclick="myCommentReact('like', 'toggle', {{$child_comment->comment_id}})" id="my_comment_reacts<?php echo $child_comment->comment_id; ?>">
-                                    @include('frontend.main_content.comment_reacts', ['my_react' => true])
+                            <a class="nav-link" href="javascript:void(0)" onclick="myCommentReact('like', 'toggle', {{$child_comment->comment_id}})" id="my_comment_reacts{{ $child_comment->comment_id }}">
+                                    @include('frontend.main_content.comment_reacts', [
+                                        'my_react' => true,
+                                        'user_comment_reacts' => $viewData->reacts($child_comment),
+                                    ])
                             </a>
             
                             <ul class="react-list">
@@ -58,7 +63,7 @@
                 role="button" data-bs-toggle="dropdown" aria-expanded="false">
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a href="javascript:void(0)" onclick="confirmAction('<?php echo route('comment.delete', ['comment_id' => $child_comment->comment_id]); ?>', true)" class="dropdown-item"><i class="fa fa-trash me-1"></i> {{get_phrase('Delete Comment')}}</a></li>
+                <li><a href="javascript:void(0)" onclick="confirmAction('{{ route('comment.delete', ['comment_id' => $child_comment->comment_id]) }}', true)" class="dropdown-item"><i class="fa fa-trash me-1"></i> {{get_phrase('Delete Comment')}}</a></li>
             </ul>
         </div>
         @endif
@@ -67,4 +72,3 @@
 </li>
 <!-- Comment item END -->
 @endforeach
-

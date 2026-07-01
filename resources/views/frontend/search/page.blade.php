@@ -18,9 +18,9 @@
                                 @endphp
                                 <span class="small text-muted">{{ $likecount }} {{ get_phrase('likes') }}</span>
                                 @if ($likecount>0)
-                                    <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('page.dislike',$mypage->id); ?>')" class="btn common_btn"><i class="fa fa-thumbs-up me-2"></i>{{ get_phrase('Liked') }}</a>
+                                    <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.dislike',$mypage->id) }}')" class="btn common_btn"><i class="fa fa-thumbs-up me-2"></i>{{ get_phrase('Liked') }}</a>
                                 @else
-                                    <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('page.like',$mypage->id); ?>')" class="btn common_btn"><i class="fa fa-thumbs-up me-2"></i>{{ get_phrase('Like') }}</a>
+                                    <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.like',$mypage->id) }}')" class="btn common_btn"><i class="fa fa-thumbs-up me-2"></i>{{ get_phrase('Like') }}</a>
                                 @endif
                             </div>
                         </div><!--  Card End -->

@@ -2,18 +2,7 @@
 <html lang="en">
 
 <head>
-    @php
-        if (isset($common_path) && $common_path == 'global') {
-            $folder = 'global';
-        } elseif (auth()->user()->user_role == 'admin') {
-            $folder = 'admin';
-        } elseif (auth()->user()->user_role == 'general') {
-            $folder = 'user';
-        }
-        $system_name = \App\Models\Setting::where('type', 'system_name')->value('description');
-        $system_favicon = \App\Models\Setting::where('type', 'system_fav_icon')->value('description');
-    @endphp
-    <title>{{ $system_name }}</title>
+    <title>{{ $viewData->setting('system_name') }}</title>
     <!-- all the meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -22,7 +11,7 @@
     <!-- CSRF Token for ajax for submission -->
     <meta name="csrf_token" content="{{ csrf_token() }}" />
     <!-- all the css files -->
-    <link rel="shortcut icon" href="{{ get_system_logo_favicon($system_favicon, 'favicon') }}" />
+    <link rel="shortcut icon" href="{{ get_system_logo_favicon($viewData->setting('system_fav_icon'), 'favicon') }}" />
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" type="text/css"
         href="{{ asset('assets/backend/vendors/bootstrap-5.1.3/css/bootstrap.min.css') }}" />
@@ -53,11 +42,11 @@
 </head>
 
 <body>
-    @include('backend.' . $folder . '.sidebar')
+    @include('backend.' . $viewData->backendFolder($common_path ?? null, auth()->user()) . '.sidebar')
     <section class="home-section">
         <div class="home-content">
             @include('backend.header')
-            @include('backend.' . $folder . '.' . $view_path)
+            @include('backend.' . $viewData->backendFolder($common_path ?? null, auth()->user()) . '.' . $view_path)
             @include('backend.modal')
             @include('backend.common_scripts')
         </div>

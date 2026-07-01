@@ -1,6 +1,4 @@
-@php
-    $group = \App\Models\Group::find($group_id);
-@endphp
+@props(['group' => $viewData->group($group_id)])
 <img class="uploaded_place_here image-fluid rounded mb-5" width="100%" src="{{get_group_cover_photo($group->coverphoto,'coverphoto')}}">
 
 <form class="ajaxForm" action="{{route('group.coverphoto',$group->id)}}" method="post" enctype="multipart/form-data">

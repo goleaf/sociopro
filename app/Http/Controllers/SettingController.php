@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Mail\ContactMail;
+use App\Models\Currency;
 use App\Models\FileUploader;
+use App\Models\Language;
 use App\Models\Posts;
 use App\Models\Report;
 use App\Models\Setting;
@@ -168,6 +170,12 @@ class SettingController extends Controller
         $page_data['meta_pixel_id'] = Setting::where('type', 'meta_pixel_id')->value('description');
         $page_data['commission_rate'] = Setting::where('type', 'commission_rate')->value('description');
         $page_data['hugging_face_auth_key'] = Setting::where('type', 'hugging_face_auth_key')->value('description');
+        $page_data['system_currency'] = Setting::where('type', 'system_currency')->value('description');
+        $page_data['system_language'] = Setting::where('type', 'system_language')->value('description');
+        $page_data['public_signup'] = Setting::where('type', 'public_signup')->value('description');
+        $page_data['storedColor'] = Setting::where('type', 'theme_color')->value('description');
+        $page_data['currencies'] = Currency::query()->select(['code'])->orderBy('code')->get();
+        $page_data['languages'] = Language::query()->select(['name'])->groupBy('name')->orderBy('name')->get();
         $page_data['view_path'] = 'setting.system';
         return view('backend.index', $page_data);
     }

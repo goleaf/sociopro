@@ -35,8 +35,7 @@
                 <div class="group-suggestion mt-3" id="friendsForInvitingGroup">
                     <h6>{{ get_phrase('Suggestion') }}</h6>
                     <div class="sugest-wrap">
-                        @php $users = \App\Models\User::orderBy('id','DESC')->limit('7')->get(); @endphp
-                        @include('frontend.groups.invite-user',['users'=>$users,'group_id'=>$group->id])
+                        @include('frontend.groups.invite-user', ['users' => $viewData->recentUsers(), 'group_id' => $group->id])
                     </div>
                 </div>
                 <button type="submit" class="btn common_btn d-block w-100 btn-lg">{{ get_phrase('Invite Group') }}</button>

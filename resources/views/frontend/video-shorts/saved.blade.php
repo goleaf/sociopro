@@ -47,9 +47,9 @@
                                             $saved = \App\Models\Saveforlater::where('video_id',$video->video_id)->where('user_id',auth()->user()->id)->count();
                                         @endphp
                                         @if ($saved>0)
-                                        <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('unsave.video.later',$video->video_id); ?>')" class="dropdown-item btn btn-primary btn-sm"> <img src="{{ asset('assets/frontend/images/save.png') }}" alt=""> {{get_phrase('Unsave Video')}}</a>
+                                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('unsave.video.later',$video->video_id) }}')" class="dropdown-item btn btn-primary btn-sm"> <img src="{{ asset('assets/frontend/images/save.png') }}" alt=""> {{get_phrase('Unsave Video')}}</a>
                                         @else
-                                        <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('save.video.later',$video->video_id); ?>')" class="dropdown-item btn btn-primary btn-sm"> <img src="{{ asset('assets/frontend/images/save.png') }}" alt=""> {{get_phrase('Save Video')}}</a>
+                                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('save.video.later',$video->video_id) }}')" class="dropdown-item btn btn-primary btn-sm"> <img src="{{ asset('assets/frontend/images/save.png') }}" alt=""> {{get_phrase('Save Video')}}</a>
                                         @endif
                                     </li>
                                 </ul>

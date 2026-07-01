@@ -1,9 +1,3 @@
-@php
-    $page_data = $data['page_data'];
-    $payment_details = $data['payment_details'];
-    $color = $data['color'];
-@endphp
-
 <button id="rzp-button1" hidden>Pay</button>
 
 <form action="{{ route('payment.success', ['identifier' => 'razorpay']) }}" hidden>

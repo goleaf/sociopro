@@ -35,7 +35,7 @@
                       <i class="bi bi-people-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                      <h4>{{DB::table('users')->whereNot('user_role', 'admin')->count()}}</h4>
+                      <h4>{{ $dashboardCounts['users'] }}</h4>
                       <p>{{get_phrase('Total Users')}}</p>
                   </div>
               </div>
@@ -55,7 +55,7 @@
                       <i class="bi bi-postcard-heart-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                      <h4>{{DB::table('posts')->get()->count()}}</h4>
+                      <h4>{{ $dashboardCounts['posts'] }}</h4>
                       <p>{{get_phrase('Total Posts')}}</p>
                   </div>
               </div>
@@ -75,7 +75,7 @@
                       <i class="bi bi-file-richtext-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                      <h4>{{DB::table('pages')->get()->count()}}</h4>
+                      <h4>{{ $dashboardCounts['pages'] }}</h4>
                       <p>{{get_phrase('Total Pages')}}</p>
                   </div>
               </div>
@@ -95,7 +95,7 @@
                       <i class="bi bi-file-text-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                      <h4>{{DB::table('blogs')->get()->count()}}</h4>
+                      <h4>{{ $dashboardCounts['blogs'] }}</h4>
                       <p>{{get_phrase('Total Blogs')}}</p>
                   </div>
               </div>
@@ -115,7 +115,7 @@
                       <i class="bi bi-badge-ad-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                      <h4>{{DB::table('sponsors')->get()->count()}}</h4>
+                      <h4>{{ $dashboardCounts['sponsors'] }}</h4>
                       <p>{{get_phrase('Total Sponsored Posts')}}</p>
                   </div>
               </div>
@@ -135,7 +135,7 @@
                       <i class="bi bi-bag-heart-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                      <h4>{{DB::table('marketplaces')->get()->count()}}</h4>
+                      <h4>{{ $dashboardCounts['marketplaces'] }}</h4>
                       <p>{{get_phrase('Total Products')}}</p>
                   </div>
               </div>
@@ -164,13 +164,6 @@
     @include('backend.footer')
     <!-- End Footer -->
   </div>
-<?php
-  if(isset($_GET['year']) && !empty($_GET['year'])){
-    $year = $_GET['year'];
-  }else{
-    $year = date('Y');
-  }
-?>
 <script type="text/javascript">
   "use strict";
   $(document).ready(function(){
@@ -188,21 +181,7 @@
               labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
               datasets: [{
                       label: "{{get_phrase('Number of user')}}",
-                      data: [
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-01-01')->whereDate('created_at', '<=', $year.'-01-'.date('t', strtotime($year.'-01-01')))->count(); ?>,
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-02-01')->whereDate('created_at', '<=', $year.'-02-'.date('t', strtotime($year.'-02-01')))->count(); ?>,
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-03-01')->whereDate('created_at', '<=', $year.'-03-'.date('t', strtotime($year.'-03-01')))->count(); ?>,
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-04-01')->whereDate('created_at', '<=', $year.'-04-'.date('t', strtotime($year.'-04-01')))->count(); ?>,
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-05-01')->whereDate('created_at', '<=', $year.'-05-'.date('t', strtotime($year.'-05-01')))->count(); ?>,
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-06-01')->whereDate('created_at', '<=', $year.'-06-'.date('t', strtotime($year.'-06-01')))->count(); ?>,
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-07-01')->whereDate('created_at', '<=', $year.'-07-'.date('t', strtotime($year.'-07-01')))->count(); ?>,
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-08-01')->whereDate('created_at', '<=', $year.'-08-'.date('t', strtotime($year.'-08-01')))->count(); ?>,
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-09-01')->whereDate('created_at', '<=', $year.'-09-'.date('t', strtotime($year.'-09-01')))->count(); ?>,
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-10-01')->whereDate('created_at', '<=', $year.'-10-'.date('t', strtotime($year.'-10-01')))->count(); ?>,
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-11-01')->whereDate('created_at', '<=', $year.'-11-'.date('t', strtotime($year.'-11-01')))->count(); ?>,
-                          <?php echo DB::table('users')->whereDate('created_at', '>=', $year.'-12-01')->whereDate('created_at', '<=', $year.'-12-'.date('t', strtotime($year.'-12-01')))->count(); ?>,
-
-                        ],
+                      data: @json($monthlyUserCounts),
                       backgroundColor: "#5A2FF9"
                   }
               ]
@@ -213,4 +192,3 @@
       });
   });
 </script>
-

@@ -167,7 +167,7 @@
     function addFeelingActivity(feeling_and_activity_id, title, icon, iconExt) {
 
         if (iconExt == 'png' || iconExt == 'jpg' || iconExt == 'ico') {
-            var icon = "<img src='<?php echo asset('storage/images'); ?>/" + icon + "'>";
+            var icon = "<img src='{{ asset('storage/images') }}/" + icon + "'>";
         } else {
             var icon = '<i class="+' + icon + '+"></i>';
         }

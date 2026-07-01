@@ -19,9 +19,9 @@
                         $likecount = \App\Models\Page_like::where('page_id',$likepage->page_id)->where('user_id',auth()->user()->id)->count();
                     @endphp
                     @if ($likecount>0)
-                        <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('page.dislike',$likepage->page_id); ?>')" class="btn common_btn_2"><i class="fa fa-thumbs-up me-1"></i>{{ ('Liked') }}</a>
+                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.dislike',$likepage->page_id) }}')" class="btn common_btn_2"><i class="fa fa-thumbs-up me-1"></i>{{ ('Liked') }}</a>
                     @else
-                        <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('page.like',$likepage->page_id); ?>')" class="btn common_btn"><i class="fa fa-thumbs-up me-1"></i>{{ ('Like') }}</a>
+                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.like',$likepage->page_id) }}')" class="btn common_btn"><i class="fa fa-thumbs-up me-1"></i>{{ ('Like') }}</a>
                     @endif
                </div>
             </div><!--  Card End -->

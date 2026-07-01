@@ -11,13 +11,17 @@ use App\Models\JobWishlist;
 use App\Models\JobPackage;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Currency;
 use App\Models\FileUploader;
 use App\Models\Page;
 use App\Models\Group;
 use App\Models\Group_member;
+use App\Models\Marketplace;
 use App\Models\Pagecategory;
 use App\Models\Page_like;
 use App\Models\Payment_gateway;
+use App\Models\Posts;
+use App\Models\Sponsor;
 use App\Models\User;
 use App\Models\Account_active_request;
 use App\Models\Setting;
@@ -85,9 +89,29 @@ class AdminCrudController extends Controller
 
     // dashboard
 
-    public function admin_dashboard()
+    public function admin_dashboard(Request $request)
     {
+        $year = (int) $request->query('year', date('Y'));
+
         $page_data['all_category'] = Pagecategory::all();
+        $page_data['year'] = $year;
+        $page_data['dashboardCounts'] = [
+            'users' => User::query()->where('user_role', '!=', 'admin')->count(),
+            'posts' => Posts::query()->count(),
+            'pages' => Page::query()->count(),
+            'blogs' => Blog::query()->count(),
+            'sponsors' => Sponsor::query()->count(),
+            'marketplaces' => Marketplace::query()->count(),
+        ];
+        $page_data['monthlyUserCounts'] = collect(range(1, 12))->map(function (int $month) use ($year): int {
+            $start = now()->setDate($year, $month, 1)->startOfDay();
+            $end = $start->copy()->endOfMonth();
+
+            return User::query()
+                ->whereDate('created_at', '>=', $start->toDateString())
+                ->whereDate('created_at', '<=', $end->toDateString())
+                ->count();
+        })->all();
         $page_data['view_path'] = 'dashboard.index';
         return view('backend.index', $page_data);
     }
@@ -330,9 +354,12 @@ class AdminCrudController extends Controller
 			'customer_name'        => 'valid',
 			'product_license'      => 'valid',
 			'license_type'         => 'Regular',
-		);
+        );
 
         $page_data['application_details'] = $returnable_array;
+        $page_data['curlEnabled'] = function_exists('curl_version');
+        $page_data['softwareVersion'] = Setting::where('type', 'version')->value('description');
+        $page_data['purchaseCode'] = Setting::where('type', 'purchase_code')->value('description');
         $page_data['view_path'] = 'setting.system_about';
         return view('backend.index', $page_data);
     }
@@ -1220,8 +1247,9 @@ class AdminCrudController extends Controller
 
     public function payment_gateway_edit($id)
     {
-        $page_data['currencies'] = DB::table('currencies')->get();
+        $page_data['currencies'] = Currency::query()->select(['code'])->orderBy('code')->get();
         $page_data['payment_gateway'] = Payment_gateway::where('id', $id)->first();
+        $page_data['paymentGatewayKeys'] = json_decode($page_data['payment_gateway']->keys, true) ?: [];
         $page_data['view_path'] = 'payment.payment_gateway_edit';
         return view('backend.index', $page_data);
     }

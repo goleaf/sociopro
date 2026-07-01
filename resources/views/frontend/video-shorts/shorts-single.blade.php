@@ -19,9 +19,9 @@
                                 $follow = \App\Models\Follower::where('user_id',auth()->user()->id)->where('follow_id',$short->getUser->id)->count();
                             @endphp
                             @if ($follow>0)
-                                <a href="javascript:void(0)" onclick="event.stopPropagation(); ajaxAction('<?php echo route('user.unfollow',$short->getUser->id); ?>')" class="btn common_btn_2">{{ get_phrase('Unfollow') }}</a> 
+                                <a href="javascript:void(0)" onclick="event.stopPropagation(); ajaxAction('{{ route('user.unfollow',$short->getUser->id) }}')" class="btn common_btn_2">{{ get_phrase('Unfollow') }}</a> 
                             @else
-                                <a href="javascript:void(0)" onclick="event.stopPropagation(); ajaxAction('<?php echo route('user.follow',$short->getUser->id); ?>')" class="btn common_btn">{{ get_phrase('Follow') }}</a> 
+                                <a href="javascript:void(0)" onclick="event.stopPropagation(); ajaxAction('{{ route('user.follow',$short->getUser->id) }}')" class="btn common_btn">{{ get_phrase('Follow') }}</a> 
                             @endif
                         </div>
                     </div>
@@ -38,7 +38,7 @@
                             $user_info = \App\Models\User::find($short->getUser->id);
                         @endphp
                         <span class="entry-react post-react eFont custom-text-shadow">
-                            <a href="#" onclick="event.stopPropagation(); myReact('post', 'like', 'toggle', {{$post->post_id}}, 'number')" id="reactNumber<?php echo $post->post_id; ?>">
+                            <a href="#" onclick="event.stopPropagation(); myReact('post', 'like', 'toggle', {{$post->post_id}}, 'number')" id="reactNumber{{ $post->post_id }}">
                                 @include('frontend.main_content.post_reacts', ['my_react' => true,'user_reacts'=>$user_reacts,'user_info'=>$user_info,'type'=>'shorts']) 
                                 <span class="fs-6 custom-text-shadow appendNumber"> {{ $totalreact }}</span>
                             </a>

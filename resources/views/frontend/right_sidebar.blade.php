@@ -9,19 +9,6 @@
         </div>
     </div>
 </div>
-{{-- @php
-    
-    $media_files = \App\Models\Media_files::where('user_id', Auth()->user()->id)
-        ->whereNull('story_id')
-        ->whereNull('product_id')
-        ->whereNull('page_id')
-        ->whereNull('group_id')
-        ->whereNull('chat_id')
-        ->take(9)
-        ->orderBy('id', 'desc')
-        ->get();
-
-@endphp --}}
 <aside class="sidebar mt-0 sidebarToggle d-hidden" id="sidebarToggle">
     @if (Route::currentRouteName() == 'timeline' ||
             Route::currentRouteName() == 'pages' ||
@@ -83,23 +70,10 @@
             )
         <div class="widget">
             <div class="d-flex align-items-center">
-                @php
-
-                    $tz = auth()->user()->timezone;
-                    if (!empty($tz)) {
-                        $timestamp = time();
-                        $dt = new DateTime('now', new DateTimeZone($tz)); //first argument "must" be a string
-                        $dt->setTimestamp($timestamp);
-                        $current_hour = $dt->format('H');
-                    } else {
-                        $current_hour = date('H', time());
-                    }
-                @endphp
-
-                @if ($current_hour >= 5 && $current_hour < 12)
+                @if ($viewData->rightSidebarHour(auth()->user()) >= 5 && $viewData->rightSidebarHour(auth()->user()) < 12)
                     <img class="img-fluid" src="{{ asset('assets/frontend/images/sun.svg') }}" height="30px"
                         width="30px" alt="">
-                @elseif($current_hour >= 12 && $current_hour < 17)
+                @elseif($viewData->rightSidebarHour(auth()->user()) >= 12 && $viewData->rightSidebarHour(auth()->user()) < 17)
                     <img class="img-fluid" src="{{ asset('storage/images/cloud-sun.png') }}" alt="">
                     
                 @else
@@ -107,9 +81,9 @@
                 width="30px" alt="">
                 @endif
                 <h3 class="h6 ms-2">{{ get_phrase('Hi') }}, {{ Auth()->user()->name }}
-                    @if ($current_hour >= 5 && $current_hour < 12)
+                    @if ($viewData->rightSidebarHour(auth()->user()) >= 5 && $viewData->rightSidebarHour(auth()->user()) < 12)
                         <span class="d-block text-primary">{{ get_phrase('Good Morning') }}!</span>
-                    @elseif($current_hour >= 12 && $current_hour < 17)
+                    @elseif($viewData->rightSidebarHour(auth()->user()) >= 12 && $viewData->rightSidebarHour(auth()->user()) < 17)
                         <span class="d-block text-primary">{{ get_phrase('Good Afternoon') }}!</span>
                     @else
                         <span class="d-block text-primary">{{ get_phrase('Good Evening') }}!</span>
@@ -123,25 +97,7 @@
 
             </div>
             <div class="sponsors">
-                @php
-
-                    $sponsorPost = \App\Models\Sponsor::orderBy('id', 'desc')
-
-                        ->where(function ($query) {
-                            $query->where('start_date', '<', date('Y-m-d H:i:s'))->orWhere(function ($query) {
-                                $query->where('start_date', '=', date('Y-m-d H:i:s'))->whereTime('start_date', '<=', date('Y-m-d H:i:s'));
-                            });
-                        })
-                        ->where(function ($query) {
-                            $query->where('end_date', '>', date('Y-m-d H:i:s'))->orWhere(function ($query) {
-                                $query->where('end_date', '=', date('Y-m-d H:i:s'))->whereTime('end_date', '>=', date('Y-m-d H:i:s'));
-                            });
-                        })
-                        ->where('status', 1)
-                        ->limit('6')
-                        ->get();
-                @endphp
-                @foreach ($sponsorPost as $sponsor)
+                @foreach ($viewData->activeSponsors() as $sponsor)
                     <a target="_blank" href="{{ $sponsor->ext_url }}">
                         <div class="sponsor d-flex d-md-block d-xl-flex  mb-1 text-lg-center text-xl-start">
                             <img src="{{ get_sponsor_image($sponsor->image, 'thumbnail') }}"
@@ -164,71 +120,20 @@
                 </div>
             </div>
             <div class="contact-lists side_contact mt-3">
-                @php
-                    $friends = \App\Models\Friendships::where(function ($query) {
-                        $query->where('accepter', auth()->user()->id)->orWhere('requester', auth()->user()->id);
-                    })
-                        ->where('is_accepted', 1)
-                        ->get();
-                 // Block User Each Other
-                $blockedByUser = DB::table('block_users')->where('user_id', auth()->user()->id)->pluck('block_user')->toArray();
-                $blockedByOthers = DB::table('block_users')->where('block_user', auth()->user()->id)->pluck('user_id')->toArray();
-                @endphp
-                @foreach ($friends as $friend)
-                @php 
-                //  User Block
-                if (in_array($friend->accepter, $blockedByUser)) {
-                        continue;
-                    }
-                    if (in_array($friend->requester, $blockedByOthers)) {
-                        continue;
-                    }
-                
-                @endphp
-                    @if ($friend->requester == auth()->user()->id)
-                        {{-- @if ($friend->getFriendAccepter->isOnline()) --}}
-                        @if (!empty($friend->getFriendAccepter) && $friend->getFriendAccepter->isOnline())
-                            @if ($friend->getFriendAccepter->id != auth()->user()->id)
-                                <div class="single-contact d-flex align-items-center justify-content-between">
-                                    <div class="avatar d-flex">
-                                        <a href="{{ route('chat', $friend->getFriendAccepter->id) }}"
-                                            class="d-flex align-items-center">
-                                            <div class="avatar me-2">
-                                                <img src="{{ get_user_image($friend->getFriendAccepter->photo, 'optimized') }}"
-                                                    class="rounded-circle w-45px" alt="">
-                                                <span class="online-status active"></span>
-                                            </div>
-                                            <h4>{{ $friend->getFriendAccepter->name }}</h4>
-                                        </a>
-                                    </div>
-                                    <div class="login-time">
-
-                                    </div>
+                @foreach ($viewData->onlineFriendRows(auth()->user()) as $row)
+                    <div class="single-contact d-flex align-items-center justify-content-between">
+                        <div class="avatar d-flex">
+                            <a href="{{ route('chat', $row['user']->id) }}" class="d-flex align-items-center">
+                                <div class="avatar me-2">
+                                    <img src="{{ get_user_image($row['user']->photo, 'optimized') }}"
+                                        class="rounded-circle w-45px h-45" alt="">
+                                    <span class="online-status active"></span>
                                 </div>
-                            @endif
-                        @endif
-                    @else
-                        @if ($friend->getFriend->isOnline())
-                            @if ($friend->getFriend->id != auth()->user()->id)
-                                <div class="single-contact d-flex align-items-center justify-content-between">
-                                    <div class="avatar d-flex">
-                                        <a href="{{ route('chat', $friend->getFriend->id) }}"
-                                            class="d-flex align-items-center">
-                                            <div class="avatar me-2">
-                                                <img src="{{ get_user_image($friend->getFriend->photo, 'optimized') }}"
-                                                    class="rounded-circle w-45px h-45" alt="">
-                                                <span class="online-status active"></span>
-                                            </div>
-                                            <h4>{{ $friend->getFriend->name }}</h4>
-                                        </a>
-                                    </div>
-                                    <div class="login-time">
-
-                                    </div>
-                                </div>
-                            @endif
-                        @endif
-                    @endif
+                                <h4>{{ $row['user']->name }}</h4>
+                            </a>
+                        </div>
+                        <div class="login-time"></div>
+                    </div>
                 @endforeach
             </div>
         </div> <!-- Widget End -->
@@ -267,17 +172,12 @@
                 </div>
                 <div class="d-flex gt_control justify-content-center  mt-3">
                     <div class="going">
-                        @php
-                            $directly_going_data = json_decode($event->going_users_id) != null ? count(json_decode($event->going_users_id)) : '0';
-                            $invite_going_data = $invited_friend_going;
-                            $total = $directly_going_data + $invite_going_data;
-                        @endphp
-                        <span class="rounded-2">{{ $total }} </span>
+                        <span class="rounded-2">{{ $viewData->eventGuestStats($event, $invited_friend_going)['going'] }} </span>
                         Going
                     </div>
                     <div class="going">
                         <span
-                            class="rounded-2">{{ json_decode($event->interested_users_id) != null ? count(json_decode($event->interested_users_id)) : '0' }}</span>
+                            class="rounded-2">{{ $viewData->eventGuestStats($event, $invited_friend_going)['interested'] }}</span>
                         Interested
                     </div>
                 </div>
@@ -295,47 +195,32 @@
                 <div class="invite-wrap nw_wrap overflow-auto mt-3">
                     <table id="myTable" class="w-100">
                         <tbody class="searchTbody">
-                            @foreach ($friends as $friend)
-                                {{--  asiging user as requester or getting request as friend whos are inviteable --}}
-                                @php $invited_friend_id = $friend->requester==auth()->user()->id ? $friend->accepter:$friend->requester; @endphp
-                                {{--  getiing user data for view   --}}
-                                @php
-                                    $inviteablefrienddetails = DB::table('users')
-                                        ->where('id', $invited_friend_id)
-                                        ->first();
-                                @endphp
-                                {{--  chekcing invite is already done or not   --}}
-                                @php
-                                    $invite_details = DB::table('invites')
-                                        ->where('invite_reciver_id', $invited_friend_id)
-                                        ->where('event_id', $event->id)
-                                        ->first();
-                                @endphp
+                            @foreach ($viewData->eventInviteRows($friends, $event, auth()->user()) as $row)
                                 <tr>
                                     <td>
                                         <div class="d-flex justify-content-between s-invite">
                                             <div class="ava-img d-flex align-items-center">
                                                 <a
-                                                    href="{{ route('user.profile.view', $inviteablefrienddetails->id) }}"><img
+                                                    href="{{ route('user.profile.view', $row['user']->id) }}"><img
                                                         width="40" class="user-round h-33"
-                                                        src="{{ get_user_image($inviteablefrienddetails->photo, 'optimized') }}"
+                                                        src="{{ get_user_image($row['user']->photo, 'optimized') }}"
                                                         alt=""></a>
                                                 <h3 class="h6 mb-0"><a
-                                                        href="{{ route('user.profile.view', $inviteablefrienddetails->id) }}">{{ ellipsis($inviteablefrienddetails->name, 20) }}</a>
+                                                        href="{{ route('user.profile.view', $row['user']->id) }}">{{ ellipsis($row['user']->name, 20) }}</a>
                                                 </h3>
                                             </div>
                                             <div class="invite_button_css">
                                                 @if (
-                                                    !empty($invite_details) &&
-                                                        $invite_details->invite_reciver_id == $invited_friend_id &&
-                                                        $invite_details->is_accepted != '1')
+                                                    !empty($row['invite']) &&
+                                                        $row['invite']->invite_reciver_id == $row['user']->id &&
+                                                        $row['invite']->is_accepted != '1')
                                                     <button class="btn common_btn_2 px-1 py-0 me-1 text-primary"
                                                         data-bs-toggle="tooltip" data-bs-placement="top"
                                                         data-bs-title="{{ get_phrase('Invited') }}"> Invited</button>
                                                 @elseif (
-                                                    !empty($invite_details) &&
-                                                        $invite_details->invite_reciver_id == $invited_friend_id &&
-                                                        $invite_details->is_accepted == '1')
+                                                    !empty($row['invite']) &&
+                                                        $row['invite']->invite_reciver_id == $row['user']->id &&
+                                                        $row['invite']->is_accepted == '1')
                                                     <button data-bs-toggle="tooltip" data-bs-placement="top"
                                                         data-bs-title="{{ get_phrase('Going') }}"
                                                         class="btn px-1 py-0 me-1 text-success"> <i
@@ -344,7 +229,7 @@
                                                     <a data-bs-toggle="tooltip" data-bs-placement="top"
                                                         data-bs-title="{{ get_phrase('Send invitations') }}"
                                                         href="javascript:void(0)"
-                                                        onclick="ajaxAction('<?php echo route('event.invite', ['invited_friend_id' => $invited_friend_id, 'requester_id' => auth()->user()->id, 'event_id' => $event->id]); ?>')"
+                                                        onclick="ajaxAction('{{ route('event.invite', ['invited_friend_id' => $row['user']->id, 'requester_id' => auth()->user()->id, 'event_id' => $event->id]) }}')"
                                                         class="btn common_btn px-1 py-0 me-1">invite</a>
                                                 @endif
                                             </div>
@@ -359,21 +244,15 @@
 
             <div class="widget p-event-widget">
                 <h3 class="widget-title mb-3">{{ get_phrase('Popular Events') }}</h3>
-                @php $index=1;
-               
-               
-                
-                @endphp
-                @foreach ($popularevents as $key => $popularevent)
+                @foreach (collect($popularevents)->take(5) as $key => $popularevent)
                     <div class=" ">
                         <div class="popular-event e_popular m_product m_event event-card">
                             <a href="{{ route('single.event', $popularevent['id']) }}"><img class="img-fluid w-100" src="{{ viewImage('event', $popularevent['banner'], 'thumbnail') }}" alt="">
                                 <div class="event-date n_date">
-                                    @php $date = explode("-",$popularevent['event_date']); @endphp
                                     <p class="eve_t_text">
                                         {{ date('M', strtotime($popularevent['event_date'])) }}
                                     </p>
-                                    <span>{{ $date['2'] }}</span>
+                                    <span>{{ date('d', strtotime($popularevent['event_date'])) }}</span>
                                 </div>
                             </a>
                            
@@ -411,13 +290,6 @@
                             </div>
                         </div>
                     </div> <!-- Event Widget End -->
-                    @php
-                        if ($index == '5') {
-                            break;
-                        } else {
-                            $index++;
-                        }
-                    @endphp
                 @endforeach
             </div><!-- Widget End -->
         </aside>
@@ -460,7 +332,7 @@
                     @foreach ($categories as $category)
                         <a href="{{ route('category.blog', $category->id) }}"
                             class=" @if ($post->category_id == $category->id) active @endif">{{ $category->name }}
-                            ({{ DB::table('blogs')->where('category_id', $category->id)->get()->count() }})
+                            ({{ $viewData->blogCategoryPostCount($category->id) }})
                         </a>
                     @endforeach
                 </div>
@@ -485,22 +357,17 @@
                 Route::currentRouteName() == 'post.type')
             <div class="sidebar">
                 <div class="widget paid_sidebar">
-                    @php
-                        $creator = DB::table('paid_content_creators')
-                            ->where('user_id', auth()->user()->id)
-                            ->first();
-                        $social_media = json_decode($creator->social_accounts);
-                    @endphp
+                    @if ($viewData->paidContentCreator(auth()->user())['creator'])
+                        <h4 class="widget-title">{{ get_phrase('Intro') }}</h4>
+                        <p class="intro_text mb-8 mt-8">
+                            {{ $viewData->paidContentCreator(auth()->user())['creator']->description }}
+                        </p>
 
-                    <h4 class="widget-title">{{ get_phrase('Intro') }}</h4>
-                    <p class="intro_text mb-8 mt-8">
-                        {{ $creator->description }}
-                    </p>
-
-                    <div class="mt-8 mb-8 creator-boi h-auto">
-                        <h4 class="widget-title">{{ get_phrase('Creator Bio') }}</h4>
-                        <p class="intro_text ">{{ $creator->bio }}</p>
-                    </div>
+                        <div class="mt-8 mb-8 creator-boi h-auto">
+                            <h4 class="widget-title">{{ get_phrase('Creator Bio') }}</h4>
+                            <p class="intro_text ">{{ $viewData->paidContentCreator(auth()->user())['creator']->bio }}</p>
+                        </div>
+                    @endif
 
                     {{-- edit personal settings --}}
                     <a href="{{ route('settings') }}" class="page-s-btn">{{ get_phrase('Edit bio') }}</a>
@@ -524,26 +391,22 @@
                     <ul class="social-links">
 
                         <li>
-                            <a href="@if ($social_media->facebook == '') javascript: void(0);
-                                @else {{ $social_media->facebook }} @endif"
+                            <a href="{{ data_get($viewData->paidContentCreator(auth()->user())['social'], 'facebook') ?: 'javascript: void(0);' }}"
                                 target="_blank">
                                 <i class="fa-brands fa-facebook-f"></i></a>
                         </li>
                         <li>
-                            <a href="@if ($social_media->twitter == '') javascript: void(0);
-                                @else {{ $social_media->twitter }} @endif"
+                            <a href="{{ data_get($viewData->paidContentCreator(auth()->user())['social'], 'twitter') ?: 'javascript: void(0);' }}"
                                 target="_blank">
                                 <i class="fa-brands fa-twitter"></i></a>
                         </li>
                         <li>
-                            <a href="@if ($social_media->instagram == '') javascript: void(0);
-                                @else {{ $social_media->instagram }} @endif"
+                            <a href="{{ data_get($viewData->paidContentCreator(auth()->user())['social'], 'instagram') ?: 'javascript: void(0);' }}"
                                 target="_blank">
                                 <i class="fa-brands fa-instagram"></i></a>
                         </li>
                         <li>
-                            <a href="@if ($social_media->linkedin == '') javascript: void(0);
-                                @else {{ $social_media->linkedin }} @endif"
+                            <a href="{{ data_get($viewData->paidContentCreator(auth()->user())['social'], 'linkedin') ?: 'javascript: void(0);' }}"
                                 target="_blank">
                                 <i class="fa-brands fa-linkedin-in"></i></a>
                         </li>
@@ -567,26 +430,11 @@
                     <p class="pera_text">{{get_phrase('Donated')}}</p>
                 </div>
                 <div class="fund-single-progress">
-                    @php
-                        $invite = json_decode($fundraiser->invited);
-                    @endphp
-                    @if ($invite != '')
-                        <h3 class="text_22">{{ count($invite) }}</h3>
-                    @else
-                        <h3 class="text_22">0</h3>
-                    @endif
-
+                    <h3 class="text_22">{{ $viewData->fundraiserInvitedCount($fundraiser) }}</h3>
                     <p class="pera_text">{{get_phrase('Invited')}}</p>
                 </div>
                 <div class="fund-single-progress">
-                    @php
-                     if ($sharecount !== null) {
-                         $s_count = \App\Models\Post_share::where('post_id', $sharecount->post_id)->get()->count();
-                        } else {
-                            $s_count = 0; 
-                        }
-                    @endphp
-                    <h3 class="text_22">{{ $s_count }}</h3>
+                    <h3 class="text_22">{{ $viewData->fundraiserShareCount($sharecount) }}</h3>
                     <p class="pera_text">{{get_phrase('Shared')}}</p>
                 </div>
             </div>
@@ -597,98 +445,44 @@
             <div class="friend-invite-area fund_side border-none bg-white p-20 radius-8 mb-12 pb-0">
                 <ul class="friend-invite-wrap custom_invited_card">
 
-                    {{-- ..........start......................................................................... --}}
-                    {{-- User Block --}}
-                    @php 
-                        $blockedByUser = DB::table('block_users')->where('user_id', auth()->user()->id)->pluck('block_user')->toArray();
-                    @endphp
-                    @foreach ($friendships as $friendship)
-                  
-                        @if ($friendship->requester == $user_info->id)
-                            @php
-                                $friends_user_data = DB::table('users')
-                                    ->where('id', $friendship->accepter)
-                                    ->first();
-                            @endphp
-                        @else
-                            @php
-                                $friends_user_data = DB::table('users')
-                                    ->where('id', $friendship->requester)
-                                    ->first();
-                            @endphp
-                        @endif
-
-                        @php 
-                        //  User Block
-                        if (in_array($friends_user_data->id, $blockedByUser)) {
-                                continue;
-                            }
-                        
-                        @endphp
-
-                        {{--  chekcing invite is already done or not   --}}
-                        @php
-                            $invite_details = DB::table('invites')
-                                ->where('invite_reciver_id', $friends_user_data->id)
-                                ->where('fundraiser_id', $fundraiser->id)
-                                ->first();
-                        @endphp
-
-                        @php
-                            $number_of_friend_friends = json_decode($friends_user_data->friends);
-                            $number_of_my_friends = json_decode($user_info->friends);
-                            
-                            if (!is_array($number_of_friend_friends)) {
-                                $number_of_friend_friends = [];
-                            }
-                            if (!is_array($number_of_my_friends)) {
-                                $number_of_my_friends = [];
-                            }
-                            
-                            if ($friends_user_data->id == auth()->user()->id) {
-                                continue;
-                            }
-                            
-                        $number_of_mutual_friends = count(array_intersect($number_of_friend_friends, $number_of_my_friends)); @endphp
+                    @foreach ($viewData->fundraiserInviteRows($friendships, $fundraiser, auth()->user()) as $row)
                         <div
                             class="single-item-countable d-flex friend-item align-items-center justify-content-between mb-3">
                             <div class="d-flex align-items-center w-100">
                                 <!-- Avatar -->
                                 <div class="avatar">
-                                    <a href="{{ route('user.profile.view', $friends_user_data->id) }}"><img
+                                    <a href="{{ route('user.profile.view', $row['user']->id) }}"><img
                                             class="avatar-img rounded-circle user_image_show_on_modal"
-                                            src="{{ get_user_image($friends_user_data->photo, 'optimized') }}"
+                                            src="{{ get_user_image($row['user']->photo, 'optimized') }}"
                                             alt="" height="40" width="40"></a>
                                 </div>
                                 <div class="avatar-info ms-2">
                                     <h6 class="mb-1"><a
-                                            href="{{ route('user.profile.view', $friends_user_data->id) }}">{{ $friends_user_data->name }}</a>
+                                            href="{{ route('user.profile.view', $row['user']->id) }}">{{ $row['user']->name }}</a>
                                     </h6>
                                     <div class="activity-time small-text text-muted">
-                                        {{ $number_of_mutual_friends }}
+                                        {{ $row['mutual_count'] }}
                                         {{ get_phrase('Mutual Friends') }}</div>
                                 </div>
                             </div>
                             <div class="invite_button_css">
                                 @if (
-                                    !empty($invite_details) &&
-                                        $invite_details->invite_reciver_id == $friends_user_data->id &&
-                                        $invite_details->is_accepted != '1')
+                                    !empty($row['invite']) &&
+                                        $row['invite']->invite_reciver_id == $row['user']->id &&
+                                        $row['invite']->is_accepted != '1')
                                     <button class=" btn_invited">{{get_phrase('Invited')}}</button>
                                 @elseif (
-                                    !empty($invite_details) &&
-                                        $invite_details->invite_reciver_id == $friends_user_data->id &&
-                                        $invite_details->is_accepted == '1')
+                                    !empty($row['invite']) &&
+                                        $row['invite']->invite_reciver_id == $row['user']->id &&
+                                        $row['invite']->is_accepted == '1')
                                     <button class=" btn_invited">{{get_phrase('Invited')}}</button>
                                 @else
                                     <a class="btn_2"
-                                        href="{{ route('fundraiser.invited', ['invited_friend_id' => $friends_user_data->id, 'requester_id' => auth()->user()->id, 'fundraiser_id' => $fundraiser->id]) }}">{{get_phrase('Invite')}}</a>
+                                        href="{{ route('fundraiser.invited', ['invited_friend_id' => $row['user']->id, 'requester_id' => auth()->user()->id, 'fundraiser_id' => $fundraiser->id]) }}">{{get_phrase('Invite')}}</a>
                                 @endif
                             </div>
                         </div>
                     @endforeach
-
-                    {{-- ------------------END--------------------------------------------------------------------- --}}
 
                 </ul>
                 <div class="see-all-btn">
@@ -729,4 +523,3 @@
     @endif
 
 </aside>
-

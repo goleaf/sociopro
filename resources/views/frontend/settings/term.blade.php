@@ -14,7 +14,7 @@
                     <div class="login-txt ms-5">
                         <h3>{{ get_phrase('Terms And Condition') }} </h3>
                         <div>
-                            @php echo script_checker($term, false); @endphp
+                            {!! script_checker($term, false) !!}
                         </div>
                     </div>
                 </div>

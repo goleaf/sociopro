@@ -20,9 +20,9 @@
                                     <span class="small text-muted">{{ $joined }} {{ get_phrase('Member') }} @if($joined>1) s @endif</span>
                                     @php $join = \App\Models\Group_member::where('group_id',$group->id)->where('user_id',auth()->user()->id)->count(); @endphp
                                     @if ($join>0)
-                                    <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('group.rjoin',$group->id); ?>')" class="btn common_btn_2">{{ get_phrase('Joined') }}</a>
+                                    <a href="javascript:void(0)" onclick="ajaxAction('{{ route('group.rjoin',$group->id) }}')" class="btn common_btn_2">{{ get_phrase('Joined') }}</a>
                                     @else
-                                        <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('group.join',$group->id); ?>')" class="btn common_btn">{{ get_phrase('Join') }}</a>
+                                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('group.join',$group->id) }}')" class="btn common_btn">{{ get_phrase('Join') }}</a>
                                     @endif
                                </div>
                             </div>

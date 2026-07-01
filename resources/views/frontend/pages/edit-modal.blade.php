@@ -11,7 +11,7 @@
 
     <div class="form-group">
         <label for="#">{{ get_phrase('Page BIO') }}</label>
-        <textarea class="border-0 bg-secondary content" name="description" id="description" rows="5" placeholder="Description">@php echo script_checker($page->description, false); @endphp</textarea>
+        <textarea class="border-0 bg-secondary content" name="description" id="description" rows="5" placeholder="Description">{!! script_checker($page->description, false) !!}</textarea>
     </div>
     <div>
         <label for="">{{ get_phrase('Previous Profile Photo') }}</label> <br>

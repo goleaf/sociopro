@@ -42,12 +42,6 @@
 
      @endif   
         
-        @php
-            if(session()->has('product_ref_id')){
-                $product_url =  url('/')."/product/view/".session('product_ref_id');
-            }
-        @endphp
-        
         <div class="mt-action"> 
             @if(!empty($reciver_data))
             <!-- Chat textarea -->
@@ -77,10 +71,6 @@
                 </div>
             </form>
             <!-- Button -->
-            @php
-                Session::forget('product_ref_id')
-            @endphp
-             
               @else
               <div style="width: 100%; height: 500px; display:flex; justify-content:center; align-items:center; font-size:20px;">
                  <p>{{get_phrase('No Conversion Start!')}}</p>

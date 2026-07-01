@@ -6,15 +6,11 @@
                     <div class="st-child-gallery stc-bg owl-carousel">
                         
                         @if($story_details->content_type == 'text')
-                            @php
-                                $text_info = json_decode($story_details->description, true);
-                            @endphp
-                            <div class="stories-view mt-3 py-4" style="color: <?php echo '#'.$text_info['color']; ?>; background-color: <?php echo '#'.$text_info['bg-color']; ?>;">
-                                {{$text_info['text']}}
+                            <div class="stories-view mt-3 py-4" style="color: {{ '#'.$viewData->storyTextInfo($story_details)['color'] }}; background-color: {{ '#'.$viewData->storyTextInfo($story_details)['bg-color'] }};">
+                                {{$viewData->storyTextInfo($story_details)['text']}}
                             </div>  
                         @else
-                            @php $media_files = DB::table('media_files')->where('story_id', $story_details->story_id)->get(); @endphp
-                            @foreach($media_files as $media_file)
+                            @foreach($viewData->storyMediaFiles($story_details) as $media_file)
                                 @if($media_file->file_type == 'video')
                                     @if(File::exists('public/storage/story/videos/'.$media_file->file_name))
                                         <video class="plyr-js" width="100%" autoplay controlsList="nodownload">

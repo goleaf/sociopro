@@ -1,14 +1,3 @@
-@php
-  $payment_keys = json_decode($payment_gateway->keys, true);
-
-  if($payment_gateway->test_mode == 1){
-    $client_id = $payment_keys['sandbox_client_id'];
-    $paypalURL       = 'https://api.sandbox.paypal.com/v1/';
-  }else{
-    $client_id = $payment_keys['production_client_id'];
-    $paypalURL       = 'https://api.paypal.com/v1/';
-  }
-@endphp
 <div id="smart-button-container">
   <div style="text-align: center;">
     <div id="paypal-button-container"></div>
@@ -19,7 +8,7 @@
 <script>
   function initPayPalButton() {
           paypal.Button.render({
-            env: '<?php echo ($payment_gateway->test_mode != 1) ? 'production':'sandbox';?>', // 'sandbox' or 'production'
+            env: '{{ ($payment_gateway->test_mode != 1) ? 'production':'sandbox' }}', // 'sandbox' or 'production'
             style: {
               label: 'paypal',
               size:  'large',    // small | medium | large | responsive
@@ -28,8 +17,8 @@
               tagline: true
             },
             client: {
-              sandbox:    '<?php echo $client_id; ?>',
-              production: '<?php echo $client_id; ?>'
+              sandbox:    '{{ $client_id }}',
+              production: '{{ $client_id }}'
             },
         
             commit: true, // Show a 'Pay Now' button
@@ -39,7 +28,7 @@
                 payment: {
                   transactions: [
                     {
-                      amount: { total: '<?php echo $payment_details['payable_amount'];?>', currency: '<?php echo get_settings('system_currency'); ?>' }
+                      amount: { total: '{{ $payment_details['payable_amount'] }}', currency: '{{ $systemCurrency }}' }
                     }
                   ]
                 }

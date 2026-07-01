@@ -1,15 +1,3 @@
-<?php
-use App\Models\Notification;
-use App\Models\User;
-use Carbon\Carbon;
-
-        $date = Carbon::today();
-        $new_notification = Notification::where('reciver_user_id', auth()->user()->id)->where('status', '0')
-            ->orderBy('id', 'DESC')->get();
-        $older_notification = Notification::where('reciver_user_id', auth()->user()->id)->where('created_at', '<', $date)->orderBy('id', 'DESC')->get();
-
-?>
-
 <!-- header -->
 <div class="custom-progress-bar">
     <div class="custom-progress"></div>
@@ -24,11 +12,8 @@ use Carbon\Carbon;
                             data-bs-target="#offcanvasRight" aria-controls="offcanvasRight"><i
                                 class="fw-bold fa-solid fa-sliders-h"></i></button>
                         <!-- logo -->
-                        @php
-                            $system_light_logo = \App\Models\Setting::where('type', 'system_light_logo')->value('description');
-                        @endphp
                         <a class="navbar-brand mt-2" href="{{ route('timeline') }}"><img
-                                src="{{ get_system_logo_favicon($system_light_logo, 'light') }}"
+                                src="{{ get_system_logo_favicon($systemLightLogo, 'light') }}"
                                 class="logo_height_width" alt="logo" /></a>
                     </div>
                 </div>
@@ -72,24 +57,6 @@ use Carbon\Carbon;
                                 <a href="{{ route('profile.friends') }}" class="notification-button"><i
                                         class="fa-solid fa-user-group"></i></a>
                             </div>
-                            @php
-                                $last_msg = \App\Models\Chat::where('sender_id', auth()->user()->id)
-                                    ->orWhere('reciver_id', auth()->user()->id)
-                                    ->orderBy('id', 'DESC')
-                                    ->limit('1')
-                                    ->first();
-                                if (!empty($last_msg)) {
-                                    if ($last_msg->sender_id == auth()->user()->id) {
-                                        $msg_to = $last_msg->reciver_id;
-                                    } else {
-                                        $msg_to = $last_msg->sender_id;
-                                    }
-                                }
-                                
-                                $unread_msg = \App\Models\Chat::where('reciver_id', auth()->user()->id)
-                                    ->where('read_status', '0')
-                                    ->count();
-                            @endphp
                             <div class="inbox-control">
                                 <a href="@if(isset($msg_to)) {{ route('chat', $msg_to) }} @else {{route('chat','all')}} @endif"
                                     class="message_custom_button position-relative">
@@ -102,12 +69,6 @@ use Carbon\Carbon;
                                     @endif
                                 </a>
                             </div>
-                            @php
-                                $unread_notification = \App\Models\Notification::where('reciver_user_id', auth()->user()->id)
-                                    ->where('status', '0')
-                                    ->count();
-                            @endphp
-
                             <div class="notify-control ">
                                 <a class="notification-button position-relative" id="notification-button" href="javascript:;">
                                     <i class="fa-solid fa-bell"></i>

@@ -17,13 +17,11 @@
                                 <div class="card p-2 rounded">
                                     <div class="mb-2"> <img class="img-fluid img-radisu" src="{{ get_group_logo($group->logo,'logo') }}" ></div>
                                     <a href="{{ route('single.group',$group->id) }}"><h4>{{ $group->title }}</h4></a>
-                                    @php $joined = \App\Models\Group_member::where('group_id',$group->id)->where('is_accepted','1')->count(); @endphp
-                                    <span class="small text-muted">{{ $joined }} Member @if($joined>1) s @endif</span>
-                                    @php $join = \App\Models\Group_member::where('group_id',$group->id)->where('user_id',auth()->user()->id)->count(); @endphp
-                                    @if ($join>0)
-                                    <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('group.rjoin',$group->id); ?>')" class="btn common_btn_2">{{ get_phrase('Joined') }}</a>
+                                    <span class="small text-muted">{{ $viewData->groupAcceptedMemberCount($group) }} Member @if($viewData->groupAcceptedMemberCount($group)>1) s @endif</span>
+                                    @if ($viewData->userJoinedGroup($group, auth()->user()))
+                                    <a href="javascript:void(0)" onclick="ajaxAction('{{ route('group.rjoin',$group->id) }}')" class="btn common_btn_2">{{ get_phrase('Joined') }}</a>
                                     @else
-                                        <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('group.join',$group->id); ?>')" class="btn common_btn">{{ get_phrase('Join') }}</a>
+                                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('group.join',$group->id) }}')" class="btn common_btn">{{ get_phrase('Join') }}</a>
                                     @endif
                                 </div>
                             </div>

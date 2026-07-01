@@ -3,22 +3,15 @@
 <div class="single-item-countable mt-4" id="message-{{ $message->id }}">
     @if ($message->reciver_id==auth()->user()->id)
         <div class="d-flex user-quote ">
-            @php
-                $user = \App\Models\User::find($message->sender_id);
-            @endphp
             @if (empty($message->thumbsup)&&!empty($message->message))
-                <img src="{{ get_user_image($user->id,'optimized') }}" alt="" class="avatar-sm me-2">
+                <img src="{{ get_user_image($viewData->user($message->sender_id)?->id,'optimized') }}" alt="" class="avatar-sm me-2">
                 <div class="quote-box">
                     <div class="text-quote mt-0">
                         @if (\Illuminate\Support\Str::contains($message->message, 'http','https'))
-                            @php
-                                $explode_data = explode( '/', $message->message );
-                                $shared_id = end($explode_data);
-                            @endphp
-                            @if ($explode_data[count($explode_data)-2] == 'post')
-                                <iframe src="{{ route('custom.shared.post.view',$shared_id) }}?shared=yes" scrolling="no"  class="w-100" onload="resizeIframe(this)" frameborder="0"></iframe>  
+                            @if ($viewData->sharedTargetType($message->message) == 'post')
+                                <iframe src="{{ route('custom.shared.post.view',$viewData->sharedTargetId($message->message)) }}?shared=yes" scrolling="no"  class="w-100" onload="resizeIframe(this)" frameborder="0"></iframe>  
                             @else
-                                <iframe src="{{ route('single.product.iframe',$shared_id) }}?shared=yes" scrolling="no"  class="w-100" onload="resizeIframe(this)" frameborder="0"></iframe>
+                                <iframe src="{{ route('single.product.iframe',$viewData->sharedTargetId($message->message)) }}?shared=yes" scrolling="no"  class="w-100" onload="resizeIframe(this)" frameborder="0"></iframe>
                             @endif
                             <a class="text-dark ellipsis-line-2" href="{{ $message->message }}" target="_blank">{!! $message->message !!}</a>
                         @else
@@ -35,16 +28,13 @@
         </div>
         @if (!empty($message->thumbsup)&&empty($message->message))
             <div class="d-flex user-quote position-relative">
-                <img src="{{ get_user_image($user->id,'optimized') }}" alt="" class="avatar-sm me-2">
+                <img src="{{ get_user_image($viewData->user($message->sender_id)?->id,'optimized') }}" alt="" class="avatar-sm me-2">
                 <div class="chat-react"><img src="{{ asset('assets/frontend/images/like-lg.png') }}" alt=""></div>
             </div>
         @endif
         @if (!empty($message->file))
-            @php
-                $files = \App\Models\Media_files::where('chat_id',$message->id)->get();
-            @endphp
             <div class="d-flex user-quote user-reply justify-content-start">
-                @foreach ($files as $file)
+                @foreach ($viewData->chatFiles($message) as $file)
                     @if ($file->file_type=="image")
                         <div class="quote-box">
                             <img src="{{ asset('storage/chat/images/'.$file->file_name) }}" alt="" class="quote_image_box_image" >
@@ -75,14 +65,10 @@
                 </div>
                 <div class="text-quote mt-0">
                     @if (\Illuminate\Support\Str::contains($message->message, 'http','https'))
-                        @php
-                            $explode_data = explode( '/', $message->message );
-                            $shared_id = end($explode_data);
-                        @endphp
-                        @if ($explode_data[count($explode_data)-2] == 'post')
-                            <iframe src="{{ route('custom.shared.post.view',$shared_id) }}?shared=yes" scrolling="no"  class="w-100" onload="resizeIframe(this)" frameborder="0"></iframe>  
+                        @if ($viewData->sharedTargetType($message->message) == 'post')
+                            <iframe src="{{ route('custom.shared.post.view',$viewData->sharedTargetId($message->message)) }}?shared=yes" scrolling="no"  class="w-100" onload="resizeIframe(this)" frameborder="0"></iframe>  
                         @else
-                            <iframe src="{{ route('single.product.iframe',$shared_id) }}?shared=yes" scrolling="no"  class="w-100" onload="resizeIframe(this)" frameborder="0"></iframe>
+                            <iframe src="{{ route('single.product.iframe',$viewData->sharedTargetId($message->message)) }}?shared=yes" scrolling="no"  class="w-100" onload="resizeIframe(this)" frameborder="0"></iframe>
                         @endif
                         <a href="{{ $message->message }}" class="text-dark ellipsis-line-2" target="_blank">{!! $message->message !!}</a>
                     @else
@@ -93,11 +79,8 @@
             </div>  
         @endif
         @if (!empty($message->file))
-                @php
-                    $files = \App\Models\Media_files::where('chat_id',$message->id)->get();
-                @endphp
                 <div class="d-flex user-quote user-reply justify-content-end">
-                    @foreach ($files as $file)
+                    @foreach ($viewData->chatFiles($message) as $file)
                         @if ($file->file_type=="image")
                             <div class="quote-box d-flex">
                                 <div class="quote-react remove-icon-message">

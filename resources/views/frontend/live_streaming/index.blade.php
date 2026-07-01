@@ -1,12 +1,7 @@
-<?php
-    $zoom_configuration = get_settings('zoom_configuration', true);
-?>
-
-
 <!DOCTYPE html>
 
 <head>
-    <title><?php echo get_phrase('Live class'); ?> : <?php echo get_phrase('Page title'); ?></title>
+    <title>{{ get_phrase('Live class') }} : {{ get_phrase('Page title') }}</title>
     <meta charset="utf-8" />
     <link type="text/css" rel="stylesheet" href="https://source.zoom.us/2.6.0/css/bootstrap.css" />
     <link type="text/css" rel="stylesheet" href="https://source.zoom.us/2.6.0/css/react-select.css" />
@@ -59,7 +54,7 @@
         "use strict";
 
         function stop_zoom() {
-            var r = confirm("<?php echo get_phrase('Do you want to leave the live video'); ?> ? <?php echo get_phrase('You can join them later if the video remains live'); ?>");
+            var r = confirm("{{ get_phrase('Do you want to leave the live video') }} ? {{ get_phrase('You can join them later if the video remains live') }}");
             if (r == true) {
                 ZoomMtg.leaveMeeting();
             }

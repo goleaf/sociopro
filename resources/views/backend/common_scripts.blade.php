@@ -1,8 +1,8 @@
 <!-- NEW THME START FROM HERE -->
 
 <!-- Google analytics -->
-<?php if(!empty(get_settings('google_analytics_id'))): ?>
-<script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo get_settings('google_analytics_id'); ?>"></script>
+@if (! empty($googleAnalyticsId))
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ $googleAnalyticsId }}"></script>
 <script>
     window.dataLayer = window.dataLayer || [];
 
@@ -11,13 +11,13 @@
     }
     gtag('js', new Date());
 
-    gtag('config', '<?php echo get_settings('google_analytics_id'); ?>');
+    gtag('config', '{{ $googleAnalyticsId }}');
 </script>
-<?php endif; ?>
+@endif
 <!-- Ended Google analytics -->
 
 <!-- Meta pixel -->
-<?php if(!empty(get_settings('meta_pixel_id'))): ?>
+@if (! empty($metaPixelId))
 <script>
     ! function(f, b, e, v, n, t, s) {
         if (f.fbq) return;
@@ -37,14 +37,14 @@
         s.parentNode.insertBefore(t, s)
     }(window, document, 'script',
         'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '<?php echo get_settings('meta_pixel_id'); ?>');
+    fbq('init', '{{ $metaPixelId }}');
     fbq('track', 'PageView');
 </script>
 <noscript>
     <img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id=<?php echo get_settings('meta_pixel_id'); ?>&ev=PageView&noscript=1" />
+        src="https://www.facebook.com/tr?id={{ $metaPixelId }}&ev=PageView&noscript=1" />
 </noscript>
-<?php endif; ?>
+@endif
 <!-- Ended Meta pixel -->
 
 

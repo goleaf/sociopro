@@ -14,20 +14,14 @@
   
   <div class="mb-3 w-100 d-flex">
     @if (isset($page_id)&&!empty($page_id))
-    @php
-      $page = \App\Models\Page::find($page_id);
-    @endphp
       <a href="{{route('single.page',$page_id)}}" class="author-thumb d-flex align-items-center">
-        <img src="{{get_page_logo($page->logo, 'logo')}}" class="rounded-circle user_image_show_on_modal" alt="">
-        <h6 class="ms-2">{{$page->title}}</h6>
+        <img src="{{get_page_logo($viewData->page($page_id)?->logo, 'logo')}}" class="rounded-circle user_image_show_on_modal" alt="">
+        <h6 class="ms-2">{{$viewData->page($page_id)?->title}}</h6>
       </a>
     @elseif (isset($group_id)&&!empty($group_id))
-      @php
-        $group = \App\Models\Group::find($group_id);
-      @endphp
         <a href="{{route('single.group',$group_id)}}" class="author-thumb d-flex align-items-center">
-          <img src="{{get_group_logo($group->logo, 'logo')}}" class="rounded-circle user_image_show_on_modal" alt="">
-          <h6 class="ms-2">{{$group->title}}</h6>
+          <img src="{{get_group_logo($viewData->group($group_id)?->logo, 'logo')}}" class="rounded-circle user_image_show_on_modal" alt="">
+          <h6 class="ms-2">{{$viewData->group($group_id)?->title}}</h6>
         </a>
     @else
       <a href="{{route('profile')}}" class="author-thumb d-flex align-items-center">
@@ -42,7 +36,7 @@
             <label for="image" class="form-label">{{get_phrase('Album')}}</label>
             <select name="album" id="album" class="form-control bg-secondary mb-2">
             <option value="" selected disabled>{{ get_phrase('Select Album') }}</option>
-            @foreach (\App\Models\Albums::where('group_id',$group_id)->get(); as $album)
+            @foreach ($viewData->albumsFor('group', $group_id) as $album)
                 <option value="{{ $album->id }}">{{ $album->title }}</option>
             @endforeach
             </select>
@@ -53,7 +47,7 @@
             <label for="image" class="form-label">{{get_phrase('Album')}}</label>
             <select name="album" id="album" class="form-control bg-secondary mb-2">
             <option value="" selected disabled>{{ get_phrase('Select Album') }}</option>
-            @foreach (\App\Models\Albums::where('page_id',$page_id)->get(); as $album)
+            @foreach ($viewData->albumsFor('page', $page_id) as $album)
                 <option value="{{ $album->id }}">{{ $album->title }}</option>
             @endforeach
             </select>
@@ -63,7 +57,7 @@
     <label for="image" class="form-label">{{get_phrase('Album')}}</label>
     <select name="album" id="album" class="form-control bg-secondary mb-2">
       <option value="" selected disabled>{{ get_phrase('Select Album') }}</option>
-      @foreach (\App\Models\Albums::where('user_id',auth()->user()->id)->whereNull('page_id')->whereNull('group_id')->get(); as $album)
+      @foreach ($viewData->albumsFor('profile', auth()->id()) as $album)
           <option value="{{ $album->id }}">{{ $album->title }}</option>
       @endforeach
       </select>

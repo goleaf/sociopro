@@ -59,8 +59,8 @@
 
                 <div class="mb-3">
                   <label for="gender" class="form-label eForm-label">{{ get_phrase('Gender') }}</label><br>
-                  <input type="radio" id="male" name="gender" value="male" <?php if($user_data->gender == 'male') echo 'checked'; ?>> <label for="male">{{ get_phrase('Male') }}</label> 
-                  <input type="radio" id="female" name="gender" value="female" <?php if($user_data->gender == 'female') echo 'checked'; ?>> <label for="female">{{ get_phrase('Female') }}</label>
+                  <input type="radio" id="male" name="gender" value="male" @checked($user_data->gender == 'male')> <label for="male">{{ get_phrase('Male') }}</label> 
+                  <input type="radio" id="female" name="gender" value="female" @checked($user_data->gender == 'female')> <label for="female">{{ get_phrase('Female') }}</label>
                 </div>
 
                 <div class="mb-3">

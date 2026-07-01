@@ -32,16 +32,11 @@
                 <table class="table eTable eTable-2">
                     <tbody>
 
-                        @php
-                            $total_payable_amount = 0;
-                            $counter = 0;
-                        @endphp
                         @foreach ($payment_details['items'] as $key => $item)
-                            @php $counter++; @endphp
                             <tr>
                                 <td>
                                     <div class="dAdmin_info_name">
-                                        <p><span>#{{ $counter }}</span></p>
+                                        <p><span>#{{ $loop->iteration }}</span></p>
                                     </div>
                                 </td>
                                 <td>

@@ -31,9 +31,9 @@
                                             $saved = \App\Models\SavedProduct::where('product_id',$saved_product->product_id)->where('user_id',auth()->user()->id)->count();
                                         @endphp
                                         @if ($saved>0)
-                                        <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('unsave.product.later',$saved_product->product_id); ?>')" class="dropdown-item btn btn-primary btn-sm"> {{get_phrase('Unsave')}}</a>
+                                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('unsave.product.later',$saved_product->product_id) }}')" class="dropdown-item btn btn-primary btn-sm"> {{get_phrase('Unsave')}}</a>
                                         @else
-                                        <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('save.product.later',$saved_product->product_id); ?>')" class="dropdown-item btn btn-primary btn-sm">  {{get_phrase('Save')}}</a>
+                                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('save.product.later',$saved_product->product_id) }}')" class="dropdown-item btn btn-primary btn-sm">  {{get_phrase('Save')}}</a>
                                         @endif
                                     </li>
                                 </ul>

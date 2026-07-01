@@ -5,18 +5,14 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     
-    @php
-        $system_name = \App\Models\Setting::where('type', 'system_name')->value('description');
-        $system_favicon = \App\Models\Setting::where('type', 'system_fav_icon')->value('description');
-    @endphp
-    <title>{{ $system_name }}</title>
+    <title>{{ $viewData->setting('system_name') }}</title>
 
     <!-- CSRF Token for ajax for submission -->
     <meta name="csrf_token" content="{{ csrf_token() }}" />
 
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="shortcut icon" href="{{ get_system_logo_favicon($system_favicon,'favicon') }}" />
+    <link rel="shortcut icon" href="{{ get_system_logo_favicon($viewData->setting('system_fav_icon'),'favicon') }}" />
 
     <!-- Font Awesome CSS -->
     <link rel="stylesheet" href="{{asset('assets/frontend/css/fontawesome/all.min.css')}}">
@@ -41,28 +37,7 @@
 
 
 </head>
-    @if(Session::get('theme_color'))
-    @php
-        $theme_color = Session::get('theme_color');
-        if ($theme_color === 'dark') {
-            $image = asset('assets/frontend/images/white_sun.svg');
-        } else {
-        
-            $image = asset('assets/frontend/images/white_moon.svg');
-        }
-    @endphp
-    @else
-    @php
-        $theme_color = 'default';
-        $image = asset('assets/frontend/images/white_moon.svg');
-    @endphp
-    @endif
-
-@php
-    $themeColor = App\Models\Setting::where('type', 'theme_color')->value('description');
-@endphp
-<body class="{{$themeColor}}">
-    @php $user_info = Auth()->user() @endphp
+<body class="{{ $viewData->setting('theme_color') }}">
     
  	@include('frontend.header')
 
@@ -136,7 +111,7 @@
             dark.onclick = function(){
                 document.body.classList.toggle('dark');
                 var themeColor = document.body.classList.contains('dark') ? 'dark' : 'default';
-                var url = "<?php echo route('update-theme-color') ?>";
+                var url = "{{ route('update-theme-color') }}";
                 $.ajax({
                     type: 'POST',
                     url: url,

@@ -37,17 +37,17 @@
                         </div>
 
 
-                        <?php foreach(json_decode($payment_gateway['keys'], true) as $key => $value): ?>
+                        @foreach($paymentGatewayKeys as $key => $value)
                         	<div class="form-group mb-3">
-                                <?php if($key == 'theme_color'): ?>
+                                @if($key == 'theme_color')
                                     <label class="text-capitalize eForm-label">{{get_phrase(str_replace('_', ' ', $key))}}</label>
-                                    <input type="color" name="<?php echo $key; ?>" class="form-control eForm-control" value="<?php echo $value;?>" required />
-                                <?php else: ?>
+                                    <input type="color" name="{{ $key }}" class="form-control eForm-control" value="{{ $value }}" required />
+                                @else
                                         <label class="text-capitalize eForm-label">{{get_phrase(str_replace('_', ' ', $key))}}</label>
-                                        <input type="text" name="<?php echo $key; ?>" class="form-control eForm-control" value="<?php echo $value;?>" required />
-                                <?php endif; ?>
+                                        <input type="text" name="{{ $key }}" class="form-control eForm-control" value="{{ $value }}" required />
+                                @endif
                         	</div>
-                        <?php endforeach; ?>
+                        @endforeach
 
                         <div class="row">
                             <div class="form-group">

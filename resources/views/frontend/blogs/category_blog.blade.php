@@ -47,7 +47,7 @@
                                                 <a href="{{ route('blog.edit',$blog->id) }}" class="dropdown-item btn btn-primary btn-sm"> <i class="fa fa-edit"></i> {{ get_phrase('Edit Article') }}</a>
                                             </li>
                                             <li>
-                                                <a href="javascript:void(0)" onclick="confirmAction('<?php echo route('blog.delete', ['blog_id' => $blog->id]); ?>', true)" class="dropdown-item btn btn-primary btn-sm"><i class="fa fa-trash me-1"></i> {{get_phrase('Delete Article')}}</a>
+                                                <a href="javascript:void(0)" onclick="confirmAction('{{ route('blog.delete', ['blog_id' => $blog->id]) }}', true)" class="dropdown-item btn btn-primary btn-sm"><i class="fa fa-trash me-1"></i> {{get_phrase('Delete Article')}}</a>
                                             </li>
                                         </ul>
                                     </div>

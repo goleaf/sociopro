@@ -1,12 +1,8 @@
 <div class="sidebar">
       <div class="logo-details mt-4">
         <div class="img_wrapper">
-          @php
-          $system_light_logo = \App\Models\Setting::where('type', 'system_light_logo')->value('description');
-          $system_fav_icon = \App\Models\Setting::where('type', 'system_fav_icon')->value('description');
-          @endphp
-          <img class="logo-lg" height="34px" src="{{ get_system_logo_favicon($system_light_logo,'light') }}" alt="" />
-          <img class="logo-sm" height="34px" src="{{ get_system_logo_favicon($system_fav_icon,'favicon') }}" alt="" />
+          <img class="logo-lg" height="34px" src="{{ get_system_logo_favicon($viewData->setting('system_light_logo'),'light') }}" alt="" />
+          <img class="logo-sm" height="34px" src="{{ get_system_logo_favicon($viewData->setting('system_fav_icon'),'favicon') }}" alt="" />
         </div>
       </div>
       <div class="closeIcon">
