@@ -4440,7 +4440,9 @@ class ApiController extends Controller
                     $category = Category::where('id', $page->category)->first();
                     $brand = Brand::where('id', $page->brand)->first();
                     $currency = Currency::where('id', $page->currency_id)->first();
-                    $is_Saved = SavedProduct::where('product_id', $page->id)->first();
+                    $is_Saved = SavedProduct::where('product_id', $page->id)
+                        ->where('user_id', $user_id)
+                        ->first();
 
                     $is_chat = 'not_chat'; // Initialize profile ID as 0
                     $msgthread_id = 0; // Initialize profile ID as 0
@@ -4881,7 +4883,9 @@ class ApiController extends Controller
                 $category = Category::where('id', $page->category)->first();
                 $brand = Brand::where('id', $page->brand)->first();
                 $currency = Currency::where('id', $page->currency_id)->first();
-                $is_Saved = SavedProduct::where('product_id', $page->id)->first();
+                $is_Saved = SavedProduct::where('product_id', $page->id)
+                    ->where('user_id', $user_id)
+                    ->first();
                 $is_chat = 'not_chat'; // Initialize profile ID as 0
                 $msgthread_id = 0; // Initialize profile ID as 0
 
@@ -4945,16 +4949,26 @@ class ApiController extends Controller
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
+            $user = auth('sanctum')->user();
+            if (! $user) {
+                $response['success'] = false;
+                $response['message'] = 'Unauthorized access';
+
+                return response()->json($response);
+            }
+
+            $user_id = $user->id;
 
             $saveproduct = new SavedProduct;
             $saveproduct->user_id = $user_id;
             $saveproduct->product_id = $id;
 
-            $save = SavedProduct::where('product_id', $id)->first();
+            $save = SavedProduct::where('product_id', $id)
+                ->where('user_id', $user_id)
+                ->first();
 
             if ($save) {
-                SavedProduct::where('product_id', $id)->delete();
+                $save->delete();
 
                 $response['success'] = false;
                 $response['message'] = 'product unsave successfully';

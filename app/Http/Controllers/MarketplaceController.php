@@ -309,7 +309,9 @@ class MarketplaceController extends Controller
 
     public function saved_product()
     {
-        $page_data['saved_products'] = SavedProduct::all();
+        $page_data['saved_products'] = SavedProduct::with(['productData.getUser'])
+            ->where('user_id', auth()->id())
+            ->get();
         $page_data['view_path'] = 'frontend.marketplace.saved_product';
 
         return view('frontend.index', $page_data);

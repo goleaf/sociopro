@@ -30,6 +30,7 @@ use App\Models\PaidContentCreator;
 use App\Models\PaidContentPayout;
 use App\Models\Post_share;
 use App\Models\Posts;
+use App\Models\SavedProduct;
 use App\Models\Saveforlater;
 use App\Models\Setting;
 use App\Models\Sponsor;
@@ -637,6 +638,20 @@ final class BladeViewData
 
         return $this->remember("video-saved:{$viewer->id}:{$videoId}", fn (): bool => Saveforlater::query()
             ->where('video_id', $videoId)
+            ->where('user_id', $viewer->id)
+            ->exists());
+    }
+
+    public function isProductSaved(Model|int|string|null $product, ?User $viewer): bool
+    {
+        if (! $product || ! $viewer) {
+            return false;
+        }
+
+        $productId = $product instanceof Model ? $product->getKey() : $product;
+
+        return $this->remember("product-saved:{$viewer->id}:{$productId}", fn (): bool => SavedProduct::query()
+            ->where('product_id', $productId)
             ->where('user_id', $viewer->id)
             ->exists());
     }

@@ -8,6 +8,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Currency;
 use App\Models\Marketplace;
+use App\Models\SavedProduct;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -117,6 +118,71 @@ class MarketplaceAuthorizationTest extends TestCase
         $response->assertNotFound();
     }
 
+    public function test_web_user_cannot_load_another_users_marketplace_edit_modal(): void
+    {
+        $owner = $this->activeUser();
+        $otherUser = $this->activeUser();
+        $product = $this->marketplace($owner);
+
+        $response = $this
+            ->actingAs($otherUser)
+            ->get(route('load_modal_content', [
+                'view_path' => 'frontend.marketplace.edit_product',
+                'product_id' => $product->id,
+            ]));
+
+        $response->assertForbidden();
+    }
+
+    public function test_web_saved_products_page_only_shows_current_users_saved_products(): void
+    {
+        $currentUser = $this->activeUser();
+        $otherUser = $this->activeUser();
+        $currentProduct = $this->marketplace($currentUser, [
+            'title' => 'Current user saved product',
+        ]);
+        $otherProduct = $this->marketplace($otherUser, [
+            'title' => 'Other user saved product',
+        ]);
+
+        $this->savedProduct($currentUser, $currentProduct);
+        $this->savedProduct($otherUser, $otherProduct);
+
+        $response = $this
+            ->actingAs($currentUser)
+            ->get(route('product.saved'));
+
+        $response
+            ->assertOk()
+            ->assertSee('Current user saved product')
+            ->assertDontSee('Other user saved product');
+    }
+
+    public function test_web_unsave_for_later_deletes_only_current_users_saved_product(): void
+    {
+        $currentUser = $this->activeUser();
+        $otherUser = $this->activeUser();
+        $product = $this->marketplace($otherUser);
+
+        $this->savedProduct($currentUser, $product);
+        $this->savedProduct($otherUser, $product);
+
+        $response = $this
+            ->actingAs($currentUser)
+            ->get(route('unsave.product.later', ['id' => $product->id]));
+
+        $response->assertOk();
+
+        $this->assertDatabaseMissing('saved_products', [
+            'user_id' => $currentUser->id,
+            'product_id' => $product->id,
+        ]);
+        $this->assertDatabaseHas('saved_products', [
+            'user_id' => $otherUser->id,
+            'product_id' => $product->id,
+        ]);
+    }
+
     public function test_api_guest_keeps_legacy_unauthorized_response_for_marketplace_update(): void
     {
         $owner = $this->activeUser();
@@ -203,6 +269,121 @@ class MarketplaceAuthorizationTest extends TestCase
         ]);
     }
 
+    public function test_api_marketplace_listing_scopes_saved_status_to_authenticated_user(): void
+    {
+        $currentUser = $this->activeUser();
+        $otherUser = $this->activeUser();
+        $product = $this->marketplace($otherUser);
+
+        $this->savedProduct($otherUser, $product);
+
+        Sanctum::actingAs($currentUser);
+
+        $response = $this
+            ->withToken('test-token')
+            ->getJson(route('api.marketplace.index'));
+
+        $response->assertOk();
+
+        $this->assertSame('not_saved', $response->json('0.is_Saved'));
+
+        $this->savedProduct($currentUser, $product);
+
+        $response = $this
+            ->withToken('test-token')
+            ->getJson(route('api.marketplace.index'));
+
+        $response->assertOk();
+
+        $this->assertSame('saved', $response->json('0.is_Saved'));
+    }
+
+    public function test_api_marketplace_filter_scopes_saved_status_to_authenticated_user(): void
+    {
+        $currentUser = $this->activeUser();
+        $otherUser = $this->activeUser();
+        $product = $this->marketplace($otherUser, [
+            'title' => 'Filter saved state product',
+        ]);
+
+        $this->savedProduct($otherUser, $product);
+
+        Sanctum::actingAs($currentUser);
+
+        $response = $this
+            ->withToken('test-token')
+            ->getJson(route('api.marketplace.filter', [
+                'search' => 'Filter saved state product',
+            ]));
+
+        $response->assertOk();
+
+        $this->assertSame('not_saved', $response->json('0.is_Saved'));
+    }
+
+    public function test_api_save_for_later_does_not_toggle_another_users_saved_product(): void
+    {
+        $currentUser = $this->activeUser();
+        $otherUser = $this->activeUser();
+        $product = $this->marketplace($otherUser);
+
+        $this->savedProduct($otherUser, $product);
+
+        Sanctum::actingAs($currentUser);
+
+        $response = $this
+            ->withToken('test-token')
+            ->postJson(route('api.marketplace.saves.store', ['id' => $product->id]));
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'message' => 'User saved the product',
+            ]);
+
+        $this->assertDatabaseHas('saved_products', [
+            'user_id' => $currentUser->id,
+            'product_id' => $product->id,
+        ]);
+        $this->assertDatabaseHas('saved_products', [
+            'user_id' => $otherUser->id,
+            'product_id' => $product->id,
+        ]);
+    }
+
+    public function test_api_save_for_later_unsaves_only_authenticated_users_existing_save(): void
+    {
+        $currentUser = $this->activeUser();
+        $otherUser = $this->activeUser();
+        $product = $this->marketplace($otherUser);
+
+        $this->savedProduct($currentUser, $product);
+        $this->savedProduct($otherUser, $product);
+
+        Sanctum::actingAs($currentUser);
+
+        $response = $this
+            ->withToken('test-token')
+            ->postJson(route('api.marketplace.saves.store', ['id' => $product->id]));
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'success' => false,
+                'message' => 'product unsave successfully',
+            ]);
+
+        $this->assertDatabaseMissing('saved_products', [
+            'user_id' => $currentUser->id,
+            'product_id' => $product->id,
+        ]);
+        $this->assertDatabaseHas('saved_products', [
+            'user_id' => $otherUser->id,
+            'product_id' => $product->id,
+        ]);
+    }
+
     public function test_api_owner_can_delete_own_marketplace_product(): void
     {
         $owner = $this->activeUser();
@@ -276,6 +457,18 @@ class MarketplaceAuthorizationTest extends TestCase
         $marketplace->save();
 
         return $marketplace;
+    }
+
+    private function savedProduct(User $user, Marketplace $product): SavedProduct
+    {
+        $savedProduct = new SavedProduct;
+        $savedProduct->forceFill([
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+        ]);
+        $savedProduct->save();
+
+        return $savedProduct;
     }
 
     /**
