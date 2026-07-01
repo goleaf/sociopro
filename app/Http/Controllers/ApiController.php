@@ -60,6 +60,7 @@ use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
@@ -4505,7 +4506,17 @@ class ApiController extends Controller
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
+            $user = auth('sanctum')->user();
+            if (! $user) {
+                $response['success'] = false;
+                $response['message'] = 'Unauthorized access';
+
+                return response()->json($response);
+            }
+
+            Gate::forUser($user)->authorize('create', Marketplace::class);
+
+            $user_id = $user->id;
 
             $marketplace = new Marketplace;
             $marketplace->user_id = $user_id;
@@ -4564,9 +4575,19 @@ class ApiController extends Controller
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            $marketplace = Marketplace::find($id);
-            $marketplace->user_id = $user_id;
+            $user = auth('sanctum')->user();
+            if (! $user) {
+                $response['success'] = false;
+                $response['message'] = 'Unauthorized access';
+
+                return response()->json($response);
+            }
+
+            $user_id = $user->id;
+            $marketplace = Marketplace::findOrFail($id);
+
+            Gate::forUser($user)->authorize('update', $marketplace);
+
             $marketplace->title = $request->title;
             $marketplace->currency_id = $request->currency;
             $marketplace->price = $request->price;
@@ -4635,11 +4656,20 @@ class ApiController extends Controller
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
+            $user = auth('sanctum')->user();
+            if (! $user) {
+                $response['success'] = false;
+                $response['message'] = 'Unauthorized access';
+
+                return response()->json($response);
+            }
+
             // Find the marketplace product by its ID
             $market = Marketplace::find($product_id);
 
             if ($market) {
+                Gate::forUser($user)->authorize('delete', $market);
+
                 // Store the image name for deletion
                 $imagename = $market->banner;
 

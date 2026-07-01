@@ -1,6 +1,7 @@
 
 {{--  create event modal  --}}
 @isset($product)
+@can('update', $product)
 <form class="ajaxForm market_form" action="{{ route('product.update',$product->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="form-group">
@@ -85,6 +86,7 @@
     </div>
     <input type="submit" class="btn common_btn" value="Submit">
 </form>
+@endcan
 @endisset
 
 

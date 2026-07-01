@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MediaFileType;
+use App\Models\Marketplace;
+use App\Models\Media_files;
 use App\ViewModels\BladeViewData;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ModalController extends Controller
 {
@@ -61,8 +65,20 @@ class ModalController extends Controller
         }
 
         if (($pageData['product_id'] ?? null) !== null) {
-            $pageData['product'] = $viewData->product($pageData['product_id']);
-            $pageData['productImages'] = $viewData->productImages($pageData['product']);
+            $pageData['product'] = $viewPath === 'frontend.marketplace.edit_product'
+                ? Marketplace::findOrFail($pageData['product_id'])
+                : Marketplace::find($pageData['product_id']);
+
+            if ($viewPath === 'frontend.marketplace.edit_product') {
+                Gate::authorize('update', $pageData['product']);
+            }
+
+            $pageData['productImages'] = $pageData['product'] === null
+                ? collect()
+                : Media_files::query()
+                    ->where('product_id', $pageData['product']->id)
+                    ->ofType(MediaFileType::Image)
+                    ->get();
         }
 
         if ($viewPath === 'frontend.events.view-all') {

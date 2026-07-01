@@ -8,6 +8,7 @@ use App\Models\Media_files;
 use App\Models\SavedProduct;
 use App\Support\Files\FileUploader;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Image;
 use Session;
@@ -46,6 +47,8 @@ class MarketplaceController extends Controller
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
+
+        Gate::authorize('create', Marketplace::class);
 
         $marketplace = new Marketplace;
         $marketplace->user_id = auth()->user()->id;
@@ -110,8 +113,10 @@ class MarketplaceController extends Controller
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
 
-        $marketplace = Marketplace::find($id);
-        $marketplace->user_id = auth()->user()->id;
+        $marketplace = Marketplace::findOrFail($id);
+
+        Gate::authorize('update', $marketplace);
+
         $marketplace->title = $request->title;
         $marketplace->currency_id = $request->currency;
         $marketplace->price = $request->price;
@@ -171,16 +176,19 @@ class MarketplaceController extends Controller
         }
     }
 
-    public function product_delete()
+    public function product_delete(Request $request)
     {
         $response = [];
-        $market = Marketplace::find($_GET['product_id']);
+        $market = Marketplace::findOrFail($request->integer('product_id'));
+
+        Gate::authorize('delete', $market);
+
         // store image name for delete file operation
         $imagename = $market->banner;
 
         $done = $market->delete();
         if ($done) {
-            $response = ['alertMessage' => get_phrase('Product Deleted Successfully'), 'fadeOutElem' => '#product-'.$_GET['product_id']];
+            $response = ['alertMessage' => get_phrase('Product Deleted Successfully'), 'fadeOutElem' => '#product-'.$market->id];
             // just put the file name and folder name nothing more :)
             removeFile('marketplace', $imagename);
         }
