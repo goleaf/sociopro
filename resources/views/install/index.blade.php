@@ -5,8 +5,8 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<meta name="description" content="Creativeitem Software Installation" />
-	<meta name="author" content="Creativeitem" />
+	<meta name="description" content="Sociopro Software Installation" />
+	<meta name="author" content="Sociopro" />
 	<title>{{ __('Installation').' | '.__('Sociopro') }}</title>
 	
 	<!-- CSRF Token for ajax for submission -->

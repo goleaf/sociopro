@@ -23,6 +23,6 @@ class CommonServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        view()->share('copy_right', 'Creativeitem');
+        view()->share('copy_right', config('app.name', 'Sociopro'));
     }
 }

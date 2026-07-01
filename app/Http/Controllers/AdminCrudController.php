@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\Install\VerifyEnvatoPurchase;
 use App\Models\Blog;
 use App\Models\Blogcategory;
 use App\Models\Job;
@@ -34,7 +33,7 @@ use App\Models\Badge;
 class AdminCrudController extends Controller
 {
 
-    public function __construct(private VerifyEnvatoPurchase $verifyEnvatoPurchase)
+    public function __construct()
     {
 
         //Don't remove it
@@ -338,11 +337,6 @@ class AdminCrudController extends Controller
         return view('backend.index', $page_data);
     }
 
-    public function curl_request($code = ''): bool
-    {
-        return $this->verifyEnvatoPurchase->handle($code);
-    }
-
     //Don't remove this code for security reasons
     public function save_valid_purchase_code($action_type, Request $request)
     {
@@ -428,7 +422,7 @@ class AdminCrudController extends Controller
         return view('backend.index', $page_data);
     }
 
-    public function group_updated($id = "", Request $request)
+    public function group_updated($id, Request $request)
     {
 
         $request->validate([
@@ -547,7 +541,7 @@ class AdminCrudController extends Controller
         return redirect(route('admin.page'));
     }
 
-    public function page_updated($id = "", Request $request)
+    public function page_updated($id, Request $request)
     {
         if ($request->category == 'Select a category') {
             flash()->addError('Please select a category');
@@ -1048,7 +1042,7 @@ class AdminCrudController extends Controller
         return view('backend.index', $page_data);
     }
 
-    public function user_update($id = "", Request $request)
+    public function user_update($id, Request $request)
     {
         //password validation
         //  $request->validate([

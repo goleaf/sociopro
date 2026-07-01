@@ -7,7 +7,6 @@ use App\Actions\Install\ConfigureDatabase;
 use App\Actions\Install\FinalizeInstallation;
 use App\Actions\Install\ImportInstallSqlDump;
 use App\Actions\Install\PrepareDatabaseConnection;
-use App\Actions\Install\VerifyEnvatoPurchase;
 use App\Http\Requests\Install\FinalizeInstallationRequest;
 use App\Http\Requests\Install\PrepareDatabaseConnectionRequest;
 use App\Http\Requests\Install\ValidatePurchaseCodeRequest;
@@ -22,8 +21,7 @@ class InstallController extends Controller
     private const DEFAULT_INSTALL_TIMEZONE = 'Asia/Dhaka';
 
     public function __construct(
-        private ConfigureDatabase $configureDatabase,
-        private VerifyEnvatoPurchase $verifyEnvatoPurchase
+        private ConfigureDatabase $configureDatabase
     )
     {
     }
@@ -76,11 +74,6 @@ class InstallController extends Controller
 		session(['purchase_code_verified' => 1]);
 		//move to step 3
 		return redirect()->route('install.step3');
-    }
-
-    public function api_request($code = ''): bool
-    {
-        return $this->verifyEnvatoPurchase->handle($code);
     }
 
     public function step3(

@@ -18,7 +18,7 @@
           <!-- panel body -->
           <div class="panel-body ins-four">
             <p class="ins-four">
-              {{ __('Provide your codecanyon') }} <strong>{{ __('purchase code') }}</strong>
+              {{ __('Provide your application') }} <strong>{{ __('purchase code') }}</strong>
             </p>
             <br>
             <div class="row">
@@ -35,12 +35,6 @@
                     <button type="submit" class="btn btn-primary">{{ __('Continue') }}</button>
                   </div>
                 </form>
-                <br>
-                <p>
-                  <a href="https://help.market.envato.com/hc/en-us/articles/202822600-Where-Is-My-Purchase-Code-" target="_blank">
-                    <strong>{{ __('Where to get my purchase code ?') }}</strong>
-                  </a>
-                </p>
               </div>
             </div>
           </div>
