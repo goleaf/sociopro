@@ -15,6 +15,10 @@ class Payment_gateway extends Model
         'identifier', 'currency', 'title', 'description', 'keys', 'model_name', 'test_model', 'status', 'is_addon',
     ];
 
+    protected $hidden = [
+        'keys',
+    ];
+
     public function scopeForIdentifier(Builder $query, string|PaymentGatewayIdentifier $identifier): Builder
     {
         $identifier = $identifier instanceof PaymentGatewayIdentifier ? $identifier->value : $identifier;

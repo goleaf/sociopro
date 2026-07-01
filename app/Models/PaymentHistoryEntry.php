@@ -25,6 +25,12 @@ class PaymentHistoryEntry extends Model
         'transaction_id',
     ];
 
+    protected $hidden = [
+        'transaction_keys',
+        'order_id',
+        'transaction_id',
+    ];
+
     protected function casts(): array
     {
         return [
