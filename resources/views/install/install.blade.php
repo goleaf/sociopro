@@ -1,7 +1,7 @@
 @extends('install.index')
-   
+
 @section('content')
-<?php if(isset($error)) { ?>
+@isset($error)
   <div class="row justify-content-center ins-seven">
     <div class="col-md-8 col-md-offset-2">
       <div class="alert alert-danger">
@@ -9,7 +9,7 @@
       </div>
     </div>
   </div>
-<?php } ?>
+@endisset
 <div class="row justify-content-center ins-two">
   <div class="col-md-8 col-md-offset-2">
     <div class="card">

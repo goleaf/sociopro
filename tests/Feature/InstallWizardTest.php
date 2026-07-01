@@ -150,4 +150,11 @@ class InstallWizardTest extends TestCase
 
         $this->assertStringNotContainsString('DateTimeZone::listIdentifiers', $view);
     }
+
+    public function test_installer_blade_views_do_not_use_raw_php_blocks(): void
+    {
+        foreach (File::files(resource_path('views/install')) as $view) {
+            $this->assertStringNotContainsString('<?php', File::get($view->getPathname()), $view->getFilename());
+        }
+    }
 }
