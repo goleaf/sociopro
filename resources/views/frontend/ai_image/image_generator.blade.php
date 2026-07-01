@@ -44,10 +44,7 @@
                     return await response.blob(); // Return image blob
                 } else {
                     const errorDetails = await response.json();
-                    console.error("Error details:", errorDetails);
-                    if (errorDetails.error && errorDetails.error.includes("currently loading")) {
-                        console.log(`Retrying... (${i + 1}/${retries})`);
-                    } else {
+                    if (!errorDetails.error || !errorDetails.error.includes("currently loading")) {
                         throw new Error(errorDetails.error || response.statusText);
                     }
                 }
@@ -55,7 +52,6 @@
                 if (i === retries - 1) {
                     throw error; // Re-throw error if retries are exhausted
                 }
-                console.log(`Waiting ${delay / 1000} seconds before retrying...`);
                 await new Promise((resolve) => setTimeout(resolve, delay)); // Wait before retrying
             }
         }
@@ -88,7 +84,6 @@
             downloadButton.href = imageUrl;
             downloadButton.classList.remove('hidden');
         } catch (error) {
-            console.error("Error occurred:", error);
             alert(`An error occurred: ${error.message}`);
         }
     });

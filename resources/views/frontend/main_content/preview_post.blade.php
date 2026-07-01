@@ -39,7 +39,6 @@
 
 	function restorePostView(){
 		var postView = $('#postPreviewSection').html();
-		console.log(postView)
 		$('#postIdentification{{$post->post_id}}').html(postView);
 		$('#postPreviewSection').html('');
 		$('#postMediaSection{{$post->post_id}}').show();

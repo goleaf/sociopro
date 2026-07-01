@@ -129,9 +129,6 @@
                         
                         $('#dark').attr('src', '{{ asset("assets/frontend/images/white_moon.svg") }}');
                     }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error updating theme color:', error);
                     }
                 });
                 return false;

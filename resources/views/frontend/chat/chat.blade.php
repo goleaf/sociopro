@@ -156,7 +156,6 @@
             },
             data:{'id':id},
             success:function(response){
-                console.log(response);
                 distributeServerResponse(response);
                 if(response.content !==undefined){
                     var elem = document.getElementById('messageShowDiv');
@@ -178,7 +177,6 @@
             },
             data:{'id':id},
             success:function(response){
-                console.log(response);
             }
         });
     }
@@ -195,7 +193,6 @@
             },
             data:{'search':value},
             success:function(response){
-                console.log(response);
                 $('#chatFriendList').html(response);
             }
         });
@@ -228,9 +225,6 @@
                 // Scroll to the bottom of the message container
                 
             },
-            error: function(xhr, status, error) {
-                console.log(error); // Handle any errors here
-            }
         });
     });
 });

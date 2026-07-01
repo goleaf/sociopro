@@ -19,7 +19,6 @@
 				},
 				data:{'search_value':searchValue},
 				success: function(response){
-                    console.log(response)
 					$(showOn).html(response);
 					if(!$('.suggestions-loaging-bar').hasClass('d-none')){
 			    		$('.suggestions-loaging-bar').addClass('d-none');

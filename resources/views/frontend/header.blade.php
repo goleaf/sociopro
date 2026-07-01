@@ -166,9 +166,7 @@ jQuery(document).ready(function($) {
 <script>
     $(document).ready(function(){
         $('#dark').click(function(){
-            console.log("Dark button clicked"); // Debugging statement
             $('.webgl body').toggleClass('test');
-            console.log("Class 'test' toggled on .webgl elements"); // Debugging statement
         });
     });
 

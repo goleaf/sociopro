@@ -47,7 +47,10 @@ class ZoomMeetingClient
 
             return $date->format('Y-m-d\TH:i:s');
         } catch (Exception $exception) {
-            Log::error('ZoomMeetingClient->toZoomTimeFormat : '.$exception->getMessage());
+            Log::warning('zoom_time_conversion_failed', [
+                'operation' => 'to_zoom_time_format',
+                'exception' => $exception::class,
+            ]);
 
             return '';
         }
@@ -60,7 +63,10 @@ class ZoomMeetingClient
 
             return $date->getTimestamp();
         } catch (Exception $exception) {
-            Log::error('ZoomMeetingClient->toUnixTimeStamp : '.$exception->getMessage());
+            Log::warning('zoom_time_conversion_failed', [
+                'operation' => 'to_unix_timestamp',
+                'exception' => $exception::class,
+            ]);
 
             return '';
         }

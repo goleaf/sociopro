@@ -38,7 +38,6 @@
               // executes the payment
               return actions.payment.execute().then(function() {
                 // PASSING TO CONTROLLER FOR CHECKING
-                //console.log(data)
                 window.location = "{{$payment_details['success_url'].'/'.$payment_gateway->identifier}}"+"?payment_id="+data.paymentID+"&payment_token="+data.paymentToken+"&payer_id="+data.payerID
               });
             }

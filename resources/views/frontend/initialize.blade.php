@@ -89,7 +89,6 @@
 					},
 					uploadProgress: function(event, position, total, percentComplete) {
 						$('.custom-progress-bar .custom-progress').width(percentComplete + '%');
-						console.log(percentComplete)
 						if (percentComplete >= 100) {
 							$('.ajaxForm .submitted:not(.no-processing)').html("{{ get_phrase('Processing') }}..");
 						}
@@ -104,9 +103,6 @@
 							$('.ajaxForm .submitted').html($('.ajaxForm .submitted').attr("title"));
 							$('.ajaxForm .submitted').attr('disabled', false);
 						}, 400);
-					},
-					error: function(e) {
-						console.log(e);
 					}
 				});
 			}

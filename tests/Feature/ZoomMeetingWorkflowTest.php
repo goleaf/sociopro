@@ -9,9 +9,12 @@ use App\Models\Live_streamings;
 use App\Models\Posts;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\Zoom\ZoomMeetingClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
+use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use ReflectionClass;
 use Tests\TestCase;
 
@@ -95,6 +98,28 @@ class ZoomMeetingWorkflowTest extends TestCase
             && $request['topic'] === 'Updated live topic'
             && $request['type'] === MainController::MEETING_TYPE_SCHEDULE
             && $request['duration'] === 40);
+    }
+
+    public function test_zoom_time_conversion_logs_structured_context_without_raw_input(): void
+    {
+        $messages = [];
+        Log::listen(function (MessageLogged $message) use (&$messages): void {
+            $messages[] = $message;
+        });
+
+        $this->assertSame(
+            '',
+            app(ZoomMeetingClient::class)->toUnixTimeStamp('sensitive invalid datetime', 'Sensitive/Invalid')
+        );
+
+        $this->assertCount(1, $messages);
+        $this->assertSame('warning', $messages[0]->level);
+        $this->assertSame('zoom_time_conversion_failed', $messages[0]->message);
+        $this->assertSame('to_unix_timestamp', $messages[0]->context['operation'] ?? null);
+        $this->assertArrayHasKey('exception', $messages[0]->context);
+        $this->assertArrayNotHasKey('message', $messages[0]->context);
+        $this->assertArrayNotHasKey('date_time', $messages[0]->context);
+        $this->assertArrayNotHasKey('timezone', $messages[0]->context);
     }
 
     /**

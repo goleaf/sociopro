@@ -98,10 +98,7 @@
                 meetingNumber: meetConfig.meetingNumber,
                 apiKey: meetConfig.apiKey,
                 apiSecret: meetConfig.apiSecret,
-                role: meetConfig.role,
-                success: function(res) {
-                    console.log(res.result);
-                }
+                role: meetConfig.role
             });
 
             ZoomMtg.init({
@@ -116,17 +113,8 @@
                         userName: meetConfig.userName,
                         signature: signature,
                         apiKey: meetConfig.apiKey,
-                        passWord: meetConfig.passWord,
-                        success: function(res) {
-                            console.log('Successfully joined');
-                        },
-                        error: function(res) {
-                            console.log(res);
-                        }
+                        passWord: meetConfig.passWord
                     });
-                },
-                error: function(res) {
-                    console.log(res);
                 }
             });
         }

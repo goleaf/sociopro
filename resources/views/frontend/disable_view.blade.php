@@ -384,9 +384,6 @@
                     
                     $('#dark').attr('src', '{{ asset("assets/frontend/images/white_moon.svg") }}');
                 }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error updating theme color:', error);
                 }
             });
             return false;
@@ -398,9 +395,7 @@
 <script>
 $(document).ready(function(){
     $('#dark').click(function(){
-        console.log("Dark button clicked"); 
         $('.webgl body').toggleClass('test');
-        console.log("Class 'test' toggled on .webgl elements"); 
     });
 });
 
@@ -437,9 +432,7 @@ jQuery(document).ready(function($) {
 <script>
     $(document).ready(function(){
         $('#dark').click(function(){
-            console.log("Dark button clicked"); // Debugging statement
             $('.webgl body').toggleClass('test');
-            console.log("Class 'test' toggled on .webgl elements"); // Debugging statement
         });
     });
     

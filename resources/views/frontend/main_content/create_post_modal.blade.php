@@ -279,16 +279,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     return await response.blob();
                 } else {
                     const errorDetails = await response.json();
-                    console.error("Error details:", errorDetails);
-                    if (errorDetails.error && errorDetails.error.includes("currently loading")) {
-                        console.log(`Retrying... (${i + 1}/${retries})`);
-                    } else {
+                    if (!errorDetails.error || !errorDetails.error.includes("currently loading")) {
                         throw new Error(errorDetails.error || response.statusText);
                     }
                 }
             } catch (error) {
                 if (i === retries - 1) throw error;
-                console.log(`Retrying in ${delay / 1000} seconds...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
@@ -317,11 +313,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitButton.classList.remove('hidden');
             };
         } catch (error) {
-            console.error("Error occurred:", error);
             alert(`An error occurred: ${error.message}`);
         }
     });
 });
 
 </script>
-

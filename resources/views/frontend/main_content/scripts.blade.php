@@ -2,7 +2,6 @@
     "use strict";
 
     function postComment(e, parent_id, post_id, comment_id, type) {
-        console.log(2);
         var key = window.event.keyCode;
         var description = $(e).val();
 

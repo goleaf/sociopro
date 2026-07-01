@@ -52,7 +52,6 @@
             type: 'get',
             url: url,
             success: function(response) {
-                console.log(response);
                 $('#customModalBody').html(response);
             }
         });
@@ -147,12 +146,10 @@
 
             //For showing success message
             if (typeof response.errorMessage != "undefined" && response.errorMessage != 0) {
-                console.log('Success message ' + response.errorMessage);
             }
 
             //For showing error message
             if (typeof response.successMessage != "undefined" && response.successMessage != 0) {
-                console.log('Error message ' + response.successMessage);
             }
 
             //For showing alert message
@@ -381,10 +378,8 @@
         filter = input.value.toUpperCase();
         table = document.getElementById("myTable");
         tr = table.getElementsByTagName("tr");
-        console.log(tr.length);
         for (i = 0; i < tr.length; i++) {
             td = tr[i].getElementsByTagName("td")[0];
-            console.log(td);
             if (td) {
                 txtValue = td.textContent || td.innerText;
                 if (txtValue.toUpperCase().indexOf(filter) > -1) {
