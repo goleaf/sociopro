@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Marketplace;
 
 use App\Http\Requests\Api\ApiFormRequest;
+use App\Support\Validation\DateTimeRules;
 use Illuminate\Validation\Rule;
 
 class FilterMarketplaceRequest extends ApiFormRequest
@@ -52,8 +53,8 @@ class FilterMarketplaceRequest extends ApiFormRequest
             'direction' => ['nullable', 'string', Rule::in(['asc', 'desc'])],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
-            'date_from' => ['nullable', 'date'],
-            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'date_from' => DateTimeRules::nullableBrowserDate(),
+            'date_to' => ['nullable', 'date_format:'.DateTimeRules::BROWSER_DATE_FORMAT, 'after_or_equal:date_from'],
             'filters' => ['nullable', 'array'],
             'filters.search' => ['nullable', 'string', 'max:255'],
             'filters.category' => ['nullable', 'integer', 'exists:categories,id'],
@@ -64,8 +65,8 @@ class FilterMarketplaceRequest extends ApiFormRequest
             'filters.price.min' => ['nullable', 'numeric', 'min:0'],
             'filters.price.max' => ['nullable', 'numeric', 'min:0', 'gte:filters.price.min'],
             'filters.created_between' => ['nullable', 'array'],
-            'filters.created_between.from' => ['nullable', 'date'],
-            'filters.created_between.to' => ['nullable', 'date', 'after_or_equal:filters.created_between.from'],
+            'filters.created_between.from' => DateTimeRules::nullableBrowserDate(),
+            'filters.created_between.to' => ['nullable', 'date_format:'.DateTimeRules::BROWSER_DATE_FORMAT, 'after_or_equal:filters.created_between.from'],
         ];
     }
 

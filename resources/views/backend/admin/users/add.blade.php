@@ -76,7 +76,7 @@
 
                 <div class="mb-3">
                   <label for="date_of_birth" class="form-label eForm-label">{{ get_phrase('Date of birth') }}</label>
-                  <input type="text" class="form-control eForm-control inputDate" id="date_of_birth" name="date_of_birth" placeholder="{{ get_phrase('Date of birth') }}" required>
+                  <input type="date" class="form-control eForm-control inputDate" id="date_of_birth" name="date_of_birth" placeholder="{{ get_phrase('Date of birth') }}" required>
                 </div>
                 
                 <div class="form-group mb-3">

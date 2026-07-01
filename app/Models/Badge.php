@@ -13,6 +13,17 @@ class Badge extends Model
 
     protected $table = 'batchs';
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'datetime',
+            'end_date' => 'datetime',
+        ];
+    }
+
     public function getUser()
     {
         return $this->belongsTo(User::class, 'user_id');

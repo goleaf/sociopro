@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\Users;
 use App\Queries\FriendshipsQuery;
 use App\Support\Files\FileUploader;
+use App\Support\Validation\DateTimeRules;
 use App\ViewModels\ProfileFollowList;
 use DB;
 use Illuminate\Http\Request;
@@ -409,7 +410,7 @@ class Profile extends Controller
             'nickname' => 'max:255|nullable',
             'marital_status' => 'max:255|nullable',
             'phone' => 'max:20|nullable',
-            'date_of_birth' => 'required',
+            'date_of_birth' => DateTimeRules::requiredBirthDate(),
         ];
         $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
@@ -430,7 +431,7 @@ class Profile extends Controller
         $data['nickname'] = $request->nickname;
         $data['marital_status'] = $request->marital_status;
         $data['phone'] = $request->phone;
-        $data['date_of_birth'] = strtotime($request->date_of_birth);
+        $data['date_of_birth'] = DateTimeRules::birthDateTimestamp($request->date_of_birth);
         Users::where('id', $this->user->id)->update($data);
 
         // Ajax flush message

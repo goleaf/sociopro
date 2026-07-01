@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Sponsor;
 use App\Support\Files\FileUploader;
-use Carbon\Carbon;
+use App\Support\Validation\DateTimeRules;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -108,26 +109,32 @@ class UserController extends Controller
 
     public function ad_charge_by_daterange(Request $request)
     {
-        $total_days = Carbon::parse($request->start_date)->diffInDays($request->end_date);
+        $rules = [
+            'start_date' => DateTimeRules::requiredBrowserDate(),
+            'end_date' => DateTimeRules::requiredDateRangeEnd('start_date'),
+        ];
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
 
-        if (strtotime($request->start_date) < strtotime($request->end_date)) {
-            return $total_days * get_settings('ad_charge_per_day');
-        } else {
+        if ($validator->fails()) {
             return 0;
         }
+
+        $totalDays = DateTimeRules::browserDate($request->start_date)
+            ->diffInDays(DateTimeRules::browserDate($request->end_date));
+
+        return ($totalDays + 1) * get_settings('ad_charge_per_day');
     }
 
     public function payment_configuration($id, Request $request)
     {
         $request->validate([
-            'start_date' => 'required',
-            'end_date' => 'required',
+            'start_date' => DateTimeRules::requiredBrowserDate(),
+            'end_date' => DateTimeRules::requiredDateRangeEnd('start_date'),
         ]);
 
-        $total_days = Carbon::parse($request->start_date)->diffInDays($request->end_date);
+        $total_days = DateTimeRules::browserDate($request->start_date)
+            ->diffInDays(DateTimeRules::browserDate($request->end_date));
         $payable_amount = ($total_days * get_settings('ad_charge_per_day')) + get_settings('ad_charge_per_day');
-        $start_timestamp = strtotime($request->start_date.' '.date('H:i:s'));
-        $end_timestamp = strtotime($request->end_date.' '.date('H:i:s'));
 
         $payment_details = [
             'items' => [
@@ -141,8 +148,8 @@ class UserController extends Controller
                 ],
             ],
             'custom_field' => [
-                'start_date' => date('Y-m-d H:i:s', $start_timestamp),
-                'end_date' => date('Y-m-d H:i:s', $end_timestamp),
+                'start_date' => DateTimeRules::browserDateAtCurrentTime($request->start_date),
+                'end_date' => DateTimeRules::browserDateAtCurrentTime($request->end_date),
                 'user_id' => auth()->user()->id,
             ],
             'success_method' => [

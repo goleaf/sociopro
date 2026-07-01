@@ -26,6 +26,7 @@ use App\Models\Setting;
 use App\Models\Sponsor;
 use App\Models\User;
 use App\Support\Files\FileUploader;
+use App\Support\Validation\DateTimeRules;
 use DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -75,12 +76,15 @@ class AdminCrudController extends Controller
     {
         $validated = $request->validate([
             'profile_photo' => 'mimes:jpeg,jpg,png,gif|nullable',
+            'dateofbirth' => DateTimeRules::nullableBirthDate(),
         ]);
 
         $user = auth()->user();
         $user->name = $request->name;
         $user->email = $request->email;
-        $user->date_of_birth = $request->dateofbirth;
+        $user->date_of_birth = $request->filled('dateofbirth')
+            ? DateTimeRules::birthDateTimestamp($request->dateofbirth)
+            : null;
         $user->profession = $request->profession;
         $user->gender = $request->gender;
         $user->phone = $request->phone;
@@ -694,6 +698,8 @@ class AdminCrudController extends Controller
         $request->validate([
             'title' => 'required|max:255',
             'category' => 'required',
+            'start_date' => DateTimeRules::requiredBrowserDate(),
+            'end_date' => DateTimeRules::requiredDateRangeEnd('start_date'),
         ]);
 
         $file_name = null;
@@ -919,8 +925,8 @@ class AdminCrudController extends Controller
         $data['updated_at'] = date('Y-m-d H:i:s', time());
         $data['description'] = $request->description;
         $data['status'] = $request->status;
-        $data['start_date'] = date('Y-m-d H:i:s', strtotime($request->start_date));
-        $data['end_date'] = date('Y-m-d H:i:s', strtotime($request->end_date));
+        $data['start_date'] = DateTimeRules::browserDateAtCurrentTime($request->start_date);
+        $data['end_date'] = DateTimeRules::browserDateAtCurrentTime($request->end_date);
         $data['is_published'] = $request->is_published ?? 0;
         if ($file_name !== null) {
             $data['thumbnail'] = $file_name;
@@ -950,6 +956,8 @@ class AdminCrudController extends Controller
         $request->validate([
             'title' => 'required|max:255',
             'category' => 'required',
+            'start_date' => DateTimeRules::requiredBrowserDate(),
+            'end_date' => DateTimeRules::requiredDateRangeEnd('start_date'),
         ]);
 
         if ($request->image) {
@@ -977,8 +985,8 @@ class AdminCrudController extends Controller
         $job->location = $request->location;
 
         $job->status = $request->status;
-        $job->start_date = date('Y-m-d H:i:s', strtotime($request->start_date));
-        $job->end_date = date('Y-m-d H:i:s', strtotime($request->end_date));
+        $job->start_date = DateTimeRules::browserDateAtCurrentTime($request->start_date);
+        $job->end_date = DateTimeRules::browserDateAtCurrentTime($request->end_date);
         $job->is_published = $request->has('is_published') ? 1 : 0;
 
         $job->description = $request->description;
@@ -1110,7 +1118,7 @@ class AdminCrudController extends Controller
             'email' => ['required', 'email', $this->uniqueRule('users', 'email')],
             'name' => 'required', 'max:255',
             'gender' => 'required',
-            'date_of_birth' => 'required',
+            'date_of_birth' => DateTimeRules::requiredBirthDate(),
         ]);
 
         if ($request->photo && ! empty($request->photo)) {
@@ -1126,7 +1134,7 @@ class AdminCrudController extends Controller
         $data['password'] = Hash::make($request->password);
         $data['phone'] = $request->phone;
         $data['address'] = $request->address;
-        $data['date_of_birth'] = strtotime($request->date_of_birth);
+        $data['date_of_birth'] = DateTimeRules::birthDateTimestamp($request->date_of_birth);
         $data['about'] = $request->bio;
         $data['friends'] = '[]';
         $data['followers'] = '[]';
@@ -1164,7 +1172,7 @@ class AdminCrudController extends Controller
             'email' => ['required', 'email', $this->uniqueRule('users', 'email', $user)],
             'name' => 'required', 'max:255',
             'gender' => 'required',
-            'date_of_birth' => 'required',
+            'date_of_birth' => DateTimeRules::requiredBirthDate(),
         ]);
 
         if ($request->photo && ! empty($request->photo)) {
@@ -1185,7 +1193,7 @@ class AdminCrudController extends Controller
         $data['email'] = $request->email;
         $data['phone'] = $request->phone;
         $data['address'] = $request->address;
-        $data['date_of_birth'] = strtotime($request->date_of_birth);
+        $data['date_of_birth'] = DateTimeRules::birthDateTimestamp($request->date_of_birth);
         $data['about'] = $request->bio;
         $data['gender'] = $request->gender;
         $date['updated_at'] = now();

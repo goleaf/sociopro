@@ -10,6 +10,17 @@ class Sponsor extends Model
 {
     use HasFactory;
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'datetime',
+            'end_date' => 'datetime',
+        ];
+    }
+
     public static function add_payment_success($identifier)
     {
         $payment_details = session('payment_details');

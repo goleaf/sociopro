@@ -65,7 +65,7 @@
         
         <div class="fpb-7">
         <label for="eBrithDay" class="eForm-label">{{get_phrase('Birthday')}}</label>
-                            <input type="date" class="form-control eForm-control" id="eInputDate" name="dateofbirth" value="{{ auth()->user()->id }}">
+                            <input type="date" class="form-control eForm-control" id="eInputDate" name="dateofbirth" value="{{ auth()->user()->date_of_birth ? date('Y-m-d', (int) auth()->user()->date_of_birth) : '' }}">
         </div>
         <div class="fpb-7">
         <label for="eGenderList" class="eForm-label">{{get_phrase('Gender')}}</label>

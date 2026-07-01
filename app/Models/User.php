@@ -59,6 +59,18 @@ class User extends Authenticatable implements MustVerifyEmail
         'remember_token',
     ];
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'date_of_birth' => 'integer',
+            'email_verified_at' => 'datetime',
+            'lastActive' => 'datetime',
+        ];
+    }
+
     public function scopeAdmins(Builder $query): Builder
     {
         return $query->where('user_role', UserRole::Admin->value);

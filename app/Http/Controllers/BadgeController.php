@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Badge;
+use App\Support\Validation\DateTimeRules;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -38,15 +39,16 @@ class BadgeController extends Controller
         $request->validate([
             'title' => 'required',
             'description' => 'required',
+            'start_date' => DateTimeRules::nullableBrowserDate(),
         ]);
 
         $badge_pay = get_settings('badge_price');
         $title = $request->title;
         $description = $request->description;
-        $start_timestamp = strtotime($request->start_date.' '.date('H:i:s'));
-        $end_timestamp = strtotime('+30 days', $start_timestamp);
-        $start_date = date('Y-m-d H:i:s', $start_timestamp);
-        $end_date = date('Y-m-d H:i:s', $end_timestamp);
+        $startDate = $request->filled('start_date')
+            ? DateTimeRules::browserDateAtCurrentTime($request->start_date)
+            : now(config('app.timezone'))->format('Y-m-d H:i:s');
+        $endDate = Carbon::parse($startDate)->addDays(30)->format('Y-m-d H:i:s');
 
         $payment_details = [
             'items' => [
@@ -60,8 +62,8 @@ class BadgeController extends Controller
                 ],
             ],
             'custom_field' => [
-                'start_date' => date('Y-m-d H:i:s', $start_timestamp),
-                'end_date' => date('Y-m-d H:i:s', $end_timestamp),
+                'start_date' => $startDate,
+                'end_date' => $endDate,
                 'user_id' => auth()->user()->id,
                 'description' => $description,
             ],

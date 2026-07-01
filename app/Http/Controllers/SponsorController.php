@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sponsor;
 use App\Support\Files\FileUploader;
+use App\Support\Validation\DateTimeRules;
 use Facade\FlareClient\Stacktrace\File;
 use Illuminate\Http\Request;
 use Image;
@@ -65,6 +66,7 @@ class SponsorController extends Controller
         $validated = $request->validate([
             'name' => 'required|max:255|string',
             'image' => ['mimes:jpg,jpeg,png'],
+            'end_date' => DateTimeRules::nullableBrowserDateTimeLocal(),
         ]);
 
         $sponsor = Sponsor::find($id);
@@ -75,7 +77,9 @@ class SponsorController extends Controller
             $sponsor->image = $filename;
         }
         $sponsor->description = $request->description;
-        $sponsor->end_date = $request->end_date;
+        if ($request->has('end_date')) {
+            $sponsor->end_date = DateTimeRules::dateTimeLocalToDatabase($request->end_date);
+        }
         $sponsor->ext_url = $request->ext_url;
         $sponsor->status = $request->status;
         $done = $sponsor->save();

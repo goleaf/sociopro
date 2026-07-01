@@ -55,7 +55,7 @@
                                     <label for="end_date"
                                         class="form-label eForm-label">{{ get_phrase('End date') }}</label>
                                     <input type="datetime-local" class=" form-control eForm-control"
-                                        value="{{ $sponsor->end_date }}" name="end_date" id="end_date">
+                                        value="{{ $sponsor->end_date ? $sponsor->end_date->format('Y-m-d\TH:i') : '' }}" name="end_date" id="end_date">
                                 </div>
 
                                 <div class="form-group mb-3">

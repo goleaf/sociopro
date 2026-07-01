@@ -13,6 +13,7 @@ use App\Models\Posts;
 use App\Models\Share;
 use App\Models\User;
 use App\Queries\FriendshipsQuery;
+use App\Support\Validation\DateTimeRules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -49,8 +50,8 @@ class EventController extends Controller
         $rules = [
             'coverphoto' => 'mimes:jpeg,jpg,png,gif|nullable',
             'eventname' => 'required|max:255',
-            'eventdate' => 'required',
-            'eventtime' => 'required',
+            'eventdate' => DateTimeRules::requiredBrowserDate(),
+            'eventtime' => DateTimeRules::requiredBrowserTime(),
             'eventlocation' => 'required',
         ];
         $validator = Validator::make($request->only(array_keys($rules)), $rules);
@@ -122,8 +123,8 @@ class EventController extends Controller
         $rules = [
             'coverphoto' => 'mimes:jpeg,jpg,png,gif|nullable',
             'eventname' => 'required|max:255',
-            'eventdate' => 'required',
-            'eventtime' => 'required',
+            'eventdate' => DateTimeRules::requiredBrowserDate(),
+            'eventtime' => DateTimeRules::requiredBrowserTime(),
             'eventlocation' => 'required',
         ];
         $validator = Validator::make($request->only(array_keys($rules)), $rules);

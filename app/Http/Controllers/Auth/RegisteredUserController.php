@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
+use App\Support\Validation\DateTimeRules;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -39,10 +40,11 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'timezone' => DateTimeRules::nullableTimezone(),
         ]);
 
         $user = User::create([
@@ -52,7 +54,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'friends' => json_encode([]),
             'followers' => json_encode([]),
-            'timezone' => $request->timezone,
+            'timezone' => DateTimeRules::timezoneOrDefault($validated['timezone'] ?? null),
             'password' => Hash::make($request->password),
             'status' => UserAccountStatus::Disabled->value,
             'lastActive' => Carbon::now(),

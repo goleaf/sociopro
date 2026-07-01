@@ -51,6 +51,7 @@ use App\Models\Video;
 use App\Providers\RouteServiceProvider;
 use App\Queries\FriendshipsQuery;
 use App\Support\Files\FileUploader;
+use App\Support\Validation\DateTimeRules;
 use Carbon\Carbon;
 use DB;
 use Exception;
@@ -127,11 +128,13 @@ class ApiController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'timezone' => DateTimeRules::nullableTimezone(),
         ];
-        $validator = Validator::make($request->only(['name', 'email', 'password', 'password_confirmation']), $rules);
+        $validator = Validator::make($request->only(['name', 'email', 'password', 'password_confirmation', 'timezone']), $rules);
         if ($validator->fails()) {
             return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
         }
+        $validated = $validator->validated();
         // return $response;
         $user = User::create([
             'user_role' => 'general',
@@ -140,7 +143,7 @@ class ApiController extends Controller
             'email' => $request->email,
             'friends' => json_encode([]),
             'followers' => json_encode([]),
-            'timezone' => $request->timezone,
+            'timezone' => DateTimeRules::timezoneOrDefault($validated['timezone'] ?? null),
             'password' => Hash::make($request->password),
             'status' => 0,
             'lastActive' => Carbon::now(),
@@ -2175,6 +2178,13 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
+            $rules = [
+                'date_of_birth' => DateTimeRules::nullableBirthDate(),
+            ];
+            $validator = Validator::make($request->only(array_keys($rules)), $rules);
+            if ($validator->fails()) {
+                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
+            }
 
             $data['name'] = $request->name;
             $data['nickname'] = $request->nickname;
@@ -2184,7 +2194,11 @@ class ApiController extends Controller
             $data['gender'] = $request->gender;
             $data['address'] = $request->address;
             $data['phone'] = $request->phone;
-            $data['date_of_birth'] = strtotime($request->date_of_birth);
+            if ($request->has('date_of_birth')) {
+                $data['date_of_birth'] = $request->filled('date_of_birth')
+                    ? DateTimeRules::birthDateTimestamp($request->date_of_birth)
+                    : null;
+            }
             $data['about'] = $request->about;
 
             // return $data['date_of_birth'];
@@ -5366,8 +5380,8 @@ class ApiController extends Controller
             $rules = [
                 'coverphoto' => 'mimes:jpeg,jpg,png,gif|nullable',
                 'eventname' => 'required|max:255',
-                'eventdate' => 'required',
-                'eventtime' => 'required',
+                'eventdate' => DateTimeRules::requiredBrowserDate(),
+                'eventtime' => DateTimeRules::requiredBrowserTime(),
                 'eventlocation' => 'required',
             ];
             $validator = Validator::make($request->only(array_keys($rules)), $rules);
@@ -5454,8 +5468,8 @@ class ApiController extends Controller
             $rules = [
                 'coverphoto' => 'mimes:jpeg,jpg,png,gif|nullable',
                 'eventname' => 'required|max:255',
-                'eventdate' => 'required',
-                'eventtime' => 'required',
+                'eventdate' => DateTimeRules::requiredBrowserDate(),
+                'eventtime' => DateTimeRules::requiredBrowserTime(),
                 'eventlocation' => 'required',
             ];
             $validator = Validator::make($request->only(array_keys($rules)), $rules);
