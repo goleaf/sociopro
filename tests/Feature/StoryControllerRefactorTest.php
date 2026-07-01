@@ -50,6 +50,32 @@ class StoryControllerRefactorTest extends TestCase
         $this->assertNotContains($oldFriendStory->story_id, $storyIds);
     }
 
+    public function test_story_details_returns_not_found_for_missing_story(): void
+    {
+        $viewer = User::factory()->create([
+            'friends' => json_encode([]),
+            'status' => '1',
+            'user_role' => 'general',
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('story_details', ['story_id' => 999999]))
+            ->assertNotFound();
+    }
+
+    public function test_single_story_details_returns_not_found_for_missing_story(): void
+    {
+        $viewer = User::factory()->create([
+            'friends' => json_encode([]),
+            'status' => '1',
+            'user_role' => 'general',
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('single_story_details', ['story_id' => 999999]))
+            ->assertNotFound();
+    }
+
     private function storyFor(User $user, array $overrides = []): Stories
     {
         return Stories::create($overrides + [

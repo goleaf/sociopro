@@ -36,12 +36,14 @@ class StoryController extends Controller
 
     public function story_details($story_id = '', $offset = 0, $limit = 10)
     {
+        $story_details = StoriesQuery::findWithOwner($story_id);
+
+        abort_if($story_details === null, 404);
+
         $stories = StoriesQuery::visibleFor($this->user)
             ->where('stories.privacy', '!=', 'private')
             ->whereNotIn('stories.story_id', [$story_id])
             ->get();
-
-        $story_details = StoriesQuery::findWithOwner($story_id);
 
         $page_data['stories'] = $stories;
         $page_data['story_details'] = $story_details;
@@ -52,6 +54,8 @@ class StoryController extends Controller
     public function single_story_details($story_id = '')
     {
         $story_details = StoriesQuery::findWithOwner($story_id);
+
+        abort_if($story_details === null, 404);
 
         $page_data['story_details'] = $story_details;
 

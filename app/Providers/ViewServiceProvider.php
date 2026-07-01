@@ -41,7 +41,7 @@ class ViewServiceProvider extends ServiceProvider
             ]);
         });
 
-        View::composer('errors.404', function ($view): void {
+        View::composer(['errors.404', 'errors::404'], function ($view): void {
             $settings = $this->settings([
                 'system_name',
                 'system_fav_icon',
