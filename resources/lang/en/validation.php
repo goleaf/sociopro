@@ -129,6 +129,7 @@ return [
     'uploaded' => 'The :attribute failed to upload.',
     'url' => 'The :attribute must be a valid URL.',
     'uuid' => 'The :attribute must be a valid UUID.',
+    'post_media_file' => 'The :attribute must be a post media upload of type: :types and may not be greater than :max kilobytes.',
 
     /*
     |--------------------------------------------------------------------------

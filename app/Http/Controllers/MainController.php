@@ -17,8 +17,10 @@ use App\Models\Setting;
 use App\Models\Stories;
 use App\Models\User;
 use App\Queries\FriendshipsQuery;
+use App\Rules\PostMediaFile;
 use App\Services\Zoom\ZoomMeetingClient;
 use App\Support\Files\FileUploader;
+use App\Support\Validation\NestedFileValidationErrors;
 use DB;
 use Exception;
 use Illuminate\Database\Query\JoinClause;
@@ -199,24 +201,9 @@ class MainController extends Controller
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
 
-        if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-            // Data validation
-
-            $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
-            // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
-            $validator = Validator::make($request->all(), $rules);
-            if ($validator->fails()) {
-                $validation_errors = $validator->getMessageBag()->toArray();
-                foreach ($validation_errors as $key => $validation_error) {
-                    $fileIndex = explode('.', $key);
-                    if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
-                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
-                    }
-                    unset($validation_errors['multiple_files.'.$fileIndex[1]]);
-                }
-
-                return json_encode(['validationError' => $validation_errors]);
-            }
+        $mediaValidationErrors = $this->postMediaValidationErrors($request, PostMediaFile::forCreate());
+        if ($mediaValidationErrors !== null) {
+            return json_encode(['validationError' => $mediaValidationErrors]);
         }
 
         $data['user_id'] = $this->user->id;
@@ -333,22 +320,10 @@ class MainController extends Controller
         }
 
         // add media files
-        if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-            // Data validation
-
-            $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
-            $validator = Validator::make($request->all(), $rules);
-            if ($validator->fails()) {
-                $validation_errors = $validator->getMessageBag()->toArray();
-                foreach ($validation_errors as $key => $validation_error) {
-                    $fileIndex = explode('.', $key);
-                    if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
-                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
-                    }
-                    unset($validation_errors['multiple_files.'.$fileIndex[1]]);
-                }
-
-                return json_encode(['validationError' => $validation_errors]);
+        if ($this->hasPostMediaFiles($request)) {
+            $mediaValidationErrors = $this->postMediaValidationErrors($request, PostMediaFile::forCreate());
+            if ($mediaValidationErrors !== null) {
+                return json_encode(['validationError' => $mediaValidationErrors]);
             }
 
             foreach ($request->multiple_files as $key => $media_file) {
@@ -414,6 +389,34 @@ class MainController extends Controller
         return view('frontend.main_content.jitsi_streaming', compact('user', 'join_pass', 'room'));
     }
 
+    /**
+     * @return array<string, list<string>>|null
+     */
+    private function postMediaValidationErrors(Request $request, PostMediaFile $rule): ?array
+    {
+        if (! $this->hasPostMediaFiles($request)) {
+            return null;
+        }
+
+        $validator = Validator::make($request->all(), [
+            'multiple_files.*' => [$rule],
+        ]);
+
+        if (! $validator->fails()) {
+            return null;
+        }
+
+        return NestedFileValidationErrors::collapse(
+            $validator->getMessageBag()->toArray(),
+            'multiple_files'
+        );
+    }
+
+    private function hasPostMediaFiles(Request $request): bool
+    {
+        return is_array($request->multiple_files) && ($request->multiple_files[0] ?? null) !== null;
+    }
+
     public function edit_post_form($id)
     {
         $page_data['post'] = Posts::where('post_id', $id)->first();
@@ -431,24 +434,9 @@ class MainController extends Controller
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
 
-        if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-            // Data validation
-
-            $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
-            // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
-            $validator = Validator::make($request->all(), $rules);
-            if ($validator->fails()) {
-                $validation_errors = $validator->getMessageBag()->toArray();
-                foreach ($validation_errors as $key => $validation_error) {
-                    $fileIndex = explode('.', $key);
-                    if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
-                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
-                    }
-                    unset($validation_errors['multiple_files.'.$fileIndex[1]]);
-                }
-
-                return json_encode(['validationError' => $validation_errors]);
-            }
+        $mediaValidationErrors = $this->postMediaValidationErrors($request, PostMediaFile::forUpdate());
+        if ($mediaValidationErrors !== null) {
+            return json_encode(['validationError' => $mediaValidationErrors]);
         }
 
         $data['privacy'] = $request->privacy;
@@ -500,22 +488,10 @@ class MainController extends Controller
         Posts::where('post_id', $id)->update($data);
 
         // add media files
-        if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-            // Data validation
-
-            $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
-            $validator = Validator::make($request->all(), $rules);
-            if ($validator->fails()) {
-                $validation_errors = $validator->getMessageBag()->toArray();
-                foreach ($validation_errors as $key => $validation_error) {
-                    $fileIndex = explode('.', $key);
-                    if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
-                        $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
-                    }
-                    unset($validation_errors['multiple_files.'.$fileIndex[1]]);
-                }
-
-                return json_encode(['validationError' => $validation_errors]);
+        if ($this->hasPostMediaFiles($request)) {
+            $mediaValidationErrors = $this->postMediaValidationErrors($request, PostMediaFile::forUpdate());
+            if ($mediaValidationErrors !== null) {
+                return json_encode(['validationError' => $mediaValidationErrors]);
             }
 
             foreach ($request->multiple_files as $key => $media_file) {
