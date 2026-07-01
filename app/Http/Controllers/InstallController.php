@@ -157,14 +157,15 @@ class InstallController extends Controller
     }
 
 
-    public function confirmImport($param1='')
+    public function confirmImport($param1 = '')
     {
-        if (in_array($param1, ['confirm_import', 'confirm_install'], true)) {
-            $this->configureDatabase();
-
-            // redirect to admin creation page
-            return view('install.install');
+        if (! in_array($param1, ['confirm_import', 'confirm_install'], true)) {
+            return redirect()->route('install.step4');
         }
+
+        $this->configureDatabase();
+
+        return view('install.install');
     }
 
     public function confirmInstall(ImportInstallSqlDump $importInstallSqlDump)

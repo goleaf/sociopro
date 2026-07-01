@@ -82,6 +82,13 @@ class InstallWizardTest extends TestCase
         @unlink($sqlitePath);
     }
 
+    public function test_confirm_import_rejects_unknown_confirmation(): void
+    {
+        $response = $this->get('/install/step4/not-confirmed');
+
+        $response->assertRedirect(route('install.step4'));
+    }
+
     public function test_purchase_code_validation_requires_a_code(): void
     {
         $response = $this->from('/install/step2')->post(route('install.validate'));
