@@ -12,6 +12,7 @@ use App\Http\Requests\Install\PrepareDatabaseConnectionRequest;
 use App\Http\Requests\Install\ValidatePurchaseCodeRequest;
 use App\Models\User;
 use DateTimeZone;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -110,9 +111,9 @@ class InstallController extends Controller
         PrepareDatabaseConnectionRequest $request,
         PrepareDatabaseConnection $prepareDatabaseConnection
     ) {
-        $db_connection = "";
+        $databaseError = "";
 
-        $purchaseCodeRedirect = $this->check_purchase_code_verification($request);
+        $purchaseCodeRedirect = $this->redirectIfPurchaseCodeUnverified($request);
 
         if ($purchaseCodeRedirect) {
             return $purchaseCodeRedirect;
@@ -129,17 +130,18 @@ class InstallController extends Controller
                 return redirect()->route('install.step4');
             }
 
-            $db_connection = $result['message'];
+            $databaseError = $result['message'];
         }
 
         return view('install.step3', [
-            'db_connection' => $db_connection,
+            'db_connection' => $databaseError,
             'selectedConnection' => $this->isLocalInstall($request) ? 'sqlite' : 'mysql',
             'sqlitePath' => database_path('database.sqlite'),
         ]);
     }
 
-    public function check_purchase_code_verification(Request $request) {
+    private function redirectIfPurchaseCodeUnverified(Request $request): ?RedirectResponse
+    {
         if ($this->isLocalInstall($request)) {
             return null;
         }
@@ -151,8 +153,8 @@ class InstallController extends Controller
         return null;
     }
 
-    public function step4(Request $request) {
-
+    public function step4()
+    {
         return view('install.step4');
     }
 
@@ -207,7 +209,7 @@ class InstallController extends Controller
     }
 
     public function success($param1 = '') {
-        $this->configure_routes();
+        $this->configureRoutes();
 
         if ($param1 === 'login') {
             return view('auth.login');
@@ -226,8 +228,8 @@ class InstallController extends Controller
         return view('install.success', ['admin_email' => $admin->email]);
     }
 
-    public function configure_routes() {
-        return true;
+    private function configureRoutes(): void
+    {
     }
 
     private function isLocalInstall(Request $request): bool
