@@ -41,4 +41,16 @@ class FriendshipsQuery
         return self::acceptedForUser($user)
             ->orderByDesc('friendships.id');
     }
+
+    /**
+     * @return list<int>
+     */
+    public static function acceptedFriendIdsForUser(User|int $user): array
+    {
+        return self::acceptedForUser($user)
+            ->get()
+            ->map(fn (Friendships $friendship): int => $friendship->otherUserId($user))
+            ->values()
+            ->all();
+    }
 }

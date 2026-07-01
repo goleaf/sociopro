@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MediaFileType;
 use App\Models\Albums;
 use App\Models\Follower;
 use App\Models\Friendships;
@@ -183,7 +184,7 @@ class CustomUserController extends Controller
     public function photos($id)
     {
         $all_photos = Media_files::where('user_id', $id)
-            ->where('file_type', 'image')
+            ->ofType(MediaFileType::Image)
             ->whereNull('page_id')
             ->whereNull('story_id')
             ->whereNull('product_id')
@@ -210,7 +211,7 @@ class CustomUserController extends Controller
     public function videos($id)
     {
         $all_videos = Media_files::where('user_id', $id)
-            ->where('file_type', 'video')
+            ->ofType(MediaFileType::Video)
             ->whereNull('story_id')
             ->whereNull('page_id')
             ->whereNull('album_id')

@@ -108,8 +108,8 @@ class MainController extends Controller
                         });
                 });
         })
-            ->where('posts.status', ContentStatus::Active->value)
-            ->where('posts.report_status', '0')
+            ->active()
+            ->notReported()
             ->where('publisher', '!=', 'paid_content') // post type can not be paid content
             ->join('users', 'posts.user_id', '=', 'users.id')
 
@@ -176,9 +176,9 @@ class MainController extends Controller
                         });
                 });
         })
-            ->where('posts.status', ContentStatus::Active->value)
+            ->active()
             ->where('posts.publisher', 'post')
-            ->where('posts.report_status', '0')
+            ->notReported()
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->skip($request->offset)->take(3)->orderBy('posts.post_id', 'DESC')->get();
@@ -555,7 +555,7 @@ class MainController extends Controller
     public function create_live_streaming($publisher, $publisher_id)
     {
         // return $publisher;
-        $post_details = Posts::where('posts.status', ContentStatus::Active->value)
+        $post_details = Posts::active()
             ->where('posts.post_id', $publisher_id)
             ->join('users', 'posts.user_id', '=', 'users.id')->first();
 
@@ -635,7 +635,7 @@ class MainController extends Controller
                 ->orWhere('posts.user_id', $this->user->id);
         })
             ->where('posts.post_id', $post_id)
-            ->where('posts.status', ContentStatus::Active->value)
+            ->active()
             ->join('users', 'posts.user_id', '=', 'users.id');
 
         $post_details = $post_details->first();
@@ -760,7 +760,7 @@ class MainController extends Controller
 
     public function load_post_comments(Request $request)
     {
-        $post = Posts::where('posts.status', ContentStatus::Active->value)
+        $post = Posts::active()
             ->where('posts.post_id', $request->post_id)
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')->first();
@@ -840,7 +840,7 @@ class MainController extends Controller
                 ->orWhere('posts.user_id', $this->user->id);
         })
             ->where('posts.post_id', $request->post_id)
-            ->where('posts.status', ContentStatus::Active->value)
+            ->active()
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->take(1)->orderBy('posts.post_id', 'DESC')->get();
@@ -1010,8 +1010,8 @@ class MainController extends Controller
                 ->orWhere('posts.user_id', $this->user->id);
         })
             ->where('posts.post_id', $id)
-            ->where('posts.status', ContentStatus::Active->value)
-            ->where('posts.report_status', '0')
+            ->active()
+            ->notReported()
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')->first();
 

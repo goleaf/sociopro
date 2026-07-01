@@ -396,7 +396,7 @@ final class BladeViewData
         return $this->remember("share-groups:{$viewer->id}", fn (): Collection => Group_member::query()
             ->with('getGroup:id,title,logo')
             ->where('user_id', $viewer->id)
-            ->where('is_accepted', '1')
+            ->accepted()
             ->get());
     }
 
@@ -844,7 +844,7 @@ final class BladeViewData
     {
         return $this->remember("group-accepted-members:{$group->id}", fn (): int => Group_member::query()
             ->where('group_id', $group->id)
-            ->where('is_accepted', '1')
+            ->accepted()
             ->count());
     }
 
@@ -884,7 +884,7 @@ final class BladeViewData
         return $this->remember("recent-group-members:{$group->id}:{$limit}", fn (): Collection => Group_member::query()
             ->with('getUser:id,name,photo')
             ->where('group_id', $group->id)
-            ->where('is_accepted', '1')
+            ->accepted()
             ->orderByDesc('id')
             ->limit($limit)
             ->get());

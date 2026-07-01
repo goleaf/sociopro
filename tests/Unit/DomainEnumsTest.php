@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Enums\AccountActivationStatus;
 use App\Enums\ContentStatus;
+use App\Enums\MediaFileType;
 use App\Enums\MembershipRole;
 use App\Enums\PaymentGatewayIdentifier;
 use App\Enums\PaytmTransactionStatus;
@@ -33,6 +34,7 @@ class DomainEnumsTest extends TestCase
         $this->assertSame([0, 1], UserAccountStatus::values());
         $this->assertSame(['public', 'friends', 'private'], Visibility::values());
         $this->assertSame(['active', 'inactive'], ContentStatus::values());
+        $this->assertSame(['image', 'video'], MediaFileType::values());
         $this->assertSame(['pending'], AccountActivationStatus::values());
         $this->assertSame([0, 1, 2], PaytmTransactionStatus::values());
         $this->assertSame(['video', 'shorts'], VideoCategory::values());

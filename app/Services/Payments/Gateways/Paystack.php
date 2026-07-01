@@ -26,7 +26,7 @@ class Paystack
             return false;
         }
 
-        $keys = json_decode($paymentGateway->keys, true) ?: [];
+        $keys = $paymentGateway->decodedKeys();
         $secretKey = $this->secretKey($paymentGateway, $keys);
 
         if (! $secretKey) {
@@ -52,7 +52,7 @@ class Paystack
 
     private function secretKey(Payment_gateway $paymentGateway, array $keys): ?string
     {
-        if ((int) $paymentGateway->test_mode === 1) {
+        if ($paymentGateway->isInTestMode()) {
             return $keys['secret_test_key'] ?? null;
         }
 

@@ -199,10 +199,10 @@ class PaymentController extends Controller
                 ? ($keys['stripe_secret_live_key'] ?? '')
                 : ($keys['stripe_secret_key'] ?? '');
         } elseif (in_array($model, ['Sponsor', 'Subscription', 'Donation', 'Job'], true)) {
-            $paymentKeys = json_decode($paymentGateway->keys, true) ?: [];
+            $paymentKeys = $paymentGateway->decodedKeys();
 
-            if ($paymentGateway->status == 1) {
-                $key = $paymentGateway->test_mode == 1
+            if ($paymentGateway->isEnabled()) {
+                $key = $paymentGateway->isInTestMode()
                     ? ($paymentKeys['secret_key'] ?? '')
                     : ($paymentKeys['secret_live_key'] ?? '');
             } else {
@@ -228,9 +228,9 @@ class PaymentController extends Controller
             $publicKey = $keys['raz_key_id'] ?? '';
             $secretKey = $keys['raz_secret_key'] ?? '';
         } elseif (in_array($model, ['Sponsor', 'Subscription', 'Donation', 'Job', 'Badge'], true)) {
-            $keys = json_decode($paymentGateway->keys, true) ?: [];
+            $keys = $paymentGateway->decodedKeys();
 
-            if ($paymentGateway->status == 1) {
+            if ($paymentGateway->isEnabled()) {
                 $publicKey = $keys['public_key'] ?? '';
                 $secretKey = $keys['secret_key'] ?? '';
             } else {
@@ -268,10 +268,10 @@ class PaymentController extends Controller
             $title = $model === 'AuthorPayout' ? 'Authors payout.' : 'Campaign Payout.';
             $description = $title;
         } elseif (in_array($model, ['Sponsor', 'Subscription', 'Donation', 'Job'], true)) {
-            $paymentKeys = json_decode($paymentGateway->keys, true) ?: [];
+            $paymentKeys = $paymentGateway->decodedKeys();
 
-            if ($paymentGateway->status == 1) {
-                if ($paymentGateway->test_mode == 1) {
+            if ($paymentGateway->isEnabled()) {
+                if ($paymentGateway->isInTestMode()) {
                     $keyType = 'public_key';
                     $key = $paymentKeys['public_key'] ?? '';
                 } else {
@@ -306,13 +306,13 @@ class PaymentController extends Controller
 
     private function paypalViewData(Payment_gateway $paymentGateway): array
     {
-        $paymentKeys = json_decode($paymentGateway->keys, true) ?: [];
+        $paymentKeys = $paymentGateway->decodedKeys();
 
         return [
-            'client_id' => $paymentGateway->test_mode == 1
+            'client_id' => $paymentGateway->isInTestMode()
                 ? ($paymentKeys['sandbox_client_id'] ?? '')
                 : ($paymentKeys['production_client_id'] ?? ''),
-            'paypalURL' => $paymentGateway->test_mode == 1
+            'paypalURL' => $paymentGateway->isInTestMode()
                 ? 'https://api.sandbox.paypal.com/v1/'
                 : 'https://api.paypal.com/v1/',
             'systemCurrency' => Setting::query()
@@ -323,10 +323,10 @@ class PaymentController extends Controller
 
     private function paystackViewData(Payment_gateway $paymentGateway, array $paymentDetails): array
     {
-        $keys = json_decode($paymentGateway->keys, true) ?: [];
+        $keys = $paymentGateway->decodedKeys();
 
         return [
-            'key' => $paymentGateway->test_mode == 1
+            'key' => $paymentGateway->isInTestMode()
                 ? ($keys['public_test_key'] ?? '')
                 : ($keys['public_live_key'] ?? ''),
             'amount' => $paymentDetails['items'][0]['price'],

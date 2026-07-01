@@ -7,7 +7,6 @@ use App\Enums\PostType;
 use App\Enums\Visibility;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
-use App\Models\Friendships;
 use App\Models\Invite;
 use App\Models\Notification;
 use App\Models\Posts;
@@ -215,18 +214,18 @@ class EventController extends Controller
         aasort($popularrate, 'popular');
 
         // friend find
-        $friends = Friendships::where('requester', auth()->user()->id)->orWhere('accepter', auth()->user()->id)->where('is_accepted', '1')->orderBy('id', 'DESC')->get();
+        $friends = FriendshipsQuery::recentForUser(auth()->user())->get();
         $invited_friend_going = Invite::where('event_id', $id)->where('is_accepted', '1')->count();
 
         // for sending  user invite
         $users = User::orderBy('id', 'DESC')->limit('10')->get();
 
         $posts = Posts::where(function ($query) {
-            $query->where('posts.privacy', '!=', Visibility::Private->value)
+            $query->notPrivate()
                 ->orWhere('posts.user_id', auth()->user()->id);
         })
             ->where('publisher_id', $id)->where('publisher', 'event')
-            ->where('posts.status', ContentStatus::Active->value)
+            ->active()
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->orderBy('posts.post_id', 'DESC')->get();

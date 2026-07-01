@@ -18,9 +18,9 @@ class StripePay
     public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
         $payment_gateway = Payment_gateway::query()->where('identifier', $identifier)->first();
-        $keys = json_decode($payment_gateway->keys, true);
+        $keys = $payment_gateway->decodedKeys();
 
-        if ($payment_gateway->test_mode == 1) {
+        if ($payment_gateway->isInTestMode()) {
             $stripeSecretKey = $keys['secret_key'];
         } else {
             $stripeSecretKey = $keys['secret_live_key'];
@@ -58,7 +58,7 @@ class StripePay
     {
         $payment_gateway = Payment_gateway::query()->where('identifier', $identifier)->first();
         $payment_details = session('payment_details');
-        $keys = json_decode($payment_gateway->keys, true);
+        $keys = $payment_gateway->decodedKeys();
 
         $products_name = '';
         foreach ($payment_details['items'] as $key => $value) {
@@ -69,7 +69,7 @@ class StripePay
             }
         }
 
-        if ($payment_gateway->test_mode == 1) {
+        if ($payment_gateway->isInTestMode()) {
             $stripeSecretKey = $keys['secret_key'];
         } else {
             $stripeSecretKey = $keys['secret_live_key'];

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Group_member extends Model
 {
     use HasFactory;
+
+    public function scopeAccepted(Builder $query): Builder
+    {
+        return $query->where('is_accepted', '1');
+    }
 
     public function getGroup(): BelongsTo
     {

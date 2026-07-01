@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MediaFileType;
+use App\Enums\Visibility;
 use App\Models\Album_image;
 use App\Models\Albums;
 use App\Models\Blog;
@@ -516,12 +518,12 @@ class ApiController extends Controller
             // First 10 posts
             $posts = Posts::where(function ($query) use ($user_id) {
                 $query->whereJsonContains('users.friends', [$user_id])
-                    ->where('posts.privacy', '!=', 'private')
+                    ->notPrivate()
                     ->orWhere('posts.user_id', $user_id)
 
                     // if folowing any users, pages, groups and others if not friend listed
                     ->orWhere(function ($query3) {
-                        $query3->where('posts.privacy', 'public')
+                        $query3->where('posts.privacy', Visibility::Public->value)
                             ->where(function ($query4) {
                                 $query4->where('posts.publisher', 'post')
                                     ->join('followers', function (JoinClause $join) {
@@ -552,8 +554,8 @@ class ApiController extends Controller
                             });
                     });
             })
-                ->where('posts.status', 'active')
-                ->where('posts.report_status', '0')
+                ->active()
+                ->notReported()
                 ->where('publisher', '!=', 'paid_content') // post type can not be paid content
                 ->join('users', 'posts.user_id', '=', 'users.id')
 
@@ -1019,12 +1021,12 @@ class ApiController extends Controller
 
             $posts = Posts::where(function ($query) use ($user_id) {
                 $query->whereJsonContains('users.friends', [$user_id])
-                    ->where('posts.privacy', '!=', 'private')
+                    ->notPrivate()
                     ->orWhere('posts.user_id', $user_id)
 
                     // if following any users, pages, groups and others if not friend listed
                     ->orWhere(function ($query3) {
-                        $query3->where('posts.privacy', 'public')
+                        $query3->where('posts.privacy', Visibility::Public->value)
                             ->where(function ($query4) {
                                 $query4->where('posts.publisher', 'post')
                                     ->join('followers', function (JoinClause $join) {
@@ -1055,9 +1057,9 @@ class ApiController extends Controller
                             });
                     });
             })
-                ->where('posts.status', 'active')
+                ->active()
                 ->where('posts.publisher', 'post')
-                ->where('posts.report_status', '0')
+                ->notReported()
                 ->join('users', 'posts.user_id', '=', 'users.id')
                 ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
                 ->skip($offset)->take(10)->orderBy('posts.post_id', 'DESC')->get();
@@ -2322,7 +2324,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
             $all_photos = Media_files::where('user_id', $user_id)
-                ->where('file_type', 'image')
+                ->ofType(MediaFileType::Image)
                 ->whereNull('page_id')
                 ->whereNull('story_id')
                 ->whereNull('product_id')
@@ -2356,7 +2358,7 @@ class ApiController extends Controller
             $page_data['all_albums'] = $albumArray;
 
             $all_videos = Media_files::where('user_id', $user_id)
-                ->where('file_type', 'video')
+                ->ofType(MediaFileType::Video)
                 ->whereNull('story_id')
                 ->whereNull('page_id')
                 ->whereNull('album_id')
@@ -2387,7 +2389,7 @@ class ApiController extends Controller
             // $user_id = auth('sanctum')->user()->id;
             $user_id = $id;
             $all_photos = Media_files::where('user_id', $user_id)
-                ->where('file_type', 'image')
+                ->ofType(MediaFileType::Image)
                 ->whereNull('page_id')
                 ->whereNull('story_id')
                 ->whereNull('product_id')
@@ -2421,7 +2423,7 @@ class ApiController extends Controller
             $page_data['all_albums'] = $albumArray;
 
             $all_videos = Media_files::where('user_id', $user_id)
-                ->where('file_type', 'video')
+                ->ofType(MediaFileType::Video)
                 ->whereNull('story_id')
                 ->whereNull('page_id')
                 ->whereNull('album_id')
@@ -3618,7 +3620,7 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $all_photos = Media_files::where('group_id', $group_id)->where('file_type', 'image')->orderBy('id', 'DESC')->get();
+            $all_photos = Media_files::where('group_id', $group_id)->ofType(MediaFileType::Image)->orderBy('id', 'DESC')->get();
             $photoArray = [];
             foreach ($all_photos as $photo) {
                 $photoArray[] = [
@@ -3629,7 +3631,7 @@ class ApiController extends Controller
             $page_data['all_photos'] = $photoArray;
             // $page_data['all_photos'] = $all_photos;
 
-            $all_videos = Media_files::where('group_id', $group_id)->where('file_type', 'video')->orderBy('id', 'DESC')->get();
+            $all_videos = Media_files::where('group_id', $group_id)->ofType(MediaFileType::Video)->orderBy('id', 'DESC')->get();
             $videoArray = [];
             foreach ($all_videos as $video) {
                 $videoArray[] = [
@@ -4191,7 +4193,7 @@ class ApiController extends Controller
             $user_id = auth('sanctum')->user()->id;
 
             $all_photos = Media_files::where('page_id', $id)
-                ->where('file_type', 'image')
+                ->ofType(MediaFileType::Image)
                 ->orderBy('id', 'DESC')->get();
             $photoArray = [];
             foreach ($all_photos as $photo) {
@@ -4217,7 +4219,7 @@ class ApiController extends Controller
             $page_data['all_albums'] = $albumArray;
 
             $all_videos = Media_files::where('page_id', $id)
-                ->where('file_type', 'video')
+                ->ofType(MediaFileType::Video)
                 ->orderBy('id', 'DESC')->get();
             $videoArray = [];
             foreach ($all_videos as $video) {

@@ -34,4 +34,14 @@ class Friendships extends Model
     {
         return $this->belongsTo(User::class, 'accepter');
     }
+
+    public function otherUserId(User|int $user): int
+    {
+        $userId = $user instanceof User ? $user->id : $user;
+        $accepterId = (int) $this->getAttribute('accepter');
+
+        return $accepterId === (int) $userId
+            ? (int) $this->getAttribute('requester')
+            : $accepterId;
+    }
 }

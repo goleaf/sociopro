@@ -20,7 +20,7 @@ class Paypal
             return false;
         }
 
-        $keys = json_decode($paymentGateway->keys, true) ?: [];
+        $keys = $paymentGateway->decodedKeys();
         [$clientId, $secretKey, $paypalUrl] = self::gatewayCredentials($paymentGateway, $keys);
 
         if (! $clientId || ! $secretKey) {
@@ -59,7 +59,7 @@ class Paypal
 
     private static function gatewayCredentials(Payment_gateway $paymentGateway, array $keys): array
     {
-        if ((int) $paymentGateway->test_mode === 1) {
+        if ($paymentGateway->isInTestMode()) {
             return [
                 $keys['sandbox_client_id'] ?? null,
                 $keys['sandbox_secret_key'] ?? null,

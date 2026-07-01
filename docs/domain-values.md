@@ -12,6 +12,7 @@ This project still contains many legacy string and numeric flags. New and refact
 | Account activation request status | `App\Enums\AccountActivationStatus` | `pending` | Admin dashboard view data |
 | Visibility / privacy | `App\Enums\Visibility` | `public`, `friends`, `private` | Post/story/event/video/page queries, validation, tests |
 | Content status | `App\Enums\ContentStatus` | `active`, `inactive` | Post/story query filters, creation paths, tests |
+| Media file type | `App\Enums\MediaFileType` | `image`, `video` | Media library filters and uploaded media metadata |
 | Post type | `App\Enums\PostType` | `general`, `event`, `live_streaming`, `share`, `profile_picture`, `cover_photo`, `fundraiser` | Post creation and share paths |
 | Video category | `App\Enums\VideoCategory` | `video`, `shorts` | Video/short listing queries |
 | Payment gateway identifier | `App\Enums\PaymentGatewayIdentifier` | `stripe`, `razorpay`, `flutterwave`, `paypal`, `paystack`, `paytm` | Gateway lookup, payment controller, payment services, tests |

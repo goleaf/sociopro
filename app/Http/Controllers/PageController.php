@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ContentStatus;
+use App\Enums\MediaFileType;
 use App\Enums\MembershipRole;
-use App\Enums\Visibility;
 use App\Models\Albums;
-use App\Models\Friendships;
 use App\Models\Media_files;
 use App\Models\Page;
 use App\Models\Page_like;
@@ -177,16 +175,10 @@ class PageController extends Controller
 
     public function single_page($id)
     {
-        $friendsid = [];
-        $friendidfind = '';
-        $friends = Friendships::where('requester', auth()->user()->id)->orWhere('accepter', auth()->user()->id)->where('is_accepted', '1')->get();
-        foreach ($friends as $friend) {
-            $friendidfind = $friend->accepter == auth()->user()->id ? "$friend->requester" : "$friend->accepter";
-            array_push($friendsid, $friendidfind);
-        }
+        $friendsid = FriendshipsQuery::acceptedFriendIdsForUser(auth()->user());
 
         $all_videos = Media_files::where('page_id', $id)
-            ->where('file_type', 'video')
+            ->ofType(MediaFileType::Video)
             ->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;
@@ -195,10 +187,10 @@ class PageController extends Controller
             ->take(30)->orderBy('id', 'DESC')->get();
         $page_data['all_photos'] = $all_photos;
 
-        $posts = Posts::where('posts.privacy', '!=', Visibility::Private->value)
+        $posts = Posts::notPrivate()
             ->where('posts.publisher', 'page')
             ->where('posts.publisher_id', $id)
-            ->where('posts.status', ContentStatus::Active->value)
+            ->active()
             ->join('pages', 'posts.publisher_id', '=', 'pages.id')
             ->select('posts.*', 'pages.id', 'pages.title', 'pages.logo', 'posts.created_at as created_at')
             ->orderBy('posts.post_id', 'DESC')->get();
@@ -217,23 +209,17 @@ class PageController extends Controller
 
     public function page_photos($id)
     {
-        $friendsid = [];
-        $friendidfind = '';
-        $friends = Friendships::where('requester', auth()->user()->id)->orWhere('accepter', auth()->user()->id)->where('is_accepted', '1')->get();
-        foreach ($friends as $friend) {
-            $friendidfind = $friend->accepter == auth()->user()->id ? "$friend->requester" : "$friend->accepter";
-            array_push($friendsid, $friendidfind);
-        }
+        $friendsid = FriendshipsQuery::acceptedFriendIdsForUser(auth()->user());
 
         $all_photos = Media_files::where('page_id', $id)
-            ->where('file_type', 'image')
+            ->ofType(MediaFileType::Image)
             ->take(20)->orderBy('id', 'DESC')->get();
 
         $all_albums = Albums::where('page_id', $id)
             ->take(6)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = Media_files::where('page_id', $id)
-            ->where('file_type', 'video')
+            ->ofType(MediaFileType::Video)
             ->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['all_photos'] = $all_photos;
@@ -249,23 +235,17 @@ class PageController extends Controller
 
     public function videos($id)
     {
-        $friendsid = [];
-        $friendidfind = '';
-        $friends = Friendships::where('requester', auth()->user()->id)->orWhere('accepter', auth()->user()->id)->where('is_accepted', '1')->get();
-        foreach ($friends as $friend) {
-            $friendidfind = $friend->accepter == auth()->user()->id ? "$friend->requester" : "$friend->accepter";
-            array_push($friendsid, $friendidfind);
-        }
+        $friendsid = FriendshipsQuery::acceptedFriendIdsForUser(auth()->user());
 
         $all_videos = Media_files::where('page_id', $id)
-            ->where('file_type', 'video')
+            ->ofType(MediaFileType::Video)
             ->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;
 
         $page_data['page'] = Page::find($id);
         $all_photos = Media_files::where('page_id', $id)
-            ->where('file_type', 'image')
+            ->ofType(MediaFileType::Image)
             ->take(20)->orderBy('id', 'DESC')->get();
         $page_data['all_photos'] = $all_photos;
 
@@ -278,7 +258,7 @@ class PageController extends Controller
     public function load_videos(Request $request)
     {
         $all_videos = Media_files::where('user_id', $this->user->id)
-            ->where('file_type', 'video')
+            ->ofType(MediaFileType::Video)
             ->skip($request->offset)->take(12)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;

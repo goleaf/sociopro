@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ContentStatus;
-use App\Enums\Visibility;
 use App\Models\Posts;
 use App\Queries\FriendshipsQuery;
 use Illuminate\Http\Request;
@@ -29,9 +27,9 @@ class MemoriesController extends Controller
             ->whereMonth('posts.posted_on', date('m', time()))
             ->whereYear('posts.posted_on', '!=', date('Y', time()))
             ->where('posts.user_id', auth()->user()->id)
-            ->where('posts.status', ContentStatus::Active->value)
-            ->where('posts.privacy', '!=', Visibility::Private->value)
-            ->where('posts.report_status', '0')
+            ->active()
+            ->notPrivate()
+            ->notReported()
             ->where('posts.publisher', ['post', 'video_and_shorts'])
             ->orderBy('posts.post_id', 'desc')->take(5)->get();
 
@@ -53,9 +51,9 @@ class MemoriesController extends Controller
             ->whereMonth('posts.posted_on', date('m', time()))
             ->whereYear('posts.posted_on', '!=', date('Y', time()))
             ->where('posts.user_id', auth()->user()->id)
-            ->where('posts.status', ContentStatus::Active->value)
-            ->where('posts.privacy', '!=', Visibility::Private->value)
-            ->where('posts.report_status', '0')
+            ->active()
+            ->notPrivate()
+            ->notReported()
             ->where('posts.publisher', ['post', 'video_and_shorts'])
             ->orderBy('posts.post_id', 'desc')
             ->skip($request->offset)->take(3)->get();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MediaFileType;
 use App\Models\Marketplace;
 use App\Models\Media_files;
 use App\Models\SavedProduct;
@@ -203,7 +204,7 @@ class MarketplaceController extends Controller
         if ($product) {
             $page_data['related_product'] = Marketplace::Where('brand', $product->brand)->orWhere('category', $product->category)->get();
             $page_data['product'] = $product;
-            $page_data['product_image'] = Media_files::where('product_id', $id)->where('file_type', 'image')->get();
+            $page_data['product_image'] = Media_files::where('product_id', $id)->ofType(MediaFileType::Image)->get();
             $page_data['view_path'] = 'frontend.marketplace.single_product';
 
             return view('frontend.index', $page_data);
@@ -334,7 +335,7 @@ class MarketplaceController extends Controller
     {
         $product = Marketplace::find($id);
         $page_data['product'] = $product;
-        $page_data['product_image'] = Media_files::where('product_id', $id)->where('file_type', 'image')->get();
+        $page_data['product_image'] = Media_files::where('product_id', $id)->ofType(MediaFileType::Image)->get();
 
         if ($product) {
             if (isset($_GET['shared'])) {

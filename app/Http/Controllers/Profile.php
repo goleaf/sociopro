@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ContentStatus;
+use App\Enums\MediaFileType;
 use App\Enums\PostType;
 use App\Enums\Visibility;
 use App\Models\Album_image;
@@ -40,7 +41,7 @@ class Profile extends Controller
         // For my own profile
         $posts = Posts::where(function ($query) {
             $query->whereJsonContains('posts.tagged_user_ids', [$this->user->id])
-                ->where('posts.privacy', '!=', Visibility::Private->value)
+                ->notPrivate()
                 ->orWhere('posts.user_id', $this->user->id);
         })
             ->where('posts.publisher', 'post')
@@ -62,7 +63,7 @@ class Profile extends Controller
         // For my own profile
         $posts = Posts::where(function ($query) {
             $query->whereJsonContains('posts.tagged_user_ids', [$this->user->id])
-                ->where('posts.privacy', '!=', Visibility::Private->value)
+                ->notPrivate()
                 ->orWhere('posts.user_id', $this->user->id);
         })
             ->where('posts.publisher', 'post')
@@ -111,7 +112,7 @@ class Profile extends Controller
     public function photos()
     {
         $all_photos = Media_files::where('user_id', $this->user->id)
-            ->where('file_type', 'image')
+            ->ofType(MediaFileType::Image)
             ->whereNull('story_id')
             ->whereNull('product_id')
             ->whereNull('page_id')
@@ -138,7 +139,7 @@ class Profile extends Controller
     public function load_photos(Request $request)
     {
         $all_photos = Media_files::where('user_id', $this->user->id)
-            ->where('file_type', 'image')
+            ->ofType(MediaFileType::Image)
             ->whereNull('story_id')
             ->whereNull('product_id')
             ->whereNull('page_id')
@@ -225,7 +226,7 @@ class Profile extends Controller
     public function videos()
     {
         $all_videos = Media_files::where('user_id', $this->user->id)
-            ->where('file_type', 'video')
+            ->ofType(MediaFileType::Video)
             ->take(24)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;
@@ -238,7 +239,7 @@ class Profile extends Controller
     public function load_videos(Request $request)
     {
         $all_videos = Media_files::where('user_id', $this->user->id)
-            ->where('file_type', 'video')
+            ->ofType(MediaFileType::Video)
             ->skip($request->offset)->take(12)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;
@@ -458,7 +459,7 @@ class Profile extends Controller
         $post_id = Posts::insertGetId($data);
 
         // Stored to media files table
-        $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => Visibility::Public->value];
+        $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => MediaFileType::Image->value, 'privacy' => Visibility::Public->value];
         $media_file_data['created_at'] = time();
         $media_file_data['updated_at'] = $media_file_data['created_at'];
         Media_files::create($media_file_data);
@@ -484,7 +485,7 @@ class Profile extends Controller
         $post_id = Posts::insertGetId($data);
 
         // Stored to media files table
-        $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => Visibility::Public->value];
+        $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => MediaFileType::Image->value, 'privacy' => Visibility::Public->value];
         $media_file_data['created_at'] = time();
         $media_file_data['updated_at'] = $media_file_data['created_at'];
         Media_files::create($media_file_data);
