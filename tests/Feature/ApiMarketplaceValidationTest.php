@@ -88,6 +88,37 @@ class ApiMarketplaceValidationTest extends TestCase
             ]);
     }
 
+    public function test_marketplace_filter_uses_default_pagination_and_safe_default_ordering(): void
+    {
+        $owner = $this->authenticateApiUser();
+        [$category, $brand, $currency] = $this->createMarketplaceLookups();
+
+        $latestVisibleProduct = null;
+        for ($index = 1; $index <= 25; $index++) {
+            $latestVisibleProduct = $this->marketplace([
+                'user_id' => $owner->id,
+                'title' => sprintf('Visible Product %02d', $index),
+                'price' => (string) (100 + $index),
+                'location' => 'Vilnius',
+                'category' => (string) $category->id,
+                'condition' => 'new',
+                'status' => '1',
+                'brand' => (string) $brand->id,
+                'currency_id' => $currency->id,
+                'description' => 'Visible product for default pagination.',
+            ]);
+        }
+
+        $response = $this->withToken('test-token')->getJson(route('api.marketplace.filter'));
+
+        $response->assertOk();
+
+        $products = $response->json();
+
+        $this->assertCount(20, $products);
+        $this->assertSame($latestVisibleProduct->id, $products[0]['id']);
+    }
+
     public function test_create_marketplace_rejects_invalid_json_body_without_creating_product(): void
     {
         $this->authenticateApiUser();

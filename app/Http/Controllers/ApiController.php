@@ -4840,9 +4840,7 @@ class ApiController extends Controller
                 $query->whereDate('created_at', '<=', $filters['date_to']);
             }
 
-            if ($filters['page'] !== null && $filters['per_page'] !== null) {
-                $query->forPage($filters['page'], $filters['per_page']);
-            }
+            $query->forPage($filters['page'], $filters['per_page']);
 
             $marketplace = $query->get();
             // return $marketplace;

@@ -8,6 +8,22 @@ use Illuminate\Validation\Rule;
 
 class FilterMarketplaceRequest extends ApiFormRequest
 {
+    public const DEFAULT_PAGE = 1;
+
+    public const DEFAULT_PER_PAGE = 20;
+
+    public const MAX_PER_PAGE = 100;
+
+    /**
+     * @var list<string>
+     */
+    private const ALLOWED_SORT_FIELDS = ['id', 'created_at', 'price', 'title'];
+
+    /**
+     * @var list<string>
+     */
+    private const ALLOWED_DIRECTIONS = ['asc', 'desc'];
+
     /**
      * @return array<string, string>
      */
@@ -49,10 +65,10 @@ class FilterMarketplaceRequest extends ApiFormRequest
             'max' => ['nullable', 'numeric', 'min:0', 'gte:min'],
             'brand' => ['nullable', 'integer', 'exists:brands,id'],
             'location' => ['nullable', 'string', 'max:255'],
-            'sort' => ['nullable', 'string', Rule::in(['id', 'created_at', 'price', 'title'])],
-            'direction' => ['nullable', 'string', Rule::in(['asc', 'desc'])],
+            'sort' => ['nullable', 'string', Rule::in(self::ALLOWED_SORT_FIELDS)],
+            'direction' => ['nullable', 'string', Rule::in(self::ALLOWED_DIRECTIONS)],
             'page' => ['nullable', 'integer', 'min:1'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_PER_PAGE],
             'date_from' => DateTimeRules::nullableBrowserDate(),
             'date_to' => ['nullable', 'date_format:'.DateTimeRules::BROWSER_DATE_FORMAT, 'after_or_equal:date_from'],
             'filters' => ['nullable', 'array'],
@@ -81,8 +97,8 @@ class FilterMarketplaceRequest extends ApiFormRequest
      *     location: mixed,
      *     sort: string,
      *     direction: string,
-     *     page: int|null,
-     *     per_page: int|null,
+     *     page: int,
+     *     per_page: int,
      *     date_from: mixed,
      *     date_to: mixed
      * }
@@ -106,12 +122,61 @@ class FilterMarketplaceRequest extends ApiFormRequest
             'max' => $this->input('max', $price['max'] ?? null),
             'brand' => $this->input('brand', $nested['brand'] ?? null),
             'location' => $this->input('location', $nested['location'] ?? null),
-            'sort' => (string) $this->input('sort', 'id'),
-            'direction' => (string) $this->input('direction', 'desc'),
-            'page' => $this->filled('page') ? $this->integer('page') : null,
-            'per_page' => $this->filled('per_page') ? $this->integer('per_page') : null,
+            'sort' => $this->sortField(),
+            'direction' => $this->sortDirection(),
+            'page' => $this->positiveInteger('page', self::DEFAULT_PAGE),
+            'per_page' => $this->positiveInteger('per_page', self::DEFAULT_PER_PAGE, self::MAX_PER_PAGE),
             'date_from' => $this->input('date_from', $createdBetween['from'] ?? null),
             'date_to' => $this->input('date_to', $createdBetween['to'] ?? null),
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $direction = $this->input('direction');
+
+        if (is_string($direction)) {
+            $this->merge([
+                'direction' => strtolower($direction),
+            ]);
+        }
+    }
+
+    private function sortField(): string
+    {
+        $sort = $this->input('sort', 'id');
+
+        return is_string($sort) && in_array($sort, self::ALLOWED_SORT_FIELDS, true)
+            ? $sort
+            : 'id';
+    }
+
+    private function sortDirection(): string
+    {
+        $direction = $this->input('direction', 'desc');
+        $direction = is_string($direction) ? strtolower($direction) : 'desc';
+
+        return in_array($direction, self::ALLOWED_DIRECTIONS, true)
+            ? $direction
+            : 'desc';
+    }
+
+    private function positiveInteger(string $key, int $default, ?int $maximum = null): int
+    {
+        if (! $this->filled($key)) {
+            return $default;
+        }
+
+        $value = $this->integer($key);
+
+        if ($value < 1) {
+            return $default;
+        }
+
+        if ($maximum !== null && $value > $maximum) {
+            return $maximum;
+        }
+
+        return $value;
     }
 }

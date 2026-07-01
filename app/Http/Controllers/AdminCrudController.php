@@ -37,6 +37,19 @@ use Image;
 
 class AdminCrudController extends Controller
 {
+    private const ADMIN_USERS_DATATABLE_COLUMNS = [
+        0 => 'id',
+        1 => 'id',
+        2 => 'name',
+        3 => 'email',
+        4 => 'status',
+        5 => 'id',
+    ];
+
+    private const DATATABLE_DEFAULT_LENGTH = 10;
+
+    private const DATATABLE_MAX_LENGTH = 100;
+
     public function __construct()
     {
         // Don't remove it
@@ -52,6 +65,51 @@ class AdminCrudController extends Controller
         }
 
         return $rule;
+    }
+
+    /**
+     * @return array{draw: int, start: int, length: int, sort: string, direction: string, search: string}
+     */
+    private function adminUsersDataTableParameters(Request $request): array
+    {
+        $columnIndex = $this->integerWithin(
+            data_get($request->input('order'), '0.column'),
+            0,
+            0,
+            count(self::ADMIN_USERS_DATATABLE_COLUMNS) - 1
+        );
+        $requestedDirection = data_get($request->input('order'), '0.dir', 'desc');
+        $direction = is_string($requestedDirection) ? strtolower($requestedDirection) : 'desc';
+        $search = data_get($request->input('search'), 'value', '');
+        $search = is_string($search) ? trim(mb_substr($search, 0, 255)) : '';
+
+        return [
+            'draw' => $this->integerWithin($request->input('draw'), 0, 0),
+            'start' => $this->integerWithin($request->input('start'), 0, 0),
+            'length' => $this->integerWithin($request->input('length'), self::DATATABLE_DEFAULT_LENGTH, 1, self::DATATABLE_MAX_LENGTH),
+            'sort' => self::ADMIN_USERS_DATATABLE_COLUMNS[$columnIndex] ?? 'id',
+            'direction' => in_array($direction, ['asc', 'desc'], true) ? $direction : 'desc',
+            'search' => $search,
+        ];
+    }
+
+    private function integerWithin(mixed $value, int $default, int $minimum, ?int $maximum = null): int
+    {
+        if (is_array($value) || is_object($value)) {
+            return $default;
+        }
+
+        $integer = filter_var($value, FILTER_VALIDATE_INT);
+
+        if ($integer === false || $integer < $minimum) {
+            return $default;
+        }
+
+        if ($maximum !== null && $integer > $maximum) {
+            return $maximum;
+        }
+
+        return (int) $integer;
     }
 
     // admin change pass
@@ -1227,34 +1285,30 @@ class AdminCrudController extends Controller
 
     public function server_side_users_data(Request $request)
     {
-        // echo $total_number_of_row = User::where('user_role', '!=', 'admin')->count();
-        // $users = User::skip(12)->take(12)->select('name', 'id', 'email', 'photo', 'status')->where('user_role', '!=', 'admin')->orderBy('id', 'asc')->get();
+        $parameters = $this->adminUsersDataTableParameters($request);
         $data = [];
-        // mentioned all with colum of database table that related with number of html table
-        $columns = ['id', 'id', 'name', 'email', 'status', 'id'];
-
-        $limit = $request->length;
-        $start = $request->start;
-
-        $column_index = $columns[$request->order[0]['column']];
-
-        $dir = $request->order[0]['dir'];
         $total_number_of_row = User::query()->nonAdmins()->count();
 
-        $filtered_number_of_row = $total_number_of_row;
-        $search = $request->search['value'];
+        $usersQuery = User::query()
+            ->select(['name', 'id', 'email', 'photo', 'status', 'email_verified_at'])
+            ->nonAdmins();
 
-        if (empty($search)) {
-            $users = User::query()->skip($start)->take($limit)->select('name', 'id', 'email', 'photo', 'status', 'email_verified_at')->nonAdmins()->orderBy($column_index, $dir)->get();
-        } else {
-            $users = User::where(function ($query) use ($search) {
+        if ($parameters['search'] !== '') {
+            $usersQuery->where(function ($query) use ($parameters) {
+                $search = $parameters['search'];
                 $query->where('name', 'like', '%'.$search.'%')
                     ->orWhere('email', 'like', '%'.$search.'%');
-            })
-                ->nonAdmins();
-            $filtered_number_of_row = $users->count();
-            $users = $users->skip($start)->take($limit)->orderBy($column_index, $dir)->get();
+            });
         }
+
+        $filtered_number_of_row = $parameters['search'] === ''
+            ? $total_number_of_row
+            : (clone $usersQuery)->count();
+        $users = $usersQuery
+            ->orderBy($parameters['sort'], $parameters['direction'])
+            ->skip($parameters['start'])
+            ->take($parameters['length'])
+            ->get();
 
         foreach ($users as $key => $user) {
             // photo
@@ -1308,12 +1362,13 @@ class AdminCrudController extends Controller
         }
 
         $json_data = [
-            'draw' => intval($request->draw),
+            'draw' => $parameters['draw'],
             'recordsTotal' => intval($total_number_of_row),
             'recordsFiltered' => intval($filtered_number_of_row),
             'data' => $data,
         ];
-        echo json_encode($json_data);
+
+        return response()->json($json_data);
     }
 
     public function payment_settings()
