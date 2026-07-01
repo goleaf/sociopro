@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\PaymentGatewayIdentifier;
 use App\Exceptions\Payments\PaymentGatewayException;
 use App\Models\Payment_gateway;
 use App\Services\Payments\Gateways\Paystack;
@@ -34,7 +35,7 @@ class PaystackPaymentStatusTest extends TestCase
             ]),
         ]);
 
-        $this->assertTrue($this->makeGateway()->payment_status('paystack', ['reference' => 'PSK-123']));
+        $this->assertTrue($this->makeGateway()->payment_status(PaymentGatewayIdentifier::Paystack->value, ['reference' => 'PSK-123']));
 
         Http::assertSentCount(1);
         Http::assertSent(fn (Request $request) => $request->method() === 'GET'
@@ -56,7 +57,7 @@ class PaystackPaymentStatusTest extends TestCase
             ]),
         ]);
 
-        $this->assertFalse($this->makeGateway()->payment_status('paystack', ['reference' => 'PSK-123']));
+        $this->assertFalse($this->makeGateway()->payment_status(PaymentGatewayIdentifier::Paystack->value, ['reference' => 'PSK-123']));
     }
 
     public function test_it_does_not_call_paystack_without_reference(): void
@@ -65,7 +66,7 @@ class PaystackPaymentStatusTest extends TestCase
 
         Http::fake();
 
-        $this->assertFalse($this->makeGateway()->payment_status('paystack'));
+        $this->assertFalse($this->makeGateway()->payment_status(PaymentGatewayIdentifier::Paystack->value));
 
         Http::assertNothingSent();
     }
@@ -79,32 +80,32 @@ class PaystackPaymentStatusTest extends TestCase
             throw new ConnectionException('Connection failed.');
         });
 
-        $this->assertFalse($this->makeGateway()->payment_status('paystack', ['reference' => 'PSK-123']));
+        $this->assertFalse($this->makeGateway()->payment_status(PaymentGatewayIdentifier::Paystack->value, ['reference' => 'PSK-123']));
 
-        Exceptions::assertReported(fn (PaymentGatewayException $exception) => $exception->gateway() === 'paystack'
+        Exceptions::assertReported(fn (PaymentGatewayException $exception) => $exception->gateway() === PaymentGatewayIdentifier::Paystack->value
             && $exception->reason() === 'transport_failure'
             && $exception->getPrevious() instanceof ConnectionException);
     }
 
     public function test_it_reports_missing_paystack_credentials_without_calling_paystack(): void
     {
-        Payment_gateway::where('identifier', 'paystack')->update([
+        Payment_gateway::where('identifier', PaymentGatewayIdentifier::Paystack->value)->update([
             'keys' => json_encode([]),
             'test_mode' => 1,
         ]);
         Exceptions::fake();
         Http::fake();
 
-        $this->assertFalse($this->makeGateway()->payment_status('paystack', ['reference' => 'PSK-123']));
+        $this->assertFalse($this->makeGateway()->payment_status(PaymentGatewayIdentifier::Paystack->value, ['reference' => 'PSK-123']));
 
-        Exceptions::assertReported(fn (PaymentGatewayException $exception) => $exception->gateway() === 'paystack'
+        Exceptions::assertReported(fn (PaymentGatewayException $exception) => $exception->gateway() === PaymentGatewayIdentifier::Paystack->value
             && $exception->reason() === 'missing_credentials');
         Http::assertNothingSent();
     }
 
     private function configurePaystackGateway(): void
     {
-        Payment_gateway::where('identifier', 'paystack')->update([
+        Payment_gateway::where('identifier', PaymentGatewayIdentifier::Paystack->value)->update([
             'keys' => json_encode([
                 'secret_test_key' => 'test-secret-key',
                 'public_test_key' => 'test-public-key',

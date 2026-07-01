@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContentStatus;
+use App\Enums\MembershipRole;
+use App\Enums\Visibility;
 use App\Models\Albums;
 use App\Models\Friendships;
 use App\Models\Media_files;
@@ -192,10 +195,10 @@ class PageController extends Controller
             ->take(30)->orderBy('id', 'DESC')->get();
         $page_data['all_photos'] = $all_photos;
 
-        $posts = Posts::where('posts.privacy', '!=', 'private')
+        $posts = Posts::where('posts.privacy', '!=', Visibility::Private->value)
             ->where('posts.publisher', 'page')
             ->where('posts.publisher_id', $id)
-            ->where('posts.status', 'active')
+            ->where('posts.status', ContentStatus::Active->value)
             ->join('pages', 'posts.publisher_id', '=', 'pages.id')
             ->select('posts.*', 'pages.id', 'pages.title', 'pages.logo', 'posts.created_at as created_at')
             ->orderBy('posts.post_id', 'DESC')->get();
@@ -290,7 +293,7 @@ class PageController extends Controller
         $pagelike = new Page_like;
         $pagelike->page_id = $id;
         $pagelike->user_id = auth()->user()->id;
-        $pagelike->role = 'general';
+        $pagelike->role = MembershipRole::General->value;
         $pagelike->save();
         Session::flash('success_message', get_phrase('Page Liked Successfully'));
         $response = ['reload' => 1];

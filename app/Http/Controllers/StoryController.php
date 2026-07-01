@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContentStatus;
+use App\Enums\Visibility;
 use App\Models\Media_files;
 use App\Models\Stories;
 use App\Queries\StoriesQuery;
@@ -41,7 +43,7 @@ class StoryController extends Controller
         abort_if($story_details === null, 404);
 
         $stories = StoriesQuery::visibleFor($this->user)
-            ->where('stories.privacy', '!=', 'private')
+            ->where('stories.privacy', '!=', Visibility::Private->value)
             ->whereNotIn('stories.story_id', [$story_id])
             ->get();
 
@@ -89,7 +91,7 @@ class StoryController extends Controller
         $data['created_at'] = time();
         $data['updated_at'] = $data['created_at'];
         $data['user_id'] = $this->user->id;
-        $data['status'] = 'active';
+        $data['status'] = ContentStatus::Active->value;
         $story_id = Stories::insertGetId($data);
 
         if ($request->content_type != 'text') {

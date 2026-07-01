@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Models\Account_active_request;
 use App\Models\Badge;
 use App\Models\Blog;
@@ -92,7 +93,7 @@ class AdminCrudController extends Controller
         $page_data['all_category'] = Pagecategory::all();
         $page_data['year'] = $year;
         $page_data['dashboardCounts'] = [
-            'users' => User::query()->where('user_role', '!=', 'admin')->count(),
+            'users' => User::query()->nonAdmins()->count(),
             'posts' => Posts::query()->count(),
             'pages' => Page::query()->count(),
             'blogs' => Blog::query()->count(),
@@ -1068,7 +1069,7 @@ class AdminCrudController extends Controller
 
     public function users()
     {
-        $users = User::where('user_role', '!=', 'admin')->get();
+        $users = User::query()->nonAdmins()->get();
 
         $page_data['users'] = $users;
         $page_data['view_path'] = 'users.list';
@@ -1106,7 +1107,7 @@ class AdminCrudController extends Controller
             $data['photo'] = $file_name;
         }
 
-        $data['user_role'] = 'general';
+        $data['user_role'] = UserRole::General->value;
         $data['name'] = $request->name;
         $data['email'] = $request->email;
         $data['password'] = Hash::make($request->password);
@@ -1215,19 +1216,19 @@ class AdminCrudController extends Controller
         $column_index = $columns[$request->order[0]['column']];
 
         $dir = $request->order[0]['dir'];
-        $total_number_of_row = User::where('user_role', '!=', 'admin')->count();
+        $total_number_of_row = User::query()->nonAdmins()->count();
 
         $filtered_number_of_row = $total_number_of_row;
         $search = $request->search['value'];
 
         if (empty($search)) {
-            $users = User::skip($start)->take($limit)->select('name', 'id', 'email', 'photo', 'status', 'email_verified_at')->where('user_role', '!=', 'admin')->orderBy($column_index, $dir)->get();
+            $users = User::query()->skip($start)->take($limit)->select('name', 'id', 'email', 'photo', 'status', 'email_verified_at')->nonAdmins()->orderBy($column_index, $dir)->get();
         } else {
             $users = User::where(function ($query) use ($search) {
                 $query->where('name', 'like', '%'.$search.'%')
                     ->orWhere('email', 'like', '%'.$search.'%');
             })
-                ->where('user_role', '!=', 'admin');
+                ->nonAdmins();
             $filtered_number_of_row = $users->count();
             $users = $users->skip($start)->take($limit)->orderBy($column_index, $dir)->get();
         }

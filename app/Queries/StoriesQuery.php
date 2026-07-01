@@ -2,6 +2,8 @@
 
 namespace App\Queries;
 
+use App\Enums\ContentStatus;
+use App\Enums\Visibility;
 use App\Models\Stories;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,10 +21,10 @@ class StoriesQuery
             ->where(function (Builder $query) use ($viewerId): void {
                 $query->where(function (Builder $query) use ($viewerId): void {
                     $query->whereJsonContains('users.friends', [$viewerId])
-                        ->where('stories.privacy', '!=', 'private');
+                        ->where('stories.privacy', '!=', Visibility::Private->value);
                 })->orWhere('stories.user_id', $viewerId);
             })
-            ->where('stories.status', 'active')
+            ->where('stories.status', ContentStatus::Active->value)
             ->where('stories.created_at', '>=', time() - $seconds)
             ->orderByDesc('stories.story_id');
     }

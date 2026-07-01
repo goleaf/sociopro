@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Anand\LaravelPaytmWallet\Facades\PaytmWallet;
+use App\Enums\PaymentGatewayIdentifier;
+use App\Enums\PaytmTransactionStatus;
 use App\Models\Payment_gateway;
 use App\Models\PaymentHistoryEntry;
 use App\Models\Setting;
@@ -114,7 +116,7 @@ class PaymentController extends Controller
             'mobile_number' => $user->phone,
             'email' => $user->email,
             'amount' => $request->amount,
-            'callback_url' => route('payment.status', ['identifier' => 'paytm']),
+            'callback_url' => route('payment.status', ['identifier' => PaymentGatewayIdentifier::Paytm->value]),
         ]);
 
         return $payment->receive();
@@ -129,15 +131,15 @@ class PaymentController extends Controller
 
         // update the db data as per result from api call
         if ($transaction->isSuccessful()) {
-            PaymentHistoryEntry::where('order_id', $order_id)->update(['status' => 1, 'transaction_id' => $transaction->getTransactionId()]);
+            PaymentHistoryEntry::where('order_id', $order_id)->update(['status' => PaytmTransactionStatus::Successful->value, 'transaction_id' => $transaction->getTransactionId()]);
 
             return redirect()->route('initiate.payment')->with('message', 'Your payment is successfull.');
         } elseif ($transaction->isFailed()) {
-            PaymentHistoryEntry::where('order_id', $order_id)->update(['status' => 0, 'transaction_id' => $transaction->getTransactionId()]);
+            PaymentHistoryEntry::where('order_id', $order_id)->update(['status' => PaytmTransactionStatus::Failed->value, 'transaction_id' => $transaction->getTransactionId()]);
 
             return redirect()->route('initiate.payment')->with('message', 'Your payment is failed.');
         } elseif ($transaction->isOpen()) {
-            PaymentHistoryEntry::where('order_id', $order_id)->update(['status' => 2, 'transaction_id' => $transaction->getTransactionId()]);
+            PaymentHistoryEntry::where('order_id', $order_id)->update(['status' => PaytmTransactionStatus::Open->value, 'transaction_id' => $transaction->getTransactionId()]);
 
             return redirect()->route('initiate.payment')->with('message', 'Your payment is processing.');
         }
@@ -157,7 +159,8 @@ class PaymentController extends Controller
 
     private function gatewayModelClass(Payment_gateway $paymentGateway): string
     {
-        return 'App\Services\Payments\Gateways\\'.str_replace(' ', '', $paymentGateway->model_name);
+        return PaymentGatewayIdentifier::tryFrom($paymentGateway->identifier)?->serviceClass()
+            ?? 'App\Services\Payments\Gateways\\'.str_replace(' ', '', $paymentGateway->model_name);
     }
 
     private function paymentPageSettings(): array
@@ -174,12 +177,12 @@ class PaymentController extends Controller
 
     private function paymentGatewayViewData(string $identifier, Payment_gateway $paymentGateway, array $paymentDetails): array
     {
-        return match ($identifier) {
-            'stripe' => $this->stripeViewData($paymentGateway, $paymentDetails),
-            'razorpay' => $this->razorpayViewData($paymentGateway, $paymentDetails),
-            'flutterwave' => $this->flutterwaveViewData($paymentGateway, $paymentDetails),
-            'paypal' => $this->paypalViewData($paymentGateway),
-            'paystack' => $this->paystackViewData($paymentGateway, $paymentDetails),
+        return match (PaymentGatewayIdentifier::tryFrom($identifier)) {
+            PaymentGatewayIdentifier::Stripe => $this->stripeViewData($paymentGateway, $paymentDetails),
+            PaymentGatewayIdentifier::Razorpay => $this->razorpayViewData($paymentGateway, $paymentDetails),
+            PaymentGatewayIdentifier::Flutterwave => $this->flutterwaveViewData($paymentGateway, $paymentDetails),
+            PaymentGatewayIdentifier::Paypal => $this->paypalViewData($paymentGateway),
+            PaymentGatewayIdentifier::Paystack => $this->paystackViewData($paymentGateway, $paymentDetails),
             default => [],
         };
     }

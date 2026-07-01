@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use DB;
 
 class PaymentHistory extends Controller
 {
     public function index()
     {
-        if (auth()->user()->user_role == 'admin') {
+        if (auth()->user()->user_role == UserRole::Admin->value) {
             $payment_histories = DB::table('payment_histories')->get();
         } else {
             $payment_histories = DB::table('payment_histories')->where('user_id', auth()->user()->id)->get();

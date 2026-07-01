@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContentStatus;
+use App\Enums\MembershipRole;
+use App\Enums\PostType;
+use App\Enums\Visibility;
 use App\Models\Album_image;
 use App\Models\Albums;
 use App\Models\Event;
@@ -26,7 +30,7 @@ class GroupController extends Controller
 {
     public function groups()
     {
-        $page_data['groups'] = Group::orderBy('id', 'DESC')->where('privacy', 'public')->where('status', '1')->limit('18')->get();
+        $page_data['groups'] = Group::orderBy('id', 'DESC')->where('privacy', Visibility::Public->value)->where('status', '1')->limit('18')->get();
         $page_data['managegroups'] = Group::orderBy('id', 'DESC')->where('user_id', auth()->user()->id)->limit('6')->get();
         $page_data['joinedgroups'] = Group_member::where('user_id', auth()->user()->id)->where('is_accepted', '1')->limit('6')->get();
         $page_data['view_path'] = 'frontend.groups.groups';
@@ -37,10 +41,10 @@ class GroupController extends Controller
     public function single_group($id)
     {
         $page_data['group'] = Group::find($id);
-        $posts = Posts::where('posts.privacy', '!=', 'private')
+        $posts = Posts::where('posts.privacy', '!=', Visibility::Private->value)
             ->where('posts.publisher', 'group')
             ->where('posts.publisher_id', $id)
-            ->where('posts.status', 'active')
+            ->where('posts.status', ContentStatus::Active->value)
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->orderBy('posts.post_id', 'DESC')->get();
@@ -87,7 +91,7 @@ class GroupController extends Controller
             $group_member = new Group_member;
             $group_member->group_id = $group->id;
             $group_member->user_id = auth()->user()->id;
-            $group_member->role = 'admin';
+            $group_member->role = MembershipRole::Admin->value;
             $group_member->is_accepted = '1';
             $done = $group_member->save();
             if ($done) {
@@ -179,7 +183,7 @@ class GroupController extends Controller
         $group_member = new Group_member;
         $group_member->group_id = $id;
         $group_member->user_id = auth()->user()->id;
-        $group_member->role = 'general';
+        $group_member->role = MembershipRole::General->value;
         $group_member->is_accepted = '1';
         $group_member->save();
         Session::flash('success_message', get_phrase('Group Joind  Successfully'));
@@ -239,7 +243,7 @@ class GroupController extends Controller
     {
         $page_data['group'] = Group::find($id);
         $group_events = Event::where('group_id', $id)->where(function ($query) {
-            $query->where('privacy', '!=', 'private')
+            $query->where('privacy', '!=', Visibility::Private->value)
                 ->orWhere('user_id', auth()->user()->id);
         })->get();
         $page_data['group_events'] = $group_events;
@@ -279,10 +283,9 @@ class GroupController extends Controller
                     $data['publisher_id'] = auth()->user()->id;
                     $data['user_id'] = auth()->user()->id;
                     $data['publisher'] = 'post';
-                    $data['post_type'] = 'general';
-                    $data['privacy'] = 'public';
-                    $data['privacy'] = 'public';
-                    $data['status'] = 'active';
+                    $data['post_type'] = PostType::General->value;
+                    $data['privacy'] = Visibility::Public->value;
+                    $data['status'] = ContentStatus::Active->value;
                     $data['tagged_user_ids'] = json_encode([]);
                     $data['user_reacts'] = json_encode([]);
                     $data['shared_user'] = json_encode([]);

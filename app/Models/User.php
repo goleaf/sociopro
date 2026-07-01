@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -60,7 +61,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function scopeAdmins(Builder $query): Builder
     {
-        return $query->where('user_role', 'admin');
+        return $query->where('user_role', UserRole::Admin->value);
+    }
+
+    public function scopeNonAdmins(Builder $query): Builder
+    {
+        return $query->where('user_role', '!=', UserRole::Admin->value);
     }
 
     public function isOnline(): bool

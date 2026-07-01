@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments\Gateways;
 
+use App\Enums\PaymentGatewayIdentifier;
 use App\Exceptions\Payments\PaymentGatewayException;
 use App\Models\Payment_gateway;
 use Illuminate\Support\Facades\Http;
@@ -9,6 +10,8 @@ use Throwable;
 
 class Paypal
 {
+    private const APPROVED_STATE = 'approved';
+
     public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
         $paymentGateway = Payment_gateway::where('identifier', $identifier)->first();
@@ -21,7 +24,7 @@ class Paypal
         [$clientId, $secretKey, $paypalUrl] = self::gatewayCredentials($paymentGateway, $keys);
 
         if (! $clientId || ! $secretKey) {
-            report(PaymentGatewayException::missingCredentials('paypal'));
+            report(PaymentGatewayException::missingCredentials(PaymentGatewayIdentifier::Paypal->value));
 
             return false;
         }
@@ -46,12 +49,12 @@ class Paypal
                 ->timeout(10)
                 ->get($paypalUrl.'payments/payment/'.$transaction_keys['payment_id']);
         } catch (Throwable $throwable) {
-            report(PaymentGatewayException::transportFailure('paypal', $throwable));
+            report(PaymentGatewayException::transportFailure(PaymentGatewayIdentifier::Paypal->value, $throwable));
 
             return false;
         }
 
-        return $paymentResponse->json('state') === 'approved';
+        return $paymentResponse->json('state') === self::APPROVED_STATE;
     }
 
     private static function gatewayCredentials(Payment_gateway $paymentGateway, array $keys): array

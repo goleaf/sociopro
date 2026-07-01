@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContentStatus;
+use App\Enums\PostType;
+use App\Enums\Visibility;
 use App\Models\BlockUser;
 // used models
 use App\Models\Comments;
@@ -57,10 +60,10 @@ class MainController extends Controller
         // First 10 stories
         $stories = Stories::where(function ($query) {
             $query->whereJsonContains('users.friends', [$this->user->id])
-                ->where('stories.privacy', '!=', 'private')
+                ->where('stories.privacy', '!=', Visibility::Private->value)
                 ->orWhere('stories.user_id', $this->user->id);
         })
-            ->where('stories.status', 'active')
+            ->where('stories.status', ContentStatus::Active->value)
             ->where('stories.created_at', '>=', (time() - 86400))
             ->join('users', 'stories.user_id', '=', 'users.id')
             ->select('stories.*', 'users.name', 'users.photo', 'users.friends', 'stories.created_at as created_at')
@@ -69,12 +72,12 @@ class MainController extends Controller
         // First 10 posts
         $posts = Posts::where(function ($query) {
             $query->whereJsonContains('users.friends', [$this->user->id])
-                ->where('posts.privacy', '!=', 'private')
+                ->where('posts.privacy', '!=', Visibility::Private->value)
                 ->orWhere('posts.user_id', $this->user->id)
 
                 // if folowing any users, pages, groups and others if not friend listed
                 ->orWhere(function ($query3) {
-                    $query3->where('posts.privacy', 'public')
+                    $query3->where('posts.privacy', Visibility::Public->value)
                         ->where(function ($query4) {
                             $query4->where('posts.publisher', 'post')
                                 ->join('followers', function (JoinClause $join) {
@@ -105,7 +108,7 @@ class MainController extends Controller
                         });
                 });
         })
-            ->where('posts.status', 'active')
+            ->where('posts.status', ContentStatus::Active->value)
             ->where('posts.report_status', '0')
             ->where('publisher', '!=', 'paid_content') // post type can not be paid content
             ->join('users', 'posts.user_id', '=', 'users.id')
@@ -137,12 +140,12 @@ class MainController extends Controller
     {
         $posts = Posts::where(function ($query) {
             $query->whereJsonContains('users.friends', [$this->user->id])
-                ->where('posts.privacy', '!=', 'private')
+                ->where('posts.privacy', '!=', Visibility::Private->value)
                 ->orWhere('posts.user_id', $this->user->id)
 
                 // if following any users, pages, groups and others if not friend listed
                 ->orWhere(function ($query3) {
-                    $query3->where('posts.privacy', 'public')
+                    $query3->where('posts.privacy', Visibility::Public->value)
                         ->where(function ($query4) {
                             $query4->where('posts.publisher', 'post')
                                 ->join('followers', function (JoinClause $join) {
@@ -173,7 +176,7 @@ class MainController extends Controller
                         });
                 });
         })
-            ->where('posts.status', 'active')
+            ->where('posts.status', ContentStatus::Active->value)
             ->where('posts.publisher', 'post')
             ->where('posts.report_status', '0')
             ->join('users', 'posts.user_id', '=', 'users.id')
@@ -192,7 +195,7 @@ class MainController extends Controller
     {
         // Data validation
 
-        $rules = ['privacy' => ['required', Rule::in(['private', 'public', 'friends'])]];
+        $rules = ['privacy' => ['required', Rule::enum(Visibility::class)]];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
@@ -240,7 +243,7 @@ class MainController extends Controller
         if (isset($request->post_type) && ! empty($request->post_type)) {
             $data['post_type'] = $request->post_type;
         } else {
-            $data['post_type'] = 'general';
+            $data['post_type'] = PostType::General->value;
         }
 
         if (isset($request->tagged_users_id) && is_array($request->tagged_users_id)) {
@@ -294,7 +297,7 @@ class MainController extends Controller
         $mobile_app_image = FileUploader::upload($request->mobile_app_image, 'public/storage/post/images/');
         $data['mobile_app_image'] = $mobile_app_image;
 
-        $data['status'] = 'active';
+        $data['status'] = ContentStatus::Active->value;
         $data['user_reacts'] = json_encode([]);
         $data['shared_user'] = json_encode([]);
         $data['created_at'] = time();
@@ -376,7 +379,7 @@ class MainController extends Controller
             }
         }
 
-        if ($data['post_type'] == 'live_streaming') {
+        if ($data['post_type'] == PostType::LiveStreaming->value) {
             // Live streaming
             $live['publisher'] = $data['publisher'];
             $live['publisher_id'] = $post_id;
@@ -423,7 +426,7 @@ class MainController extends Controller
     {
         // $posts = Posts::where('id', $id)->first();
 
-        $rules = ['privacy' => ['required', Rule::in(['private', 'public', 'friends'])]];
+        $rules = ['privacy' => ['required', Rule::enum(Visibility::class)]];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
@@ -552,7 +555,7 @@ class MainController extends Controller
     public function create_live_streaming($publisher, $publisher_id)
     {
         // return $publisher;
-        $post_details = Posts::where('posts.status', 'active')
+        $post_details = Posts::where('posts.status', ContentStatus::Active->value)
             ->where('posts.post_id', $publisher_id)
             ->join('users', 'posts.user_id', '=', 'users.id')->first();
 
@@ -628,11 +631,11 @@ class MainController extends Controller
     {
         $post_details = Posts::where(function ($query) {
             $query->whereJsonContains('users.friends', [$this->user->id])
-                ->where('posts.privacy', '!=', 'private')
+                ->where('posts.privacy', '!=', Visibility::Private->value)
                 ->orWhere('posts.user_id', $this->user->id);
         })
             ->where('posts.post_id', $post_id)
-            ->where('posts.status', 'active')
+            ->where('posts.status', ContentStatus::Active->value)
             ->join('users', 'posts.user_id', '=', 'users.id');
 
         $post_details = $post_details->first();
@@ -757,7 +760,7 @@ class MainController extends Controller
 
     public function load_post_comments(Request $request)
     {
-        $post = Posts::where('posts.status', 'active')
+        $post = Posts::where('posts.status', ContentStatus::Active->value)
             ->where('posts.post_id', $request->post_id)
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')->first();
@@ -833,11 +836,11 @@ class MainController extends Controller
     {
         // Previw post
         $posts = Posts::where(function ($query) {
-            $query->where('posts.privacy', '!=', 'private')
+            $query->where('posts.privacy', '!=', Visibility::Private->value)
                 ->orWhere('posts.user_id', $this->user->id);
         })
             ->where('posts.post_id', $request->post_id)
-            ->where('posts.status', 'active')
+            ->where('posts.status', ContentStatus::Active->value)
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->take(1)->orderBy('posts.post_id', 'DESC')->get();
@@ -925,8 +928,8 @@ class MainController extends Controller
         $post->user_id = auth()->user()->id;
         $post->publisher = 'group';
         $post->publisher_id = $request->group_id;
-        $post->post_type = 'share';
-        $post->privacy = 'public';
+        $post->post_type = PostType::Share->value;
+        $post->privacy = Visibility::Public->value;
         $post->tagged_user_ids = json_encode([]);
         if (isset($request->shared_post_id) && ! empty($request->shared_post_id)) {
             $post->description = $request->message;
@@ -934,7 +937,7 @@ class MainController extends Controller
         if (isset($request->shared_product_id) && ! empty($request->shared_product_id)) {
             $post->description = $request->productUrl;
         }
-        $post->status = 'active';
+        $post->status = ContentStatus::Active->value;
         $post->user_reacts = json_encode([]);
         $post->shared_user = json_encode([]);
         $time = time();
@@ -959,8 +962,8 @@ class MainController extends Controller
         $post->user_id = auth()->user()->id;
         $post->publisher = 'post';
         $post->publisher_id = auth()->user()->id;
-        $post->post_type = 'share';
-        $post->privacy = 'public';
+        $post->post_type = PostType::Share->value;
+        $post->privacy = Visibility::Public->value;
         $post->tagged_user_ids = json_encode([]);
         if (isset($request->shared_post_id) && ! empty($request->shared_post_id)) {
             $post->description = $request->postUrl;
@@ -968,7 +971,7 @@ class MainController extends Controller
         if (isset($request->shared_product_id) && ! empty($request->shared_product_id)) {
             $post->description = $request->productUrl;
         }
-        $post->status = 'active';
+        $post->status = ContentStatus::Active->value;
         $post->user_reacts = json_encode([]);
         $post->shared_user = json_encode([]);
         $time = time();
@@ -1003,11 +1006,11 @@ class MainController extends Controller
     {
         $post = Posts::where(function ($query) {
             $query->whereJsonContains('users.friends', [$this->user->id])
-                ->where('posts.privacy', '!=', 'private')
+                ->where('posts.privacy', '!=', Visibility::Private->value)
                 ->orWhere('posts.user_id', $this->user->id);
         })
             ->where('posts.post_id', $id)
-            ->where('posts.status', 'active')
+            ->where('posts.status', ContentStatus::Active->value)
             ->where('posts.report_status', '0')
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')->first();

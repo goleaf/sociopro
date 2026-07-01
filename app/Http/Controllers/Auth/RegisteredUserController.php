@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserAccountStatus;
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
@@ -43,7 +45,7 @@ class RegisteredUserController extends Controller
         ]);
 
         $user = User::create([
-            'user_role' => 'general',
+            'user_role' => UserRole::General->value,
             'username' => rand(100000, 999999),
             'name' => $request->name,
             'email' => $request->email,
@@ -51,7 +53,7 @@ class RegisteredUserController extends Controller
             'followers' => json_encode([]),
             'timezone' => $request->timezone,
             'password' => Hash::make($request->password),
-            'status' => 0,
+            'status' => UserAccountStatus::Disabled->value,
             'lastActive' => Carbon::now(),
             'created_at' => time(),
         ]);

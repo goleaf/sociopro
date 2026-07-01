@@ -38,7 +38,7 @@ class SettingController extends Controller
 
     public function contact_send(Request $request)
     {
-        $user = User::where('user_role', 'admin')->first();
+        $user = User::query()->admins()->first();
         $name = $request->name;
         $email = $request->email;
         $subject = $request->subject;

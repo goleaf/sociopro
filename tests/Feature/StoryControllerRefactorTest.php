@@ -2,6 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ContentStatus;
+use App\Enums\UserAccountStatus;
+use App\Enums\UserRole;
+use App\Enums\Visibility;
 use App\Models\Stories;
 use App\Models\User;
 use App\Queries\StoriesQuery;
@@ -24,17 +28,17 @@ class StoryControllerRefactorTest extends TestCase
         $stranger = User::factory()->create(['friends' => json_encode([])]);
 
         $oldFriendStory = $this->storyFor($friend, [
-            'privacy' => 'public',
+            'privacy' => Visibility::Public->value,
             'created_at' => time() - 90000,
         ]);
         $inactiveFriendStory = $this->storyFor($friend, [
-            'privacy' => 'public',
-            'status' => 'inactive',
+            'privacy' => Visibility::Public->value,
+            'status' => ContentStatus::Inactive->value,
         ]);
-        $privateFriendStory = $this->storyFor($friend, ['privacy' => 'private']);
-        $strangerStory = $this->storyFor($stranger, ['privacy' => 'public']);
-        $friendStory = $this->storyFor($friend, ['privacy' => 'friends']);
-        $ownPrivateStory = $this->storyFor($viewer, ['privacy' => 'private']);
+        $privateFriendStory = $this->storyFor($friend, ['privacy' => Visibility::Private->value]);
+        $strangerStory = $this->storyFor($stranger, ['privacy' => Visibility::Public->value]);
+        $friendStory = $this->storyFor($friend, ['privacy' => Visibility::Friends->value]);
+        $ownPrivateStory = $this->storyFor($viewer, ['privacy' => Visibility::Private->value]);
 
         $storyIds = StoriesQuery::visibleFor($viewer)
             ->pluck('story_id')
@@ -54,8 +58,8 @@ class StoryControllerRefactorTest extends TestCase
     {
         $viewer = User::factory()->create([
             'friends' => json_encode([]),
-            'status' => '1',
-            'user_role' => 'general',
+            'status' => UserAccountStatus::Active->value,
+            'user_role' => UserRole::General->value,
         ]);
 
         $this->actingAs($viewer)
@@ -67,8 +71,8 @@ class StoryControllerRefactorTest extends TestCase
     {
         $viewer = User::factory()->create([
             'friends' => json_encode([]),
-            'status' => '1',
-            'user_role' => 'general',
+            'status' => UserAccountStatus::Active->value,
+            'user_role' => UserRole::General->value,
         ]);
 
         $this->actingAs($viewer)
@@ -82,10 +86,10 @@ class StoryControllerRefactorTest extends TestCase
             'user_id' => $user->id,
             'publisher' => 'user',
             'publisher_id' => $user->id,
-            'privacy' => 'public',
+            'privacy' => Visibility::Public->value,
             'content_type' => 'text',
             'description' => json_encode(['color' => '000000', 'bg-color' => 'ffffff', 'text' => 'Story text']),
-            'status' => 'active',
+            'status' => ContentStatus::Active->value,
             'created_at' => time(),
             'updated_at' => time(),
         ]);

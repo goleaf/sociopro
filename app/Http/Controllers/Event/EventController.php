@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Event;
 
+use App\Enums\ContentStatus;
+use App\Enums\PostType;
+use App\Enums\Visibility;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Friendships;
@@ -25,7 +28,7 @@ class EventController extends Controller
     // event view
     public function allevents()
     {
-        $page_data['events'] = Event::where('privacy', 'public')->whereNull('group_id')->orderBy('id', 'DESC')->limit(20)->get();
+        $page_data['events'] = Event::where('privacy', Visibility::Public->value)->whereNull('group_id')->orderBy('id', 'DESC')->limit(20)->get();
         $page_data['view_path'] = 'frontend.events.events';
 
         return view('frontend.index', $page_data);
@@ -101,8 +104,8 @@ class EventController extends Controller
             $data['privacy'] = $request->privacy;
             $data['publisher'] = 'event';
             $data['publisher_id'] = $event->id;
-            $data['post_type'] = 'event';
-            $data['status'] = 'active';
+            $data['post_type'] = PostType::Event->value;
+            $data['status'] = ContentStatus::Active->value;
             $data['description'] = $request->description;
             $data['user_reacts'] = json_encode([]);
             $data['user_reacts'] = json_encode([]);
@@ -200,7 +203,7 @@ class EventController extends Controller
     public function single_event($id)
     {
         // calculation of popular event
-        $events = Event::where('privacy', 'public')->orderBy('id', 'DESC')->where('user_id', '!=', auth()->user()->id)->where('id', '!=', $id)->limit('500')->get();
+        $events = Event::where('privacy', Visibility::Public->value)->orderBy('id', 'DESC')->where('user_id', '!=', auth()->user()->id)->where('id', '!=', $id)->limit('500')->get();
         $popularrate = [];
         foreach ($events as $event) {
             $goingusercount = count(json_decode($event->going_users_id));
@@ -219,11 +222,11 @@ class EventController extends Controller
         $users = User::orderBy('id', 'DESC')->limit('10')->get();
 
         $posts = Posts::where(function ($query) {
-            $query->where('posts.privacy', '!=', 'private')
+            $query->where('posts.privacy', '!=', Visibility::Private->value)
                 ->orWhere('posts.user_id', auth()->user()->id);
         })
             ->where('publisher_id', $id)->where('publisher', 'event')
-            ->where('posts.status', 'active')
+            ->where('posts.status', ContentStatus::Active->value)
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->orderBy('posts.post_id', 'DESC')->get();
@@ -397,7 +400,7 @@ class EventController extends Controller
 
     public function load_event_by_scrolling(Request $request)
     {
-        $events = Event::where('privacy', 'public')->whereNull('group_id')->skip($request->offset)->take(20)->orderBy('id', 'DESC')->get();
+        $events = Event::where('privacy', Visibility::Public->value)->whereNull('group_id')->skip($request->offset)->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['events'] = $events;
 

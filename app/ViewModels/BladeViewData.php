@@ -2,6 +2,9 @@
 
 namespace App\ViewModels;
 
+use App\Enums\AccountActivationStatus;
+use App\Enums\UserRole;
+use App\Enums\Visibility;
 use App\Models\Account_active_request;
 use App\Models\Album_image;
 use App\Models\Albums;
@@ -618,7 +621,7 @@ final class BladeViewData
     public function videoPost(Model $video): ?Posts
     {
         return $this->remember("video-post:{$video->id}", fn (): ?Posts => Posts::query()
-            ->where('privacy', '!=', 'private')
+            ->where('privacy', '!=', Visibility::Private->value)
             ->where('publisher', 'video_and_shorts')
             ->where('publisher_id', $video->id)
             ->first());
@@ -806,13 +809,13 @@ final class BladeViewData
             return 'global';
         }
 
-        return $user?->user_role === 'admin' ? 'admin' : 'user';
+        return $user?->user_role === UserRole::Admin->value ? 'admin' : 'user';
     }
 
     public function pendingAccountActivationCount(): int
     {
         return $this->remember('pending-account-activation-count', fn (): int => Account_active_request::query()
-            ->where('status', 'pending')
+            ->where('status', AccountActivationStatus::Pending->value)
             ->count());
     }
 
@@ -975,7 +978,7 @@ final class BladeViewData
     {
         return $this->remember("upcoming-public-group-events:{$group->id}", fn (): Collection => Event::query()
             ->where('group_id', $group->id)
-            ->where('privacy', 'public')
+            ->where('privacy', Visibility::Public->value)
             ->whereDate('event_date', '>', now())
             ->orderBy('event_date')
             ->get());

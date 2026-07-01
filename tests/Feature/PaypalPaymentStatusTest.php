@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\PaymentGatewayIdentifier;
 use App\Exceptions\Payments\PaymentGatewayException;
 use App\Models\Payment_gateway;
 use App\Services\Payments\Gateways\Paypal;
@@ -34,7 +35,7 @@ class PaypalPaymentStatusTest extends TestCase
             ]),
         ]);
 
-        $this->assertTrue(Paypal::payment_status('paypal', ['payment_id' => 'PAY-123']));
+        $this->assertTrue(Paypal::payment_status(PaymentGatewayIdentifier::Paypal->value, ['payment_id' => 'PAY-123']));
 
         Http::assertSentCount(2);
         Http::assertSent(fn (Request $request) => $request->method() === 'POST'
@@ -60,7 +61,7 @@ class PaypalPaymentStatusTest extends TestCase
             ]),
         ]);
 
-        $this->assertFalse(Paypal::payment_status('paypal', ['payment_id' => 'PAY-123']));
+        $this->assertFalse(Paypal::payment_status(PaymentGatewayIdentifier::Paypal->value, ['payment_id' => 'PAY-123']));
     }
 
     public function test_it_reports_paypal_transport_failures_without_changing_public_result(): void
@@ -72,32 +73,32 @@ class PaypalPaymentStatusTest extends TestCase
             throw new ConnectionException('Connection failed.');
         });
 
-        $this->assertFalse(Paypal::payment_status('paypal', ['payment_id' => 'PAY-123']));
+        $this->assertFalse(Paypal::payment_status(PaymentGatewayIdentifier::Paypal->value, ['payment_id' => 'PAY-123']));
 
-        Exceptions::assertReported(fn (PaymentGatewayException $exception) => $exception->gateway() === 'paypal'
+        Exceptions::assertReported(fn (PaymentGatewayException $exception) => $exception->gateway() === PaymentGatewayIdentifier::Paypal->value
             && $exception->reason() === 'transport_failure'
             && $exception->getPrevious() instanceof ConnectionException);
     }
 
     public function test_it_reports_missing_paypal_credentials_without_calling_paypal(): void
     {
-        Payment_gateway::where('identifier', 'paypal')->update([
+        Payment_gateway::where('identifier', PaymentGatewayIdentifier::Paypal->value)->update([
             'keys' => json_encode([]),
             'test_mode' => 1,
         ]);
         Exceptions::fake();
         Http::fake();
 
-        $this->assertFalse(Paypal::payment_status('paypal', ['payment_id' => 'PAY-123']));
+        $this->assertFalse(Paypal::payment_status(PaymentGatewayIdentifier::Paypal->value, ['payment_id' => 'PAY-123']));
 
-        Exceptions::assertReported(fn (PaymentGatewayException $exception) => $exception->gateway() === 'paypal'
+        Exceptions::assertReported(fn (PaymentGatewayException $exception) => $exception->gateway() === PaymentGatewayIdentifier::Paypal->value
             && $exception->reason() === 'missing_credentials');
         Http::assertNothingSent();
     }
 
     private function configurePaypalGateway(): void
     {
-        Payment_gateway::where('identifier', 'paypal')->update([
+        Payment_gateway::where('identifier', PaymentGatewayIdentifier::Paypal->value)->update([
             'keys' => json_encode([
                 'sandbox_client_id' => 'sandbox-client',
                 'sandbox_secret_key' => 'sandbox-secret',

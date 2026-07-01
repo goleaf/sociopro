@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserAccountStatus;
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -19,8 +21,8 @@ class AccountDisableRouteTest extends TestCase
     public function test_disabled_user_can_view_account_disable_page(): void
     {
         $user = User::factory()->create([
-            'user_role' => 'general',
-            'status' => '0',
+            'user_role' => UserRole::General->value,
+            'status' => UserAccountStatus::Disabled->value,
             'photo' => null,
         ]);
 
@@ -33,8 +35,8 @@ class AccountDisableRouteTest extends TestCase
     public function test_unverified_disabled_user_can_view_account_disable_page(): void
     {
         $user = User::factory()->unverified()->create([
-            'user_role' => 'general',
-            'status' => '0',
+            'user_role' => UserRole::General->value,
+            'status' => UserAccountStatus::Disabled->value,
             'photo' => null,
         ]);
 

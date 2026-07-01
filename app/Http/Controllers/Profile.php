@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContentStatus;
+use App\Enums\PostType;
+use App\Enums\Visibility;
 use App\Models\Album_image;
 use App\Models\Albums;
 use App\Models\Follower;
@@ -37,7 +40,7 @@ class Profile extends Controller
         // For my own profile
         $posts = Posts::where(function ($query) {
             $query->whereJsonContains('posts.tagged_user_ids', [$this->user->id])
-                ->where('posts.privacy', '!=', 'private')
+                ->where('posts.privacy', '!=', Visibility::Private->value)
                 ->orWhere('posts.user_id', $this->user->id);
         })
             ->where('posts.publisher', 'post')
@@ -59,7 +62,7 @@ class Profile extends Controller
         // For my own profile
         $posts = Posts::where(function ($query) {
             $query->whereJsonContains('posts.tagged_user_ids', [$this->user->id])
-                ->where('posts.privacy', '!=', 'private')
+                ->where('posts.privacy', '!=', Visibility::Private->value)
                 ->orWhere('posts.user_id', $this->user->id);
         })
             ->where('posts.publisher', 'post')
@@ -374,7 +377,7 @@ class Profile extends Controller
 
     public function upload_photo($photo_type, Request $request)
     {
-        if ($photo_type == 'cover_photo') {
+        if ($photo_type == PostType::CoverPhoto->value) {
             // Validate the input and return correct response
             $rules = ['cover_photo' => 'mimes:jpeg,jpg,png,gif|required'];
             $validator = Validator::make($request->all(), $rules);
@@ -440,22 +443,22 @@ class Profile extends Controller
         FileUploader::upload($image, 'public/storage/post/images/'.$file_name, 800);
 
         $data['user_id'] = $this->user->id;
-        $data['privacy'] = 'public';
+        $data['privacy'] = Visibility::Public->value;
         $data['publisher'] = 'post';
         $data['publisher_id'] = $this->user->id;
-        $data['post_type'] = 'profile_picture';
+        $data['post_type'] = PostType::ProfilePicture->value;
         $data['tagged_user_ids'] = json_encode([]);
         $data['activity_id'] = 0;
         $data['location'] = '';
         $data['description'] = '';
-        $data['status'] = 'active';
+        $data['status'] = ContentStatus::Active->value;
         $data['user_reacts'] = json_encode([]);
         $data['created_at'] = time();
         $data['updated_at'] = $data['created_at'];
         $post_id = Posts::insertGetId($data);
 
         // Stored to media files table
-        $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => 'public'];
+        $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => Visibility::Public->value];
         $media_file_data['created_at'] = time();
         $media_file_data['updated_at'] = $media_file_data['created_at'];
         Media_files::create($media_file_data);
@@ -466,22 +469,22 @@ class Profile extends Controller
         FileUploader::upload($image, 'public/storage/post/images/'.$file_name, 800);
 
         $data['user_id'] = $this->user->id;
-        $data['privacy'] = 'public';
+        $data['privacy'] = Visibility::Public->value;
         $data['publisher'] = 'post';
         $data['publisher_id'] = $this->user->id;
-        $data['post_type'] = 'cover_photo';
+        $data['post_type'] = PostType::CoverPhoto->value;
         $data['tagged_user_ids'] = json_encode([]);
         $data['activity_id'] = 0;
         $data['location'] = '';
         $data['description'] = '';
-        $data['status'] = 'active';
+        $data['status'] = ContentStatus::Active->value;
         $data['user_reacts'] = json_encode([]);
         $data['created_at'] = time();
         $data['updated_at'] = $data['created_at'];
         $post_id = Posts::insertGetId($data);
 
         // Stored to media files table
-        $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => 'public'];
+        $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => Visibility::Public->value];
         $media_file_data['created_at'] = time();
         $media_file_data['updated_at'] = $media_file_data['created_at'];
         Media_files::create($media_file_data);
@@ -531,8 +534,8 @@ class Profile extends Controller
         $user->save();
 
         Posts::where('user_id', $id)
-            ->where('privacy', 'public')
-            ->update(['privacy' => 'friends']);
+            ->where('privacy', Visibility::Public->value)
+            ->update(['privacy' => Visibility::Friends->value]);
 
         Session::flash('success_message', get_phrase('Profile locked successfully and privacy updated.'));
 

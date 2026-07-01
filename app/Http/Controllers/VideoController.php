@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ContentStatus;
+use App\Enums\VideoCategory;
+use App\Enums\Visibility;
 use App\Models\Posts;
 use App\Models\Saveforlater;
 use App\Models\Video;
@@ -15,7 +18,7 @@ class VideoController extends Controller
 {
     public function videos()
     {
-        $page_data['vidoes'] = Video::where('category', 'video')->where('privacy', 'public')->orderBy('id', 'DESC')->limit(5)->get();
+        $page_data['vidoes'] = Video::where('category', VideoCategory::Video->value)->where('privacy', Visibility::Public->value)->orderBy('id', 'DESC')->limit(5)->get();
         $page_data['view_path'] = 'frontend.video-shorts.video';
 
         return view('frontend.index', $page_data);
@@ -53,7 +56,7 @@ class VideoController extends Controller
             $post->mobile_app_image = $mobile_app_image;
             $post->tagged_user_ids = json_encode([]);
             $post->user_reacts = json_encode([]);
-            $post->status = 'active';
+            $post->status = ContentStatus::Active->value;
             $post->created_at = time();
             $post->updated_at = time();
             $post->save();
@@ -65,10 +68,10 @@ class VideoController extends Controller
 
     public function videoinfo($id)
     {
-        $page_data['post'] = Posts::where('posts.privacy', '!=', 'private')
+        $page_data['post'] = Posts::where('posts.privacy', '!=', Visibility::Private->value)
             ->where('posts.publisher', 'video_and_shorts')
             ->where('posts.publisher_id', $id)
-            ->where('posts.status', 'active')
+            ->where('posts.status', ContentStatus::Active->value)
             ->first();
 
         $video = Video::find($id);
@@ -79,12 +82,12 @@ class VideoController extends Controller
             $video->view = json_encode($video_view_data);
             $video->save();
         }
-        $page_data['letestvideos'] = Video::where('category', 'video')->where('privacy', 'public')->orderBy('id', 'DESC')->limit('5')->get();
+        $page_data['letestvideos'] = Video::where('category', VideoCategory::Video->value)->where('privacy', Visibility::Public->value)->orderBy('id', 'DESC')->limit('5')->get();
         $last_data = Video::latest()->first();
         if ($last_data->id == $id) {
-            $page_data['vidoes'] = Video::where('id', '<', $id)->where('category', 'video')->where('privacy', 'public')->orderBy('id', 'DESC')->limit('2')->get();
+            $page_data['vidoes'] = Video::where('id', '<', $id)->where('category', VideoCategory::Video->value)->where('privacy', Visibility::Public->value)->orderBy('id', 'DESC')->limit('2')->get();
         } else {
-            $page_data['vidoes'] = Video::where('id', '>', $id)->where('category', 'video')->where('privacy', 'public')->orderBy('id', 'ASC')->limit('2')->get();
+            $page_data['vidoes'] = Video::where('id', '>', $id)->where('category', VideoCategory::Video->value)->where('privacy', Visibility::Public->value)->orderBy('id', 'ASC')->limit('2')->get();
         }
         $page_data['view_path'] = 'frontend.video-shorts.video-detail';
 
@@ -93,7 +96,7 @@ class VideoController extends Controller
 
     public function load_videos_by_scrolling(Request $request)
     {
-        $vidoes = Video::where('category', 'video')->where('privacy', 'public')->skip($request->offset)->take(5)->orderBy('id', 'DESC')->get();
+        $vidoes = Video::where('category', VideoCategory::Video->value)->where('privacy', Visibility::Public->value)->skip($request->offset)->take(5)->orderBy('id', 'DESC')->get();
         $page_data['vidoes'] = $vidoes;
 
         return view('frontend.video-shorts.single-video', $page_data);
@@ -101,7 +104,7 @@ class VideoController extends Controller
 
     public function shorts()
     {
-        $page_data['shorts'] = Video::where('category', 'shorts')->where('privacy', 'public')->orderBy('id', 'DESC')->limit(5)->get();
+        $page_data['shorts'] = Video::where('category', VideoCategory::Shorts->value)->where('privacy', Visibility::Public->value)->orderBy('id', 'DESC')->limit(5)->get();
         $page_data['view_path'] = 'frontend.video-shorts.shorts';
 
         return view('frontend.index', $page_data);
@@ -109,7 +112,7 @@ class VideoController extends Controller
 
     public function load_shorts_by_scrolling(Request $request)
     {
-        $shorts = Video::where('category', 'shorts')->where('privacy', 'public')->skip($request->offset)->take(5)->orderBy('id', 'DESC')->get();
+        $shorts = Video::where('category', VideoCategory::Shorts->value)->where('privacy', Visibility::Public->value)->skip($request->offset)->take(5)->orderBy('id', 'DESC')->get();
         $page_data['shorts'] = $shorts;
 
         return view('frontend.video-shorts.shorts-single', $page_data);

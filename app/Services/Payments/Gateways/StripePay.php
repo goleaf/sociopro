@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments\Gateways;
 
+use App\Enums\PaymentGatewayIdentifier;
 use App\Exceptions\Payments\PaymentGatewayException;
 use App\Models\Payment_gateway;
 use Stripe\Checkout\Session as CheckoutSession;
@@ -12,6 +13,8 @@ use Throwable;
 
 class StripePay
 {
+    private const SUCCEEDED_STATUS = 'succeeded';
+
     public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
         $payment_gateway = Payment_gateway::query()->where('identifier', $identifier)->first();
@@ -30,7 +33,7 @@ class StripePay
             try {
                 $checkout_session = CheckoutSession::retrieve($session_id);
             } catch (Throwable $throwable) {
-                report(PaymentGatewayException::transportFailure('stripe', $throwable));
+                report(PaymentGatewayException::transportFailure(PaymentGatewayIdentifier::Stripe->value, $throwable));
 
                 return false;
             }
@@ -38,12 +41,12 @@ class StripePay
             try {
                 $intent = PaymentIntent::retrieve($checkout_session->payment_intent);
             } catch (ApiErrorException $throwable) {
-                report(PaymentGatewayException::transportFailure('stripe', $throwable));
+                report(PaymentGatewayException::transportFailure(PaymentGatewayIdentifier::Stripe->value, $throwable));
 
                 return false;
             }
 
-            return $intent->status == 'succeeded';
+            return $intent->status == self::SUCCEEDED_STATUS;
         } else {
             return false;
         }

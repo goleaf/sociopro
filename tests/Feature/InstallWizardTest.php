@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -136,7 +137,7 @@ class InstallWizardTest extends TestCase
         $admin = User::where('email', 'admin@example.test')->firstOrFail();
 
         $this->assertTrue(Hash::check('secret-password', $admin->password));
-        $this->assertSame('admin', $admin->user_role);
+        $this->assertSame(UserRole::Admin->value, $admin->user_role);
         $this->assertSame('Europe/Vilnius', $admin->timezone);
     }
 
@@ -183,12 +184,12 @@ class InstallWizardTest extends TestCase
     {
         User::factory()->create([
             'email' => 'member@example.test',
-            'user_role' => 'member',
+            'user_role' => UserRole::Member->value,
         ]);
 
         User::factory()->create([
             'email' => 'admin@example.test',
-            'user_role' => 'admin',
+            'user_role' => UserRole::Admin->value,
         ]);
 
         $response = $this->get(route('install.success'));

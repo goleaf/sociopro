@@ -2,6 +2,7 @@
 
 namespace App\Actions\Install;
 
+use App\Enums\UserRole;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +31,7 @@ class FinalizeInstallation
                 'name' => $data['admin_name'],
                 'email' => $data['admin_email'],
                 'password' => Hash::make($data['admin_password']),
-                'user_role' => 'admin',
+                'user_role' => UserRole::Admin->value,
                 'friends' => json_encode([]),
                 'gender' => 'male',
                 'address' => $data['admin_address'],
