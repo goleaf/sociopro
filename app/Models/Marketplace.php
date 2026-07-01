@@ -10,6 +10,8 @@ class Marketplace extends Model
 {
     use HasFactory;
 
+    protected $guarded = ['*'];
+
     /**
      * @return BelongsTo<User, Marketplace>
      */

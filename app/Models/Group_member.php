@@ -11,6 +11,8 @@ class Group_member extends Model
 {
     use HasFactory;
 
+    protected $guarded = ['*'];
+
     public function scopeAccepted(Builder $query): Builder
     {
         return $query->where('is_accepted', '1');

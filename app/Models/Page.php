@@ -9,6 +9,8 @@ class Page extends Model
 {
     use HasFactory;
 
+    protected $guarded = ['*'];
+
     public function getCategory()
     {
         return $this->belongsTo(Pagecategory::class, 'category_id');

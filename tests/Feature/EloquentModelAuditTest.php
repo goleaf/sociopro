@@ -45,6 +45,23 @@ class EloquentModelAuditTest extends TestCase
         }
     }
 
+    public function test_models_declare_explicit_mass_assignment_contracts(): void
+    {
+        foreach (self::modelClasses() as $class) {
+            $reflection = new ReflectionClass($class);
+
+            $declaresFillable = $reflection->hasProperty('fillable')
+                && $reflection->getProperty('fillable')->getDeclaringClass()->getName() === $class;
+            $declaresGuarded = $reflection->hasProperty('guarded')
+                && $reflection->getProperty('guarded')->getDeclaringClass()->getName() === $class;
+
+            $this->assertTrue(
+                $declaresFillable || $declaresGuarded,
+                "{$class} must declare either fillable or guarded fields."
+            );
+        }
+    }
+
     public function test_user_table_models_hide_authentication_secrets_when_serialized(): void
     {
         foreach ([User::class, Users::class] as $class) {
@@ -61,6 +78,34 @@ class EloquentModelAuditTest extends TestCase
         }
     }
 
+    public function test_user_table_models_block_sensitive_mass_assignment_fields(): void
+    {
+        $sensitiveAttributes = [
+            'id' => 123,
+            'password' => 'plain-text-password',
+            'remember_token' => 'remember-me',
+            'user_role' => 'admin',
+            'status' => 1,
+            'friends' => '[1]',
+            'followers' => '[2]',
+            'email_verified_at' => now(),
+            'lastActive' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        foreach ([User::class, Users::class] as $class) {
+            $model = new $class($sensitiveAttributes);
+
+            foreach (array_keys($sensitiveAttributes) as $attribute) {
+                $this->assertFalse(
+                    $model->offsetExists($attribute),
+                    "{$class} allows sensitive [{$attribute}] mass assignment."
+                );
+            }
+        }
+    }
+
     public function test_legacy_users_model_does_not_mass_assign_primary_key(): void
     {
         $model = new Users([
@@ -71,14 +116,49 @@ class EloquentModelAuditTest extends TestCase
         $this->assertNull($model->getKey());
     }
 
+    public function test_payment_models_block_sensitive_mass_assignment_fields(): void
+    {
+        $gateway = new Payment_gateway([
+            'keys' => json_encode(['secret_key' => 'sk_test_secret']),
+            'model_name' => 'TamperedGateway',
+            'test_model' => 'TamperedTestGateway',
+            'status' => 0,
+            'is_addon' => 1,
+        ]);
+
+        foreach (['keys', 'model_name', 'test_model', 'status', 'is_addon'] as $attribute) {
+            $this->assertFalse(
+                $gateway->offsetExists($attribute),
+                Payment_gateway::class." allows sensitive [{$attribute}] mass assignment."
+            );
+        }
+
+        $history = new PaymentHistoryEntry([
+            'transaction_keys' => json_encode(['token' => 'provider-token']),
+            'transaction_id' => 'txn-secret',
+            'order_id' => 'order-secret',
+            'status' => 'successful',
+        ]);
+
+        foreach (['transaction_keys', 'transaction_id', 'order_id', 'status'] as $attribute) {
+            $this->assertFalse(
+                $history->offsetExists($attribute),
+                PaymentHistoryEntry::class." allows sensitive [{$attribute}] mass assignment."
+            );
+        }
+    }
+
     public function test_sensitive_payment_models_hide_credential_material_when_serialized(): void
     {
         $gateway = new Payment_gateway([
             'identifier' => 'stripe',
+        ]);
+        $gateway->forceFill([
             'keys' => json_encode(['secret_key' => 'sk_test_secret']),
         ]);
 
-        $history = new PaymentHistoryEntry([
+        $history = new PaymentHistoryEntry;
+        $history->forceFill([
             'transaction_keys' => json_encode(['token' => 'provider-token']),
             'transaction_id' => 'txn-secret',
             'order_id' => 'order-secret',

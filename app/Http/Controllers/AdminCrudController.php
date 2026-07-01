@@ -1173,13 +1173,15 @@ class AdminCrudController extends Controller
         //     'new_confirm_password' => ['same:new_password'],
         // ]);
 
-        $this->validate($request, [
+        $validated = $this->validate($request, [
             'email' => ['required', 'email', $this->uniqueRule('users', 'email')],
             'name' => 'required', 'max:255',
+            'password' => ['required', 'string'],
             'gender' => 'required',
             'date_of_birth' => DateTimeRules::requiredBirthDate(),
         ]);
 
+        $data = [];
         if ($request->photo && ! empty($request->photo)) {
             // $file_name = FileUploader::upload($request->photo, 'public/storage/userimage', 800);
             $file_name = FileUploader::upload($request->file('photo'), 'public/storage/userimage', 800);
@@ -1187,21 +1189,22 @@ class AdminCrudController extends Controller
             $data['photo'] = $file_name;
         }
 
-        $data['user_role'] = UserRole::General->value;
-        $data['name'] = $request->name;
-        $data['email'] = $request->email;
-        $data['password'] = Hash::make($request->password);
+        $data['name'] = $validated['name'];
+        $data['email'] = $validated['email'];
         $data['phone'] = $request->phone;
         $data['address'] = $request->address;
-        $data['date_of_birth'] = DateTimeRules::birthDateTimestamp($request->date_of_birth);
+        $data['date_of_birth'] = DateTimeRules::birthDateTimestamp($validated['date_of_birth']);
         $data['about'] = $request->bio;
-        $data['friends'] = '[]';
-        $data['followers'] = '[]';
-        $data['gender'] = $request->gender;
-        $data['status'] = 1;
-        $date['created_at'] = now();
+        $data['gender'] = $validated['gender'];
 
-        $user_insert = User::create($data);
+        $user_insert = new User($data);
+        $user_insert->forceFill([
+            'user_role' => UserRole::General->value,
+            'password' => Hash::make($validated['password']),
+            'friends' => '[]',
+            'followers' => '[]',
+            'status' => 1,
+        ])->save();
         $user_insert->markEmailAsVerified();
         flash()->addSuccess('User added successfully');
 
@@ -1227,7 +1230,7 @@ class AdminCrudController extends Controller
         //     'new_confirm_password' => ['same:new_password'],
         // ]);
 
-        $this->validate($request, [
+        $validated = $this->validate($request, [
             'email' => ['required', 'email', $this->uniqueRule('users', 'email', $user)],
             'name' => 'required', 'max:255',
             'gender' => 'required',
@@ -1248,13 +1251,13 @@ class AdminCrudController extends Controller
             $data['photo'] = $file_name;
         }
 
-        $data['name'] = $request->name;
-        $data['email'] = $request->email;
+        $data['name'] = $validated['name'];
+        $data['email'] = $validated['email'];
         $data['phone'] = $request->phone;
         $data['address'] = $request->address;
-        $data['date_of_birth'] = DateTimeRules::birthDateTimestamp($request->date_of_birth);
+        $data['date_of_birth'] = DateTimeRules::birthDateTimestamp($validated['date_of_birth']);
         $data['about'] = $request->bio;
-        $data['gender'] = $request->gender;
+        $data['gender'] = $validated['gender'];
         $date['updated_at'] = now();
 
         User::where('id', $id)->update($data);
@@ -1394,10 +1397,10 @@ class AdminCrudController extends Controller
     {
         $paymentGateway = Payment_gateway::findOrFail($id);
         $allowedKeyNames = array_keys($paymentGateway->decodedKeys());
-        $data['currency'] = $request->input('currency');
-        $data['keys'] = json_encode($request->only($allowedKeyNames));
-
-        $paymentGateway->update($data);
+        $paymentGateway->forceFill([
+            'currency' => $request->input('currency'),
+            'keys' => json_encode($request->only($allowedKeyNames)),
+        ])->save();
         flash()->addSuccess('Payment gateway has been updated');
 
         return redirect()->route('admin.settings.payment');

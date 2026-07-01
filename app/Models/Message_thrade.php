@@ -8,4 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class Message_thrade extends Model
 {
     use HasFactory;
+
+    protected $guarded = ['*'];
 }

@@ -27,19 +27,23 @@ class FinalizeInstallation
                 ]);
             }
 
-            return User::create([
+            $user = new User([
                 'name' => $data['admin_name'],
                 'email' => $data['admin_email'],
-                'password' => Hash::make($data['admin_password']),
-                'user_role' => UserRole::Admin->value,
-                'friends' => json_encode([]),
                 'gender' => 'male',
                 'address' => $data['admin_address'],
                 'phone' => $data['admin_phone'],
                 'date_of_birth' => time(),
                 'timezone' => $data['timezone'],
-                'email_verified_at' => date('Y-m-d H:i:s', time()),
             ]);
+            $user->forceFill([
+                'password' => Hash::make($data['admin_password']),
+                'user_role' => UserRole::Admin->value,
+                'friends' => json_encode([]),
+                'email_verified_at' => date('Y-m-d H:i:s', time()),
+            ])->save();
+
+            return $user;
         });
     }
 }

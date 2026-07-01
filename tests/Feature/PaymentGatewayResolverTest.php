@@ -15,6 +15,8 @@ class PaymentGatewayResolverTest extends TestCase
     {
         $gateway = new Payment_gateway([
             'identifier' => PaymentGatewayIdentifier::Paypal->value,
+        ]);
+        $gateway->forceFill([
             'model_name' => 'LegacyPaypal',
         ]);
 
@@ -27,6 +29,8 @@ class PaymentGatewayResolverTest extends TestCase
     {
         $gateway = new Payment_gateway([
             'identifier' => 'custom_gateway',
+        ]);
+        $gateway->forceFill([
             'model_name' => 'Custom Gateway',
         ]);
 
@@ -47,6 +51,8 @@ class PaymentGatewayResolverTest extends TestCase
 
         $gateway = new Payment_gateway([
             'identifier' => PaymentGatewayIdentifier::Paystack->value,
+        ]);
+        $gateway->forceFill([
             'model_name' => 'Paystack',
         ]);
 

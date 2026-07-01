@@ -9,6 +9,8 @@ class Group extends Model
 {
     use HasFactory;
 
+    protected $guarded = ['*'];
+
     public function getMember()
     {
         return $this->hasMany(Group_member::class, 'group_id');

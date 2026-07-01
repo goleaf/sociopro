@@ -10,6 +10,8 @@ class SavedProduct extends Model
 {
     use HasFactory;
 
+    protected $guarded = ['*'];
+
     /**
      * @return BelongsTo<Marketplace, SavedProduct>
      */

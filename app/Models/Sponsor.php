@@ -11,6 +11,8 @@ class Sponsor extends Model
 {
     use HasFactory;
 
+    protected $guarded = ['*'];
+
     public function scopeForUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId);

@@ -24,6 +24,8 @@ class RequestPayloadProtectionTest extends TestCase
             'currency' => 'USD',
             'title' => 'Custom Gateway',
             'description' => 'Custom gateway',
+        ]);
+        $gateway->forceFill([
             'keys' => json_encode([
                 'public_key' => 'old-public',
                 'secret_key' => 'old-secret',
@@ -31,7 +33,7 @@ class RequestPayloadProtectionTest extends TestCase
             'model_name' => 'CustomGateway',
             'status' => '1',
             'is_addon' => '0',
-        ]);
+        ])->save();
 
         $this->actingAs($admin)
             ->post(route('admin.payment_gateway.update', ['id' => $gateway->id]), [

@@ -47,19 +47,21 @@ class RegisteredUserController extends Controller
             'timezone' => DateTimeRules::nullableTimezone(),
         ]);
 
-        $user = User::create([
+        $user = new User([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'timezone' => DateTimeRules::timezoneOrDefault($validated['timezone'] ?? null),
+        ]);
+        $user->forceFill([
             'user_role' => UserRole::General->value,
             'username' => rand(100000, 999999),
-            'name' => $request->name,
-            'email' => $request->email,
             'friends' => json_encode([]),
             'followers' => json_encode([]),
-            'timezone' => DateTimeRules::timezoneOrDefault($validated['timezone'] ?? null),
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($validated['password']),
             'status' => UserAccountStatus::Disabled->value,
             'lastActive' => Carbon::now(),
             'created_at' => time(),
-        ]);
+        ])->save();
 
         event(new Registered($user));
 

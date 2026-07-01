@@ -13,7 +13,7 @@ class Users extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'user_role', 'user_name', 'email', 'password', 'name', 'nickname', 'friends', 'followers', 'gender', 'studied_at', 'address', 'profession', 'job', 'marital_status', 'phone', 'date_of_birth', 'about', 'photo', 'cover_photo', 'status',
+        'user_name', 'email', 'name', 'nickname', 'gender', 'studied_at', 'address', 'profession', 'job', 'marital_status', 'phone', 'date_of_birth', 'about', 'photo', 'cover_photo',
     ];
 
     /**

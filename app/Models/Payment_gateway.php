@@ -12,7 +12,7 @@ class Payment_gateway extends Model
     use HasFactory;
 
     protected $fillable = [
-        'identifier', 'currency', 'title', 'description', 'keys', 'model_name', 'test_model', 'status', 'is_addon',
+        'identifier', 'currency', 'title', 'description',
     ];
 
     protected $hidden = [

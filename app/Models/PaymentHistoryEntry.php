@@ -19,10 +19,6 @@ class PaymentHistoryEntry extends Model
         'amount',
         'currency',
         'identifier',
-        'transaction_keys',
-        'order_id',
-        'status',
-        'transaction_id',
     ];
 
     protected $hidden = [
