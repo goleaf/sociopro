@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Actions\Install\ImportInstallSqlDump;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
@@ -11,8 +13,12 @@ class DatabaseSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(ImportInstallSqlDump $importInstallSqlDump): void
     {
-        // \App\Models\User::factory(10)->create();
+        if (Schema::hasTable('settings')) {
+            return;
+        }
+
+        $importInstallSqlDump->handle(base_path('public/assets/install.sql'));
     }
 }

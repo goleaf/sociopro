@@ -6,6 +6,7 @@ use App\Actions\Install\ImportInstallSqlDump;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ImportInstallSqlDumpTest extends TestCase
@@ -76,5 +77,14 @@ SQL);
 
         $this->assertSame('First widget', DB::table('widgets')->where('slug', 'first')->value('name'));
         $this->assertSame(2, DB::table('widgets')->where('slug', 'second')->value('id'));
+    }
+
+    public function test_database_seeder_imports_install_sql_dump(): void
+    {
+        $this->seed();
+
+        $this->assertTrue(Schema::hasTable('settings'));
+        $this->assertGreaterThan(0, DB::table('settings')->count());
+        $this->assertGreaterThan(0, DB::table('currencies')->count());
     }
 }
