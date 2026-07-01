@@ -23,8 +23,8 @@
                         <div class="form-group">
                             <select name="category" id="category" class="" onchange="this.form.submit()">
                                 <option value=""  selected>{{ get_phrase('Category') }}</option>
-                                @foreach (\App\Models\Category::all() as $category )
-                                    <option value="{{ $category->id }}" @if(isset($_GET['category']) && $_GET['category']!=""){{$_GET['category']==$category->id?"selected" :""}}@endif >{{ ucfirst($category->name) }}</option>
+                                @foreach ($viewData->productCategories() as $category )
+                                    <option value="{{ $category->id }}" @selected(request('category') == $category->id)>{{ ucfirst($category->name) }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -52,8 +52,8 @@
                         <div class="form-group">
                             <select name="brand" class="" onchange="this.form.submit()">
                                 <option value=""  selected>{{ get_phrase('Select Brand') }}</option>
-                                @foreach (\App\Models\Brand::all() as $brand )
-                                    <option value="{{ $brand->id }}" @if(isset($_GET['brand']) && $_GET['brand']!=""){{$_GET['brand']==$brand->id?"selected" :""}}@endif >{{ ucfirst($brand->name) }}</option>
+                                @foreach ($viewData->brands() as $brand )
+                                    <option value="{{ $brand->id }}" @selected(request('brand') == $brand->id)>{{ ucfirst($brand->name) }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -113,6 +113,5 @@
 @section('specific_code_niceselect')
     $('select').niceSelect();
 @endsection
-
 
 

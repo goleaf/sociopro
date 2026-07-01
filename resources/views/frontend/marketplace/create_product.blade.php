@@ -13,7 +13,7 @@
         <label for="#">{{ get_phrase('Currency') }}</label>
         <select name="currency" id="currency" required class="form-select border-0 bg-secondary">
             <option value="">{{ get_phrase('Select Currency') }}</option>
-            @foreach (\App\Models\Currency::all() as $currency)
+            @foreach ($viewData->currencies() as $currency)
                 <option value="{{ $currency->id }}">{{ $currency->name }}</option>
             @endforeach
         </select>
@@ -27,7 +27,7 @@
             <label for="category">{{ get_phrase('Category') }}</label>
             <select name="category" required class="form-select border-0 bg-secondary">
                 <option value="" disabled selected>{{ get_phrase('Select Category') }}</option>
-                @foreach (\App\Models\Category::all() as $category )
+                @foreach ($viewData->productCategories() as $category )
                     <option value="{{ $category->id }}" >{{ ucfirst($category->name) }}</option>
                 @endforeach
             </select>
@@ -60,7 +60,7 @@
             <label for="brand">{{get_phrase('Brand')}}</label>
             <select name="brand" required class="form-select border-0 bg-secondary">
                 <option value="" disabled selected>{{ get_phrase('Select Brand') }}</option>
-                @foreach (\App\Models\Brand::all() as $brand )
+                @foreach ($viewData->brands() as $brand )
                     <option value="{{ $brand->id }}" >{{ ucfirst($brand->name) }}</option>
                 @endforeach
             </select>

@@ -1,10 +1,6 @@
 
 {{--  create event modal  --}}
-@php
-     $product = \App\Models\Marketplace::find($product_id);
-     $productimage = \App\Models\Media_files::where('product_id',$product->id)->get();
-@endphp
-
+@isset($product)
 <form class="ajaxForm market_form" action="{{ route('product.update',$product->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="form-group">
@@ -20,7 +16,7 @@
         <label for="#">{{ get_phrase('Currency') }}</label>
         <select name="currency" id="currency" class="form-select border-0 bg-secondary">
             <option value="">{{ get_phrase('Select Currency') }}</option>
-            @foreach (\App\Models\Currency::all() as $currency)
+            @foreach ($viewData->currencies() as $currency)
                 <option value="{{ $currency->id }}" {{ $product->currency_id== $currency->id ? "selected":"" }}>{{ $currency->name }}</option>
             @endforeach
         </select>
@@ -34,7 +30,7 @@
             <label for="category">{{ get_phrase('Category') }}</label>
             <select name="category" class="form-select border-0 bg-secondary">
                 <option value="" disabled selected>{{ get_phrase('Select Category') }}</option>
-                @foreach (\App\Models\Category::all() as $category )
+                @foreach ($viewData->productCategories() as $category )
                     <option value="{{ $category->id }}" {{ $category->id==$product->category ? "selected":"" }}>{{ ucfirst($category->name) }}</option>
                 @endforeach
             </select>
@@ -67,7 +63,7 @@
             <label for="brand">{{get_phrase('Brand')}}</label>
             <select name="brand" class="form-select border-0 bg-secondary">
                 <option value="" disabled selected>{{ get_phrase('Select Brand') }}</option>
-                @foreach (\App\Models\Brand::all() as $brand )
+                @foreach ($viewData->brands() as $brand )
                     <option value="{{ $brand->id }}" {{ $brand->id==$product->brand ? "selected":"" }}>{{ ucfirst($brand->name) }}</option>
                 @endforeach
             </select>
@@ -79,8 +75,8 @@
     </div>
     <div>
         <label for="" class="mb-1">{{ get_phrase('Previous Uploaded Image') }}</label> <br>
-        @foreach ($productimage as $productimage )
-            <img  class="w-55 custome-height-50" src="{{ get_product_image($productimage->file_name,"thumbnail") }}" alt="">
+        @foreach (($productImages ?? $viewData->productImages($product)) as $productImage)
+            <img  class="w-55 custome-height-50" src="{{ get_product_image($productImage->file_name,"thumbnail") }}" alt="">
         @endforeach
     </div>
     <div class="form-group">
@@ -89,6 +85,7 @@
     </div>
     <input type="submit" class="btn common_btn" value="Submit">
 </form>
+@endisset
 
 
 @include('frontend.initialize')

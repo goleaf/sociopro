@@ -656,6 +656,93 @@ final class BladeViewData
             ->value('description') ?? $default);
     }
 
+    public function systemName(): string
+    {
+        return (string) $this->setting('system_name');
+    }
+
+    public function systemFavicon(): string
+    {
+        return (string) $this->setting('system_fav_icon');
+    }
+
+    public function sharePostRoute(?string $identifier = null): string
+    {
+        return $identifier === 'fundraiser'
+            ? route('fundraiser.share.my.timeline')
+            : route('share.my.timeline');
+    }
+
+    public function blogTags(Model $blog): array
+    {
+        $tags = json_decode($blog->tag ?? '[]', true);
+
+        return is_array($tags) ? $tags : [];
+    }
+
+    public function accountActivationRequest(?User $viewer): ?Account_active_request
+    {
+        if (! $viewer) {
+            return null;
+        }
+
+        return $this->remember("account-activation-request:{$viewer->id}", fn (): ?Account_active_request => Account_active_request::query()
+            ->where('user_id', $viewer->id)
+            ->first());
+    }
+
+    public function dashboardStats(?User $viewer): array
+    {
+        if (! $viewer) {
+            return [
+                'friends' => 0,
+                'posts' => 0,
+                'pages' => 0,
+                'blogs' => 0,
+                'ads' => 0,
+                'products' => 0,
+            ];
+        }
+
+        return $this->remember("dashboard-stats:{$viewer->id}", fn (): array => [
+            'friends' => Friendships::query()
+                ->where(function ($query) use ($viewer): void {
+                    $query->where('accepter', $viewer->id)->orWhere('requester', $viewer->id);
+                })
+                ->where('is_accepted', 1)
+                ->count(),
+            'posts' => Posts::query()->where('user_id', $viewer->id)->count(),
+            'pages' => Page::query()->where('user_id', $viewer->id)->count(),
+            'blogs' => Blog::query()->where('user_id', $viewer->id)->count(),
+            'ads' => Sponsor::query()->where('user_id', $viewer->id)->count(),
+            'products' => Marketplace::query()->where('user_id', $viewer->id)->count(),
+        ]);
+    }
+
+    public function addonAccess(?User $viewer): array
+    {
+        if (! $viewer) {
+            return [
+                'creator' => false,
+                'fundraiser' => false,
+                'donate' => false,
+            ];
+        }
+
+        return $this->remember("addon-access:{$viewer->id}", fn (): array => [
+            'creator' => Schema::hasTable('paid_content_creators') && PaidContentCreator::query()
+                ->where('user_id', $viewer->id)
+                ->where('status', 1)
+                ->exists(),
+            'fundraiser' => Schema::hasTable('fundraisers') && Fundraiser::query()
+                ->where('user_id', $viewer->id)
+                ->exists(),
+            'donate' => Schema::hasTable('fundraiser_donations') && Fundraiser_donation::query()
+                ->where('doner_id', $viewer->id)
+                ->exists(),
+        ]);
+    }
+
     public function backendFolder(?string $commonPath, ?User $user): string
     {
         if ($commonPath === 'global') {

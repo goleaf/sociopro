@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\ViewModels\BladeViewData;
 use Illuminate\Http\Request;
 
 class ModalController extends Controller
@@ -24,7 +25,7 @@ class ModalController extends Controller
             $page_data[$key] = $value;
         }
 
-        return view($view_path, $page_data);
+        return view($view_path, $this->modalViewData($view_path, $page_data));
     }
 
     public function common_view_function2($view_path = '', $page_all_data = '')
@@ -40,5 +41,25 @@ class ModalController extends Controller
         }
 
         return view($view_path, $page_data);
+    }
+
+    private function modalViewData(string $viewPath, array $pageData): array
+    {
+        $viewData = app(BladeViewData::class);
+
+        if (($pageData['event_id'] ?? null) !== null) {
+            $pageData['event'] = $viewData->event($pageData['event_id']);
+        }
+
+        if (($pageData['product_id'] ?? null) !== null) {
+            $pageData['product'] = $viewData->product($pageData['product_id']);
+            $pageData['productImages'] = $viewData->productImages($pageData['product']);
+        }
+
+        if ($viewPath === 'frontend.events.view-all') {
+            $pageData['eventGuestRows'] = $viewData->eventGuestRows($pageData['event'] ?? null);
+        }
+
+        return $pageData;
     }
 }
