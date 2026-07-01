@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Anand\LaravelPaytmWallet\Facades\PaytmWallet;
 use App\Models\Payment_gateway;
+use App\Models\Setting;
 use App\Models\Users;
 use Illuminate\Http\Request;
 
@@ -38,6 +39,7 @@ class PaymentController extends Controller
         $page_data['payment_gateways'] = Payment_gateway::query()
             ->select(self::PAYMENT_GATEWAY_COLUMNS)
             ->get();
+        $page_data += $this->paymentPageSettings();
 
         return view('payment.index', $page_data);
     }
@@ -139,5 +141,17 @@ class PaymentController extends Controller
     private function gatewayModelClass(Payment_gateway $paymentGateway): string
     {
         return 'App\Models\payment_gateway\\' . str_replace(' ', '', $paymentGateway->model_name);
+    }
+
+    private function paymentPageSettings(): array
+    {
+        $settings = Setting::query()
+            ->whereIn('type', ['system_name', 'system_fav_icon'])
+            ->pluck('description', 'type');
+
+        return [
+            'system_name' => $settings->get('system_name', ''),
+            'system_favicon' => $settings->get('system_fav_icon', ''),
+        ];
     }
 }

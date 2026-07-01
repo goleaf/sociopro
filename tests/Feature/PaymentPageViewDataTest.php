@@ -1,0 +1,45 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Http\Controllers\PaymentController;
+use App\Models\Setting;
+use Illuminate\View\View;
+use Tests\TestCase;
+
+class PaymentPageViewDataTest extends TestCase
+{
+    public function test_payment_index_view_does_not_query_settings(): void
+    {
+        $contents = file_get_contents(resource_path('views/payment/index.blade.php'));
+
+        $this->assertStringNotContainsString('\App\Models\Setting', $contents);
+        $this->assertStringNotContainsString('Setting::where', $contents);
+    }
+
+    public function test_payment_controller_passes_page_settings_to_index_view(): void
+    {
+        Setting::where('type', 'system_name')->update(['description' => 'SocioPro Test']);
+        Setting::where('type', 'system_fav_icon')->update(['description' => 'favicon-test.png']);
+
+        session(['payment_details' => [
+            'payable_amount' => 10,
+            'cancel_url' => '/cancel',
+            'items' => [
+                [
+                    'title' => 'Test item',
+                    'price' => 10,
+                    'discount_percentage' => 0,
+                    'discount_price' => 10,
+                ],
+            ],
+            'tax' => 0,
+        ]]);
+
+        $response = app(PaymentController::class)->index();
+
+        $this->assertInstanceOf(View::class, $response);
+        $this->assertSame('SocioPro Test', $response->getData()['system_name']);
+        $this->assertSame('favicon-test.png', $response->getData()['system_favicon']);
+    }
+}

@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    @php
-        $system_name = \App\Models\Setting::where('type', 'system_name')->value('description');
-        $system_favicon = \App\Models\Setting::where('type', 'system_fav_icon')->value('description');
-    @endphp
     <title>{{ $system_name }}</title>
     <!-- all the meta tags -->
     <meta charset="utf-8" />
