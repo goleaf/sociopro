@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Friends\SendFriendRequestAction;
 use App\Enums\MediaFileType;
 use App\Models\Albums;
 use App\Models\Follower;
@@ -72,25 +73,13 @@ class CustomUserController extends Controller
         return view('frontend.main_content.posts', $page_data);
     }
 
-    public function friend($id)
+    public function friend(Request $request, SendFriendRequestAction $sendFriendRequest, $id)
     {
         $response = [];
-        $friendship = new Friendships;
-        $friendship->accepter = $id;
-        $friendship->requester = auth()->user()->id;
-        $friendship->is_accepted = '0';
-        $friendship->save();
+        $user = $request->user();
+        abort_unless($user instanceof User, 401);
 
-        $notify = new Notification;
-        $notify->sender_user_id = auth()->user()->id;
-        $notify->reciver_user_id = $id;
-        $notify->type = 'profile';
-        $notify->save();
-
-        $follwer = new Follower;
-        $follwer->follow_id = $id;
-        $follwer->user_id = auth()->user()->id;
-        $follwer->save();
+        $sendFriendRequest->handle($user, (int) $id);
 
         Session::flash('success_message', get_phrase('Friend Request Sent Successfully'));
         $response = ['reload' => 1];
