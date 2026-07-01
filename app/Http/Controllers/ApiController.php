@@ -342,8 +342,6 @@ class ApiController extends Controller
         // $data[$key]['name'] = $user->name;
 
         // $friend = json_decode($users->friends);
-        // print($user->friends);
-        // die();
         // if (sizeof($friend) > 0) {
         //     $friend_list = User::whereIn('id', $friend)->get();
 
@@ -399,8 +397,6 @@ class ApiController extends Controller
         //         // print($friends->id);
         //         // echo "<br>";
         //     }
-        //     // die();
-
         //     // $response = get_user_info($friend_list);
         // } else {
         //     $response = array();
@@ -2595,6 +2591,8 @@ class ApiController extends Controller
                     return response()->json(['error' => 'Post not found'], 404);
                 }
             } catch (Exception $e) {
+                report($e);
+
                 // Handle database errors
                 return response()->json(['error' => $e->getMessage()], 500);
             }
@@ -3283,6 +3281,8 @@ class ApiController extends Controller
                     $response['message'] = 'User joined the group successfully';
                 }
             } catch (Exception $e) {
+                report($e);
+
                 // Handle any exceptions
                 $response['success'] = false;
                 $response['message'] = 'Error joining the group: '.$e->getMessage();

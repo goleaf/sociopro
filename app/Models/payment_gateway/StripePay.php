@@ -2,14 +2,15 @@
 
 namespace App\Models\payment_gateway;
 
+use App\Exceptions\Payments\PaymentGatewayException;
 use DB;
-use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Stripe\Checkout\Session as CheckoutSession;
 use Stripe\Exception\ApiErrorException;
 use Stripe\PaymentIntent;
 use Stripe\Stripe;
+use Throwable;
 
 class StripePay extends Model
 {
@@ -29,36 +30,24 @@ class StripePay extends Model
         $session_id = $transaction_keys['session_id'];
         if ($session_id != '') {
             Stripe::setApiKey($stripeSecretKey);
-            $api_error = null;
-            $checkout_session = null;
 
             try {
                 $checkout_session = CheckoutSession::retrieve($session_id);
-            } catch (Exception $e) {
-                $api_error = $e->getMessage();
-            }
+            } catch (Throwable $throwable) {
+                report(PaymentGatewayException::transportFailure('stripe', $throwable));
 
-            if (empty($api_error) && $checkout_session) {
-                $intent = null;
-
-                try {
-                    $intent = PaymentIntent::retrieve($checkout_session->payment_intent);
-                } catch (ApiErrorException $e) {
-                    $api_error = $e->getMessage();
-                }
-
-                if ($intent) {
-                    if ($intent->status == 'succeeded') {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return false;
-                }
-            } else {
                 return false;
             }
+
+            try {
+                $intent = PaymentIntent::retrieve($checkout_session->payment_intent);
+            } catch (ApiErrorException $throwable) {
+                report(PaymentGatewayException::transportFailure('stripe', $throwable));
+
+                return false;
+            }
+
+            return $intent->status == 'succeeded';
         } else {
             return false;
         }

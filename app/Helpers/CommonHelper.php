@@ -696,7 +696,9 @@ if (! function_exists('get_meta_details')) {
     {
         try {
             $html = file_get_contents($pageUrl);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            report($exception);
+
             return false;
         }
 

@@ -1205,9 +1205,6 @@ class AdminCrudController extends Controller
     {
         // echo $total_number_of_row = User::where('user_role', '!=', 'admin')->count();
         // $users = User::skip(12)->take(12)->select('name', 'id', 'email', 'photo', 'status')->where('user_role', '!=', 'admin')->orderBy('id', 'asc')->get();
-        // print_r($users);
-        // die;
-
         $data = [];
         // mentioned all with colum of database table that related with number of html table
         $columns = ['id', 'id', 'name', 'email', 'status', 'id'];

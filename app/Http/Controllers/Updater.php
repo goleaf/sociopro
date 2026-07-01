@@ -64,9 +64,6 @@ class Updater extends Controller
         if ($config) {
             $config = json_decode($config, true);
         }
-        // print_r($config);
-        // die();
-
         // check ias addon or main product update
         if (array_key_exists('is_addon', $config) && strval($config['is_addon']) == '1') {
             // check required main product version to install this addon

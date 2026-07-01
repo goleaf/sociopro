@@ -2,6 +2,7 @@
 
 namespace App\Models\payment_gateway;
 
+use App\Exceptions\Payments\PaymentGatewayException;
 use App\Models\Payment_gateway;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -30,6 +31,8 @@ class Paystack extends Model
         $secretKey = $this->secretKey($paymentGateway, $keys);
 
         if (! $secretKey) {
+            report(PaymentGatewayException::missingCredentials('paystack'));
+
             return false;
         }
 
@@ -38,7 +41,9 @@ class Paystack extends Model
                 ->withToken($secretKey)
                 ->timeout(10)
                 ->get('https://api.paystack.co/transaction/verify/'.rawurlencode($reference));
-        } catch (Throwable) {
+        } catch (Throwable $throwable) {
+            report(PaymentGatewayException::transportFailure('paystack', $throwable));
+
             return false;
         }
 

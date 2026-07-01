@@ -1242,7 +1242,9 @@ class MainController extends Controller
             // ]);
 
             return response()->json(['image_url' => $imageUrl]);
-        } catch (Exception) {
+        } catch (Exception $exception) {
+            report($exception);
+
             return response()->json(['error' => 'Server error'], 500);
         }
     }

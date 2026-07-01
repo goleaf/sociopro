@@ -2,6 +2,7 @@
 
 namespace App\Models\payment_gateway;
 
+use App\Exceptions\Payments\PaymentGatewayException;
 use App\Models\Payment_gateway;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,8 @@ class Paypal extends Model
         [$clientId, $secretKey, $paypalUrl] = self::gatewayCredentials($paymentGateway, $keys);
 
         if (! $clientId || ! $secretKey) {
+            report(PaymentGatewayException::missingCredentials('paypal'));
+
             return false;
         }
 
@@ -46,7 +49,9 @@ class Paypal extends Model
                 ->withToken($accessToken)
                 ->timeout(10)
                 ->get($paypalUrl.'payments/payment/'.$transaction_keys['payment_id']);
-        } catch (Throwable) {
+        } catch (Throwable $throwable) {
+            report(PaymentGatewayException::transportFailure('paypal', $throwable));
+
             return false;
         }
 
