@@ -1,0 +1,36 @@
+<?php
+
+namespace Tests;
+
+use App\Actions\Install\ImportInstallSqlDump;
+use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Schema;
+
+abstract class TestCase extends BaseTestCase
+{
+    use CreatesApplication;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->importInstallSchemaForInMemoryDatabase();
+    }
+
+    private function importInstallSchemaForInMemoryDatabase(): void
+    {
+        if (config('database.default') !== 'sqlite') {
+            return;
+        }
+
+        if (config('database.connections.sqlite.database') !== ':memory:') {
+            return;
+        }
+
+        if (Schema::hasTable('settings')) {
+            return;
+        }
+
+        app(ImportInstallSqlDump::class)->handle(base_path('public/assets/install.sql'));
+    }
+}

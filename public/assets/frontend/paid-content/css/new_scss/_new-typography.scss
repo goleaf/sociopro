@@ -1,0 +1,45 @@
+.fz-14-r-22-white-1 {
+  @include fontFamily(14, $fw_Regular, 22, #636363);
+}
+.fz-15-r-20-white-1 {
+  @include fontFamily(15, $fw_Regular, 20, #949494);
+}
+.fz-16-r-22-white {
+  @include fontFamily(16, $fw_Regular, 22, #fff);
+}
+.fz-16-r-34-black {
+  @include fontFamily(16, $fw_Regular, 34, #101010);
+}
+.fz-16-sb-22-white-1 {
+  @include fontFamily(16, $fw_SemiBold, 22, #636363);
+}
+.fz-18-r-22-white-1 {
+  @include fontFamily(18, $fw_Regular, 22, #636363);
+}
+.fz-18-sb-22-black {
+  @include fontFamily(18, $fw_SemiBold, 22, #101010);
+}
+.fz-18-sb-24-black {
+  @include fontFamily(18, $fw_SemiBold, 24, #101010);
+}
+.fz-20-b-22-black {
+  @include fontFamily(20, $fw_Bold, 22, #101010);
+}
+.fz-20-sb-27-black {
+  @include fontFamily(20, $fw_SemiBold, 27, #101010);
+}
+.fz-24-sb-22-white {
+  @include fontFamily(24, $fw_SemiBold, 22, #fff);
+}
+.fz-24-sb-22-black {
+  @include fontFamily(24, $fw_SemiBold, 22, #101010);
+}
+.fz-28-sb-38-black {
+  @include fontFamily(28, $fw_SemiBold, 38, #101010);
+}
+.fz-30-b-22-purple {
+  @include fontFamily(30, $fw_Bold, 22, $purple);
+}
+.fz-34-b-34-black {
+  @include fontFamily(34, $fw_Bold, 34, #101010);
+}

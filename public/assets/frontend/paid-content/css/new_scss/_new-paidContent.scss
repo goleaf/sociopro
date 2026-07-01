@@ -1,0 +1,32 @@
+.creator-items-wrap {
+  .row {
+    row-gap: toRem(24);
+    // > * {
+    //   padding: 0 !important;
+    // }
+  }
+}
+.crator-items {
+  position: relative;
+  border-radius: toRem(5);
+  overflow: hidden;
+  img {
+    max-width: 100%;
+  }
+  a {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: toRem(56);
+    text-align: center;
+    @include fontFamily(15, $fw_SemiBold, 22, #fff !important);
+    background: rgb(16, 16, 16);
+    background: linear-gradient(
+      180deg,
+      rgba(16, 16, 16, 0) 0%,
+      rgba(16, 16, 16, 1) 100%
+    );
+    padding: toRem(22) 0 toRem(14);
+  }
+}

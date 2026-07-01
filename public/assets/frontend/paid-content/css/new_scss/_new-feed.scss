@@ -1,0 +1,63 @@
+.cTitle-wraper {
+  padding-bottom: toRem(20.5);
+  border-bottom: toRem(1) solid #dedede;
+}
+.cProfile-photo {
+  display: flex;
+  align-items: center;
+  gap: toRem(10);
+  .img {
+    width: toRem(41);
+    height: toRem(41);
+    border-radius: 50%;
+    overflow: hidden;
+  }
+}
+
+// Feed tabs
+.feedWithout {
+  .icon {
+    width: toRem(106);
+    height: toRem(106);
+    border-radius: 50%;
+    @include d-center;
+    background-color: #dfd9f6;
+    font-size: toRem(41);
+    color: $purple;
+  }
+  .info {
+    @include fontFamily(16, $fw_Regular, 22, #636363);
+  }
+}
+// Find Creators tabs
+.popularSearch-wrap {
+  text-align: center;
+  margin-top: toRem(30);
+  .title {
+    @include fontFamily(14, $fw_SemiBold, 22, #636363);
+    margin: 0;
+    padding-bottom: toRem(30);
+  }
+  .popularSearch-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: toRem(7);
+    li {
+      flex: 0 0 auto;
+      a {
+        @include d-center;
+        width: toRem(88);
+        height: toRem(30);
+        border: toRem(1) solid #c4c4c4;
+        border-radius: toRem(15);
+        background-color: #fff;
+        @include fontFamily(14, $fw_Regular, 22, #636363);
+      }
+    }
+  }
+}

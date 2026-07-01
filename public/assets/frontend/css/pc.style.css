@@ -1,0 +1,504 @@
+.creator-boi {
+    height: 100px;
+}
+
+.main-content-wraper {
+    max-width: 760px;
+    margin: 0 auto;
+    margin-top: 20px;
+}
+
+.main-section {
+    min-height: 84vh;
+    height: auto;
+}
+
+.locked-info {
+    max-width: 95%;
+}
+
+.crator-items {
+    aspect-ratio: 1/.90;
+    max-width: 10rem;
+    min-height: 138px;
+}
+
+.crator-items img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.about-page {
+    min-height: 1rem;
+    background-color: #fff;
+    border: 0;
+    border-bottom: 1px solid #c4c4c4;
+    border-radius: 0;
+    font-size: 0.8125rem;
+}
+
+.sign-btn {
+    display: block;
+    border-radius: 0.625rem;
+    background-color: #5a2ff9;
+    text-decoration: none;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #fff !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 40px;
+    max-width: 138px;
+    pointer-events: painted;
+    cursor: pointer;
+}
+
+.creator_request_section p {
+    font-family: segoe-ui-bold;
+}
+
+.search-list-menu.dropdown-menu {
+    height: 400px;
+    inset: -20px auto auto -9px !important;
+    overflow-y: scroll;
+}
+
+.get-started-btn {
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+}
+
+.load-item {
+    width: 50px;
+    height: 50px;
+    overflow: hidden;
+}
+
+.load-item img {
+    max-width: 100px;
+    max-height: 50px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.no-package p {
+    color: #101010;
+}
+
+.payment-type,
+.user_settings .settings_tab {
+    box-shadow: 0 5px 20px rgba(0, 0, 0, .06);
+}
+
+.input-wrap label {
+    color: #6c757d;
+}
+
+.color-note {
+    font-size: 12px
+}
+
+.live {
+    width: 2.5rem !important;
+    height: 1.3rem !important
+}
+
+.alert p {
+    font-size: 13.5px;
+}
+
+.issue-date {
+    color: #949494;
+}
+
+.payout,
+.subscription,
+.input-wrap label,
+.user_info h6,
+.user_subscription {
+    font-size: 14px;
+}
+
+.user_subscription .single-cell h6 {
+    font-size: 14px;
+}
+
+.user_subscription .single-cell p {
+    font-size: 14px;
+}
+
+.searched-profile {
+    width: 50px !important;
+    height: 50px !important;
+    overflow: hidden !important;
+}
+
+.searched-profile img {
+    max-width: 100px !important;
+    max-height: 50px !important;
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+}
+
+.user_subscription .single-cell {
+    height: 50px;
+    max-height: 50px;
+}
+
+.payout .cell-item span.badge {
+    font-weight: 500;
+}
+
+.request-title {
+    font-size: 16px;
+    font-weight: 400;
+    color: #101010d4;
+}
+
+.cancel-btn {
+    background-color: #dc3545
+}
+
+.payout-report {
+    max-width: 100%;
+}
+
+.subscription .single-cell {
+    height: 50px;
+    max-height: 50px;
+}
+
+.subscription .single-cell .user_img {
+    height: 50px;
+    width: 50px;
+}
+
+.issue-date {
+    color: #949494;
+}
+
+.user_info p {
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.package-info {
+    width: 150px;
+}
+
+.paid-membership-item {
+    flex-basis: 33.33%;
+}
+
+.search-creator {
+    background-color: transparent !important;
+    font-size: 1rem !important;
+    font-weight: 400 !important;
+    line-height: 1.3125rem !important;
+    color: #636363 !important;
+    width: auto !important;
+}
+
+.search-btn {
+    background: #5a2ff9;
+    width: auto;
+    border-radius: 50px;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 500;
+    border: 0;
+    padding: 15px 40px;
+    font-family: segoe-ui-semibold;
+}
+
+.search-bar .icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    -webkit-transform: translateY(-50%);
+    -moz-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    -o-transform: translateY(-50%);
+    left: 18px;
+}
+
+.search-bar input {
+    padding: 15px 15px 15px 45px;
+    border-radius: 50px;
+    -webkit-border-radius: 50px;
+    -moz-border-radius: 50px;
+    -ms-border-radius: 50px;
+    -o-border-radius: 50px;
+    background: #f3f3f3;
+    border: 0;
+    flex-basis: 20%;
+}
+
+.search-bar input:focus {
+    box-shadow: 0 0 !important;
+    background: #f3f3f3 !important;
+    border: 0 !important;
+}
+
+form.search {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-bar {
+    flex-basis: 80%;
+    position: relative;
+}
+
+.full-width {
+    flex-basis: 100%;
+}
+
+#show_more_items {
+    min-height: 80vh !important;
+}
+
+.addon-layout {
+    height: 75vh;
+}
+
+.menu-panel {
+    width: 100%;
+    min-width: 250px;
+    max-width: 300px;
+}
+
+.toggle-menu {
+    display: none;
+}
+
+@media screen and (max-width: 991.2px) {
+    .menu-panel {
+        display: block;
+        position: absolute;
+        transform: translate(-450px, 60px);
+        -webkit-transform: translate(-450px, 60px);
+        -moz-transform: translate(-450px, 60px);
+        -ms-transform: translate(-450px, 60px);
+        -o-transform: translate(-450px, 60px);
+        transition: .4s;
+        -webkit-transition: .4s;
+        -moz-transition: .4s;
+        -ms-transition: .4s;
+        -o-transition: .4s;
+        z-index: 9999;
+    }
+
+    .menu-panel.active {
+        transform: translate(-100px, 60px);
+        -webkit-transform: translate(-100px, 60px);
+        -moz-transform: translate(-100px, 60px);
+        -ms-transform: translate(-100px, 60px);
+        -o-transform: translate(-100px, 60px);
+    }
+
+
+    .user-image {
+        width: 90px;
+        height: 90px;
+    }
+
+    .user-details h4 {
+        font-size: 18px;
+    }
+
+    .user-details p {
+        font-size: 14px;
+    }
+
+    .menu-title {
+        font-size: 17px;
+    }
+
+    .dropdown-menu-title {
+        font-size: 16.5px;
+    }
+
+    .creator-only {
+        font-size: 18px;
+        color: #adadad;
+    }
+
+    .toggle-menu {
+        display: block;
+        padding: 5px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, .06);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #fff;
+        border-radius: 50%;
+        -webkit-border-radius: 50%;
+        -moz-border-radius: 50%;
+        -ms-border-radius: 50%;
+        -o-border-radius: 50%;
+        border: 1px solid #9494942c;
+        cursor: pointer;
+    }
+
+    .fa-solid.fa-bars {
+        color: #949494cc;
+    }
+
+    .addon-layout {
+        height: 67vh;
+    }
+}
+
+@media screen and (max-width: 942px) {
+    .menu-panel.active {
+        transform: translate(-70px, 60px);
+        -webkit-transform: translate(-70px, 60px);
+        -moz-transform: translate(-70px, 60px);
+        -ms-transform: translate(-70px, 60px);
+        -o-transform: translate(-70px, 60px);
+    }
+}
+
+@media screen and (max-width: 883px) {
+    .menu-panel.active {
+        transform: translate(-40px, 60px);
+        -webkit-transform: translate(-40px, 60px);
+        -moz-transform: translate(-40px, 60px);
+        -ms-transform: translate(-40px, 60px);
+        -o-transform: translate(-40px, 60px);
+    }
+}
+
+@media screen and (max-width: 788px) {
+    .menu-panel.active {
+        transform: translate(-10px, 60px);
+        -webkit-transform: translate(-10px, 60px);
+        -moz-transform: translate(-10px, 60px);
+        -ms-transform: translate(-10px, 60px);
+        -o-transform: translate(-10px, 60px);
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .menu-panel.active {
+        transform: translate(-70px, 60px);
+        -webkit-transform: translate(-70px, 60px);
+        -moz-transform: translate(-70px, 60px);
+        -ms-transform: translate(-70px, 60px);
+        -o-transform: translate(-70px, 60px);
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .menu-panel.active {
+        transform: translate(-70px, 60px);
+        -webkit-transform: translate(-70px, 60px);
+        -moz-transform: translate(-70px, 60px);
+        -ms-transform: translate(-70px, 60px);
+        -o-transform: translate(-70px, 60px);
+    }
+}
+
+@media screen and (max-width: 680px) {
+    .menu-panel.active {
+        transform: translate(-40px, 60px);
+        -webkit-transform: translate(-40px, 60px);
+        -moz-transform: translate(-40px, 60px);
+        -ms-transform: translate(-40px, 60px);
+        -o-transform: translate(-40px, 60px);
+    }
+}
+
+@media screen and (max-width: 615px) {
+    .menu-panel.active {
+        transform: translate(-10px, 60px);
+        -webkit-transform: translate(-10px, 60px);
+        -moz-transform: translate(-10px, 60px);
+        -ms-transform: translate(-10px, 60px);
+        -o-transform: translate(-10px, 60px);
+    }
+}
+
+@media screen and (max-width: 576px) {
+    .menu-panel {
+        display: block;
+        position: absolute;
+        transform: translate(0px, -1000px);
+        -webkit-transform: translate(0px, -1000px);
+        -moz-transform: translate(0px, -1000px);
+        -ms-transform: translate(0px, -1000px);
+        -o-transform: translate(0px, -1000px);
+    }
+
+    .menu-panel.active {
+        transform: translate(0px, 60px);
+        -webkit-transform: translate(0px, 60px);
+        -moz-transform: translate(0px, 60px);
+        -ms-transform: translate(0px, 60px);
+        -o-transform: translate(0px, 60px);
+    }
+}
+
+@media screen and (max-width: 325px) {
+    .menu-panel {
+        max-width: 95%;
+        min-width: 95%;
+        left: 7px;
+    }
+}
+
+.list-img-pic {
+    width: 50px;
+    height: 50px;
+}
+
+.actions a {
+    display: inline-block;
+    color: #101010;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.paid-membership-item:hover .actions a {
+    color: #ffffff7b;
+
+}
+
+.paid-membership-item:hover .actions a:hover {
+    color: #fff;
+}
+
+.pcMonthlyPrice span {
+    font-size: 14px !important;
+}
+
+.package-title {
+    font-size: 16px !important;
+}
+
+.payment_err_msg {
+    font-size: 14px !important;
+}
+
+.banner-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: -1;
+}
+
+.payout-report {
+    max-width: 100% !important;
+}

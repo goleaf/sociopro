@@ -1,0 +1,134 @@
+@media all and (max-width:1199px){
+    /* Fundraiser Page */
+    .blog-card {
+        margin-bottom: 25px;
+    }
+    .category-list {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* Fundraiser Panel Payment History Page */
+    .complate-main-wrap{
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .complate-main-wrap .blog-card {
+        margin-bottom: 0px;
+    }
+}
+@media all and (max-width:990px){
+    /* Fundraiser Page */
+    .offcanvas-body-2{
+        padding: 0 20px;
+    }
+
+    /* Fundraiser Profile Page */
+    .fund-profile-goal-area{
+        margin-top: 0;
+    }
+    .Etab {flex-wrap: wrap;
+    }
+     .toggle-menu{
+        display: none !important;
+    }
+}
+@media all and (max-width:767px){
+    /* Fundraiser Page */
+    .blog-card .card-img {
+        height: 210px;
+    }
+    .category-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* Fundraiser Profile Page */
+    .fundraiser-header .logo-branding {
+        top: 15px;
+    }
+
+    /* Fundraiser Panel Payment History Page */
+    .complate-main-wrap{
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .category-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .over .gr-search form input.bg-secondary {
+        max-width: 100%;
+        width: auto;
+    }
+
+}
+@media all and (max-width:575px){
+    /* Fundraiser Page */
+    .category-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Fundraiser Profile Page */
+    .fund-profile-cover {
+        height: 220px;
+    }
+    .fund-profile-img {
+        width: 110px;
+        height: 110px;
+    }
+    .fund-profile-img {
+        top: -75px;
+    }
+
+    /* Fundraiser Campaign Page */
+    .text_30 {
+        font-size: 26px;
+    }
+    .step-left-area {
+        margin-left: 30px;
+        height: 400px;
+    }
+    .step-left-area {
+        padding: 0 10px 0 30px;
+    }
+    .img-file-drag .upload-field .file-thumbnail {
+        padding: 40px;
+    }
+    .fund-form-group textarea {
+        height: 240px;
+    }
+
+    /* Fundraiser Panel Payment History Page */
+    .complate-main-wrap{
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@media all and (max-width:450px){
+    /* Fundraiser Page */
+    .blog-card .card-img {
+        height: 175px;
+    }
+
+    /* Fundraiser Profile Page */
+    .fund-progress-wrap .fund-single-progress:not(:last-child) {
+        padding-right: 18px;
+    }
+    .fund-progress-wrap .fund-single-progress:not(:first-child) {
+        padding-left: 18px;
+    }
+    .fund-profile-cover {
+        height: 200px;
+    }
+
+    /* Fundraiser Panel Payment History Page */
+    .complate-main-wrap{
+        grid-template-columns: repeat(1, 1fr);
+    }
+    .complate-main-wrap .blog-card .card-img {
+        height: 160px;
+    }
+    .complate-main-wrap .blog-card {
+        max-width: 280px;
+        width: 100%;
+        margin: auto;
+    }
+    .category-list {
+        grid-template-columns: repeat(1, 1fr);
+    }
+}

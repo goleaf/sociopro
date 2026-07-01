@@ -1,0 +1,152 @@
+.withdrawalOptions {
+  .row {
+    row-gap: toRem(20);
+  }
+}
+.withdrawal-items {
+  background-color: #fff;
+  @include boxShadow(0, 10, 20, rgb(0 0 0 / 5%));
+  padding: toRem(20);
+  border: toRem(1) solid #dedede;
+  border-radius: toRem(5);
+  height: 100%;
+  .title {
+    @include fontFamily(16, $fw_SemiBold, 21, #101010);
+    margin-bottom: toRem(23);
+  }
+  .withdrawal-amount {
+    @include fontFamily(34, $fw_SemiBold, 22, #101010);
+    margin-bottom: toRem(23);
+  }
+  .info {
+    @include fontFamily(14, $fw_Regular, 22, #636363);
+    margin: 0;
+    span {
+      font-weight: $fw_SemiBold;
+      color: #101010;
+    }
+  }
+}
+
+.eTable {
+  font-size: toRem(15) !important;
+  font-weight: $fw_SemiBold !important;
+  color: #101010 !important;
+  margin-bottom: 0;
+  > :not(caption) > * > * {
+    padding: toRem(19) toRem(16) !important;
+    border-bottom-color: #d4d4d4 !important;
+    border-top: 0px solid #000;
+    border-bottom: 0px solid #000 !important;
+    &:first-child {
+      padding-left: 0px !important;
+    }
+    &:last-child {
+      width: 107px;
+      border-bottom-color: transparent !important;
+      text-align: right;
+      padding-right: 0 !important;
+    }
+  }
+  > :not(:first-child) {
+    border-top: 1px solid #d4d4d4;
+  }
+  thead {
+    tr {
+      th {
+        font-size: toRem(16);
+        font-weight: $fw_SemiBold;
+        line-height: toRem(21);
+        color: #101010;
+      }
+    }
+  }
+  tbody {
+    tr {
+      font-size: toRem(15) !important;
+      font-weight: $fw_SemiBold !important;
+      line-height: toRem(15) !important;
+      color: #101010 !important;
+      vertical-align: middle;
+      &:not(:last-child) {
+        border-bottom: toRem(1) dashed #d4d4d4;
+      }
+      td {
+        &:last-child {
+          text-align: center;
+        }
+      }
+    }
+  }
+}
+
+.tableCustom {
+  thead {
+    tr {
+      th {
+        padding-top: 0 !important;
+      }
+    }
+  }
+  tbody {
+    tr {
+      &:last-child {
+        td {
+          padding-bottom: 0 !important;
+        }
+      }
+    }
+  }
+}
+
+.t-badge {
+  display: inline-block;
+  padding: toRem(5) toRem(11) toRem(6);
+  @include fontFamily(13, $fw_SemiBold, 15, #69696a);
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: toRem(5);
+  background-color: #ececef;
+}
+
+.t-Download-btn {
+  a {
+    width: toRem(34);
+    height: toRem(34);
+    border-radius: toRem(5);
+    @include d-center;
+    color: #949494 !important;
+    background-color: #ececef;
+    margin: 0 auto;
+    transition: all 0.3s;
+    &:hover {
+      color: #fff !important;
+      background-color: $purple;
+    }
+  }
+}
+
+.btn {
+  &-paypal {
+    display: inline-block;
+    padding: toRem(11) toRem(20) toRem(10);
+    background-color: $purple;
+    border-radius: toRem(5);
+    @include fontFamily(14, $fw_SemiBold, 22, #fff !important);
+  }
+  &-stripe {
+    display: inline-block;
+    padding: toRem(11) toRem(20) toRem(10);
+    background-color: #eeebfb;
+    border-radius: toRem(5);
+    @include fontFamily(14, $fw_SemiBold, 22, $purple !important);
+  }
+  &-started {
+    display: inline-block;
+    padding: toRem(12) toRem(29);
+    background-color: $purple;
+    border-radius: toRem(5);
+    @include fontFamily(14, $fw_SemiBold, 22, #fff !important);
+  }
+}

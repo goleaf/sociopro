@@ -1,0 +1,139 @@
+<!-- Content Section Start -->
+
+
+<div class="event-page-wrap">
+    <div
+        class="d-flex pagetab-head   align-items-center justify-content-between mb-3 p-20 radius-8 bg-white">
+        <h3 class="h5 mb-0"><span><i class="fa-solid fa-calendar-days"></i></span> {{ get_phrase('Events') }}</h3>
+        <div class="">
+            <button onclick="showCustomModal('{{route('load_modal_content', ['view_path' => 'frontend.events.create_event'])}}', '{{get_phrase('Create Event')}}');" class="btn common_btn btn-sm" data-bs-toggle="modal"
+                data-bs-target="#createEvent"><i class="fa fa-plus-circle m-0"></i> <div class="d-none d-md-inline-block">{{get_phrase('Create Event')}}</div></button>
+            <a href="{{ route('userevent') }}" class="btn  btn-sm ms-2 @if(Route::currentRouteName() == 'userevent') common_btn_2 @else common_btn @endif ">{{ get_phrase('My Event') }}</a>
+        </div>
+    </div>
+    @if(count($events) > 0)
+     <div class="bg-white radius-8 p-20 Eblogs">
+        <div class="event-wrap row">
+            @foreach ($events as $event )
+            @php  $postOfThisEvent = \App\Models\Posts::where('publisher','event')->where('publisher_id',$event->id)->first(); @endphp
+            <div class="col-lg-6 col-xl-4 col-md-4 col-sm-6" id="event-{{ $event->id }}">
+                
+                <div class="card event-card m_product m_event">
+                    <a href="{{ route('single.event',$event->id) }}">
+                        <div class="event-image thumbnail-210-200" style="background-image: url('{{ viewImage('event',$event->banner,'thumbnail') }}')">
+                            {{--  just pass {folder name},{file name}and {folder type} then wait in viewImage function  --}}
+                            <div class="event-date n_date">
+                                @php $date = explode("-",$event->event_date); @endphp
+                            <p class="eve_t_text">
+                                {{ date('M', strtotime($event->event_date)) }}
+                            </p>
+                            <span>{{ $date['2'] }}</span>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="og_btn d-flex justify-content-between mt-2">
+                        
+                        {{-- <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.interested',$event->id); ?>')" class="btn ni_btn btn-primary @if (in_array(auth()->user()->id, json_decode($event->interested_users_id))) displaynone @endif" id="interestedId{{ $event->id }}"> <i class="fa-solid fa-star me-2"></i>{{get_phrase('Interested')}}</a>
+                        <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.notinterested',$event->id); ?>')" class="btn ni_btn btn-secondary @if (!in_array(auth()->user()->id, json_decode($event->interested_users_id))) displaynone @endif" id="notInterestedId{{ $event->id }}"> {{get_phrase('NotInterested')}}</a> --}}
+                        
+                        @if ($event->user_id==auth()->user()->id)
+                        <div class="post-controls hover_drop dropdown">
+                            <div class="dropdown">
+                                <button class="btn btn-secondary" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fa-solid fa-ellipsis"></i> 
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li>
+                                        <button onclick="showCustomModal('{{route('load_modal_content', ['view_path' => 'frontend.events.edit_event', 'event_id' => $event->id] )}}', '{{get_phrase('Edit Event')}}');" class="dropdown-item btn btn-primary btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#createEvent"><i class="fa fa-edit me-1"></i> {{get_phrase('Edit Event')}}</button>
+                                    </li>
+                                    <li>
+                                        <a href="javascript:void(0)" onclick="confirmAction('<?php echo route('event.delete', ['event_id' => $event->id]); ?>', true)" class="dropdown-item btn btn-primary btn-sm"><i class="fa fa-trash me-1"></i> {{get_phrase('Delete Event')}}</a>
+                                    </li>
+
+                                    @if($postOfThisEvent != null)
+                                        <li>
+                                            <a href="javascript:void(0)" onclick="showCustomModal('{{route('load_modal_content', ['view_path' => 'frontend.main_content.share_post_modal', 'post_id' => $postOfThisEvent->post_id] )}}', '{{get_phrase('Share Event')}}');" class="dropdown-item "><i class="fa fa-share me-1"></i> {{get_phrase('Share Event')}}</a>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </div>
+                        </div>
+                        @else
+                            @if($postOfThisEvent != null)
+                                <a href="javascript:void(0)" onclick="showCustomModal('{{route('load_modal_content', ['view_path' => 'frontend.main_content.share_post_modal', 'post_id' => $postOfThisEvent->post_id] )}}', '{{get_phrase('Share Event')}}');" class="dropdown-item "><i class="fa fa-share me-1"></i> {{get_phrase('Share Event')}}</a>
+                            @endif
+                        @endif
+                    </div>
+                    <div class="event-text ev_body og_event_text mt-3">
+                        <small class="event-meta">{{ date('D', strtotime($event->event_date)) }}, at
+                            {{ $event->event_time }}</small>
+                            <small class="mute e_location">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <mask id="mask0_16_74" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0"
+                                        width="20" height="20">
+                                        <rect width="20" height="20" fill="#D9D9D9" />
+                                    </mask>
+                                    <g mask="url(#mask0_16_74)">
+                                        <path
+                                            d="M10.0026 16.1248C11.697 14.5693 12.954 13.1561 13.7734 11.8853C14.5929 10.6144 15.0026 9.48595 15.0026 8.49984C15.0026 6.98595 14.52 5.74637 13.5547 4.78109C12.5894 3.81581 11.4054 3.33317 10.0026 3.33317C8.59983 3.33317 7.4158 3.81581 6.45052 4.78109C5.48524 5.74637 5.0026 6.98595 5.0026 8.49984C5.0026 9.48595 5.41233 10.6144 6.23177 11.8853C7.05121 13.1561 8.30816 14.5693 10.0026 16.1248ZM10.0026 17.7707C9.80816 17.7707 9.61371 17.736 9.41927 17.6665C9.22483 17.5971 9.05121 17.4929 8.89844 17.354C7.99566 16.5207 7.19705 15.7082 6.5026 14.9165C5.80816 14.1248 5.2283 13.3575 4.76302 12.6144C4.29774 11.8714 3.94358 11.1561 3.70052 10.4686C3.45747 9.78109 3.33594 9.12484 3.33594 8.49984C3.33594 6.4165 4.00608 4.75678 5.34635 3.52067C6.68663 2.28456 8.23871 1.6665 10.0026 1.6665C11.7665 1.6665 13.3186 2.28456 14.6589 3.52067C15.9991 4.75678 16.6693 6.4165 16.6693 8.49984C16.6693 9.12484 16.5477 9.78109 16.3047 10.4686C16.0616 11.1561 15.7075 11.8714 15.2422 12.6144C14.7769 13.3575 14.197 14.1248 13.5026 14.9165C12.8082 15.7082 12.0095 16.5207 11.1068 17.354C10.954 17.4929 10.7804 17.5971 10.5859 17.6665C10.3915 17.736 10.197 17.7707 10.0026 17.7707ZM10.0026 9.99984C10.4609 9.99984 10.8533 9.83664 11.1797 9.51025C11.5061 9.18387 11.6693 8.7915 11.6693 8.33317C11.6693 7.87484 11.5061 7.48248 11.1797 7.15609C10.8533 6.8297 10.4609 6.6665 10.0026 6.6665C9.54427 6.6665 9.15191 6.8297 8.82552 7.15609C8.49913 7.48248 8.33594 7.87484 8.33594 8.33317C8.33594 8.7915 8.49913 9.18387 8.82552 9.51025C9.15191 9.83664 9.54427 9.99984 10.0026 9.99984Z"
+                                            fill="#767676" />
+                                    </g>
+                                </svg>
+                                {{ $event->location }}</small>
+                        <h3 class="elips_con"><a class="ellipsis-line-2" href="{{ route('single.event',$event->id) }}">{{$event->title}}</a></h3>
+                        <div class="organiser elips_con  d-flex  align-items-center">
+                            <a href="{{ route('user.profile.view', $event['user_id']) }}"><img src="{{get_user_image($event->getUser->photo, 'optimized')}}"  width="35" class="user-round" alt=""></a>
+                            <div class="ognr-info ms-2">
+                                <h6 class="m-0"><a href="{{ route('user.profile.view', $event['user_id']) }}">{{ $event->getUser->name }}</a></h6>
+                                {{-- <small class="mute">{{ $event->location }}</small> --}}
+                            </div>
+                        </div>
+                        {{-- <div class="og_go">
+                            <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.going',$event->id); ?>')" class="btn btn-primary @if (in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif" id="goingId{{ $event->id }}"> {{get_phrase('Going')}}</a>
+                            <a href="javascript:void(0)" onclick="ajaxAction('<?php echo route('event.notgoing',$event->id); ?>')" class="btn btn-secondary @if (!in_array(auth()->user()->id, json_decode($event->going_users_id))) displaynone @endif" id="notGoingId{{ $event->id }}"> {{get_phrase('Cancel')}}</a>
+                        </div> --}}
+                    </div>
+                </div>
+            </div>
+            @endforeach
+         </div>
+     </div>
+     @else
+     <div class="no_data j_nodata mt-3 bg-white radius-8 p-20">
+         <div class="no_data_img eData">
+             <span><svg width="1447" height="1374" viewBox="0 0 1447 1374" fill="none" xmlns="http://www.w3.org/2000/svg">
+                 <g clip-path="url(#clip0_60_31)">
+                 <rect x="376" y="70" width="884" height="166" rx="83" fill="#EDEDED"/>
+                 <path fill-rule="evenodd" clip-rule="evenodd" d="M43 429.5C43 348.038 109.038 282 190.5 282H1280.5C1361.96 282 1428 348.038 1428 429.5C1428 510.962 1361.96 577 1280.5 577H1239.98C1202.84 607.718 1179.55 651.899 1179.55 701C1179.55 755.127 1207.85 803.275 1251.8 834H1284.5C1374.25 834 1447 906.754 1447 996.5C1447 1086.25 1374.25 1159 1284.5 1159H186.5C96.7537 1159 24 1086.25 24 996.5C24 906.754 96.7537 834 186.5 834H219.402C263.353 803.275 291.657 755.127 291.657 701C291.657 651.899 268.365 607.718 231.23 577H190.5C109.038 577 43 510.962 43 429.5Z" fill="#EDEDED"/>
+                 <path fill-rule="evenodd" clip-rule="evenodd" d="M289.939 1052.15L290.909 1044.72L291.879 1037.28C295.512 1037.75 299.224 1038 303 1038H317.833V1045.5V1053H303C298.573 1053 294.214 1052.71 289.939 1052.15ZM822.167 1053V1045.5V1038H837C840.776 1038 844.488 1037.75 848.121 1037.28L849.091 1044.72L850.061 1052.15C845.786 1052.71 841.427 1053 837 1053H822.167ZM875.279 1045.41L872.406 1038.48L869.533 1031.56C876.435 1028.69 882.885 1024.94 888.739 1020.45L893.308 1026.39L897.878 1032.34C890.997 1037.63 883.409 1042.04 875.279 1045.41ZM916.34 1013.88L910.393 1009.31L904.446 1004.74C908.945 998.885 912.694 992.435 915.556 985.533L922.484 988.406L929.412 991.279C926.041 999.409 921.628 1007 916.34 1013.88ZM317.833 201H303C298.573 201 294.214 201.288 289.939 201.845L290.909 209.282L291.879 216.719C295.512 216.245 299.224 216 303 216H317.833V208.5V201ZM264.721 208.588L267.594 215.516L270.467 222.444C263.565 225.306 257.115 229.055 251.261 233.554L246.692 227.607L242.122 221.66C249.003 216.372 256.591 211.959 264.721 208.588ZM223.66 240.122L229.607 244.692L235.554 249.262C231.055 255.115 227.306 261.565 224.444 268.467L217.516 265.594L210.588 262.721C213.959 254.591 218.372 247.003 223.66 240.122ZM203 938.182H210.5H218V953C218 956.776 218.245 960.488 218.719 964.121L211.282 965.091L203.845 966.061C203.288 961.786 203 957.427 203 953V938.182ZM210.588 991.279L217.516 988.406L224.444 985.533C227.306 992.435 231.055 998.885 235.554 1004.74L229.607 1009.31L223.66 1013.88C218.372 1007 213.959 999.409 210.588 991.279ZM264.721 1045.41L267.594 1038.48L270.467 1031.56C263.565 1028.69 257.115 1024.94 251.261 1020.45L246.692 1026.39L242.122 1032.34C249.003 1037.63 256.591 1042.04 264.721 1045.41ZM203 908.545H210.5H218V878.909H210.5H203V908.545ZM203 849.273H210.5H218V819.636H210.5H203V849.273ZM203 790H210.5H218V760.364H210.5H203V790ZM203 730.727H210.5H218V701.091H210.5H203V730.727ZM203 671.455H210.5H218V641.818H210.5H203V671.455ZM203 612.182H210.5H218V582.545H210.5H203V612.182ZM203 552.909H210.5H218V523.273H210.5H203V552.909ZM203 493.636H210.5H218V464H210.5H203V493.636ZM203 434.364H210.5H218V404.727H210.5H203V434.364ZM203 375.091H210.5H218V345.455H210.5H203V375.091ZM203 315.818H210.5H218V301C218 297.224 218.245 293.512 218.719 289.879L211.282 288.909L203.845 287.939C203.288 292.214 203 296.573 203 301V315.818ZM347.5 201V208.5V216H377.167V208.5V201H347.5ZM406.833 201V208.5V216H436.5V208.5V201H406.833ZM466.167 201V208.5V216H495.833V208.5V201H466.167ZM525.5 201V208.5V216H555.167V208.5V201H525.5ZM584.833 201V208.5V216H614.5V208.5V201H584.833ZM644.167 201V208.5V216H673.833V208.5V201H644.167ZM937 464H929.5H922V493.636H929.5H937V464ZM937 523.273H929.5H922V552.909H929.5H937V523.273ZM937 582.545H929.5H922V612.182H929.5H937V582.545ZM937 641.818H929.5H922V671.455H929.5H937V641.818ZM937 701.091H929.5H922V730.727H929.5H937V701.091ZM937 760.364H929.5H922V790H929.5H937V760.364ZM937 819.636H929.5H922V849.273H929.5H937V819.636ZM937 878.909H929.5H922V908.545H929.5H937V878.909ZM937 938.182H929.5H922V953C922 956.776 921.755 960.488 921.281 964.121L928.718 965.091L936.155 966.061C936.712 961.786 937 957.427 937 953V938.182ZM792.5 1053V1045.5V1038H762.833V1045.5V1053H792.5ZM733.167 1053V1045.5V1038H703.5V1045.5V1053H733.167ZM673.833 1053V1045.5V1038H644.167V1045.5V1053H673.833ZM614.5 1053V1045.5V1038H584.833V1045.5V1053H614.5ZM555.167 1053V1045.5V1038H525.5V1045.5V1053H555.167ZM495.833 1053V1045.5V1038H466.167V1045.5V1053H495.833ZM436.5 1053V1045.5V1038H406.833V1045.5V1053H436.5ZM377.167 1053V1045.5V1038H347.5V1045.5V1053H377.167ZM680 220L689.917 229.917L700.523 219.31L690.607 209.393L680 220ZM709.75 249.75L729.583 269.583L740.19 258.977L720.357 239.143L709.75 249.75ZM749.417 289.417L769.25 309.25L779.857 298.643L760.023 278.81L749.417 289.417ZM789.083 329.083L808.917 348.917L819.523 338.31L799.69 318.477L789.083 329.083ZM828.75 368.75L848.583 388.583L859.19 377.977L839.357 358.143L828.75 368.75ZM868.417 408.417L888.25 428.25L898.857 417.643L879.023 397.81L868.417 408.417ZM908.083 448.083L918 458L928.607 447.393L918.69 437.477L908.083 448.083Z" fill="#B2B2B2"/>
+                 <rect x="940" y="990.288" width="59" height="101" transform="rotate(-40.4621 940 990.288)" fill="#C6C6C6"/>
+                 <path d="M1052.77 1005.76C1061.28 998.714 1073.89 999.894 1080.94 1008.4L1281.52 1250.43C1299.14 1271.69 1296.19 1303.21 1274.93 1320.83L1248.75 1342.53C1227.49 1360.15 1195.97 1357.2 1178.35 1335.94L977.762 1093.9C970.714 1085.4 971.895 1072.79 980.399 1065.74L1052.77 1005.76Z" fill="#B2B2B2"/>
+                 <rect x="1058.63" y="1053.51" width="21.4981" height="265.241" rx="10.7491" transform="rotate(-40.19 1058.63 1053.51)" fill="white"/>
+                 <circle cx="752" cy="718" r="354" fill="#E6E6E6" stroke="#B2B2B2" stroke-width="10"/>
+                 <circle cx="752" cy="718" r="280" fill="white" stroke="#B2B2B2" stroke-width="10"/>
+                 <path d="M839.656 650.125C839.656 656.766 838.484 662.951 836.141 668.68C833.667 674.279 830.542 679.422 826.766 684.109C822.99 688.797 818.823 693.094 814.266 697C811.922 698.953 809.643 700.841 807.43 702.664C805.216 704.357 803.003 706.049 800.789 707.742C796.362 710.997 792.26 714.057 788.484 716.922C784.839 719.656 782.104 722.26 780.281 724.734C779.5 725.776 778.589 727.404 777.547 729.617C776.505 731.701 775.984 734.109 775.984 736.844C775.984 743.875 773.771 749.669 769.344 754.227C765.047 758.784 758.276 761.062 749.031 761.062C739.135 761.062 731.974 758.328 727.547 752.859C723.12 747.391 720.906 741.531 720.906 735.281C720.906 726.688 722.404 719.266 725.398 713.016C728.393 707.026 732.169 701.883 736.727 697.586C741.284 693.159 746.167 689.318 751.375 686.062C757.104 682.417 761.987 679.031 766.023 675.906C770.581 672.391 774.357 668.484 777.352 664.188C780.346 659.76 781.844 654.292 781.844 647.781C781.844 639.708 780.281 633.589 777.156 629.422C774.031 625.255 770.06 622.456 765.242 621.023C760.555 619.591 755.672 618.875 750.594 618.875C738.745 618.875 730.867 621.74 726.961 627.469C723.185 633.198 721.297 640.099 721.297 648.172C721.297 657.547 718.107 664.578 711.727 669.266C705.477 673.953 698.901 676.297 692 676.297C683.146 676.297 675.984 673.888 670.516 669.07C665.047 664.122 662.312 657.807 662.312 650.125C662.312 646.609 662.703 642.247 663.484 637.039C664.266 631.701 665.763 626.036 667.977 620.047C670.19 614.057 673.315 608.068 677.352 602.078C681.258 596.349 686.531 590.945 693.172 585.867C699.682 581.049 707.625 577.143 717 574.148C726.375 571.154 737.573 569.656 750.594 569.656C765.307 569.656 778.198 571.674 789.266 575.711C800.464 579.617 809.773 585.086 817.195 592.117C832.169 606.44 839.656 625.776 839.656 650.125ZM782.625 814.578C782.625 825.646 779.826 833.849 774.227 839.188C768.628 844.396 760.75 847 750.594 847C728.979 847 718.172 836.193 718.172 814.578C718.172 803.38 720.971 795.242 726.57 790.164C732.169 785.086 740.177 782.547 750.594 782.547C761.401 782.547 769.409 785.086 774.617 790.164C779.956 795.242 782.625 803.38 782.625 814.578Z" fill="#B2B2B2"/>
+                 <path d="M47.5322 74L137.462 169.256" stroke="#B2B2B2" stroke-width="15" stroke-linecap="round"/>
+                 <path d="M186.532 24L187.008 154.999" stroke="#B2B2B2" stroke-width="15" stroke-linecap="round"/>
+                 <path d="M0 216.019L130.994 217.237" stroke="#B2B2B2" stroke-width="15" stroke-linecap="round"/>
+                 </g>
+                 <defs>
+                 <clipPath id="clip0_60_31">
+                 <rect width="1447" height="1374" fill="white"/>
+                 </clipPath>
+                 </defs>
+                 </svg></span>
+             <p class="pera_text">{{get_phrase('No data found!')}}</p>
+             <p class="pera_text">{{get_phrase('Please go back')}}</p>
+             <a class="btn_1" href="{{ url()->previous() }}">{{get_phrase('Back')}}</a>
+         </div>
+     </div>
+     @endif
+
+</div>
+
+
+
+
+

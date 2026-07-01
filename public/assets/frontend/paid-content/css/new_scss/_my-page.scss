@@ -1,0 +1,162 @@
+.profile-banner-title {
+  max-width: toRem(760);
+  margin: 0 auto;
+  height: toRem(340);
+  border-radius: toRem(0) toRem(0) toRem(5) toRem(5);
+  padding: toRem(20);
+  display: flex;
+  align-items: flex-end;
+  gap: toRem(20);
+
+  .content {
+    p {
+      margin: 0;
+    }
+  }
+}
+
+.profile-img {
+  width: toRem(110);
+  height: toRem(110);
+  border: toRem(3) solid #fff;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+//
+.page-sidebar {
+  @include boxShadow(0, 10, 20, rgb(0 0 0 / 5%));
+  background-color: #fff;
+  padding: toRem(24) toRem(20) toRem(30);
+  border-radius: toRem(5);
+  text-align: center;
+}
+
+.page-s-btn {
+  @include d-center;
+  height: toRem(35);
+  background-color: #5a2ff9;
+  border-radius: toRem(5);
+  @include fontFamily(14, $fw_SemiBold, 22, #fff);
+  &:hover {
+    color: #fff !important;
+  }
+}
+
+.social-links {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: toRem(10);
+
+  li {
+    a {
+      @include d-center;
+      width: toRem(26);
+      height: toRem(26);
+      background-color: #dfd9f6;
+      border-radius: 50%;
+      color: #5a2ff9;
+      transition: all 0.3s;
+
+      &:hover {
+        background-color: #5a2ff9;
+        color: #fff;
+      }
+    }
+  }
+}
+
+.paid-membership-item {
+  background-color: #fff;
+  border-radius: toRem(5);
+  padding: toRem(20);
+  @include boxShadow(0, 15, 25, rgb(0 0 0 / 9%));
+  transition: all 0.3s;
+
+  .title {
+    padding: 0;
+    margin: 0;
+    @include fontFamily(24, $fw_SemiBold, 22, #101010);
+    padding-bottom: toRem(20);
+  }
+
+  .titleTwo {
+    padding: 0;
+    margin: 0;
+    @include fontFamily(18, $fw_SemiBold, 22, #101010);
+  }
+
+  p {
+    padding: 0;
+    margin: 0;
+    @include fontFamily(14, $fw_Regular, 20, #636363);
+    padding-bottom: toRem(20);
+  }
+
+  .list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    padding-bottom: toRem(20);
+
+    li {
+      @include fontFamily(14, $fw_Regular, 20, #636363);
+      padding-bottom: toRem(14);
+      padding-left: toRem(16);
+      position: relative;
+      &::before {
+        content: url(../../images/new/listcheck.svg);
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      &:last-child {
+        padding-bottom: 0;
+      }
+    }
+  }
+  .price {
+    padding: 0;
+    margin: 0;
+    @include fontFamily(14, $fw_Regular, 20, #636363);
+    padding-left: toRem(15);
+    padding-bottom: toRem(20);
+    span {
+      @include fontFamily(24, $fw_SemiBold, 22, #101010);
+    }
+  }
+  .paidBtn {
+    @include d-center;
+    width: toRem(140);
+    height: toRem(45);
+    margin: 0 auto;
+    border-radius: toRem(5);
+    background-color: #5a2ff9;
+    @include fontFamily(16, $fw_SemiBold, 22, #fff);
+  }
+
+  &:hover {
+    background-color: #181059;
+    .title,
+    .titleTwo,
+    p,
+    .list li,
+    .price,
+    .price span {
+      color: #fff;
+    }
+  }
+}
+.allLevel {
+  @include d-center;
+  margin: 0 auto;
+  width: toRem(153);
+  height: toRem(45);
+  border-radius: toRem(5);
+  background-color: #dfd9f6;
+  @include fontFamily(16, $fw_SemiBold, 22, #5a2ff9);
+}
