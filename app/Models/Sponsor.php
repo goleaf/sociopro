@@ -24,6 +24,9 @@ class Sponsor extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'paid_amount' => 'decimal:2',
+            'status' => 'integer',
             'start_date' => 'datetime',
             'end_date' => 'datetime',
         ];

@@ -30,6 +30,10 @@ class PaymentHistoryEntry extends Model
     protected function casts(): array
     {
         return [
+            'item_id' => 'integer',
+            'user_id' => 'integer',
+            'amount' => 'decimal:2',
+            'transaction_keys' => 'array',
             'status' => PaytmTransactionStatus::class,
         ];
     }

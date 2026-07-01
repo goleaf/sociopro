@@ -1387,7 +1387,7 @@ class AdminCrudController extends Controller
     {
         $page_data['currencies'] = Currency::query()->select(['code'])->orderBy('code')->get();
         $page_data['payment_gateway'] = Payment_gateway::where('id', $id)->first();
-        $page_data['paymentGatewayKeys'] = json_decode($page_data['payment_gateway']->keys, true) ?: [];
+        $page_data['paymentGatewayKeys'] = $page_data['payment_gateway']->decodedKeys();
         $page_data['view_path'] = 'payment.payment_gateway_edit';
 
         return view('backend.index', $page_data);
@@ -1399,7 +1399,7 @@ class AdminCrudController extends Controller
         $allowedKeyNames = array_keys($paymentGateway->decodedKeys());
         $paymentGateway->forceFill([
             'currency' => $request->input('currency'),
-            'keys' => json_encode($request->only($allowedKeyNames)),
+            'keys' => $request->only($allowedKeyNames),
         ])->save();
         flash()->addSuccess('Payment gateway has been updated');
 

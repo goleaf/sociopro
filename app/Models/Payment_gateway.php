@@ -19,6 +19,19 @@ class Payment_gateway extends Model
         'keys',
     ];
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'keys' => 'array',
+            'test_mode' => 'boolean',
+            'status' => 'boolean',
+            'is_addon' => 'boolean',
+        ];
+    }
+
     public function scopeForIdentifier(Builder $query, string|PaymentGatewayIdentifier $identifier): Builder
     {
         $identifier = $identifier instanceof PaymentGatewayIdentifier ? $identifier->value : $identifier;
@@ -43,6 +56,16 @@ class Payment_gateway extends Model
     {
         $keys = $this->getAttribute('keys');
 
-        return json_decode(is_string($keys) ? $keys : '', true) ?: [];
+        if (is_array($keys)) {
+            return $keys;
+        }
+
+        if (! is_string($keys) || $keys === '') {
+            return [];
+        }
+
+        $decodedKeys = json_decode($keys, true);
+
+        return is_array($decodedKeys) ? $decodedKeys : [];
     }
 }

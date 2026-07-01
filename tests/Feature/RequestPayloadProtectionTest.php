@@ -47,7 +47,7 @@ class RequestPayloadProtectionTest extends TestCase
             ->assertRedirect(route('admin.settings.payment'));
 
         $gateway->refresh();
-        $keys = json_decode((string) $gateway->keys, true);
+        $keys = $gateway->decodedKeys();
 
         $this->assertSame('EUR', $gateway->currency);
         $this->assertSame('1', (string) $gateway->status);

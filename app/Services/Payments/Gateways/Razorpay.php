@@ -47,7 +47,7 @@ class Razorpay
             $payment_gateway = Payment_gateway::query()
                 ->where('identifier', $identifier)
                 ->first();
-            $keys = json_decode($payment_gateway->keys, true);
+            $keys = $payment_gateway->decodedKeys();
 
             $public_key = $keys['public_key'];
             $secret_key = $keys['secret_key'];
