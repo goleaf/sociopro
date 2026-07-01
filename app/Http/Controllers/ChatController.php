@@ -181,7 +181,11 @@ class ChatController extends Controller
 
     public function react_chat(Request $request)
     {
-        $form_data = $request->all();
+        $form_data = $request->only([
+            'requestType',
+            'messageId',
+            'react',
+        ]);
         if ($form_data['requestType'] == 'update') {
             $chat = Chat::find($form_data['messageId']);
             $chat->react = $form_data['react'];

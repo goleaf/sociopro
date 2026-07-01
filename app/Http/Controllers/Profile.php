@@ -171,7 +171,7 @@ class Profile extends Controller
             $album_show_on = 'profile';
             $page_data['page_identifire'] = 'profile';
             $rules = ['title' => 'required|max:255', 'privacy' => 'required', 'thumbnail' => 'image|nullable'];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->only(array_keys($rules)), $rules);
             // Validate the input and return correct response
             if ($validator->fails()) {
                 return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
@@ -381,7 +381,7 @@ class Profile extends Controller
         if ($photo_type == PostType::CoverPhoto->value) {
             // Validate the input and return correct response
             $rules = ['cover_photo' => 'mimes:jpeg,jpg,png,gif|required'];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->only(array_keys($rules)), $rules);
             if ($validator->fails()) {
                 return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
             }
@@ -397,7 +397,7 @@ class Profile extends Controller
 
             return json_encode(['reload' => 1]);
         } else {
-            return json_encode(['alertMessage' => json_encode($request->all())]);
+            return json_encode(['alertMessage' => get_phrase('Invalid photo type')]);
         }
     }
 
@@ -411,7 +411,7 @@ class Profile extends Controller
             'phone' => 'max:20|nullable',
             'date_of_birth' => 'required',
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }

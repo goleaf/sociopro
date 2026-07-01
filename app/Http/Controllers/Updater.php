@@ -21,7 +21,7 @@ class Updater extends Controller
         $product_current_version = DB::table('settings')->where('type', 'version')->value('description');
 
         $rules = ['file' => 'required|file|mimes:zip'];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
             return redirect()->back()->with('error', get_phrase('Select a valid zip file'));
         }

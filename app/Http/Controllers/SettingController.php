@@ -135,9 +135,7 @@ class SettingController extends Controller
 
     public function smtp_settings_save(Request $request, $id)
     {
-        $data = $request->all();
-
-        unset($data['_token']);
+        $data = $request->only('smtp_protocol', 'smtp_crypto', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass');
 
         foreach ($data as $key => $value) {
             if ($key == 'smtp_protocol') {
@@ -155,7 +153,6 @@ class SettingController extends Controller
             }
         }
 
-        $data = $request->only('smtp_protocol', 'smtp_crypto', 'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass');
         $description = json_encode($data);
         Setting::where('setting_id', $id)->update(['description' => $description]);
         flash()->addSuccess('This Smtp Settings Updated Successfully');

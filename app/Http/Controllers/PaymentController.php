@@ -68,7 +68,8 @@ class PaymentController extends Controller
         $payment_details = session('payment_details');
         $payment_gateway = $this->paymentGateway($identifier);
 
-        $status = $this->paymentGatewayResolver->paymentStatus($payment_gateway, $identifier, $request->all());
+        $callbackPayload = $request->except(['_method', '_token']);
+        $status = $this->paymentGatewayResolver->paymentStatus($payment_gateway, $identifier, $callbackPayload);
 
         if ($status === true) {
             $success_model = $payment_details['success_method']['model_name'];

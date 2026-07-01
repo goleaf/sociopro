@@ -66,7 +66,7 @@ class GroupController extends Controller
             'image' => 'mimes:jpeg,jpg,png,gif|nullable',
             'name' => 'required|max:255',
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
@@ -108,7 +108,7 @@ class GroupController extends Controller
             'image' => 'mimes:jpeg,jpg,png,gif|nullable',
             'name' => 'required|max:255',
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
@@ -384,7 +384,6 @@ class GroupController extends Controller
 
     public function sent_invition(Request $request)
     {
-        // return $request->all();
         $invited_group_users_id = $request->invited_group_users_id;
         $count = count($invited_group_users_id);
 

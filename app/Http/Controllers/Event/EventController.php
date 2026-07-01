@@ -46,8 +46,6 @@ class EventController extends Controller
     // event store
     public function store(Request $request)
     {
-        // return $request->all();
-
         $rules = [
             'coverphoto' => 'mimes:jpeg,jpg,png,gif|nullable',
             'eventname' => 'required|max:255',
@@ -55,7 +53,7 @@ class EventController extends Controller
             'eventtime' => 'required',
             'eventlocation' => 'required',
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
@@ -128,7 +126,7 @@ class EventController extends Controller
             'eventtime' => 'required',
             'eventlocation' => 'required',
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }

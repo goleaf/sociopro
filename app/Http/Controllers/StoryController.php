@@ -66,7 +66,13 @@ class StoryController extends Controller
 
     public function create_story(Request $request)
     {
-        $all_data = $request->all();
+        $all_data = $request->only([
+            'publisher',
+            'content_type',
+            'color',
+            'bg-color',
+            'description',
+        ]);
 
         $data['publisher'] = $all_data['publisher'];
         $data['content_type'] = $all_data['content_type'];

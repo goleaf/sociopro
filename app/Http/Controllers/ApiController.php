@@ -118,7 +118,6 @@ class ApiController extends Controller
 
     public function signup(Request $request)
     {
-        // return $request->all();
         $response = [];
 
         // $request->validate([
@@ -137,7 +136,7 @@ class ApiController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(['name', 'email', 'password', 'password_confirmation']), $rules);
         if ($validator->fails()) {
             return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
         }
@@ -941,7 +940,13 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $all_data = $request->all();
+            $all_data = $request->only([
+                'publisher',
+                'content_type',
+                'color',
+                'bg-color',
+                'description',
+            ]);
 
             $data['publisher'] = 'user';
             $data['content_type'] = $request->content_type;
@@ -1351,8 +1356,6 @@ class ApiController extends Controller
 
     public function create_post(Request $request)
     {
-        // return $request->all();
-
         $token = $request->bearerToken();
         $response = [];
         $data = [];
@@ -1361,7 +1364,6 @@ class ApiController extends Controller
             $user_id = auth('sanctum')->user()->id;
 
             // $rules = array('privacy' => ['required', Rule::in(['private', 'public', 'friends'])]);
-            // $validator = Validator::make($request->all(), $rules);
             // if ($validator->fails()) {
             //     return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
             // }
@@ -1371,7 +1373,7 @@ class ApiController extends Controller
 
                 $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
                 // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
-                $validator = Validator::make($request->all(), $rules);
+                $validator = Validator::make($request->only(['multiple_files']), $rules);
                 if ($validator->fails()) {
                     $validation_errors = $validator->getMessageBag()->toArray();
                     foreach ($validation_errors as $key => $validation_error) {
@@ -1465,7 +1467,7 @@ class ApiController extends Controller
                 // Data validation
                 // $response['message'] = 'check image for upload';
                 $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
-                $validator = Validator::make($request->all(), $rules);
+                $validator = Validator::make($request->only(['multiple_files']), $rules);
                 if ($validator->fails()) {
                     $validation_errors = $validator->getMessageBag()->toArray();
                     foreach ($validation_errors as $key => $validation_error) {
@@ -1540,7 +1542,6 @@ class ApiController extends Controller
             // $posts = Posts::where('id', $id)->first();
 
             // $rules = array('privacy' => ['required', Rule::in(['private', 'public', 'friends'])]);
-            // $validator = Validator::make($request->all(), $rules);
             // if ($validator->fails()) {
             //     return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
             // }
@@ -1550,7 +1551,7 @@ class ApiController extends Controller
 
                 $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
                 // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
-                $validator = Validator::make($request->all(), $rules);
+                $validator = Validator::make($request->only(['multiple_files']), $rules);
                 if ($validator->fails()) {
                     $validation_errors = $validator->getMessageBag()->toArray();
                     foreach ($validation_errors as $key => $validation_error) {
@@ -1593,7 +1594,7 @@ class ApiController extends Controller
                 // Data validation
 
                 $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
-                $validator = Validator::make($request->all(), $rules);
+                $validator = Validator::make($request->only(['multiple_files']), $rules);
                 if ($validator->fails()) {
                     $validation_errors = $validator->getMessageBag()->toArray();
                     foreach ($validation_errors as $key => $validation_error) {
@@ -2224,7 +2225,7 @@ class ApiController extends Controller
                 'profile_photo' => 'nullable',
 
             ];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->only(array_keys($rules)), $rules);
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
@@ -2295,7 +2296,7 @@ class ApiController extends Controller
             $user_id = auth('sanctum')->user()->id;
             // Validate the input and return correct response
             $rules = ['cover_photo' => 'required'];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->only(array_keys($rules)), $rules);
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
@@ -2612,7 +2613,6 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            // $form_data = $request->all();
             if ($request->comment == 'comment') {
                 $data['parent_id'] = $request->parent_id;
                 $data['user_id'] = $user_id;
@@ -2721,7 +2721,6 @@ class ApiController extends Controller
     //     if (isset($token) && $token != '') {
 
     //         $user_id = auth('sanctum')->user()->id;
-    //         // $form_data = $request->all();
     //         // Fetch Posts by the User
     //         $posts = Posts::orderBy('post_id', 'desc')->where('user_id', $user_id)->get();
     //         foreach ($posts as $key1 => $post) {
@@ -3110,7 +3109,7 @@ class ApiController extends Controller
                 'name' => 'required|max:255',
                 'privacy' => 'required|max:255',
             ];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->only(array_keys($rules)), $rules);
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
@@ -3165,7 +3164,7 @@ class ApiController extends Controller
                 // 'image' => 'mimes:jpeg,jpg,png,gif|nullable',
                 // 'name' => 'required|max:255',
             ];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make([], $rules);
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
@@ -3771,7 +3770,7 @@ class ApiController extends Controller
                 // 'name' => 'required|max:255',
                 // 'category' => 'required',
             ];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make([], $rules);
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
@@ -3937,7 +3936,7 @@ class ApiController extends Controller
                 'name' => 'required|max:255',
                 'category' => 'required',
             ];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->only(array_keys($rules)), $rules);
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
@@ -4246,7 +4245,6 @@ class ApiController extends Controller
             $user_id = auth('sanctum')->user()->id;
 
             // $rules = array('title' => 'required|max:255', 'privacy' => 'required', 'thumbnail' => 'image|nullable');
-            // $validator = Validator::make($request->all(), $rules);
             // // Validate the input and return correct response
             // if ($validator->fails()) {
             //     return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
@@ -4511,7 +4509,7 @@ class ApiController extends Controller
                 'status' => 'required',
                 'brand' => 'required',
             ];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->only(array_keys($rules)), $rules);
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
@@ -4589,7 +4587,7 @@ class ApiController extends Controller
                 // 'status' => 'required',
                 // 'brand' => 'required',
             ];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make([], $rules);
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
@@ -5162,7 +5160,6 @@ class ApiController extends Controller
             $user_id = auth('sanctum')->user()->id;
 
             // $rules = array('video' => 'required|file|mimes:mp4,mov,wmv,mkv,webm,avi,m4v| max:500000');
-            // $validator = Validator::make($request->all(), $rules);
             // if ($validator->fails()) {
             //     return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
             // }
@@ -5407,7 +5404,7 @@ class ApiController extends Controller
                 'eventtime' => 'required',
                 'eventlocation' => 'required',
             ];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->only(array_keys($rules)), $rules);
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
@@ -5495,7 +5492,7 @@ class ApiController extends Controller
                 'eventtime' => 'required',
                 'eventlocation' => 'required',
             ];
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->only(array_keys($rules)), $rules);
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
@@ -7256,7 +7253,10 @@ class ApiController extends Controller
         $response = [];
 
         if (isset($token) && $token != '') {
-            $form_data = $request->all();
+            $form_data = $request->only([
+                'messageId',
+                'react',
+            ]);
             $chat = Chat::find($form_data['messageId']);
 
             $reactionValue = $chat->react;
@@ -7382,7 +7382,6 @@ class ApiController extends Controller
 
     public function group_invition(Request $request)
     {
-        // return $request->all();
         $token = $request->bearerToken();
         $response = [];
 
@@ -7417,7 +7416,6 @@ class ApiController extends Controller
 
     public function event_invition(Request $request)
     {
-        // return $request->all();
         $token = $request->bearerToken();
         $response = [];
 

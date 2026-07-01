@@ -42,7 +42,7 @@ class MarketplaceController extends Controller
             // 'status' => 'required',
             // 'brand' => 'required',
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
@@ -105,7 +105,7 @@ class MarketplaceController extends Controller
             'status' => 'required',
             // 'brand' => 'required',
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }

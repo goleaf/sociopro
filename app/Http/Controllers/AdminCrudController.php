@@ -1313,14 +1313,12 @@ class AdminCrudController extends Controller
 
     public function payment_gateway_update($id, Request $request)
     {
-        $keys = [];
-        $all_data = $request->all();
-        $data['currency'] = $request->currency;
+        $paymentGateway = Payment_gateway::findOrFail($id);
+        $allowedKeyNames = array_keys($paymentGateway->decodedKeys());
+        $data['currency'] = $request->input('currency');
+        $data['keys'] = json_encode($request->only($allowedKeyNames));
 
-        unset($all_data['_token']);
-        unset($all_data['currency']);
-        $data['keys'] = json_encode($all_data);
-        Payment_gateway::find($id)->update($data);
+        $paymentGateway->update($data);
         flash()->addSuccess('Payment gateway has been updated');
 
         return redirect()->route('admin.settings.payment');

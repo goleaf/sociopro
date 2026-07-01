@@ -7,6 +7,18 @@ use Illuminate\Http\Request;
 
 class ModalController extends Controller
 {
+    private const VIEW_DATA_KEYS = [
+        'event_id',
+        'group_id',
+        'id',
+        'image',
+        'language',
+        'page_id',
+        'post_id',
+        'product_id',
+        'profile_id',
+    ];
+
     private $user;
 
     public function __construct()
@@ -20,10 +32,7 @@ class ModalController extends Controller
 
     public function common_view_function($view_path, Request $request)
     {
-        $page_data = [];
-        foreach ($request->all() as $key => $value) {
-            $page_data[$key] = $value;
-        }
+        $page_data = $request->only(self::VIEW_DATA_KEYS);
 
         return view($view_path, $this->modalViewData($view_path, $page_data));
     }

@@ -27,7 +27,7 @@ class VideoController extends Controller
     public function store(Request $request)
     {
         $rules = ['video' => 'required|file|mimes:mp4,mov,wmv,mkv,webm,avi,m4v| max:500000'];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }

@@ -39,4 +39,54 @@ class MainControllerValidationTest extends TestCase
         $this->assertArrayNotHasKey('multiple_files.0', $payload['validationError']);
         $this->assertStringContainsString('post media upload', $payload['validationError']['multiple_files'][0]);
     }
+
+    public function test_payment_settings_ignore_sensitive_raw_request_fields(): void
+    {
+        $user = User::factory()->create([
+            'friends' => json_encode([]),
+            'status' => UserAccountStatus::Active->value,
+            'user_role' => UserRole::General->value,
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('user.settings'))
+            ->post(route('save.payment.settings'), [
+                '_token' => 'test-token',
+                'raz_key_id' => 'razorpay-key',
+                'raz_secret_key' => 'razorpay-secret',
+                'theme_color' => '#123456',
+                'stripe_public_key' => 'stripe-public',
+                'stripe_secret_key' => 'stripe-secret',
+                'stripe_public_live_key' => 'stripe-live-public',
+                'stripe_secret_live_key' => 'stripe-live-secret',
+                'paypal_client_id' => 'paypal-client',
+                'paypal_secret_key' => 'paypal-secret',
+                'paypal_production_client_id' => 'paypal-live-client',
+                'paypal_production_secret_key' => 'paypal-live-secret',
+                'flutterwave_public_key' => 'flutterwave-public',
+                'flutterwave_secret_key' => 'flutterwave-secret',
+                'flutterwave_encryption_key' => 'flutterwave-encryption',
+                'stripe_live' => 'on',
+                'status' => UserAccountStatus::Disabled->value,
+                'user_role' => UserRole::Admin->value,
+                'payment_settings' => '{"owned":"no"}',
+                'unexpected_secret' => 'do-not-store',
+            ])
+            ->assertRedirect(route('user.settings'));
+
+        $settings = json_decode((string) $user->refresh()->payment_settings, true);
+
+        $this->assertIsArray($settings);
+        $this->assertSame('razorpay-key', $settings['raz_key_id']);
+        $this->assertTrue($settings['stripe_live']);
+        $this->assertFalse($settings['paypal_live']);
+        $this->assertFalse($settings['flutterwave_live']);
+        $this->assertArrayNotHasKey('_token', $settings);
+        $this->assertArrayNotHasKey('status', $settings);
+        $this->assertArrayNotHasKey('user_role', $settings);
+        $this->assertArrayNotHasKey('payment_settings', $settings);
+        $this->assertArrayNotHasKey('unexpected_secret', $settings);
+        $this->assertSame(UserAccountStatus::Active->value, (int) $user->status);
+        $this->assertSame(UserRole::General->value, $user->user_role);
+    }
 }

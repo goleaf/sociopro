@@ -44,6 +44,26 @@ class MainController extends Controller
 
     const MEETING_TYPE_FIXED_RECURRING_FIXED = 8;
 
+    /**
+     * @var list<string>
+     */
+    private const USER_PAYMENT_SETTING_FIELDS = [
+        'raz_key_id',
+        'raz_secret_key',
+        'theme_color',
+        'stripe_public_key',
+        'stripe_secret_key',
+        'stripe_public_live_key',
+        'stripe_secret_live_key',
+        'paypal_client_id',
+        'paypal_secret_key',
+        'paypal_production_client_id',
+        'paypal_production_secret_key',
+        'flutterwave_public_key',
+        'flutterwave_secret_key',
+        'flutterwave_encryption_key',
+    ];
+
     private $user;
 
     public function __construct(private readonly ZoomMeetingClient $zoomMeetingClient)
@@ -196,7 +216,7 @@ class MainController extends Controller
         // Data validation
 
         $rules = ['privacy' => ['required', Rule::enum(Visibility::class)]];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(['privacy']), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
@@ -398,7 +418,7 @@ class MainController extends Controller
             return null;
         }
 
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->only(['multiple_files']), [
             'multiple_files.*' => [$rule],
         ]);
 
@@ -429,7 +449,7 @@ class MainController extends Controller
         // $posts = Posts::where('id', $id)->first();
 
         $rules = ['privacy' => ['required', Rule::enum(Visibility::class)]];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(['privacy']), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
@@ -665,7 +685,13 @@ class MainController extends Controller
 
     public function my_react(Request $request)
     {
-        $form_data = $request->all();
+        $form_data = $request->only([
+            'type',
+            'post_id',
+            'request_type',
+            'react',
+            'response_type',
+        ]);
 
         if ($form_data['type'] == 'post') {
             $post_data = Posts::where('post_id', $form_data['post_id'])->first();
@@ -703,7 +729,11 @@ class MainController extends Controller
 
     public function my_comment_react(Request $request)
     {
-        $form_data = $request->all();
+        $form_data = $request->only([
+            'comment_id',
+            'request_type',
+            'react',
+        ]);
 
         $comment_data = Comments::where('comment_id', $form_data['comment_id'])->first();
 
@@ -764,7 +794,13 @@ class MainController extends Controller
 
     public function post_comment(Request $request)
     {
-        $form_data = $request->all();
+        $form_data = $request->only([
+            'description',
+            'comment_id',
+            'parent_id',
+            'type',
+            'post_id',
+        ]);
 
         $data['description'] = $form_data['description'];
 
@@ -832,7 +868,10 @@ class MainController extends Controller
 
     public function post_comment_count(Request $request)
     {
-        $form_data = $request->all();
+        $form_data = $request->only([
+            'type',
+            'post_id',
+        ]);
 
         return Comments::where('is_type', $form_data['type'])->where('id_of_type', $form_data['post_id'])->count();
     }
@@ -1071,8 +1110,7 @@ class MainController extends Controller
 
     public function save_user_settings(Request $request)
     {
-        $settings = $request->all();
-        array_shift($settings);
+        $settings = $request->only(self::USER_PAYMENT_SETTING_FIELDS);
         $settings['stripe_live'] = $request->stripe_live != null;
         $settings['paypal_live'] = $request->paypal_live != null;
         $settings['flutterwave_live'] = $request->flutterwave_live != null;

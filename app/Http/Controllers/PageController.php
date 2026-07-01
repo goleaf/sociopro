@@ -53,7 +53,7 @@ class PageController extends Controller
             'name' => 'required|max:255',
             'category' => 'required',
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
@@ -93,7 +93,7 @@ class PageController extends Controller
             'name' => 'required|max:255',
             'category' => 'required',
         ];
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->only(array_keys($rules)), $rules);
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
