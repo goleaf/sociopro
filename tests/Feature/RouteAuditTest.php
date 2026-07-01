@@ -37,7 +37,7 @@ class RouteAuditTest extends TestCase
 
     public function test_clear_cache_route_requires_admin_authentication(): void
     {
-        $this->get('/clear-cache')
+        $this->get(route('system.clear-cache'))
             ->assertRedirect(route('login'));
 
         $user = User::factory()->create([
@@ -46,8 +46,19 @@ class RouteAuditTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->get('/clear-cache')
+            ->get(route('system.clear-cache'))
             ->assertRedirect();
+    }
+
+    public function test_all_http_routes_have_explicit_names(): void
+    {
+        foreach (Route::getRoutes() as $route) {
+            $name = $route->getName();
+            $identifier = "{$route->methods()[0]} {$route->uri()}";
+
+            $this->assertNotEmpty($name, "{$identifier} is missing an explicit route name.");
+            $this->assertFalse(str_starts_with((string) $name, 'generated::'), "{$identifier} has a generated route name.");
+        }
     }
 
     public function test_admin_prefixed_routes_require_admin_middleware(): void

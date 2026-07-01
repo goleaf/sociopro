@@ -382,12 +382,13 @@ class MainController extends Controller
             $live['publisher'] = $data['publisher'];
             $live['publisher_id'] = $post_id;
             $live['user_id'] = auth()->user()->id;
-            $live['details'] = json_encode(['link' => url('/streaming/live/'.$post_id), 'status' => true]);
+            $liveStreamingUrl = route('go.live', $post_id);
+            $live['details'] = json_encode(['link' => $liveStreamingUrl, 'status' => true]);
             $live['created_at'] = date('Y-m-d H:i:s', time());
             $live['updated_at'] = $live['created_at'];
 
             Live_streamings::insert($live);
-            $response = ['open_new_tab' => url('/streaming/live/'.$post_id), 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline')];
+            $response = ['open_new_tab' => $liveStreamingUrl, 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline')];
         } else {
             // Ajax flush message
             Session::flash('success_message', get_phrase('Your post has been published'));

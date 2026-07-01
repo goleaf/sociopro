@@ -16,7 +16,7 @@
         timer = setTimeout(function () {
             $.ajax({
 				type: 'get',
-				url: '{{url("/search_user_for_event_inviting")}}',
+				url: '{{ route('search_user_for_event_inviting') }}',
 				headers: {
 					'X-CSRF-TOKEN': $('meta[name="csrf_token"]').attr('content')
 				},

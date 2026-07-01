@@ -145,7 +145,7 @@
 		let value= $(this).val();
 		$.ajax({
 			type : 'get',
-			url : '{{URL::to('/blog/search/')}}',
+			url : '{{ route('search.blog') }}',
 			headers: {
 				'X-CSRF-TOKEN': $('meta[name="csrf_token"]').attr('content')
 			},

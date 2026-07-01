@@ -10,7 +10,7 @@
         if (key === 13 && description != "") {
             $.ajax({
                 type: 'get',
-                url: '{{ url('/post_comment') }}',
+                url: '{{ route('post_comment') }}',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf_token"]').attr('content')
                 },
@@ -33,7 +33,7 @@
 
                     if (response) {
                         $.ajax({
-                            url: '{{ url('/post_comment_count') }}',
+                            url: '{{ route('post_comment_count') }}',
                             type: "get",
                             data: {
                                 post_id: post_id,
@@ -60,7 +60,7 @@
     function myReact(type, react, requestType, postId, responseType = null) {
         $.ajax({
             type: 'post',
-            url: '{{ url('/my_react') }}',
+            url: '{{ route('my_react') }}',
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf_token"]').attr('content')
             },
@@ -87,7 +87,7 @@
     function myCommentReact(react, requestType, commentId) {
         $.ajax({
             type: 'get',
-            url: '{{ url('/my_comment_react') }}',
+            url: '{{ route('my_comment_react') }}',
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf_token"]').attr('content')
             },
@@ -114,7 +114,7 @@
 
         $.ajax({
             type: 'get',
-            url: '{{ url('/load_post_comments') }}',
+            url: '{{ route('load_post_comments') }}',
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf_token"]').attr('content')
             },
@@ -198,7 +198,7 @@
         timer = setTimeout(function() {
             $.ajax({
                 type: 'get',
-                url: '{{ url('/search_friends_for_tagging') }}',
+                url: '{{ route('search_friends_for_tagging') }}',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf_token"]').attr('content')
                 },

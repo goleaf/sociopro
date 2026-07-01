@@ -2,7 +2,7 @@
     "use strict";
 
     function createStoryForm(data) {
-        var url = "{{ url('/load_modal_content') }}/" + data;
+        var url = "{{ route('load_modal_content', ['view_path' => '__VIEW_PATH__']) }}".replace('__VIEW_PATH__', data);
         $('#story-create-modal').modal('show');
 
         $.ajax({
@@ -354,7 +354,7 @@
     function myMessageReact(react, requestType, messageId) {
         $.ajax({
             type: 'post',
-            url: '{{ url('/my_message_react') }}',
+            url: '{{ route('react.chat') }}',
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf_token"]').attr('content')
             },

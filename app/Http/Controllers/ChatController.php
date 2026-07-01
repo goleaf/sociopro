@@ -31,7 +31,7 @@ class ChatController extends Controller
             $message = [];
         }
         if (isset($product) && $product != null) {
-            $product_url = url('/').'/product/view/'.$product;
+            $product_url = route('single.product', $product);
         } else {
             $product_url = null;
         }
@@ -109,7 +109,7 @@ class ChatController extends Controller
                 }
                 $page_data['message'] = Chat::where('message_thrade', $messageThrade->id)->orderBy('id', 'DESC')->limit('1')->get();
                 $message = view('frontend.chat.single-message', $page_data)->render();
-                $url = url('/').'/chat/inbox/'.$request->reciver_id;
+                $url = route('chat', $request->reciver_id);
                 if (isset($request->product_id) && ! empty($request->product_id)) {
                     $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox', 'replaceUrl' => '#message_body', 'url' => $url];
                 } else {
@@ -160,7 +160,7 @@ class ChatController extends Controller
             }
             $page_data['message'] = Chat::where('message_thrade', $firstmessageThrade->id)->orderBy('id', 'DESC')->limit('1')->get();
             $message = view('frontend.chat.single-message', $page_data)->render();
-            $url = url('/').'/chat/inbox/'.$request->reciver_id;
+            $url = route('chat', $request->reciver_id);
             if (isset($request->product_id) && ! empty($request->product_id)) {
                 $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox', 'replaceUrl' => '#message_body', 'url' => $url];
             } else {

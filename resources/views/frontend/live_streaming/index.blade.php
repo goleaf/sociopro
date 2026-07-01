@@ -77,7 +77,7 @@
             var PASSWORD = "{{$meeting_details['password']}}";
 
 
-            var leave_url = "@if($host == 1){{route('zoom-meeting-leave-url', $post_details->post_id)}}@else{{url('/')}}@endif";
+            var leave_url = "@if($host == 1){{route('zoom-meeting-leave-url', $post_details->post_id)}}@else{{ route('timeline') }}@endif";
 
             var testTool = window.testTool;
 

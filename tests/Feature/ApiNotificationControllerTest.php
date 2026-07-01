@@ -24,7 +24,7 @@ class ApiNotificationControllerTest extends TestCase
 
     public function test_notifications_endpoint_rejects_missing_bearer_token(): void
     {
-        $this->getJson('/api/notifications')
+        $this->getJson(route('api.notifications.index'))
             ->assertOk()
             ->assertJson([
                 'success' => false,
@@ -59,7 +59,7 @@ class ApiNotificationControllerTest extends TestCase
         Sanctum::actingAs($receiver);
 
         $this->withToken('test-token')
-            ->getJson('/api/notifications')
+            ->getJson(route('api.notifications.index'))
             ->assertOk()
             ->assertJsonPath('new_notifications.0.id', $currentNotification->id)
             ->assertJsonPath('new_notifications.0.sender_user_id', $sender->id)
@@ -89,7 +89,7 @@ class ApiNotificationControllerTest extends TestCase
         Sanctum::actingAs($receiver);
 
         $this->withToken('test-token')
-            ->postJson('/api/mark_as_read/'.$notification->id)
+            ->postJson(route('api.notifications.read', $notification))
             ->assertOk()
             ->assertJson([
                 'success' => true,

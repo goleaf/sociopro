@@ -1510,12 +1510,13 @@ class ApiController extends Controller
                 $live['publisher'] = $data['publisher'];
                 $live['publisher_id'] = $post_id;
                 $live['user_id'] = $user_id;
-                $live['details'] = json_encode(['link' => url('/streaming/live/'.$post_id), 'status' => true]);
+                $liveStreamingUrl = route('go.live', $post_id);
+                $live['details'] = json_encode(['link' => $liveStreamingUrl, 'status' => true]);
                 $live['created_at'] = date('Y-m-d H:i:s', time());
                 $live['updated_at'] = $live['created_at'];
 
                 Live_streamings::insert($live);
-                $response = ['open_new_tab' => url('/streaming/live/'.$post_id), 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline')];
+                $response = ['open_new_tab' => $liveStreamingUrl, 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline')];
             } else {
                 // Ajax flush message
                 // Session::flash('success_message', get_phrase('Your post has been published'));
@@ -7049,7 +7050,7 @@ class ApiController extends Controller
                     }
                     $page_data['message'] = Chat::where('message_thrade', $messageThrade->id)->orderBy('id', 'DESC')->limit('1')->get();
                     $message = view('frontend.chat.single-message', $page_data)->render();
-                    $url = url('/').'/chat/inbox/'.$request->reciver_id;
+                    $url = route('chat', $request->reciver_id);
                     if (isset($request->product_id) && ! empty($request->product_id)) {
                         $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox', 'replaceUrl' => '#message_body', 'url' => $url];
                     } else {

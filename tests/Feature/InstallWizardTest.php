@@ -22,7 +22,7 @@ class InstallWizardTest extends TestCase
     {
         $response = $this
             ->withServerVariables(['SERVER_NAME' => 'localhost'])
-            ->get('/install/step1');
+            ->get(route('install.step1'));
 
         $response->assertOk();
         $response->assertSee('Local development mode');
@@ -34,7 +34,7 @@ class InstallWizardTest extends TestCase
     {
         $response = $this
             ->withServerVariables(['SERVER_NAME' => 'localhost'])
-            ->get('/install/step3');
+            ->get(route('install.step3'));
 
         $response->assertOk();
         $response->assertSee('SQLite');
@@ -44,25 +44,25 @@ class InstallWizardTest extends TestCase
 
     public function test_database_step_rejects_unknown_connection_type(): void
     {
-        $response = $this->from('/install/step3')->post(route('install.step3'), [
+        $response = $this->from(route('install.step3'))->post(route('install.step3'), [
             'db_connection' => 'pgsql',
         ]);
 
-        $response->assertRedirect('/install/step3');
+        $response->assertRedirect(route('install.step3'));
         $response->assertSessionHasErrors(['db_connection']);
     }
 
     public function test_install_post_steps_reject_unexpected_http_methods(): void
     {
-        $this->put('/install/step3')->assertStatus(405);
-        $this->put('/install/finalizing_setup')->assertStatus(405);
+        $this->put(route('install.step3'))->assertStatus(405);
+        $this->put(route('install.finalizing'))->assertStatus(405);
     }
 
     public function test_database_step_displays_validation_errors(): void
     {
         $response = $this
             ->followingRedirects()
-            ->from('/install/step3')
+            ->from(route('install.step3'))
             ->post(route('install.step3'), [
                 'db_connection' => 'pgsql',
             ]);
@@ -91,16 +91,16 @@ class InstallWizardTest extends TestCase
 
     public function test_confirm_import_rejects_unknown_confirmation(): void
     {
-        $response = $this->get('/install/step4/not-confirmed');
+        $response = $this->get(route('install.step4.confirm', 'not-confirmed'));
 
         $response->assertRedirect(route('install.step4'));
     }
 
     public function test_purchase_code_validation_requires_a_code(): void
     {
-        $response = $this->from('/install/step2')->post(route('install.validate'));
+        $response = $this->from(route('install.step2'))->post(route('install.validate'));
 
-        $response->assertRedirect('/install/step2');
+        $response->assertRedirect(route('install.step2'));
         $response->assertSessionHasErrors(['purchase_code']);
     }
 
@@ -117,7 +117,7 @@ class InstallWizardTest extends TestCase
 
     public function test_finalizing_setup_updates_settings_and_creates_admin_user(): void
     {
-        $response = $this->post('/install/finalizing_setup', [
+        $response = $this->post(route('install.finalizing'), [
             'system_name' => 'Sociopro Local',
             'admin_name' => 'Site Admin',
             'admin_email' => 'admin@example.test',
@@ -143,11 +143,11 @@ class InstallWizardTest extends TestCase
 
     public function test_finalizing_setup_requires_admin_details(): void
     {
-        $response = $this->from('/install/finalizing_setup')->post('/install/finalizing_setup', [
+        $response = $this->from(route('install.finalizing'))->post(route('install.finalizing'), [
             'system_name' => 'Sociopro Local',
         ]);
 
-        $response->assertRedirect('/install/finalizing_setup');
+        $response->assertRedirect(route('install.finalizing'));
         $response->assertSessionHasErrors([
             'admin_name',
             'admin_email',
@@ -162,8 +162,8 @@ class InstallWizardTest extends TestCase
     {
         $response = $this
             ->followingRedirects()
-            ->from('/install/finalizing_setup')
-            ->post('/install/finalizing_setup', [
+            ->from(route('install.finalizing'))
+            ->post(route('install.finalizing'), [
                 'system_name' => 'Sociopro Local',
             ]);
 

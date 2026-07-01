@@ -8,8 +8,8 @@ class ExampleTest extends TestCase
 {
     public function test_example(): void
     {
-        $response = $this->get('/');
+        $response = $this->get(route('timeline'));
 
-        $response->assertRedirect('/login');
+        $response->assertRedirect(route('login'));
     }
 }

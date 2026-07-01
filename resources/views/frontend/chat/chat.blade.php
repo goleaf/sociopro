@@ -150,7 +150,7 @@
         var id = currentURL.substring(currentURL.lastIndexOf('/') + 1);
         $.ajax({
             type : 'get',
-            url : '{{URL::to('/chat/inbox/load/data/ajax/' )}}',
+            url : '{{ route('chat.load') }}',
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf_token"]').attr('content')
             },
@@ -172,7 +172,7 @@
         var id = currentURL.substring(currentURL.lastIndexOf('/') + 1);
         $.ajax({
             type : 'get',
-            url : '{{URL::to('/chat/inbox/read/message/ajax/' )}}',
+            url : '{{ route('chat.read') }}',
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf_token"]').attr('content')
             },
@@ -189,7 +189,7 @@
         let value= $(this).val();
         $.ajax({
             type : 'get',
-            url : '{{URL::to('/chat/profile/search/')}}',
+            url : '{{ route('search.chat') }}',
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf_token"]').attr('content')
             },

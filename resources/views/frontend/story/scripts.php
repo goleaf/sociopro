@@ -44,7 +44,7 @@
 		})
 
 		function loadStory(offSet){
-			var url = "<?php echo url('/stories'); ?>/"+offSet;
+			var url = "{{ route('stories') }}/"+offSet;
 			$.ajax({
 				type: 'get',
 				url: url,
@@ -71,7 +71,7 @@
 	function loadStoryDetailsOnModal(story_id){
 		$('#story-modal').modal('show');
 		
-		var url = "<?php echo url('/story_details'); ?>/"+story_id;
+		var url = "{{ route('story_details', ['story_id' => '__STORY_ID__']) }}".replace('__STORY_ID__', story_id);
 		$.ajax({
 			type: 'get',
 			url: url,
@@ -136,7 +136,7 @@
 		$('.story-entry.active').removeClass('active');
 		$(e).addClass('active');
 		
-		var url = "<?php echo url('/single_story_details'); ?>/"+story_id;
+		var url = "{{ route('single_story_details', ['story_id' => '__STORY_ID__']) }}".replace('__STORY_ID__', story_id);
 		$.ajax({
 			type: 'get',
 			url: url,

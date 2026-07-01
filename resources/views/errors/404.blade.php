@@ -34,7 +34,7 @@
 	                         <h1>{{get_phrase('404 page not found')}}</h1>
 	                        <p>{{get_phrase('This page is not available, please provide a valid URL')}}</p>
 
-	                        <a class="btn error-btn pe-4" href="{{url('/')}}"> <i class="fas fa-arrow-left px-2"></i> {{get_phrase('Back')}}</a>
+	                        <a class="btn error-btn pe-4" href="{{ route('timeline') }}"> <i class="fas fa-arrow-left px-2"></i> {{get_phrase('Back')}}</a>
 	                    </div>
 	                </div>
 	            </div>

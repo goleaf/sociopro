@@ -37,7 +37,7 @@ class ApiControllerResponseTest extends TestCase
 
     public function test_signup_validation_errors_are_returned_as_json_response(): void
     {
-        $response = $this->postJson('/api/signup', []);
+        $response = $this->postJson(route('api.auth.signup'), []);
 
         $response
             ->assertOk()
