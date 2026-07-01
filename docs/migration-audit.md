@@ -1,5 +1,49 @@
 # Migration Audit
 
+## 2026-07-02 Update: Query Pattern Index Coverage
+
+### Scope
+
+Audited current query patterns across controllers, query objects, view models, providers, Blade helpers, routes, Eloquent relationships, local scopes, filters, searches, ordered lists, grouped selectors, and pagination paths. The live SQLite schema and `public/assets/install.sql` were cross-checked before adding indexes because the project remains dump-backed and some legacy MySQL columns are too wide for safe automatic indexing.
+
+No existing migration or SQL dump was edited.
+
+### Safe Fix Applied
+
+Added `database/migrations/2026_07_02_140000_add_query_pattern_coverage_indexes.php`.
+
+The migration adds guarded, non-unique, reversible indexes for query paths that were not fully covered by earlier migrations:
+
+| Index | Columns | Why it exists |
+|---|---|---|
+| `comments_type_content_parent_comment_idx` | `comments.is_type`, `id_of_type`, `parent_id`, `comment_id` | Supports comment counts and latest root/child comment previews filtered by content type, content id, and parent, then ordered by newest comment. |
+| `currencies_code_idx` | `currencies.code` | Supports admin/system currency selectors that sort by currency code. |
+| `friendships_accepter_status_importance_id_idx` | `friendships.accepter`, `is_accepted`, `importance`, `id` | Supports accepted-friend lookups from the recipient side with sidebar/profile ordering by importance and id. |
+| `friendships_requester_status_importance_id_idx` | `friendships.requester`, `is_accepted`, `importance`, `id` | Supports accepted-friend lookups from the requester side with the same importance/id ordering. |
+| `group_members_group_status_id_idx` | `group_members.group_id`, `is_accepted`, `id` | Supports accepted group-member counts and recent member lists ordered by newest membership id. |
+| `groups_privacy_status_id_idx` | `groups.privacy`, `status`, `id` | Supports public active group discovery lists filtered by visibility/status and ordered by newest group id. |
+| `invites_sender_receiver_event_idx` | `invites.invite_sender_id`, `invite_reciver_id`, `event_id` | Supports event invitation accept/decline updates and deletes by sender, receiver, and event. |
+| `invites_sender_receiver_group_idx` | `invites.invite_sender_id`, `invite_reciver_id`, `group_id` | Supports group invitation accept/decline updates and deletes by sender, receiver, and group. |
+| `notifications_receiver_created_id_idx` | `notifications.reciver_user_id`, `created_at`, `id` | Supports older-notification pagination filtered by receiver and date, ordered by newest notification id. |
+| `stories_status_created_story_idx` | `stories.status`, `created_at`, `story_id` | Supports active story feed windows filtered by status and age, ordered by newest story id. |
+
+### Duplicate Avoidance
+
+The migration checks both index names and exact column lists with `Schema::hasIndex()` before creating anything. Several new indexes intentionally extend older prefixes, for example accepted friendship and group-member indexes, because those list paths also order by `importance` or `id`. Exact duplicate column lists were not added.
+
+### Deferred Indexes
+
+These candidates were intentionally not added in this pass:
+
+- `languages.name + phrase`: `get_phrase()` uses this lookup heavily, but `phrase` is `varchar(300)` in the dump. A full composite index may exceed older MySQL/InnoDB key-length limits, so it needs a deliberate prefix/full-text strategy instead of an automatic safe migration.
+- Leading-wildcard searches such as `LIKE '%term%'` on titles, names, descriptions, and locations: normal B-tree indexes are not useful for these patterns. They should be addressed with validated search inputs, prefix-only search where acceptable, or a dedicated search engine/full-text plan.
+- Addon tables that are not present in the local dump-backed schema, including fundraiser, job, badge, and paid-content tables: migrations for those tables need addon-aware schema verification first.
+- Foreign keys and unique constraints: these remain deferred until orphan/duplicate data checks pass.
+
+### Verification Added
+
+Updated `tests/Feature/MigrationSafetyAuditTest.php` to verify the query-pattern index migration can run `up()`, `down()`, and `up()` again, and that every expected index appears with the intended column order.
+
 ## 2026-07-02 Update: Full Migration Safety Pass
 
 ### Scope
