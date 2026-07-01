@@ -24,7 +24,7 @@ abstract class BlogRequest extends FormRequest
             'tag' => ['nullable'],
             'tags' => ['sometimes', 'array'],
             'tags.*.value' => ['required', 'string', 'max:100'],
-            'image' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+            'image' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'extensions:jpg,jpeg,png,gif,webp', 'max:5120', 'dimensions:max_width=4096,max_height=4096'],
         ];
     }
 

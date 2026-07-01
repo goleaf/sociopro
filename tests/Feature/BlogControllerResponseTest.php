@@ -13,6 +13,8 @@ use App\Models\Blogcategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -50,7 +52,7 @@ class BlogControllerResponseTest extends TestCase
         $this->assertSame(['sometimes', 'array'], $storeRequest->rules()['tags']);
         $this->assertSame(['required', 'string', 'max:100'], $storeRequest->rules()['tags.*.value']);
         $this->assertSame(
-            ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+            ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'extensions:jpg,jpeg,png,gif,webp', 'max:5120', 'dimensions:max_width=4096,max_height=4096'],
             $storeRequest->rules()['image']
         );
     }
@@ -105,6 +107,97 @@ class BlogControllerResponseTest extends TestCase
         $this->assertDatabaseMissing('blogs', [
             'title' => 'Invalid image blog',
         ]);
+    }
+
+    public function test_guest_cannot_store_blog_image_upload(): void
+    {
+        Storage::fake('public');
+        $category = $this->blogCategory();
+
+        $this->post(route('blog.store'), [
+            'title' => 'Guest image blog',
+            'category' => $category->id,
+            'image' => UploadedFile::fake()->image('guest.jpg')->size(128),
+        ])->assertRedirect(route('login'));
+
+        $this->assertDatabaseMissing('blogs', [
+            'title' => 'Guest image blog',
+        ]);
+        $this->assertSame([], Storage::disk('public')->allFiles());
+    }
+
+    public function test_store_rejects_blog_image_with_disallowed_extension(): void
+    {
+        $user = $this->activeGeneralUser();
+        $category = $this->blogCategory();
+
+        $this->actingAs($user)
+            ->from(route('create.blog'))
+            ->post(route('blog.store'), [
+                'title' => 'Unsafe extension blog',
+                'category' => $category->id,
+                'image' => UploadedFile::fake()->image('payload.php')->size(128),
+            ])
+            ->assertRedirect(route('create.blog'))
+            ->assertSessionHasErrors(['image']);
+
+        $this->assertDatabaseMissing('blogs', [
+            'title' => 'Unsafe extension blog',
+        ]);
+    }
+
+    public function test_store_rejects_blog_image_with_unsafe_dimensions(): void
+    {
+        $user = $this->activeGeneralUser();
+        $category = $this->blogCategory();
+
+        $this->actingAs($user)
+            ->from(route('create.blog'))
+            ->post(route('blog.store'), [
+                'title' => 'Oversized dimensions blog',
+                'category' => $category->id,
+                'image' => UploadedFile::fake()->image('wide.jpg', 5000, 10)->size(128),
+            ])
+            ->assertRedirect(route('create.blog'))
+            ->assertSessionHasErrors(['image']);
+
+        $this->assertDatabaseMissing('blogs', [
+            'title' => 'Oversized dimensions blog',
+        ]);
+    }
+
+    public function test_store_uploads_blog_image_to_public_disk_with_safe_filename(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->makeDirectory('blog/thumbnail');
+        Storage::disk('public')->makeDirectory('blog/coverphoto');
+
+        $user = $this->activeGeneralUser();
+        $category = $this->blogCategory();
+        $blog = null;
+
+        try {
+            $this->actingAs($user)
+                ->post(route('blog.store'), [
+                    'title' => 'Image-backed blog',
+                    'category' => $category->id,
+                    'description' => 'Stores image through the public disk.',
+                    'image' => UploadedFile::fake()->image('cover.jpg', 1200, 800)->size(512),
+                ])
+                ->assertRedirect(route('blogs'));
+
+            $blog = Blog::where('title', 'Image-backed blog')->firstOrFail();
+
+            $this->assertMatchesRegularExpression('/^[0-9]+-[A-Za-z0-9]+\.jpg$/', $blog->thumbnail);
+            Storage::disk('public')->assertExists('blog/thumbnail/'.$blog->thumbnail);
+            Storage::disk('public')->assertExists('blog/coverphoto/'.$blog->thumbnail);
+            $this->assertSame('public', Storage::disk('public')->getVisibility('blog/thumbnail/'.$blog->thumbnail));
+        } finally {
+            if ($blog instanceof Blog && is_string($blog->thumbnail)) {
+                File::delete(public_path('storage/blog/thumbnail/'.$blog->thumbnail));
+                File::delete(public_path('storage/blog/coverphoto/'.$blog->thumbnail));
+            }
+        }
     }
 
     public function test_store_rejects_nested_tags_without_values(): void
