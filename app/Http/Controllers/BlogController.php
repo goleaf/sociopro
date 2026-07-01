@@ -53,8 +53,8 @@ class BlogController extends Controller
         $validated = $request->validated();
 
         $file_name = null;
-        $image = $validated['image'] ?? null;
-        if (! empty($image)) {
+        $image = $request->imageFile();
+        if ($image !== null) {
             $file_name = FileUploader::upload($image, 'public/storage/blog/thumbnail', 370);
             FileUploader::upload($image, 'public/storage/blog/coverphoto/'.$file_name, 900);
         }
@@ -63,14 +63,7 @@ class BlogController extends Controller
         $blog->user_id = Auth::user()->id;
         $blog->title = $validated['title'];
         $blog->category_id = $validated['category'];
-        $tags = json_decode((string) ($validated['tag'] ?? ''), true);
-        $tag_array = [];
-        if (is_array($tags)) {
-            foreach ($tags as $key => $tag) {
-                $tag_array[$key] = $tag['value'];
-            }
-        }
-        $blog->tag = json_encode($tag_array);
+        $blog->tag = json_encode($request->tagValues());
         $blog->description = $validated['description'] ?? null;
         if ($file_name !== null) {
             $blog->thumbnail = $file_name;
@@ -96,8 +89,8 @@ class BlogController extends Controller
         $validated = $request->validated();
 
         $file_name = null;
-        $image = $validated['image'] ?? null;
-        if (! empty($image)) {
+        $image = $request->imageFile();
+        if ($image !== null) {
             $file_name = FileUploader::upload($image, 'public/storage/blog/thumbnail', 370);
             FileUploader::upload($image, 'public/storage/blog/coverphoto/'.$file_name, 900);
         }
@@ -111,15 +104,7 @@ class BlogController extends Controller
         $blog->user_id = Auth::user()->id;
         $blog->title = $validated['title'];
         $blog->category_id = $validated['category'];
-        $tags = json_decode((string) ($validated['tag'] ?? ''), true);
-        $tag_array = [];
-
-        if (is_array($tags)) {
-            foreach ($tags as $key => $tag) {
-                $tag_array[$key] = $tag['value'];
-            }
-        }
-        $blog->tag = json_encode($tag_array);
+        $blog->tag = json_encode($request->tagValues());
         $blog->description = $validated['description'] ?? null;
         if ($file_name !== null) {
             $blog->thumbnail = $file_name;

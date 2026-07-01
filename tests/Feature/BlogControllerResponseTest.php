@@ -5,12 +5,14 @@ namespace Tests\Feature;
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\BlogController;
+use App\Http\Requests\Blog\BlogRequest;
 use App\Http\Requests\Blog\StoreBlogRequest;
 use App\Http\Requests\Blog\UpdateBlogRequest;
 use App\Models\Blog;
 use App\Models\Blogcategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -31,6 +33,28 @@ class BlogControllerResponseTest extends TestCase
         $this->assertSame(UpdateBlogRequest::class, (string) $updateParameter);
     }
 
+    public function test_blog_write_requests_share_standardized_rules(): void
+    {
+        $this->assertTrue(class_exists(BlogRequest::class), 'Blog write requests should share a common rules source.');
+
+        $storeRequest = new StoreBlogRequest;
+        $updateRequest = new UpdateBlogRequest;
+
+        $this->assertInstanceOf(BlogRequest::class, $storeRequest);
+        $this->assertInstanceOf(BlogRequest::class, $updateRequest);
+        $this->assertSame($storeRequest->rules(), $updateRequest->rules());
+        $this->assertSame(['required', 'string', 'max:255'], $storeRequest->rules()['title']);
+        $this->assertSame(['required', 'integer', 'exists:blogcategories,id'], $storeRequest->rules()['category']);
+        $this->assertSame(['nullable', 'string'], $storeRequest->rules()['description']);
+        $this->assertSame(['nullable'], $storeRequest->rules()['tag']);
+        $this->assertSame(['sometimes', 'array'], $storeRequest->rules()['tags']);
+        $this->assertSame(['required', 'string', 'max:100'], $storeRequest->rules()['tags.*.value']);
+        $this->assertSame(
+            ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+            $storeRequest->rules()['image']
+        );
+    }
+
     public function test_store_rejects_missing_blog_title_and_category(): void
     {
         $user = $this->activeGeneralUser();
@@ -42,6 +66,67 @@ class BlogControllerResponseTest extends TestCase
             ])
             ->assertRedirect(route('create.blog'))
             ->assertSessionHasErrors(['title', 'category']);
+    }
+
+    public function test_store_rejects_unknown_blog_category_id(): void
+    {
+        $user = $this->activeGeneralUser();
+
+        $this->actingAs($user)
+            ->from(route('create.blog'))
+            ->post(route('blog.store'), [
+                'title' => 'Unknown category blog',
+                'category' => 999999,
+                'description' => 'This should not be stored.',
+            ])
+            ->assertRedirect(route('create.blog'))
+            ->assertSessionHasErrors(['category']);
+
+        $this->assertDatabaseMissing('blogs', [
+            'title' => 'Unknown category blog',
+        ]);
+    }
+
+    public function test_store_rejects_invalid_blog_image_uploads(): void
+    {
+        $user = $this->activeGeneralUser();
+        $category = $this->blogCategory();
+
+        $this->actingAs($user)
+            ->from(route('create.blog'))
+            ->post(route('blog.store'), [
+                'title' => 'Invalid image blog',
+                'category' => $category->id,
+                'image' => UploadedFile::fake()->create('notes.txt', 1, 'text/plain'),
+            ])
+            ->assertRedirect(route('create.blog'))
+            ->assertSessionHasErrors(['image']);
+
+        $this->assertDatabaseMissing('blogs', [
+            'title' => 'Invalid image blog',
+        ]);
+    }
+
+    public function test_store_rejects_nested_tags_without_values(): void
+    {
+        $user = $this->activeGeneralUser();
+        $category = $this->blogCategory();
+
+        $this->actingAs($user)
+            ->from(route('create.blog'))
+            ->post(route('blog.store'), [
+                'title' => 'Invalid tags blog',
+                'category' => $category->id,
+                'tag' => [
+                    ['label' => 'missing value'],
+                ],
+            ])
+            ->assertRedirect(route('create.blog'))
+            ->assertSessionHasErrors(['tags.0.value']);
+
+        $this->assertDatabaseMissing('blogs', [
+            'title' => 'Invalid tags blog',
+        ]);
     }
 
     public function test_store_creates_blog_from_validated_payload(): void
@@ -75,6 +160,30 @@ class BlogControllerResponseTest extends TestCase
         $this->assertDatabaseMissing('blogs', [
             'user_id' => $otherUser->id,
             'title' => 'Validated store blog',
+        ]);
+    }
+
+    public function test_store_accepts_nested_tag_array_values(): void
+    {
+        $user = $this->activeGeneralUser();
+        $category = $this->blogCategory();
+
+        $this->actingAs($user)
+            ->post(route('blog.store'), [
+                'title' => 'Nested tag blog',
+                'category' => $category->id,
+                'tag' => [
+                    ['value' => 'nested'],
+                    ['value' => 'validated'],
+                ],
+            ])
+            ->assertRedirect(route('blogs'));
+
+        $this->assertDatabaseHas('blogs', [
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'title' => 'Nested tag blog',
+            'tag' => json_encode(['nested', 'validated']),
         ]);
     }
 
