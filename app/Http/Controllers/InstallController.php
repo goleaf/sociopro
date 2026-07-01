@@ -7,6 +7,7 @@ use App\Actions\Install\ConfigureDatabase;
 use App\Actions\Install\FinalizeInstallation;
 use App\Actions\Install\ImportInstallSqlDump;
 use App\Actions\Install\PrepareDatabaseConnection;
+use App\Actions\Install\VerifyEnvatoPurchase;
 use App\Http\Requests\Install\FinalizeInstallationRequest;
 use App\Http\Requests\Install\PrepareDatabaseConnectionRequest;
 use App\Http\Requests\Install\ValidatePurchaseCodeRequest;
@@ -20,7 +21,10 @@ class InstallController extends Controller
 {
     private const DEFAULT_INSTALL_TIMEZONE = 'Asia/Dhaka';
 
-    public function __construct(private ConfigureDatabase $configureDatabase)
+    public function __construct(
+        private ConfigureDatabase $configureDatabase,
+        private VerifyEnvatoPurchase $verifyEnvatoPurchase
+    )
     {
     }
 
@@ -74,37 +78,9 @@ class InstallController extends Controller
 		return redirect()->route('install.step3');
     }
 
-    public function api_request($code = '')
+    public function api_request($code = ''): bool
     {
-        $product_code = $code;
-        $personal_token = config('services.envato.personal_token');
-
-        if (! $personal_token) {
-            return false;
-        }
-
-        //setting the header for the rest of the api
-        $bearer   = 'bearer ' . $personal_token;
-        $header   = array();
-        $header[] = 'Content-length: 0';
-        $header[] = 'Content-type: application/json; charset=utf-8';
-        $header[] = 'Authorization: ' . $bearer;
-
-        $verify_url = 'https://api.envato.com/v1/market/private/user/verify-purchase:' . $product_code . '.json';
-        $ch_verify = curl_init($verify_url . '?code=' . $product_code);
-
-        curl_setopt($ch_verify, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($ch_verify, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch_verify, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch_verify, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($ch_verify, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT'] ?? 'Sociopro Installer');
-
-        $cinit_verify_data = curl_exec($ch_verify);
-        curl_close($ch_verify);
-
-        $response = json_decode($cinit_verify_data, true) ?: [];
-
-        return count($response['verify-purchase'] ?? []) > 0;
+        return $this->verifyEnvatoPurchase->handle($code);
     }
 
     public function step3(
