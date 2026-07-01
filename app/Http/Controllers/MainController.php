@@ -15,6 +15,7 @@ use App\Models\Report;
 use App\Models\Setting;
 use App\Models\Stories;
 use App\Models\User;
+use App\Queries\FriendshipsQuery;
 use App\Traits\ZoomMeetingTrait;
 use DB;
 use Exception;
@@ -123,17 +124,7 @@ class MainController extends Controller
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->take(15)->orderBy('posts.post_id', 'DESC')->get();
 
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-            ->where('is_accepted', 1)
-            ->orderBy('friendships.importance', 'desc')
-            ->get();
-
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())->get();
 
         $page_data['stories'] = $stories;
         $page_data['posts'] = $posts;
@@ -188,17 +179,7 @@ class MainController extends Controller
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->skip($request->offset)->take(3)->orderBy('posts.post_id', 'DESC')->get();
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-            ->where('is_accepted', 1)
-            ->orderBy('friendships.importance', 'desc')
-            ->get();
-
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())->get();
 
         $page_data['user_info'] = $this->user;
         $page_data['posts'] = $posts;
@@ -864,17 +845,8 @@ class MainController extends Controller
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->take(1)->orderBy('posts.post_id', 'DESC')->get();
 
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-           ->where('is_accepted', 1)
-           ->orderBy('friendships.importance', 'desc')
-           ->take(15)->get();
-
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
+            ->take(15)->get();
 
         $page_data['posts'] = $posts;
         $page_data['file_name'] = $request->file_name;
@@ -1154,17 +1126,8 @@ class MainController extends Controller
           $post_album = Posts::where('post_id', $id)->first();
           $user_info = $this->user;
 
-          // New
-          $friendships = Friendships::where(function ($query) {
-              $query->where('accepter', auth()->user()->id)
-                  ->orWhere('requester', auth()->user()->id);
-          })
-            ->where('is_accepted', 1)
-            ->orderBy('friendships.importance', 'desc')
+          $friendships = FriendshipsQuery::importantForUser(auth()->user())
             ->take(15)->get();
-
-          // $page_data['friendships'] = $friendships;
-          //new
 
           $page_data = [
               'post_id' => $id,

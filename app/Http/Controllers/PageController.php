@@ -9,6 +9,7 @@ use App\Models\Media_files;
 use App\Models\Page;
 use App\Models\Page_like;
 use App\Models\Posts;
+use App\Queries\FriendshipsQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
@@ -190,17 +191,8 @@ class PageController extends Controller
         $page_data['suggestedpages'] = Page_like::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
         $page_data['page'] = Page::find($id);
 
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-           ->where('is_accepted', 1)
-           ->orderBy('friendships.importance', 'desc')
-           ->take(15)->get();
-
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
+            ->take(15)->get();
 
         $page_data['view_path'] = 'frontend.pages.page-timeline';
 

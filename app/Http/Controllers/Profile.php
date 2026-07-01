@@ -12,6 +12,7 @@ use App\Models\Notification;
 use App\Models\Posts;
 use App\Models\User;
 use App\Models\Users;
+use App\Queries\FriendshipsQuery;
 use App\ViewModels\ProfileFollowList;
 use DB;
 use Illuminate\Http\Request;
@@ -44,15 +45,7 @@ class Profile extends Controller
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->take(5)->orderBy('posts.post_id', 'DESC')->get();
 
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-           ->where('is_accepted', 1)
-           ->orderBy('friendships.importance', 'desc')->get();
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())->get();
 
         $page_data['posts'] = $posts;
         $page_data['user'] = $this->user;
@@ -74,17 +67,7 @@ class Profile extends Controller
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->skip($request->offset)->take(3)->orderBy('posts.post_id', 'DESC')->get();
 
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-          ->where('is_accepted', 1)
-          ->orderBy('friendships.importance', 'desc')
-          ->get();
-
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())->get();
 
         $page_data['posts'] = $posts;
         $page_data['user_info'] = $this->user;
@@ -95,12 +78,7 @@ class Profile extends Controller
 
     public function friends()
     {
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', $this->user->id)
-                ->orWhere('requester', $this->user->id);
-        })
-            ->where('is_accepted', 1)
-            ->orderBy('friendships.importance', 'desc')
+        $friendships = FriendshipsQuery::importantForUser($this->user)
             ->take(15)->get();
 
         $friend_requests = Friendships::where('accepter', $this->user->id)
@@ -268,12 +246,7 @@ class Profile extends Controller
 
     public function load_my_friends(Request $request)
     {
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', $this->user->id)
-                ->orWhere('requester', $this->user->id);
-        })
-            ->where('is_accepted', 1)
-            ->orderBy('friendships.importance', 'desc')
+        $friendships = FriendshipsQuery::importantForUser($this->user)
             ->skip($request->offset)->take(15)->get();
 
         $page_data['friendships'] = $friendships;
@@ -540,15 +513,7 @@ class Profile extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-            ->where('is_accepted', 1)
-            ->orderBy('friendships.importance', 'desc')
-            ->get();
-
-        $page_data['friendships'] = $friendships;
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())->get();
         $page_data['user_info'] = $this->user;
         $page_data['posts'] = $posts;
         $page_data['type'] = 'user_post';
@@ -597,15 +562,7 @@ class Profile extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-            ->where('is_accepted', 1)
-            ->orderBy('friendships.importance', 'desc')
-            ->get();
-
-        $page_data['friendships'] = $friendships;
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())->get();
         $page_data['user_info'] = $this->user;
         $page_data['posts'] = $posts;
         $page_data['type'] = 'user_post';

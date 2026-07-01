@@ -15,6 +15,7 @@ use App\Models\Notification;
 use App\Models\Page;
 use App\Models\Posts;
 use App\Models\User;
+use App\Queries\FriendshipsQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
@@ -45,17 +46,8 @@ class GroupController extends Controller
                         ->orderBy('posts.post_id', 'DESC')->get();
         $totalmember = Group_member::where('group_id', $id)->where('is_accepted', '1')->count();
 
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-           ->where('is_accepted', 1)
-           ->orderBy('friendships.importance', 'desc')
-           ->take(15)->get();
-
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
+            ->take(15)->get();
 
         $page_data['membercount'] = $totalmember;
         $page_data['posts'] = $posts;
@@ -428,17 +420,8 @@ class GroupController extends Controller
           $page_data['page'] = Page::find($list->page_id);
       }
 
-      // New
-      $friendships = Friendships::where(function ($query) {
-          $query->where('accepter', auth()->user()->id)
-              ->orWhere('requester', auth()->user()->id);
-      })
-        ->where('is_accepted', 1)
-        ->orderBy('friendships.importance', 'desc')
+      $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
         ->take(15)->get();
-
-      $page_data['friendships'] = $friendships;
-      //new
 
       $page_data['album_id'] = $album_id;
       $page_data['identifire'] = $identifire;

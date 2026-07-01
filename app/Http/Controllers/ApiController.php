@@ -44,6 +44,7 @@ use App\Models\Stories;
 use App\Models\User;
 use App\Models\Users;
 use App\Models\Video;
+use App\Queries\FriendshipsQuery;
 use App\Providers\RouteServiceProvider;
 use Carbon\Carbon;
 use DB;
@@ -1137,13 +1138,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $friendships = Friendships::where(function ($query) use ($user_id) {
-                $query->where('accepter', $user_id)
-                    ->orWhere('requester', $user_id);
-            })
-                ->where('is_accepted', 1)
-                ->orderBy('friendships.importance', 'desc')
-                ->get();
+            $friendships = FriendshipsQuery::importantForUser($user_id)->get();
             // $user = User::where('id', $user_id)->first();
 
             $response['friendsList'] = [];
@@ -1898,13 +1893,7 @@ class ApiController extends Controller
                 }
             }
 
-            $friendships = Friendships::where(function ($query) use ($user_id) {
-                $query->where('accepter', $user_id)
-                    ->orWhere('requester', $user_id);
-            })
-                ->where('is_accepted', 1)
-                ->orderBy('friendships.importance', 'desc')
-                ->get();
+            $friendships = FriendshipsQuery::importantForUser($user_id)->get();
             // $user = User::where('id', $user_id)->first();
 
             $response['friends'] = [];
@@ -2149,13 +2138,7 @@ class ApiController extends Controller
                 }
             }
 
-            $friendships = Friendships::where(function ($query) use ($user_id) {
-                $query->where('accepter', $user_id)
-                    ->orWhere('requester', $user_id);
-            })
-                ->where('is_accepted', 1)
-                ->orderBy('friendships.importance', 'desc')
-                ->get();
+            $friendships = FriendshipsQuery::importantForUser($user_id)->get();
             // $user = User::where('id', $user_id)->first();
 
             $response['friends'] = [];

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Friendships;
 use App\Models\Posts;
+use App\Queries\FriendshipsQuery;
 use Illuminate\Http\Request;
 
 class MemoriesController extends Controller
@@ -35,15 +35,7 @@ class MemoriesController extends Controller
 
         $page_data['posts'] = $memories_by_post;
 
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-            ->where('is_accepted', 1)
-            ->orderBy('friendships.importance', 'desc')->get();
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())->get();
 
         $page_data['has_memories'] = $memories_by_post->count();
         $page_data['view_path'] = 'frontend.main_content.memories';
@@ -66,15 +58,7 @@ class MemoriesController extends Controller
             ->orderBy('posts.post_id', 'desc')
             ->skip($request->offset)->take(3)->get();
 
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-            ->where('is_accepted', 1)
-            ->orderBy('friendships.importance', 'desc')->get();
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())->get();
 
         $page_data['posts'] = $memories_by_post;
         $page_data['has_memories'] = $memories_by_post->count();

@@ -9,6 +9,7 @@ use App\Models\Media_files;
 use App\Models\Notification;
 use App\Models\Posts;
 use App\Models\User;
+use App\Queries\FriendshipsQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -48,15 +49,7 @@ class CustomUserController extends Controller
     {
         $posts = Posts::where('user_id', $id)->where('publisher', 'post')->where('privacy', 'public')->orderBy('post_id', 'DESC')->limit('10')->get();
 
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-            ->where('is_accepted', 1)
-            ->orderBy('friendships.importance', 'desc')->get();
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())->get();
 
         $page_data['posts'] = $posts;
         $page_data['user_data'] = User::find($id);
@@ -67,16 +60,7 @@ class CustomUserController extends Controller
 
     public function load_post_by_scrolling(Request $request)
     {
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-          ->where('is_accepted', 1)
-          ->orderBy('friendships.importance', 'desc')
-          ->get();
-
-        //new
+        $friendships = FriendshipsQuery::importantForUser(auth()->user())->get();
 
         $posts = Posts::where('user_id', $request->id)->where('publisher', 'post')->where('privacy', 'public')->skip($request->offset)->take(3)->orderBy('post_id', 'DESC')->get();
 
@@ -221,13 +205,7 @@ class CustomUserController extends Controller
 
     public function friends($id)
     {
-        $friendships = Friendships::where(function ($query) use ($id) {
-            $query->where('accepter', $id)
-                ->orWhere('requester', $id);
-        })
-            ->where('is_accepted', 1)
-            ->orderBy('friendships.importance', 'desc')
-            ->get();
+        $friendships = FriendshipsQuery::importantForUser((int) $id)->get();
 
         $friend_requests = Friendships::where('accepter', $id)
             ->where('is_accepted', '!=', 1)

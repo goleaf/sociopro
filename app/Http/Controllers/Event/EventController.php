@@ -10,6 +10,7 @@ use App\Models\Notification;
 use App\Models\Posts;
 use App\Models\Share;
 use App\Models\User;
+use App\Queries\FriendshipsQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -221,17 +222,8 @@ class EventController extends Controller
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->orderBy('posts.post_id', 'DESC')->get();
 
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-           ->where('is_accepted', 1)
-           ->orderBy('friendships.importance', 'desc')
-           ->take(15)->get();
-
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
+            ->take(15)->get();
 
         $page_data['users'] = $users;
         $page_data['posts'] = $posts;

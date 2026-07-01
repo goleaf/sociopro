@@ -6,7 +6,7 @@ use App\Models\Blog;
 use App\Models\Blogcategory;
 use App\Models\Comments;
 use App\Models\FileUploader;
-use App\Models\Friendships;
+use App\Queries\FriendshipsQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Image;
@@ -171,17 +171,8 @@ class BlogController extends Controller
             $blog->save();
         }
 
-        // New
-        $friendships = Friendships::where(function ($query) {
-            $query->where('accepter', auth()->user()->id)
-                ->orWhere('requester', auth()->user()->id);
-        })
-           ->where('is_accepted', 1)
-           ->orderBy('friendships.importance', 'desc')
-           ->take(15)->get();
-
-        $page_data['friendships'] = $friendships;
-        //new
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
+            ->take(15)->get();
 
         $page_data['blog'] = $blog;
         $page_data['categories'] = Blogcategory::all();
