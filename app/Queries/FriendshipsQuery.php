@@ -30,7 +30,8 @@ class FriendshipsQuery
     public static function importantForUser(User|int $user): Builder
     {
         return self::acceptedForUser($user)
-            ->orderBy('friendships.importance', 'desc');
+            ->orderByDesc('friendships.importance')
+            ->orderByDesc('friendships.id');
     }
 
     /**

@@ -1320,8 +1320,12 @@ class AdminCrudController extends Controller
         $filtered_number_of_row = $parameters['search'] === ''
             ? $total_number_of_row
             : (clone $usersQuery)->count();
+        $usersQuery->orderBy($parameters['sort'], $parameters['direction']);
+        if ($parameters['sort'] !== 'id') {
+            $usersQuery->orderByDesc('id');
+        }
+
         $users = $usersQuery
-            ->orderBy($parameters['sort'], $parameters['direction'])
             ->skip($parameters['start'])
             ->take($parameters['length'])
             ->get();
@@ -1446,7 +1450,10 @@ class AdminCrudController extends Controller
 
     public function accountActiveReq()
     {
-        $request_users = Account_active_request::with('user')->orderBy('created_at', 'DESC')->paginate(10);
+        $request_users = Account_active_request::with('user')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(10);
 
         $page_data['view_path'] = 'users.accountActiveReq';
         $page_data['request_users'] = $request_users;

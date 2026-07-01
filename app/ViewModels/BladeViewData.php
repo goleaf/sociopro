@@ -232,21 +232,28 @@ final class BladeViewData
                 })
                 ->where('is_accepted', 1)
                 ->orderByDesc('importance')
+                ->orderByDesc('id')
                 ->get();
 
+            $friendshipCount = $friendships->count();
             $friendIds = $friendships
                 ->map(fn (Friendships $friendship): int => (int) ($friendship->requester == $user->id ? $friendship->accepter : $friendship->requester))
                 ->unique()
+                ->take($limit)
                 ->values();
 
-            $friends = User::query()
+            $friendsById = User::query()
                 ->select(['id', 'name', 'photo'])
                 ->whereIn('id', $friendIds)
-                ->limit($limit)
-                ->get();
+                ->get()
+                ->keyBy('id');
+            $friends = $friendIds
+                ->map(fn (int $friendId): ?User => $friendsById->get($friendId))
+                ->filter(fn (?User $friend): bool => $friend instanceof User)
+                ->values();
 
             return [
-                'count' => $friendships->count(),
+                'count' => $friendshipCount,
                 'items' => $friends,
             ];
         });
@@ -391,6 +398,7 @@ final class BladeViewData
             })
             ->where('is_accepted', 1)
             ->orderByDesc('importance')
+            ->orderByDesc('id')
             ->get();
 
         return $this->friendshipRows($friendships, $viewer, $viewer);

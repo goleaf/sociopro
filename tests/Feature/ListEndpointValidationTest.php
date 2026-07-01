@@ -4,7 +4,12 @@ namespace Tests\Feature;
 
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
+use App\Http\Controllers\AdminCrudController;
 use App\Http\Controllers\PaymentHistory;
+use App\Http\Controllers\Updater;
+use App\Models\Account_active_request;
+use App\Models\Addon;
+use App\Models\Friendships;
 use App\Models\Notification;
 use App\Models\PaymentHistoryEntry;
 use App\Models\User;
@@ -84,6 +89,39 @@ class ListEndpointValidationTest extends TestCase
             ->assertJsonPath('data.1.email', 'zulu@example.test');
     }
 
+    public function test_admin_users_datatable_uses_id_tie_breaker_for_duplicate_sort_values(): void
+    {
+        $admin = $this->adminUser();
+        $olderUser = $this->generalUser([
+            'name' => 'Duplicate Name',
+            'email' => 'older-duplicate-name@example.test',
+        ]);
+        $newerUser = $this->generalUser([
+            'name' => 'Duplicate Name',
+            'email' => 'newer-duplicate-name@example.test',
+        ]);
+
+        $response = $this->actingAs($admin)->postJson(route('admin.server_side_users_data'), [
+            'draw' => '1',
+            'start' => '0',
+            'length' => '10',
+            'order' => [
+                [
+                    'column' => '2',
+                    'dir' => 'asc',
+                ],
+            ],
+            'search' => [
+                'value' => 'Duplicate Name',
+            ],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('data.0.email', $newerUser->email)
+            ->assertJsonPath('data.1.email', $olderUser->email);
+    }
+
     public function test_admin_users_datatable_handles_malformed_filter_shapes(): void
     {
         $admin = $this->adminUser();
@@ -143,6 +181,138 @@ class ListEndpointValidationTest extends TestCase
         $this->assertTrue($userHistories->getCollection()->every(
             fn (object $history): bool => (int) $history->user_id === $owner->id
         ));
+    }
+
+    public function test_addon_manager_paginator_uses_newest_addon_order(): void
+    {
+        $oldestAddon = Addon::query()->create([
+            'title' => 'Oldest addon',
+            'unique_identifier' => 'oldest-addon',
+            'features' => '[]',
+            'version' => '1.0.0',
+            'status' => 1,
+        ]);
+        $newestAddon = Addon::query()->create([
+            'title' => 'Newest addon',
+            'unique_identifier' => 'newest-addon',
+            'features' => '[]',
+            'version' => '1.0.0',
+            'status' => 1,
+        ]);
+
+        $view = app(Updater::class)->addon_manager();
+        $addons = $view->getData()['addons'];
+
+        $this->assertSame(
+            [$newestAddon->id, $oldestAddon->id],
+            $addons->getCollection()->pluck('id')->all()
+        );
+    }
+
+    public function test_account_activation_requests_use_id_tie_breaker_for_duplicate_timestamps(): void
+    {
+        $timestamp = now();
+        $olderUser = $this->generalUser([
+            'email' => 'older-account-request@example.test',
+        ]);
+        $newerUser = $this->generalUser([
+            'email' => 'newer-account-request@example.test',
+        ]);
+
+        $olderRequest = new Account_active_request;
+        $olderRequest->forceFill([
+            'user_id' => $olderUser->id,
+            'status' => 0,
+            'created_at' => $timestamp,
+            'updated_at' => $timestamp,
+        ])->save();
+
+        $newerRequest = new Account_active_request;
+        $newerRequest->forceFill([
+            'user_id' => $newerUser->id,
+            'status' => 0,
+            'created_at' => $timestamp,
+            'updated_at' => $timestamp,
+        ])->save();
+
+        $view = app(AdminCrudController::class)->accountActiveReq();
+        $requestUsers = $view->getData()['request_users'];
+
+        $this->assertSame(
+            [$newerRequest->id, $olderRequest->id],
+            $requestUsers->getCollection()->pluck('id')->all()
+        );
+    }
+
+    public function test_profile_friend_request_window_uses_newest_request_order(): void
+    {
+        $receiver = $this->generalUser();
+        $olderRequester = $this->generalUser([
+            'email' => 'older-friend-requester@example.test',
+        ]);
+        $newerRequester = $this->generalUser([
+            'email' => 'newer-friend-requester@example.test',
+        ]);
+
+        $olderRequest = Friendships::query()->create([
+            'requester' => $olderRequester->id,
+            'accepter' => $receiver->id,
+            'importance' => 0,
+            'is_accepted' => 0,
+        ]);
+        $newerRequest = Friendships::query()->create([
+            'requester' => $newerRequester->id,
+            'accepter' => $receiver->id,
+            'importance' => 0,
+            'is_accepted' => 0,
+        ]);
+
+        $response = $this->actingAs($receiver)
+            ->get(route('profile.load_my_friend_requests', ['offset' => 0]))
+            ->assertOk();
+
+        $friendRequests = $response->viewData('friend_requests');
+
+        $this->assertSame(
+            [$newerRequest->id, $olderRequest->id],
+            $friendRequests->pluck('id')->all()
+        );
+    }
+
+    public function test_api_friend_request_list_uses_newest_request_order(): void
+    {
+        $receiver = $this->generalUser();
+        $olderRequester = $this->generalUser([
+            'name' => 'Older API Friend Requester',
+            'email' => 'older-api-friend-requester@example.test',
+        ]);
+        $newerRequester = $this->generalUser([
+            'name' => 'Newer API Friend Requester',
+            'email' => 'newer-api-friend-requester@example.test',
+        ]);
+        $token = $receiver->createToken('friend-request-order-test')->plainTextToken;
+
+        Friendships::query()->create([
+            'requester' => $olderRequester->id,
+            'accepter' => $receiver->id,
+            'importance' => 0,
+            'is_accepted' => 0,
+        ]);
+        Friendships::query()->create([
+            'requester' => $newerRequester->id,
+            'accepter' => $receiver->id,
+            'importance' => 0,
+            'is_accepted' => 0,
+        ]);
+
+        $response = $this->withToken($token)
+            ->getJson(route('api.friend_requests.index'))
+            ->assertOk();
+
+        $this->assertSame(
+            [$newerRequester->id, $olderRequester->id],
+            array_column($response->json('friendsList'), 'friend_id')
+        );
     }
 
     public function test_web_notifications_index_paginates_new_and_older_lists(): void

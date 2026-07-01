@@ -88,6 +88,7 @@ class Profile extends Controller
 
         $friend_requests = Friendships::where('accepter', $this->user->id)
             ->where('is_accepted', '!=', 1)
+            ->orderByDesc('id')
             ->take(15)->get();
 
         $userId = auth()->user()->id;
@@ -264,6 +265,7 @@ class Profile extends Controller
     {
         $friend_requests = Friendships::where('accepter', $this->user->id)
             ->where('is_accepted', '!=', 1)
+            ->orderByDesc('id')
             ->skip($request->offset)->take(15)->get();
 
         $page_data['friend_requests'] = $friend_requests;

@@ -170,6 +170,7 @@ class CustomUserController extends Controller
 
         $friend_requests = Friendships::where('accepter', $id)
             ->where('is_accepted', '!=', 1)
+            ->orderByDesc('id')
             ->take(15)->get();
 
         $page_data['friendships'] = $friendships;

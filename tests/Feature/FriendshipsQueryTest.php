@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Friendships;
 use App\Models\User;
 use App\Queries\FriendshipsQuery;
+use App\ViewModels\BladeViewData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,6 +18,7 @@ class FriendshipsQueryTest extends TestCase
         $user = User::factory()->create();
         $firstFriend = User::factory()->create();
         $secondFriend = User::factory()->create();
+        $thirdFriend = User::factory()->create();
         $pendingFriend = User::factory()->create();
         $unrelatedUser = User::factory()->create();
 
@@ -28,6 +30,12 @@ class FriendshipsQueryTest extends TestCase
         ]);
         $highImportance = Friendships::create([
             'requester' => $secondFriend->id,
+            'accepter' => $user->id,
+            'importance' => 30,
+            'is_accepted' => 1,
+        ]);
+        $newerHighImportance = Friendships::create([
+            'requester' => $thirdFriend->id,
             'accepter' => $user->id,
             'importance' => 30,
             'is_accepted' => 1,
@@ -50,8 +58,47 @@ class FriendshipsQueryTest extends TestCase
             ->all();
 
         $this->assertSame([
+            $newerHighImportance->id,
             $highImportance->id,
             $lowImportance->id,
         ], $friendshipIds);
+    }
+
+    public function test_blade_friendship_lists_preserve_deterministic_importance_order(): void
+    {
+        $user = User::factory()->create();
+        $oldestFriend = User::factory()->create();
+        $newestFriend = User::factory()->create();
+        $lowImportanceFriend = User::factory()->create();
+
+        Friendships::create([
+            'requester' => $oldestFriend->id,
+            'accepter' => $user->id,
+            'importance' => 30,
+            'is_accepted' => 1,
+        ]);
+        Friendships::create([
+            'requester' => $newestFriend->id,
+            'accepter' => $user->id,
+            'importance' => 30,
+            'is_accepted' => 1,
+        ]);
+        Friendships::create([
+            'requester' => $lowImportanceFriend->id,
+            'accepter' => $user->id,
+            'importance' => 10,
+            'is_accepted' => 1,
+        ]);
+
+        $viewData = app(BladeViewData::class);
+
+        $this->assertSame(
+            [$newestFriend->id, $oldestFriend->id, $lowImportanceFriend->id],
+            $viewData->profileFriends($user)['items']->pluck('id')->all()
+        );
+        $this->assertSame(
+            [$newestFriend->id, $oldestFriend->id, $lowImportanceFriend->id],
+            $viewData->shareFriendRows($user)->pluck('user.id')->all()
+        );
     }
 }

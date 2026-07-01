@@ -1285,6 +1285,7 @@ class ApiController extends Controller
 
             $friend_requests = Friendships::where('accepter', $user_id)
                 ->where('is_accepted', '!=', 1)
+                ->orderByDesc('id')
                 ->get();
             $response['friendsList'] = [];
             foreach ($friend_requests as $key => $friend) {

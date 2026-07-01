@@ -26,7 +26,9 @@ class Updater extends Controller
     // addon manager table
     public function addon_manager()
     {
-        $page_data['addons'] = Addon::paginate(10);
+        $page_data['addons'] = Addon::query()
+            ->orderByDesc('id')
+            ->paginate(10);
         $page_data['view_path'] = 'addons.index';
 
         return view('backend.index', $page_data);
