@@ -27,9 +27,11 @@ use App\Models\Sponsor;
 use App\Models\User;
 use App\Support\Files\FileUploader;
 use DB;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 use Image;
 
 class AdminCrudController extends Controller
@@ -38,6 +40,17 @@ class AdminCrudController extends Controller
     {
         // Don't remove it
         session(['admin_login' => 1]);
+    }
+
+    private function uniqueRule(string $table, string $column, ?Model $ignore = null): Unique
+    {
+        $rule = Rule::unique($table, $column);
+
+        if ($ignore) {
+            return $rule->ignore($ignore);
+        }
+
+        return $rule;
     }
 
     // admin change pass
@@ -133,7 +146,7 @@ class AdminCrudController extends Controller
     public function save_category(Request $request)
     {
         $validated = $request->validate([
-            'pagecategory' => 'required|max:255|string|unique:pagecategories,name',
+            'pagecategory' => ['required', 'max:255', 'string', $this->uniqueRule('pagecategories', 'name')],
         ]);
         $pagecategory = new Pagecategory;
         $pagecategory->name = $request->pagecategory;
@@ -155,10 +168,10 @@ class AdminCrudController extends Controller
 
     public function update_category(Request $request, $id)
     {
+        $pagecategory = Pagecategory::findOrFail($id);
         $validated = $request->validate([
-            'pagecategory' => 'required|max:255|string|unique:pagecategories,name,'.$id,
+            'pagecategory' => ['required', 'max:255', 'string', $this->uniqueRule('pagecategories', 'name', $pagecategory)],
         ]);
-        $pagecategory = Pagecategory::find($id);
         $pagecategory->name = $request->pagecategory;
         $done = $pagecategory->save();
         if ($done) {
@@ -196,7 +209,7 @@ class AdminCrudController extends Controller
     public function save_product_category(Request $request)
     {
         $validated = $request->validate([
-            'productcategory' => 'required|max:255|string|unique:categories,name',
+            'productcategory' => ['required', 'max:255', 'string', $this->uniqueRule('categories', 'name')],
         ]);
         $productcategory = new Category;
         $productcategory->name = $request->productcategory;
@@ -218,10 +231,10 @@ class AdminCrudController extends Controller
 
     public function update_product_category(Request $request, $id)
     {
+        $productcategory = Category::findOrFail($id);
         $validated = $request->validate([
-            'productcategory' => 'required|max:255|string|unique:categories,name,'.$id,
+            'productcategory' => ['required', 'max:255', 'string', $this->uniqueRule('categories', 'name', $productcategory)],
         ]);
-        $productcategory = Category::find($id);
         $productcategory->name = $request->productcategory;
         $done = $productcategory->save();
         if ($done) {
@@ -259,7 +272,7 @@ class AdminCrudController extends Controller
     public function save_brand_category(Request $request)
     {
         $validated = $request->validate([
-            'brand' => 'required|max:255|string|unique:brands,name',
+            'brand' => ['required', 'max:255', 'string', $this->uniqueRule('brands', 'name')],
         ]);
         $brand = new Brand;
         $brand->name = $request->brand;
@@ -281,10 +294,10 @@ class AdminCrudController extends Controller
 
     public function update_brand_category(Request $request, $id)
     {
+        $brand = Brand::findOrFail($id);
         $validated = $request->validate([
-            'brand' => 'required|max:255|string|unique:brands,name,'.$id,
+            'brand' => ['required', 'max:255', 'string', $this->uniqueRule('brands', 'name', $brand)],
         ]);
-        $brand = Brand::find($id);
         $brand->name = $request->brand;
         $done = $brand->save();
         if ($done) {
@@ -322,7 +335,7 @@ class AdminCrudController extends Controller
     public function save_blog_category(Request $request)
     {
         $validated = $request->validate([
-            'blogcategory' => 'required|max:255|string|unique:blogcategories,name',
+            'blogcategory' => ['required', 'max:255', 'string', $this->uniqueRule('blogcategories', 'name')],
         ]);
         $blogcategories = new Blogcategory;
         $blogcategories->name = $request->blogcategory;
@@ -344,10 +357,10 @@ class AdminCrudController extends Controller
 
     public function update_blog_category(Request $request, $id)
     {
+        $blogcategories = Blogcategory::findOrFail($id);
         $validated = $request->validate([
-            'blogcategory' => 'required|max:255|string|unique:blogcategories,name,'.$id,
+            'blogcategory' => ['required', 'max:255', 'string', $this->uniqueRule('blogcategories', 'name', $blogcategories)],
         ]);
-        $blogcategories = Blogcategory::find($id);
         $blogcategories->name = $request->blogcategory;
         $done = $blogcategories->save();
         if ($done) {
@@ -815,7 +828,7 @@ class AdminCrudController extends Controller
     public function save_job_category(Request $request)
     {
         $validated = $request->validate([
-            'jobcategory' => 'required|max:255|string|unique:job_categories,name',
+            'jobcategory' => ['required', 'max:255', 'string', $this->uniqueRule('job_categories', 'name')],
         ]);
         $jobcategories = new JobCategory;
         $jobcategories->name = $request->jobcategory;
@@ -837,10 +850,10 @@ class AdminCrudController extends Controller
 
     public function update_job_category(Request $request, $id)
     {
+        $jobcategories = JobCategory::findOrFail($id);
         $validated = $request->validate([
-            'jobcategory' => 'required|max:255|string|unique:job_categories,name,'.$id,
+            'jobcategory' => ['required', 'max:255', 'string', $this->uniqueRule('job_categories', 'name', $jobcategories)],
         ]);
-        $jobcategories = JobCategory::find($id);
         $jobcategories->name = $request->jobcategory;
         $done = $jobcategories->save();
         if ($done) {
@@ -1094,7 +1107,7 @@ class AdminCrudController extends Controller
         // ]);
 
         $this->validate($request, [
-            'email' => ['required', 'email', Rule::unique('users')],
+            'email' => ['required', 'email', $this->uniqueRule('users', 'email')],
             'name' => 'required', 'max:255',
             'gender' => 'required',
             'date_of_birth' => 'required',
@@ -1138,6 +1151,8 @@ class AdminCrudController extends Controller
 
     public function user_update($id, Request $request)
     {
+        $user = User::findOrFail($id);
+
         // password validation
         //  $request->validate([
         //     'current_password' => ['required', new MatchOldPassword],
@@ -1146,7 +1161,7 @@ class AdminCrudController extends Controller
         // ]);
 
         $this->validate($request, [
-            'email' => ['required', 'email', Rule::unique('users')->ignore($id)],
+            'email' => ['required', 'email', $this->uniqueRule('users', 'email', $user)],
             'name' => 'required', 'max:255',
             'gender' => 'required',
             'date_of_birth' => 'required',
