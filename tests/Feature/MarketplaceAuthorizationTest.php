@@ -666,35 +666,28 @@ class MarketplaceAuthorizationTest extends TestCase
     {
         [$category, $brand, $currency] = $this->createMarketplaceLookups();
 
-        $marketplace = new Marketplace;
-        $marketplace->forceFill([
-            'user_id' => $owner->id,
-            'title' => 'Original marketplace product',
-            'currency_id' => $currency->id,
-            'price' => '15.00',
-            'location' => 'Kaunas',
-            'category' => (string) $category->id,
-            'condition' => 'used',
-            'brand' => (string) $brand->id,
-            'status' => '1',
-            'description' => 'Original marketplace product description.',
-            ...$attributes,
-        ]);
-        $marketplace->save();
-
-        return $marketplace;
+        return Marketplace::factory()
+            ->forOwner($owner)
+            ->forCategory($category)
+            ->forBrand($brand)
+            ->forCurrency($currency)
+            ->used()
+            ->active()
+            ->create([
+                'title' => 'Original marketplace product',
+                'price' => '15.00',
+                'location' => 'Kaunas',
+                'description' => 'Original marketplace product description.',
+                ...$attributes,
+            ]);
     }
 
     private function savedProduct(User $user, Marketplace $product): SavedProduct
     {
-        $savedProduct = new SavedProduct;
-        $savedProduct->forceFill([
-            'user_id' => $user->id,
-            'product_id' => $product->id,
-        ]);
-        $savedProduct->save();
-
-        return $savedProduct;
+        return SavedProduct::factory()
+            ->forUser($user)
+            ->forProduct($product)
+            ->create();
     }
 
     /**
@@ -711,33 +704,16 @@ class MarketplaceAuthorizationTest extends TestCase
 
     private function category(): Category
     {
-        $category = new Category;
-        $category->forceFill(['name' => 'Electronics']);
-        $category->save();
-
-        return $category;
+        return Category::factory()->electronics()->create();
     }
 
     private function brand(): Brand
     {
-        $brand = new Brand;
-        $brand->forceFill(['name' => 'Acme']);
-        $brand->save();
-
-        return $brand;
+        return Brand::factory()->acme()->create();
     }
 
     private function currency(): Currency
     {
-        $currency = new Currency;
-        $currency->timestamps = false;
-        $currency->forceFill([
-            'name' => 'Euro',
-            'code' => 'EUR',
-            'symbol' => 'EUR',
-        ]);
-        $currency->save();
-
-        return $currency;
+        return Currency::factory()->euro()->create();
     }
 }

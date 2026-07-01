@@ -387,34 +387,17 @@ class ApiMarketplaceValidationTest extends TestCase
 
     private function category(): Category
     {
-        $category = new Category;
-        $category->forceFill(['name' => 'Electronics']);
-        $category->save();
-
-        return $category;
+        return Category::factory()->electronics()->create();
     }
 
     private function brand(): Brand
     {
-        $brand = new Brand;
-        $brand->forceFill(['name' => 'Acme']);
-        $brand->save();
-
-        return $brand;
+        return Brand::factory()->acme()->create();
     }
 
     private function currency(): Currency
     {
-        $currency = new Currency;
-        $currency->timestamps = false;
-        $currency->forceFill([
-            'name' => 'Euro',
-            'code' => 'EUR',
-            'symbol' => 'EUR',
-        ]);
-        $currency->save();
-
-        return $currency;
+        return Currency::factory()->euro()->create();
     }
 
     /**
@@ -430,10 +413,6 @@ class ApiMarketplaceValidationTest extends TestCase
      */
     private function marketplace(array $attributes): Marketplace
     {
-        $marketplace = new Marketplace;
-        $marketplace->forceFill($attributes);
-        $marketplace->save();
-
-        return $marketplace;
+        return Marketplace::factory()->create($attributes);
     }
 }
