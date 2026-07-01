@@ -1,0 +1,102 @@
+// Label variable
+$l-margin-bottom: toRem(12);
+$l-font-size: 16;
+$l-font-weight: $fw_SemiBold;
+$l-line-height: 21;
+$l-font-color: #101010;
+// Form
+$f-background: #fff;
+// Font
+$f-font-size: 13;
+$f-font-weight: $fw_Regular;
+$f-line-height: 17;
+$f-text-color: #949494;
+// Padding
+$f-padding-top-bottom: toRem(17);
+$f-padding-left-right: toRem(20);
+// Border
+$f-border-size: toRem(1);
+$f-border-hover-size: toRem(1);
+$f-border-style: solid;
+$f-border-hover-style: solid;
+$f-border-color: #c4c4c4;
+$f-border-hover-color: #5a2ff9;
+$f-border-radius: toRem(10);
+// Placeholder Font
+$f-p-font-size: 13;
+$f-p-font-weight: $fw_Regular;
+$f-p-line-height: 17;
+$f-p-text-color: #c4c4c4;
+// Textarea
+$f-textarea-height: toRem(217);
+$f-textarea-background: #f5f8fa;
+$f-textarea-border-size: toRem(1);
+$f-textarea-border-style: solid;
+$f-textarea-border-color: $f-background;
+
+$f-radio-border-color: red;
+
+.eForm-label {
+  margin-bottom: $l-margin-bottom;
+  @include fontFamily(
+    $l-font-size,
+    $l-font-weight,
+    $l-line-height,
+    $l-font-color
+  );
+}
+.eForm-control {
+  display: block;
+  width: 100%;
+  padding: $f-padding-top-bottom $f-padding-left-right;
+  @include fontFamily(
+    $f-font-size,
+    $f-font-weight,
+    $f-line-height,
+    $f-text-color
+  );
+  background-color: $f-background;
+  background-clip: padding-box;
+  border: $f-border-size $f-border-style $f-border-color;
+  appearance: none;
+  border-radius: $f-border-radius;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  &:focus,
+  &:hover {
+    border: $f-border-hover-size $f-border-hover-style $f-border-hover-color;
+  }
+  &::placeholder {
+    @include fontFamily(
+      $f-p-font-size,
+      $f-p-font-weight,
+      $f-p-line-height,
+      $f-p-text-color
+    );
+  }
+}
+textarea {
+  &.eForm-control {
+    min-height: $f-textarea-height;
+    background-color: $f-textarea-background !important;
+    border: $f-textarea-border-size $f-textarea-border-style
+      $f-textarea-border-color;
+  }
+}
+// Checkbox
+.eForm-check {
+  margin-top: 0.35em;
+  margin-right: toRem(5);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0) !important;
+  border: 1px solid #5a2ff9;
+  &:checked {
+    background-color: #5a2ff9;
+    border-color: #5a2ff9;
+  }
+  ~ label {
+    @include fontFamily(14, $fw_SemiBold, 16, #101010);
+    a {
+      text-decoration: none;
+      color: #5a2ff9 !important;
+    }
+  }
+}

@@ -1,0 +1,115 @@
+.c-search-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  margin-top: toRem(30);
+}
+.c-search-item {
+  display: flex;
+  align-items: flex-start;
+  gap: toRem(12);
+  transition: all 0.3s;
+  padding: toRem(12) toRem(20);
+  border-radius: toRem(10);
+  &:hover {
+    background-color: #f3f3f3;
+  }
+  .logo {
+    flex: 0 0 toRem(50);
+    width: toRem(50);
+    height: toRem(50);
+    border-radius: 50%;
+  }
+  .info {
+    h4,
+    p {
+      margin: 0;
+    }
+    h4 {
+      display: inline-block;
+      @include fontFamily(16, $fw_SemiBold, 22, #101010);
+      margin-bottom: toRem(4);
+    }
+    p {
+      @include fontFamily(14, $fw_Regular, 22, #636363);
+      margin-bottom: toRem(5);
+    }
+    span {
+      @include fontFamily(13, $fw_Regular, 22, #949494);
+    }
+  }
+}
+
+.c-search-more {
+  @include d-center;
+  height: toRem(50);
+  border-radius: toRem(10);
+  background-color: #f3f3f3;
+  @include fontFamily(16, $fw_SemiBold, 22, #101010 !important);
+}
+
+// Search
+.search-input {
+  flex: 1 0 auto;
+  max-width: 100%;
+  height: toRem(50);
+  border-radius: toRem(25);
+  background-color: #f3f3f3;
+  padding: toRem(14) toRem(25) toRem(15);
+  span {
+    line-height: 1;
+    svg path {
+      fill: #636363;
+    }
+  }
+  input {
+    background-color: transparent;
+    border: none;
+    @include fontFamily(16, $fw_Regular, 21, #636363);
+    width: 100%;
+    box-shadow: 0 0 0 #00000000 !important;
+    &:focus {
+      background-color: transparent;
+      @include fontFamily(16, $fw_Regular, 21, #636363);
+    }
+    &::placeholder {
+      @include fontFamily(16, $fw_Regular, 21, #636363);
+    }
+  }
+}
+.btn-search {
+  @include d-center;
+  padding: toRem(14) toRem(29);
+  border-radius: toRem(25);
+  background-color: $purple;
+  @include fontFamily(17, $fw_SemiBold, 22, #fff !important);
+}
+
+.c-search-dropdownitem {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  .c-search-item {
+    border-radius: 0;
+  }
+  ~ .c-search-more {
+    border-radius: 0;
+    margin-top: toRem(10);
+  }
+}
+.search-result-drop {
+  ~ .dropdown-menu {
+    min-width: toRem(512);
+    padding: toRem(20) 0;
+    @include boxShadow(0, 15, 25, rgb(0 0 0 / 10%));
+    &.show {
+      transform: translate(554px, 414px) !important;
+    }
+    .dropdown-item {
+      padding: 0;
+      &:hover {
+        background-color: transparent !important;
+      }
+    }
+  }
+}

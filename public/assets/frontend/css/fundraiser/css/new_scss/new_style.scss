@@ -1,0 +1,39 @@
+[data-background] {
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+// Variable
+$purple: #5a2ff9;
+
+// Font weight
+$fw_ExtraLight: 200;
+$fw_Light: 300;
+$fw_Regular: 400;
+$fw_Medium: 500;
+$fw_SemiBold: 600;
+$fw_Bold: 700;
+$fw_ExtraBold: 800;
+
+@import "new-mixins";
+@import "new-spacing";
+@import "new-typography";
+@import "new-form";
+
+// New Style
+
+@import "my-page";
+@import "continer-profile-view";
+@import "sign-log-content";
+@import "new-settings";
+@import "new-payouts";
+@import "new-paidContent";
+@import "new-search";
+@import "new-feed";
+@import "new-message";

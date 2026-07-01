@@ -1,0 +1,146 @@
+@media all and (max-width:992px){
+    .rightSideBarToggler .card{
+        border:none;
+        border-radius: 8px;
+    }
+    .gm-2{
+        margin-bottom: 8px;
+    }
+    .np_info_pro {
+        margin-top: 20px;
+    }
+    .fixsize {
+        width: 100%;
+    }
+    .header-controls {
+        max-width: 62%;
+      }
+}
+
+@media all and (max-width:767px){
+    .header-controls {
+        max-width: 90%;
+    }
+    .single-entry .current-entry .btn-trans {
+        max-width: 100%;
+    }
+    .single-entry.newsfeed-form .post-options {
+        position: relative !important;
+    }
+    .grid_control{
+        grid-template-columns: repeat(3, 1fr);
+    }
+   
+}
+
+@media all and (max-width:576px){
+    .e_comment .entry-footer {
+        flex-wrap: wrap;
+    }
+    .footer-share {
+        justify-content: space-between !important;
+        width: 100%;
+    }
+    .e_comment .entry-meta {
+        padding-top: 5px !important;
+        justify-content: space-between !important;
+        width: 100%;
+    }
+     .single-entry .entry-inner .entry-meta span.react-count {
+        margin-left: 0;
+    }
+    .text-quote iframe {
+        height: auto !important;
+    }
+    .n_font {
+        font-size: 14px;
+        margin-left: 4px;
+        margin-top: 26px;
+    }
+    .n_profile_tab .avatar-xl img {
+        width: 85px !important;
+        height: 85px !important;
+    }
+    .nblog_header,
+    .nblog_header .btn-inline{
+        display: flex;
+        gap: 5px;
+    } 
+    .nblog_header{
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .res_funrai{
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .headline_size h3{
+        font-size: 22px;
+    }
+    .live-image {
+        max-width: 100%;
+    }
+    .grid_control{
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media all and (max-width: 450px){
+    .logo_height_width {
+        display: none;
+    }
+    .friends-request .card .card-control{
+        flex-wrap: wrap;
+    }
+    .friends-request .card .btn{
+        margin-bottom: 0;
+    }
+    .request_f .card-control {
+        gap: 6px;
+    }
+    .motion_text {
+        margin-top: 0;
+    }
+    .eg_card .card-body {
+        flex-wrap: wrap;
+    }
+    .join_groups .btn {
+        font-size: 12px;
+        padding: 6px 14px !important;
+        margin-top: 4px !important;
+    }
+    .n_details {
+        flex-wrap: wrap;
+    }
+    .np_page_tab .n_main_tab {
+        flex-wrap: wrap;
+    }
+    .n_tab_right {
+        top: 11px;
+    }
+    .gap_m{
+        gap: 5px;
+    }
+    .pg_tab_main  .n_video{
+        width: 100%;
+    }
+    .ng_page_tab .ct-tab .nav-link.active::after {
+        bottom: 0;
+    }
+    .nm_place{
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    .gap_10 {
+        flex-wrap: wrap;
+        display: flex;
+        gap: 5px;
+    }
+    .tabs-top .creator-menu{
+        flex-wrap: wrap;
+    }
+    .grid_control{
+        grid-template-columns: repeat(1, 1fr);
+    }
+}

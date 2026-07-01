@@ -1,0 +1,147 @@
+// Width
+.m-w-212 {
+  max-width: toRem(212);
+}
+.m-w-451 {
+  max-width: toRem(451);
+}
+
+.mi-w-110 {
+  min-width: toRem(110);
+}
+
+// Height
+.mi-h-450 {
+  min-height: toRem(450);
+}
+
+// Gap
+.g-12 {
+  gap: toRem(12);
+}
+.g-15 {
+  gap: toRem(15);
+}
+.g-16 {
+  gap: toRem(16);
+}
+.g-20 {
+  gap: toRem(20);
+}
+.g-25 {
+  gap: toRem(25);
+}
+.g-30 {
+  gap: toRem(30);
+}
+
+// Padding
+.p-30 {
+  padding: toRem(30);
+}
+.p-40 {
+  padding: toRem(40);
+}
+
+.px-20 {
+  padding-left: toRem(20);
+  padding-right: toRem(20);
+}
+.px-30 {
+  padding-left: toRem(30);
+  padding-right: toRem(30);
+}
+.px-40 {
+  padding-left: toRem(30);
+  padding-right: toRem(30);
+}
+
+.py-30 {
+  padding-top: toRem(30);
+  padding-bottom: toRem(30);
+}
+.py-40 {
+  padding-top: toRem(40);
+  padding-bottom: toRem(40);
+}
+
+.pt-10 {
+  padding-top: toRem(10);
+}
+.pt-20 {
+  padding-top: toRem(20);
+}
+.pt-30 {
+  padding-top: toRem(30);
+}
+.pt-40 {
+  padding-top: toRem(40);
+}
+.pt-60 {
+  padding-top: toRem(60);
+}
+
+.pb-6 {
+  padding-bottom: toRem(6);
+}
+.pb-10 {
+  padding-bottom: toRem(10);
+}
+.pb-12 {
+  padding-bottom: toRem(12) !important;
+}
+.pb-15 {
+  padding-bottom: toRem(15);
+}
+.pb-16 {
+  padding-bottom: toRem(16);
+}
+.pb-20 {
+  padding-bottom: toRem(20);
+}
+.pb-25 {
+  padding-bottom: toRem(25);
+}
+.pb-30 {
+  padding-bottom: toRem(30);
+}
+.pb-35 {
+  padding-bottom: toRem(35);
+}
+.pb-40 {
+  padding-bottom: toRem(40) !important;
+}
+
+// Margin
+.mt-10 {
+  margin-top: toRem(10);
+}
+.mt-20 {
+  margin-top: toRem(20);
+}
+.mt-40 {
+  margin-top: toRem(40);
+}
+
+.mb-20 {
+  margin-bottom: toRem(20);
+}
+.mb-30 {
+  margin-bottom: toRem(30);
+}
+.mb-40 {
+  margin-bottom: toRem(40);
+}
+
+// Box Shadow
+.box-shadow-5 {
+  @include boxShadow(0, 10, 20, rgb((0 0 0 / 5%)));
+}
+
+// Border
+.bd-1 {
+  border: toRem(1) solid #dedede;
+}
+.bd-r-5 {
+  border-radius: toRem(5);
+}

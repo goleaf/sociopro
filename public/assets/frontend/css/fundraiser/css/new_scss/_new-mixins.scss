@@ -1,0 +1,22 @@
+// PX to REM
+@function toRem($value) {
+  $remValue: ($value / 16) + rem;
+  @return $remValue;
+}
+// Font Family
+@mixin fontFamily($fontSize, $fontWeight, $lineHeight, $textColor) {
+  font-size: toRem($fontSize);
+  font-weight: $fontWeight;
+  line-height: toRem($lineHeight);
+  color: $textColor;
+}
+// Box Shadow
+@mixin boxShadow($x, $y, $blur, $color) {
+  box-shadow: toRem($x) toRem($y) toRem($blur) $color;
+}
+// Perfect center
+@mixin d-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

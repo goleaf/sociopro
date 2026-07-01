@@ -7,6 +7,8 @@ use App\Actions\Install\ImportInstallSqlDump;
 use App\Actions\Install\PrepareDatabaseConnection;
 use App\Actions\Install\UpdateEnvironmentFile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 use App\Models\Blogcategory;
@@ -14,9 +16,6 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Pagecategory;
 use App\Models\User;
-
-
-use DB;
 
 class InstallController extends Controller
 {
@@ -28,8 +27,7 @@ class InstallController extends Controller
      */
     public  function index()
     {
-        if(DB::connection()->getDatabaseName() != 'db_name')
-        {
+        if (DB::connection()->getDatabaseName() != 'db_name') {
            return redirect('/login');
         } else {
             return redirect()->route('step0');

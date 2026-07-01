@@ -1,0 +1,87 @@
+.about-profile {
+  background-color: #fff;
+  padding: toRem(30) toRem(20) toRem(20);
+  @include boxShadow(0, 10, 20, rgb((0 0 0 / 5%)));
+  border: toRem(1) solid #dedede;
+  border-radius: toRem(5);
+  margin-bottom: toRem(20);
+}
+.about-profile-img {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: toRem(20);
+  li {
+    flex: 0 0 auto;
+    max-width: toRem(270);
+    width: 100%;
+  }
+}
+.about-profile-content {
+  p {
+    &:last-child {
+      margin: 0;
+    }
+  }
+}
+.onOffBtn {
+  display: inline-block;
+  margin-top: toRem(20);
+  @include fontFamily(16, $fw_SemiBold, 26, $purple);
+}
+
+// Locked item
+.locked {
+  position: relative;
+  border-radius: toRem(5);
+  overflow: hidden;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #636363;
+    mix-blend-mode: multiply;
+    z-index: 1;
+  }
+  &-info {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: toRem(244);
+    z-index: 2;
+    text-align: center;
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: toRem(5);
+      padding: toRem(6) toRem(14);
+      background-color: #fff;
+      border-radius: toRem(4);
+      @include fontFamily(14, $fw_SemiBold, 24, $purple);
+    }
+    .info {
+      @include fontFamily(18, $fw_SemiBold, 24, #fff);
+      margin: toRem(23) 0;
+    }
+    a {
+      display: inline-flex;
+      padding: toRem(12) toRem(30);
+      background-color: $purple;
+      border-radius: toRem(5);
+      @include fontFamily(16, $fw_SemiBold, 22, #fff !important);
+    }
+  }
+}
+.locked-content {
+  display: inline-flex;
+  align-items: center;
+  gap: toRem(5);
+  padding: toRem(6) toRem(14);
+  background-color: #f1eefb;
+  border-radius: toRem(4);
+  @include fontFamily(14, $fw_SemiBold, 24, $purple);
+}

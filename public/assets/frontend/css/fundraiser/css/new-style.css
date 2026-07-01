@@ -1,0 +1,1110 @@
+/* Common CSS */
+.text_20 {
+    color: var(--color-dark);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: normal;
+    margin-bottom: 0;
+}
+
+.text_22 {
+    color: var(--color-dark);
+    font-size: 22px;
+    font-weight: 600;
+    line-height: normal;
+    margin-bottom: 0;
+}
+
+.text_26 {
+    color: var(--color-dark);
+    font-size: 26px;
+    font-weight: 600;
+    line-height: normal;
+    margin-bottom: 0;
+}
+
+.text_30 {
+    color: var(--color-dark);
+    font-size: 30px;
+    font-weight: 600;
+    line-height: normal;
+    margin-bottom: 0;
+}
+
+.text_15 {
+    color: var(--color-dark);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: normal;
+    margin-bottom: 0;
+}
+
+.text_16 {
+    color: var(--color-dark);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+    margin-bottom: 0;
+}
+
+.pera_text {
+    color: #949494;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: normal;
+    margin-bottom: 0;
+}
+
+.text_purple {
+    color: #5A2FF9;
+}
+
+.text_green {
+    color: #0BB878;
+}
+
+.btn_1:focus {
+    color: #fff;
+}
+
+.btn_2:focus {
+    color: #fff;
+}
+
+.btn_3:focus {
+    color: #fff;
+}
+
+
+.btn_1 {
+    border-radius: 3px;
+    background: var(--bs-primary);
+    color: inherit;
+    color: #fff;
+    padding: 10px 20px;
+    color: #FFF;
+    font-family: Segoe UI;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    transition: .3s;
+}
+
+.btn_1:hover {
+    background: #0BB878;
+    color: #fff;
+}
+
+.btn_2 {
+    width: 97px;
+    border-radius: 50px;
+    background: var(--bs-primary);
+    color: inherit;
+    color: #fff;
+    font-family: Segoe UI;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding: 8px;
+    display: flex;
+    column-gap: 7px;
+    align-items: center;
+    justify-content: center;
+    transition: .3s;
+}
+
+.btn_2:hover {
+    background: #0BB878;
+    color: #fff;
+}
+
+.btn_3 {
+    background: var(--bs-primary);
+    color: inherit;
+    color: #fff;
+    border-radius: 3px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+    transition: .3s;
+    width: max-content;
+}
+
+.btn_3:hover {
+    background: #0BB878;
+    color: #fff;
+}
+
+.btn_1:focus {
+    box-shadow: none;
+}
+
+.btn_2:focus {
+    box-shadow: none;
+}
+
+.btn_3:focus {
+    box-shadow: none;
+}
+
+.active_btn {
+    background: rgba(11, 184, 120, 0.20);
+    color: #0BB878;
+}
+
+.disable_btn {
+    background: rgba(255, 57, 57, 0.20);
+    color: #FF3939;
+}
+
+/******************************
+Fundraiser Page CSS Start ***/
+
+/* Fundraiser Sidebar CSS */
+.timeline-search form {
+    margin-top: 23px;
+    margin-bottom: 20px;
+}
+
+.blog-nav-tab {
+    margin-bottom: 40px;
+}
+
+.blog-nav-tab .nav-pills .nav-link {
+    text-align: left;
+    padding: 13px 16px;
+    color: #101010;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+    position: relative;
+    display: flex;
+    align-items: end;
+    column-gap: 10px;
+}
+
+.blog-nav-tab .nav-pills .nav-link:after {
+    position: absolute;
+    /* left: -112px; */
+    left: 0px;
+    top: 0;
+    width: 5px;
+    height: 0;
+    content: "";
+    background-color: var(--bs-primary);
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.blog-nav-tab .nav-pills .nav-link.active,
+.nav-pills .show>.nav-link {
+    background-color: #ECECEC;
+}
+
+.blog-nav-tab .nav-pills .nav-link.active::after {
+    height: 100%;
+}
+
+
+/* Blog Card CSS */
+.blog-area {
+    margin-bottom: 50px;
+}
+
+.blog-area .blog-type {
+    margin-bottom: 30px;
+}
+
+.blog-area .blog-see-more {
+    text-align: right;
+}
+
+.blog-area .blog-see-more .text_purple {
+    transition: .3s;
+}
+
+.blog-area .blog-see-more .text_purple:hover {
+    color: #5a2ff9ad;
+}
+
+.blog-card .card {
+    padding: 12px;
+    border-radius: 5px;
+    border: 1px solid #DEDEDE;
+    background: var(--bs-white);
+    box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.06);
+}
+
+.blog-card .card-img {
+    border-radius: 5px;
+    height: 175px;
+    width: 100%;
+    position: relative;
+}
+
+.blog-card .card-img img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
+.blog-card .card-body {
+    padding: 0;
+}
+
+.blog-card .card-body .text_16 {
+    margin: 12px 0 9px 0;
+}
+
+.blog-card .card-body>.pera_text {
+    margin-bottom: 8px;
+}
+
+.blog-card .card-body .btn {
+    width: 100%;
+}
+
+.blog-card .card-donate {
+    display: flex;
+    column-gap: 4px;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 2px;
+    background: var(--bs-primary);
+    position: absolute;
+    top: 9px;
+    right: 9px;
+}
+
+.blog-card .card-donate img {
+    width: 12px;
+    height: 13px;
+}
+
+.blog-card .card-donate .donate-count {
+    color: #FFF;
+    font-family: Segoe UI;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin-bottom: 0;
+}
+
+.card-raised-area .pera_text span {
+    font-weight: 600;
+}
+
+.card-raised-area {
+    padding: 14px 0;
+}
+
+/* Progress Bar */
+#progress_1 {
+    width: 100%;
+    border-radius: 3px;
+    background-color: #ECECEC;
+    border-radius: 8px;
+    height: 4px;
+}
+
+#progress_1[value] {
+    -webkit-appearance: none;
+}
+
+#progress_1[value]::-webkit-progress-bar {
+    background-color: #ECECEC;
+    border-radius: 8px;
+}
+
+#progress_1[value]::-webkit-progress-value {
+    background: var(--color-global);
+    border-radius: 8px;
+}
+
+#progress_1[value]::-moz-progress-bar {
+    background: var(--color-global);
+    border-radius: 8px;
+}
+
+.card-progress .card-progress-value {
+    margin-bottom: 0;
+    color: #101010;
+    font-family: Segoe UI;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.card-progress {
+    column-gap: 11px;
+}
+
+.blog-card-2 .card-body .btn {
+    border: 1px solid #DEDEDE;
+    background: #FFF;
+    color: #101010;
+}
+
+.blog-card-2 .card-body .btn:hover {
+    background: var(--color-global);
+    color: #fff;
+}
+
+.blog-card-2 #progress_1[value]::-webkit-progress-value {
+    background: var(--color-global);
+}
+
+.blog-card-2 #progress_1[value]::-moz-progress-bar {
+    background: var(--color-global);
+}
+
+/* Category CSS */
+.category-title {
+    margin-bottom: 30px;
+}
+
+.category-list {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    column-gap: 17px;
+    row-gap: 17px;
+    list-style: none;
+    margin-bottom: 0;
+    padding-left: 0;
+}
+
+.category-list .single-category {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    border-radius: 5px;
+    border: 1px solid #DEDEDE;
+    background: #FFF;
+    box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.06);
+    padding: 20px;
+    text-align: center;
+    width: 100%;
+    height: 168px;
+}
+
+/****************************
+Fundraiser Page CSS End ***/
+
+
+/**************************************
+Fundraiser Profile Page CSS Start ***/
+/* Profile Area CSS */
+.fund-profile-area {
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background: var(--color-white);
+    box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.06);
+}
+
+.fund-profile-cover {
+    border-radius: 5px;
+    height: 263px;
+    width: 100%;
+}
+
+.fund-profile-cover img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.fund-profile-info {
+    padding: 30px;
+    position: relative;
+}
+
+.fund-profile-img {
+    width: 134px;
+    height: 134px;
+    border-radius: 50%;
+    outline: 6px solid #fff;
+    position: absolute;
+    left: 30px;
+    top: -93px;
+}
+
+.fund-profile-img img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.found-profile-option {
+    margin-bottom: 40px;
+}
+
+.found-profile-option .nav-link {
+    padding: 0;
+    margin-top: -30px;
+}
+
+.profile-name-title {
+    margin-bottom: 30px;
+}
+
+.profile-name-title .text_22 {
+    margin-bottom: 7px;
+}
+
+.profile-title-privacy span {
+    color: var(--text-color);
+    font-weight: 400;
+}
+
+.fund-profile-area .donate-share {
+    column-gap: 14px;
+}
+
+.fund-profile-area .donate-share .btn_2:nth-of-type(2) {
+    border: 1px solid var(--border-color);
+    background: var(--color-white);
+    color: var(--text-color);
+}
+
+.fund-profile-area .donate-share .btn_2:nth-of-type(2):hover {
+    background: #0BB878;
+    color: #fff;
+}
+
+/* Fundraiser progress */
+.fundraiser-progress-area {
+    border-radius: 5px;
+    border: 1px solid #DEDEDE;
+    background: #FFF;
+    box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.06);
+    padding: 20px;
+}
+
+.fund-progress-title {
+    margin-bottom: 29px;
+}
+
+.fund-progress-wrap {
+    row-gap: 20px;
+}
+
+.fund-progress-wrap .fund-single-progress:not(:first-child) {
+    padding-left: 22px;
+}
+
+.fund-progress-wrap .fund-single-progress:not(:last-child) {
+    padding-right: 22px;
+    position: relative;
+}
+
+.fund-progress-wrap .fund-single-progress:not(:last-child)::after {
+    position: absolute;
+    content: " ";
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 27px;
+    background: var(--border-color);
+}
+
+/* Invite Friend */
+.friend-invite-area {
+    border-radius: 5px;
+    border: 1px solid #DEDEDE;
+    background: #FFF;
+    box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.06);
+    padding: 20px;
+}
+
+.friend-name-img {
+    column-gap: 14px;
+}
+
+.friend-name-img .friend-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+
+.friend-name-img .friend-img img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.friend-name-img .friend-name .text_15 {
+    margin-bottom: 4px;
+    transition: .3s;
+}
+.friend-name-img .friend-name .text_15:focus,
+.friend-name-img .friend-name .text_15:hover {
+    color: var(--color-global);
+}
+
+.friend-name-img .friend-name .pera_text {
+    color: var(--text-color);
+}
+
+.friend-invite-wrap {
+    padding-bottom: 15px;
+    padding-left: 0;
+    list-style: none;
+}
+
+.friend-invite-wrap li {
+    margin-bottom: 15px;
+}
+
+.friend-invite-wrap li .btn_2 {
+    padding: 7px;
+    width: 86px;
+}
+
+.friend-invite-area .see-all-btn a {
+    background: #F9F9F9;
+    width: 100%;
+    border-radius: 3px;
+    padding: 15px;
+    color: #5A2FF9;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: normal;
+    display: inline-block;
+    text-align: center;
+    transition: .3s;
+}
+
+.friend-invite-area .see-all-btn a:hover {
+    background: #0BB878;
+    color: #fff;
+}
+
+/* Created */
+.created-owner-area {
+    border-radius: 5px;
+    border: 1px solid #DEDEDE;
+    background: #FFF;
+    box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.06);
+    padding: 20px;
+}
+
+.created-owner-area .text_22 {
+    margin-bottom: 26px;
+}
+
+.created-owner-area .friend-name .text_15 {
+    font-size: 20px;
+}
+
+/* Goal */
+.fund-profile-goal-area {
+    border-radius: 5px;
+    border: 1px solid #DEDEDE;
+    background: #FFF;
+    box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.06);
+    padding: 30px;
+    margin-top: -165px;
+}
+
+.fund-profile-goal-area .text_22 {
+    margin-bottom: 20px;
+}
+
+.fund-profile-goal-area .goal-date .text_16 {
+    color: #636363;
+    margin-bottom: 16px;
+}
+
+.fund-profile-goal-area .goal-date .text_16 span {
+    font-weight: 400;
+}
+
+.goal-progress {
+    column-gap: 13px;
+}
+
+.goal-progress #progress_1 {
+    height: 8px;
+}
+
+.fund-profile-goal-area .goal-raised {
+    padding: 14px 0 16px 0;
+}
+
+.fund-profile-goal-area .goal-raised .pera_text span {
+    font-weight: 600;
+}
+
+.goal-share-btn {
+    margin-top: 16px;
+}
+
+.goal-share-btn a {
+    display: flex;
+    width: 100%;
+    border-radius: 5px;
+    border: 1px solid #DEDEDE;
+    background: #FFF;
+    ;
+    column-gap: 8px;
+    justify-content: center;
+    padding: 12px;
+    transition: .3s;
+    color: #101010;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.goal-share-btn a:hover {
+    color: #101010;
+    background: #0BB878;
+}
+
+/* About */
+.fund-profile-about-area {
+    border-radius: 5px;
+    border: 1px solid #DEDEDE;
+    background: #FFF;
+    box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.06);
+    padding: 30px;
+}
+
+.fund-profile-about-area .text_22 {
+    margin-bottom: 30px;
+}
+
+.fund-profile-about-area .calender-date {
+    column-gap: 11px;
+    margin-bottom: 12px;
+}
+
+.fund-profile-about-area .about-see-more-btn {
+    margin-top: 30px;
+}
+
+.fund-profile-about-area .about-see-more-btn a {
+    text-decoration: underline;
+    transition: .3s;
+}
+
+.fund-profile-about-area .about-see-more-btn a:hover {
+    color: #5a2ff9ad;
+}
+
+/************************************
+Fundraiser Profile Page CSS End ***/
+
+
+/********************************************
+Fundraiser Campaign Form Page CSS Start ***/
+.step-heading .text_30 {
+    margin-bottom: 30px;
+}
+
+.step-left-area {
+    margin-bottom: 30px;
+    margin-left: 40px;
+    height: 453px;
+    border-left: 1px solid #C4C4C4;
+    padding: 0 20px 0 78px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.step-left-area.active {
+    border-color: #5A2FF9;
+}
+
+.step-left-area .text_26 {
+    margin-bottom: 20px;
+    max-width: 401px;
+    width: 100%;
+}
+
+.step-left-area .pera_text {
+    margin-bottom: 40px;
+    max-width: 436px;
+    width: 100%;
+}
+
+.step-right-area {
+    margin-bottom: 30px;
+}
+
+/* Fundraising For Area */
+.fundraising-for-area>.text_20 {
+    margin-bottom: 30px;
+}
+
+.fundraising-for-wrap .form-check {
+    position: relative;
+    padding-left: 0;
+}
+
+.fundraising-for-wrap .form-check:not(:last-child) {
+    margin-bottom: 20px;
+}
+
+.fundraising-for-wrap .form-check-input[type=radio] {
+    background-image: none;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+    border-radius: 5px;
+    border: none;
+}
+
+.fundraising-for-wrap .form-check-input:checked {
+    border-radius: 5px;
+    box-shadow: none;
+}
+
+.fundraising-for-wrap .form-check-input {
+    margin-top: 0;
+    margin-left: 0;
+}
+
+.fundraising-for-wrap .form-check-label {
+    position: relative;
+    z-index: 1;
+    outline: 1px solid #DEDEDE;
+    border-radius: 5px;
+    width: 100%;
+}
+
+.fundraising-for-wrap .form-check-label.active {
+    outline-color: #5A2FF9;
+}
+
+.fundraising-for-wrap .form-check-label.active .single-fundraising-for {
+    background: rgba(90, 47, 249, 0.08);
+}
+
+.single-fundraising-for {
+    border-radius: 5px;
+    background: #FFF;
+    padding: 24px;
+    cursor: pointer;
+    transition: .3s;
+}
+
+.single-fundraising-for .text_16 {
+    margin-bottom: 9px;
+}
+
+
+/* Starting Goal */
+.starting-goal-input input {
+    border-radius: 5px;
+    border: 1px solid #DEDEDE;
+    background: #FFF;
+    padding: 43px 24px 17px 24px;
+}
+
+.starting-goal-input .form-control:focus {
+    box-shadow: none;
+    border: 1px solid #5A2FF9;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.starting-goal-input {
+    position: relative;
+}
+
+.starting-goal-input .pera_text {
+    position: absolute;
+    top: 17px;
+    left: 24px;
+}
+
+.starting-goal-input .amount-add-btn {
+    position: absolute;
+    bottom: 17px;
+    right: 24px;
+}
+
+.starting-goal-input .amount-add-btn {
+    color: #FFF;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: #5A2FF9;
+    margin-bottom: 0;
+}
+
+.starting-goal-area .starting-goal-pera {
+    margin: 20px 0;
+}
+
+.receive-money-card {
+    padding: 24px;
+    border-radius: 5px;
+    background: #EBE7F7;
+}
+
+.receive-money-card .pera_text {
+    color: #101010;
+}
+
+.receive-money-card .reveice-money-list {
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+    margin-top: 20px;
+}
+
+.receive-money-card .reveice-money-list span {
+    height: 3px;
+    width: 3px;
+    border-radius: 50%;
+    background: #101010;
+    display: block;
+}
+
+.receive-money-card .reveice-money-list li {
+    display: flex;
+    align-items: center;
+    column-gap: 6px;
+}
+
+.receive-money-card .reveice-money-list li:not(:last-child) {
+    margin-bottom: 10px;
+}
+
+/* Image Drag N Drop */
+.img-file-drag .image-upload {
+    position: relative;
+    max-width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 5px;
+    border: 2px dashed #D4D4D4;
+    box-shadow: 0px 5px 20px 0px rgba(0, 0, 0, 0.06);
+    transition: .3s;
+}
+
+.img-file-drag .image-upload:hover {
+    border-color: #5b2ff9b7;
+}
+
+.img-file-drag .image-upload input {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.img-file-drag .upload-field {
+    display: block;
+}
+
+.img-file-drag .upload-field .file-thumbnail {
+    text-align: center;
+    padding: 84px;
+}
+
+.img-file-drag .upload-field .file-thumbnail img {
+    width: 75px;
+    height: 75px;
+    object-fit: contain;
+    margin-bottom: 12px;
+}
+
+.img-file-drag .browse-option {
+    margin-bottom: 14px;
+}
+
+.img-file-drag .browse-option span {
+    color: #5A2FF9;
+    cursor: pointer !important;
+    transition: .3s;
+    position: relative;
+}
+
+.img-file-drag .browse-option span:hover {
+    text-decoration: underline;
+}
+
+.img-file-drag .file-img-type {
+    color: #949494;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+/* Title Message */
+.fund-form-group:not(:last-child) {
+    margin-bottom: 50px;
+}
+
+.fund-form-group .form-label {
+    margin-bottom: 20px;
+}
+
+.fund-form-group .form-control {
+    border-radius: 5px;
+    border: 1px solid #DEDEDE;
+    background: #FFF;
+}
+
+.fund-form-group .form-control:focus {
+    box-shadow: none;
+    border: 1px solid #5A2FF9;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.fund-form-group .form-control.active {
+    border: 1px solid #5A2FF9;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.fund-form-group input {
+    padding: 22px 24px 24px 24px;
+    color: #101010;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.fund-form-group input::placeholder {
+    color: #949494;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.fund-form-group .title-form-field {
+    position: relative;
+}
+
+.fund-form-group .title-form-field .title-max-text {
+    color: #101010;
+    font-size: 18px;
+    font-weight: 400;
+    position: absolute;
+    right: 24px;
+    top: 26px;
+    margin-bottom: 0;
+}
+
+.fund-form-group textarea {
+    height: 271px;
+    resize: none;
+}
+
+/******************************************
+Fundraiser Campaign Form Page CSS End ***/
+
+
+
+/**************************************************
+Fundraiser Panel My Activities Page CSS Start ***/
+.profile-menu-panel .menu-panel {
+    z-index: 9;
+}
+
+.profile-menu-panel .expand-btn {
+    z-index: 10;
+}
+
+.card-raised-area-2 {
+    padding: 14px 0 3px 0;
+}
+
+.in-process-btn {
+    column-gap: 11px;
+}
+
+/************************************************
+Fundraiser Panel My Activities Page CSS End ***/
+
+
+
+/****************************************************
+Fundraiser Panel payment History Page CSS Start ***/
+.payouts-btn-width {
+    max-width: 230px;
+}
+
+
+.complate-main-wrap {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    column-gap: 16px;
+    row-gap: 16px;
+}
+
+.complate-main-wrap .blog-card .card {
+    padding: 7px;
+    border-radius: 3px;
+    border: 0.58px solid #DEDEDE;
+    background: #FFF;
+    box-shadow: 0px 2.8991599082946777px 11.596639633178711px 0px rgba(0, 0, 0, 0.06);
+}
+
+.complate-main-wrap .blog-card .card-donate {
+    column-gap: 3px;
+    padding: 4px 6px;
+    border-radius: 2px;
+    top: 6px;
+    right: 6px;
+}
+
+.complate-main-wrap .blog-card .card-img {
+    border-radius: 3px;
+    height: 102px;
+}
+
+.complate-main-wrap .blog-card .card-body .text_16 {
+    margin: 6px 0 4px 0;
+    font-size: 10px;
+}
+
+.complate-main-wrap #progress_1 {
+    height: 3px;
+}
+
+.complate-main-wrap .blog-card .card-body>.pera_text {
+    margin-bottom: 7px;
+    font-size: 8px;
+}
+
+.complate-main-wrap .card-raised-area-2 {
+    padding: 7px 0 1px 0;
+}
+
+.complate-main-wrap .card-raised-area-2 .pera_text {
+    font-size: 8px;
+}
+
+.complate-main-wrap .blog-card .card-donate .donate-count {
+    font-size: 9px;
+}
+
+.complate-main-wrap .blog-card .card-donate img {
+    width: 9.574px;
+    height: 10.372px;
+}
+
+.complate-main-wrap .card-progress .card-progress-value {
+    font-size: 8px;
+}
+
+/**************************************************
+Fundraiser Panel payment History Page CSS End ***/

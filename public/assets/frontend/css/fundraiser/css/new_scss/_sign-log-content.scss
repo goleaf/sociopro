@@ -1,0 +1,96 @@
+.sign-log-content {
+  width: 100%;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 100px 0;
+}
+.sign-log-wrap {
+  background-color: #fff;
+  border: toRem(1) solid #dedede;
+  border-radius: toRem(5);
+  @include boxShadow(0, 10, 20, rgb(0 0 0 / 5%));
+  max-width: toRem(760);
+  padding: toRem(80) toRem(115);
+}
+
+.alter-sign-option {
+  @include d-center;
+  gap: toRem(8);
+  background-color: #fff;
+  border: toRem(1) solid #c4c4c4;
+  border-radius: toRem(10);
+  width: 100%;
+  height: toRem(60);
+  text-decoration: none;
+  @include fontFamily(16, $fw_Regular, 16, #101010);
+  .icon {
+    [class*="fa-"] {
+      width: toRem(24);
+      height: toRem(24);
+      border-radius: 50%;
+      background-color: #4f60d2;
+      @include d-center;
+      font-size: toRem(11);
+      color: #fff;
+    }
+  }
+}
+
+.alter-divider {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  margin-bottom: toRem(30);
+  span {
+    display: block;
+    @include fontFamily(16, $fw_Regular, 16, #101010);
+    position: relative;
+    &::before {
+      content: "";
+      position: absolute;
+      top: 60%;
+      left: 0;
+      transform: translateY(-50%);
+      width: 100%;
+      height: toRem(1);
+      background-color: #c4c4c4;
+      z-index: -2;
+    }
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: toRem(40);
+      height: 100%;
+      background-color: #fff;
+      z-index: -1;
+    }
+  }
+}
+
+.btn-sign {
+  @include d-center;
+  height: toRem(60);
+  border-radius: toRem(10);
+  background-color: #5a2ff9;
+  text-decoration: none;
+  @include fontFamily(18, $fw_SemiBold, 16, #fff !important);
+}
+
+.sign-log-link {
+  text-align: center;
+  @include fontFamily(16, $fw_SemiBold, 16, #101010);
+  a {
+    color: #5a2ff9 !important;
+  }
+}
+
+.formLink {
+  @include fontFamily(16, $fw_SemiBold, 16, #5a2ff9 !important);
+  text-decoration: none;
+}

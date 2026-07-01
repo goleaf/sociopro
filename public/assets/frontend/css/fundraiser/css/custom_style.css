@@ -1,0 +1,257 @@
+.card_preview_text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+
+.preview_tex {
+    display: -webkit-box;
+    -webkit-line-clamp: 7;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card_preview_title {
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 25px !important;
+
+}
+
+.custom_card {
+    margin-bottom: 20px;
+}
+
+.custom-btn-2 {
+    border-radius: 3px;
+    background: #4826c7 !important;
+    padding: 10px 20px !important;
+    font-family: Segoe UI;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    border: 1px solid #DEDEDE !important;
+    color: #fff !important;
+    transition: .3s;
+}
+
+.pera_text.card_preview_text {
+    height: 55px;
+}
+
+
+
+.campaign-title {
+    height: 52px;
+}
+
+.custom-btn-1 {
+    border-radius: 3px;
+    background: #f3f3f3 !important;
+    padding: 10px 20px !important;
+    font-family: Segoe UI;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    border: 1px solid #DEDEDE !important;
+    color: #101010;
+    transition: .3s;
+}
+
+
+.custom-btn-1:hover {
+    background: #0BB878 !important;
+    color: #fff !important;
+}
+
+.custom-btn-2:hover {
+    background: #0BB878 !important;
+    color: #fff !important;
+}
+
+.blog-card-2 #progress_2[value]::-webkit-progress-value {
+    background: #e81111 !important;
+}
+
+.custom-btn-3 {
+    background: rgba(11, 184, 120, 0.20) !important;
+    color: #0BB878 !important;
+}
+
+.custom-btn-3:hover {
+    background: #0BB878 !important;
+    color: #fff !important;
+}
+
+.custom_btn_5 {
+    border: none !important;
+}
+
+
+.custom_margin {
+
+    margin-bottom: 40px;
+}
+
+.end_btn {
+    border: 1px solid #DEDEDE !important;
+    background: #FFF !important;
+    color: #636363 !important;
+}
+
+.end_btn:hover {
+    background: #0BB878 !important;
+    color: #fff !important;
+}
+
+
+.custom_invited_card {
+    height: 216px !important;
+}
+
+.custom_invited_card_2 {
+    height: 207px !important;
+}
+
+.btn_invited {
+    width: 97px;
+    border-radius: 50px;
+
+    color: inherit;
+
+    font-family: Segoe UI;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding: 8px;
+    display: flex;
+    column-gap: 7px;
+    align-items: center;
+    justify-content: center;
+    transition: .3s;
+    background: #DFDCDB;
+    border: none;
+
+}
+
+.select-date input {
+    display: inline-block;
+    padding: 15px 20px;
+    background: transparent;
+    color: #ffffff;
+    border: 0;
+}
+
+.custom_date_btn {
+    background: #4826c7;
+    border: none;
+    border-radius: 5px;
+    position: relative;
+}
+
+
+
+.date-report-icon {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+}
+
+.donate_card_1 {
+    display: flex;
+    column-gap: 4px;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 2px;
+    background: #b4b4b4;
+    position: absolute;
+    top: 9px;
+    right: 9px;
+}
+
+/* ---------------------------------------------start form--------------------------------------- */
+.texts_size {
+    font-family: Segoe UI;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 21px;
+    letter-spacing: 0em;
+    text-align: left;
+    color: #101010;
+}
+
+.fund-form-group {
+    margin: 0 !important;
+}
+
+.campaign-form {
+    margin-top: 50px;
+}
+
+span.current {
+    font-weight: 500;
+}
+
+.fund-form-group textarea {
+    padding: 24px;
+}
+
+.campaign-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.headline_size {
+
+    font-family: Segoe UI;
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 45px;
+    letter-spacing: 0em;
+    text-align: left;
+    color: #101010;
+
+
+}
+
+.fixsize {
+    width: 55%;
+    margin: 0 auto;
+    /*border: 1px solid red;*/
+    overflow: hidden;
+}
+
+.btn_fundraiser {
+    background: #5A2FF9;
+    color: inherit;
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+    transition: .3s;
+    width: 220px;
+    height: 55px;
+
+
+
+}
+
+.btn_fundraiser:hover {
+    background: #0BB878;
+    color: #fff;
+}
+
+
+/* ---------------------------------------------end form--------------------------------------- */
