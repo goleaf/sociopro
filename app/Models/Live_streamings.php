@@ -12,9 +12,7 @@ class Live_streamings extends Model
     public $timestamps = false;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
+     * @var list<string>
      */
     protected $fillable = [
         'streaming_id', 'publisher', 'publisher_id', 'user_id', 'details', 'created_at', 'updated_at',

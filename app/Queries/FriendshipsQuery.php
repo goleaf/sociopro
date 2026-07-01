@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class FriendshipsQuery
 {
+    /**
+     * @return Builder<Friendships>
+     */
     public static function acceptedForUser(User|int $user): Builder
     {
         $userId = $user instanceof User ? $user->id : $user;
@@ -21,12 +24,18 @@ class FriendshipsQuery
             ->where('is_accepted', 1);
     }
 
+    /**
+     * @return Builder<Friendships>
+     */
     public static function importantForUser(User|int $user): Builder
     {
         return self::acceptedForUser($user)
             ->orderBy('friendships.importance', 'desc');
     }
 
+    /**
+     * @return Builder<Friendships>
+     */
     public static function recentForUser(User|int $user): Builder
     {
         return self::acceptedForUser($user)

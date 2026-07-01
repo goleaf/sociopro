@@ -25,12 +25,6 @@ use Illuminate\Support\Facades\Route;
 |
  */
 
-// Route::group(['domain' => '{subdomain}.localhost'], function(){
-//     Route::any('/sssss', function($subdomain) {
-//         return 'Subdomain ' . $subdomain;
-//     });
-// });
-
 Route::get('/clear-cache', function () {
     Artisan::call('cache:clear');
     Artisan::call('config:clear');
@@ -48,7 +42,6 @@ Route::get('/auth-checker', function () {
     }
 })->name('auth-checker');
 
-// Passing param
 Route::get('/users/{user_id}', function ($user_id) {
     return view('welcome');
 });
@@ -226,8 +219,6 @@ Route::controller(Updater::class)->middleware('auth', 'verified', 'activity')->g
     Route::get('admin/addon/delete/{id}', 'addon_delete')->name('addon.delete');
     Route::get('admin/addon/form', 'addon_form')->name('addon.form');
 });
-// End Updater routes
-
 // Installation routes
 Route::prefix('install')->name('install.')->controller(InstallController::class)->group(function () {
     Route::get('/', 'index')->name('index');
@@ -242,4 +233,3 @@ Route::prefix('install')->name('install.')->controller(InstallController::class)
     Route::match(['GET', 'POST'], 'finalizing_setup', 'finalizingSetup')->name('finalizing');
     Route::get('success', 'success')->name('success');
 });
-// Installation routes

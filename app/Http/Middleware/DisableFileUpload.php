@@ -3,21 +3,16 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 class DisableFileUpload
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response|RedirectResponse)  $next
-     * @return Response|RedirectResponse
+     * @param  Closure(Request): Response  $next
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        // $request->files->replace([]);
         return $next($request);
     }
 }

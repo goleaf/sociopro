@@ -5,20 +5,16 @@ namespace App\Http\Middleware;
 use Cache;
 use Carbon\Carbon;
 use Closure;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class UserActivity
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response|RedirectResponse)  $next
-     * @return Response|RedirectResponse
+     * @param  Closure(Request): Response  $next
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
         $user->lastActive = Carbon::now();

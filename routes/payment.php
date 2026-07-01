@@ -9,13 +9,10 @@ Route::controller(PaymentController::class)->group(function () {
     Route::get('payment/success/{identifier}', 'payment_success')->name('payment.success');
     Route::get('payment/create/{identifier}', 'payment_create')->name('payment.create');
 
-    // razor pay
     Route::post('payment/{identifier}/order', 'payment_razorpay')->name('razorpay.order');
 
-    // paytm pay
     Route::post('payment/make/order/{identifier}', 'payment_paytm')->name('make.order');
     Route::get('payment/make/{identifier}/status', 'paytm_paymentCallback')->name('payment.status');
 
-    // Paystack Pay
     Route::post('paystack/payment/{identifier}', 'payment_success')->name('make.payment');
 });

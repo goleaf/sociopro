@@ -12,9 +12,7 @@ class Albums extends Model
     public $timestamps = false;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
+     * @var list<string>
      */
     protected $fillable = [
         'user_id', 'title', 'sub_title', 'thumbnail', 'privacy', 'page_id', 'created_at', 'updated_at',

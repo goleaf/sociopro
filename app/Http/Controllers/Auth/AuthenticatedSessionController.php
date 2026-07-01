@@ -14,27 +14,13 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     *
-     * @return View
-     */
-    public function create()
+    public function create(): View
     {
         return view('auth.login');
     }
 
-    /**
-     * Handle an incoming authentication request.
-     *
-     * @return RedirectResponse
-     */
-    public function store(LoginRequest $request)
+    public function store(LoginRequest $request): RedirectResponse
     {
-        // if(rand(1, 3)==2){
-        //     $this->dataReplace('logout');
-        // }
-
         $request->authenticate();
 
         $request->session()->regenerate();
@@ -42,17 +28,8 @@ class AuthenticatedSessionController extends Controller
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 
-    /**
-     * Destroy an authenticated session.
-     *
-     * @return RedirectResponse
-     */
-    public function destroy(Request $request)
+    public function destroy(Request $request): RedirectResponse
     {
-        // if(rand(1, 3)==2){
-        //     $this->dataReplace('logout');
-        // }
-
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
@@ -64,16 +41,10 @@ class AuthenticatedSessionController extends Controller
 
     public function dataReplace($type = '')
     {
-        // Need to add the schema on top of class, before using this function
-        // use Illuminate\Support\Facades\Schema;
-        // use DB;
-
-        // Restore data only for demo
         if ($type == 'logout') {
             DB::unprepared(file_get_contents(base_path('public/assets/restore.sql')));
         }
 
-        // Date update to show demo data every time
         $databaseName = DB::connection()->getDatabaseName();
         $databaseNameObject = 'Tables_in_'.$databaseName;
         $tables = DB::select('SHOW TABLES');

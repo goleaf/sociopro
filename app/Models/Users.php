@@ -10,9 +10,7 @@ class Users extends Model
     use HasFactory;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
+     * @var list<string>
      */
     protected $fillable = [
         'id', 'user_role', 'user_name', 'email', 'password', 'name', 'nickname', 'friends', 'followers', 'gender', 'studied_at', 'address', 'profession', 'job', 'marital_status', 'phone', 'date_of_birth', 'about', 'photo', 'cover_photo', 'status',

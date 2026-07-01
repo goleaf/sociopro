@@ -5,7 +5,6 @@ namespace App\Models\payment_gateway;
 use DB;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Session;
 use Stripe\Checkout\Session as CheckoutSession;
 use Stripe\Exception\ApiErrorException;
 use Stripe\PaymentIntent;
@@ -26,13 +25,10 @@ class StripePay extends Model
             $stripeSecretKey = $keys['secret_live_key'];
         }
 
-        // Check whether stripe checkout session is not empty
         $session_id = $transaction_keys['session_id'];
         if ($session_id != '') {
-            // Set API key
             Stripe::setApiKey($stripeSecretKey);
 
-            // Fetch the Checkout Session to display the JSON result on the success page
             try {
                 $checkout_session = CheckoutSession::retrieve($session_id);
             } catch (Exception $e) {
@@ -40,39 +36,25 @@ class StripePay extends Model
             }
 
             if (empty($api_error) && $checkout_session) {
-                // Retrieve the details of a PaymentIntent
                 try {
                     $intent = PaymentIntent::retrieve($checkout_session->payment_intent);
                 } catch (ApiErrorException $e) {
                     $api_error = $e->getMessage();
                 }
 
-                // // Retrieves the details of customer
-                // try {
-                //     // Create the PaymentIntent
-                //     $customer = \Stripe\Customer::retrieve($checkout_session->customer);
-                // } catch (ApiErrorException $e) {
-                //     $api_error = $e->getMessage();
-                // }
-
-                // if(empty($api_error) && $intent){
                 if ($intent) {
-                    // Check whether the charge is successful
                     if ($intent->status == 'succeeded') {
                         return true;
                     } else {
                         return false;
                     }
                 } else {
-                    // return get_phrase("Unable_to_fetch_the_transaction_details"). ' ' .$api_error;
                     return false;
                 }
             } else {
-                // return get_phrase("Transaction_has_been_failed").' '.$api_error;
                 return false;
             }
         } else {
-            // return get_phrase("Invalid_Request");
             return false;
         }
 
@@ -81,9 +63,6 @@ class StripePay extends Model
 
     public static function payment_create(mixed $identifier)
     {
-        // require_once '../vendor/autoload.php';
-        // require_once '../secrets.php';
-
         $payment_gateway = DB::table('payment_gateways')->where('identifier', $identifier)->first();
         $payment_details = session('payment_details');
         $keys = json_decode($payment_gateway->keys, true);
@@ -111,9 +90,6 @@ class StripePay extends Model
         $checkout_session = CheckoutSession::create([
             'line_items' => [
                 [
-                    // Provide the exact Price ID (e.g. pr_1234) of the product you want to sell
-                    // 'price' => '{{PRICE_ID}}', This structure for pre-created stripe payment or product
-                    // OR
                     'price_data' => [
                         'product_data' => [
                             'name' => get_phrase('Purchasing').' '.$products_name,
@@ -124,7 +100,7 @@ class StripePay extends Model
                     'quantity' => 1,
                 ],
             ],
-            'mode' => 'payment', // Checkout has three modes: payment, subscription, or setup. Use payment mode for one-time purchases. Learn more about subscription and setup modes in the docs.
+            'mode' => 'payment',
             'success_url' => $payment_details['success_url'].'/'.$identifier.'?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => $payment_details['cancel_url'],
         ]);

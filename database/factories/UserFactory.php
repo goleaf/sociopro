@@ -2,15 +2,18 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
+/**
+ * @extends Factory<User>
+ */
 class UserFactory extends Factory
 {
     /**
-     * Define the model's default state.
-     *
-     * @return array
+     * @return array{name: string, email: string, email_verified_at: Carbon, password: string, remember_token: string}
      */
     public function definition()
     {
@@ -24,9 +27,7 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
-     *
-     * @return Factory
+     * @return static
      */
     public function unverified()
     {

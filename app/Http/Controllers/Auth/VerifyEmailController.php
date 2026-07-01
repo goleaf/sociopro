@@ -10,12 +10,7 @@ use Illuminate\Http\RedirectResponse;
 
 class VerifyEmailController extends Controller
 {
-    /**
-     * Mark the authenticated user's email address as verified.
-     *
-     * @return RedirectResponse
-     */
-    public function __invoke(EmailVerificationRequest $request)
+    public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
             return redirect()->intended(RouteServiceProvider::HOME.'?verified=1');

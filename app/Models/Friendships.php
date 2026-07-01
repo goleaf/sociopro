@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Friendships extends Model
 {
@@ -12,19 +13,23 @@ class Friendships extends Model
     public $timestamps = false;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
+     * @var list<string>
      */
     protected $fillable = [
         'requester', 'accepter', 'importance', 'is_accepted', 'accepted_at', 'created_at', 'updated_at',
     ];
 
+    /**
+     * @return BelongsTo<User, Friendships>
+     */
     public function getFriend()
     {
         return $this->belongsTo(User::class, 'requester');
     }
 
+    /**
+     * @return BelongsTo<User, Friendships>
+     */
     public function getFriendAccepter()
     {
         return $this->belongsTo(User::class, 'accepter');

@@ -11,7 +11,7 @@ return new class extends Migration
      * They intentionally avoid uniqueness, foreign keys, cascade rules, and
      * type/nullability changes because the existing dump has no constraints.
      *
-     * @var array<string, array<string, array<int, string>>>
+     * @var array<string, array<string, list<string>>>
      */
     private array $indexes = [
         'account_active_requests' => [
@@ -192,7 +192,7 @@ return new class extends Migration
     }
 
     /**
-     * @param  array<int, string>  $columns
+     * @param  list<string>  $columns
      */
     private function hasColumns(string $table, array $columns): bool
     {

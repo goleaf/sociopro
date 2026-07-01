@@ -12,9 +12,7 @@ class Feeling_and_activities extends Model
     public $timestamps = false;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
+     * @var list<string>
      */
     protected $fillable = [
         'feeling_and_activity_id', 'type', 'title', 'icon', 'created_at', 'updated_at',

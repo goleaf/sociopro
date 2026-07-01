@@ -19,9 +19,10 @@ class ContactMail extends Mailable
     public $details;
 
     /**
-     * Create a new message instance.
-     *
-     * @return void
+     * @param  string  $name
+     * @param  string  $email
+     * @param  string  $subject
+     * @param  string  $details
      */
     public function __construct($name, $email, $subject, $details)
     {
@@ -32,8 +33,6 @@ class ContactMail extends Mailable
     }
 
     /**
-     * Build the message.
-     *
      * @return $this
      */
     public function build()

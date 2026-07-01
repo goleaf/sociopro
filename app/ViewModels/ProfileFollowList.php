@@ -6,8 +6,15 @@ use App\Models\Follower;
 use App\Models\User;
 use Illuminate\Support\Collection;
 
+/**
+ * @phpstan-type FollowRow array{user: User, is_following: bool, mutual_friends: int}
+ * @phpstan-type FollowList array{count: int, items: Collection<int, FollowRow>}
+ */
 final class ProfileFollowList
 {
+    /**
+     * @return array{followers: FollowList, following: FollowList}
+     */
     public static function forUser(User $user): array
     {
         return [
@@ -16,6 +23,9 @@ final class ProfileFollowList
         ];
     }
 
+    /**
+     * @return FollowList
+     */
     private static function build(User $user, string $ownerColumn, string $profileColumn): array
     {
         $rows = Follower::query()
@@ -48,6 +58,10 @@ final class ProfileFollowList
         ];
     }
 
+    /**
+     * @param  Collection<int, int|string>  $profileIds
+     * @return Collection<int, User>
+     */
     private static function profiles(Collection $profileIds): Collection
     {
         if ($profileIds->isEmpty()) {
@@ -61,6 +75,10 @@ final class ProfileFollowList
             ->keyBy(fn (User $profile): int => (int) $profile->id);
     }
 
+    /**
+     * @param  Collection<int, int|string>  $profileIds
+     * @return Collection<int, int>
+     */
     private static function followedProfileIds(User $user, Collection $profileIds): Collection
     {
         if ($profileIds->isEmpty()) {
@@ -75,6 +93,9 @@ final class ProfileFollowList
             ->map(fn ($profileId): int => (int) $profileId);
     }
 
+    /**
+     * @return Collection<int, int>
+     */
     private static function friendIds(mixed $friends): Collection
     {
         $decodedFriends = is_string($friends) ? json_decode($friends, true) : $friends;

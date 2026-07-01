@@ -35,8 +35,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * @phpstan-type FriendshipRow array{friendship: Friendships, user: User, mutual_count: int, is_following: bool, is_blocked: bool}
+ * @phpstan-type FriendRequestRow array{request: Friendships, user: User, mutual_count: int}
+ * @phpstan-type BlockedUserRow array{block: BlockUser, user: User}
+ * @phpstan-type InviteRow array{friendship: Friendships, user: User, mutual_count: int, is_following: bool, is_blocked: bool, invite: Invite|null}
+ */
 final class BladeViewData
 {
+    /**
+     * @var array<string, mixed>
+     */
     private array $cache = [];
 
     public function postCommentCount(Model $post, string $type = 'post'): int
@@ -49,6 +58,9 @@ final class BladeViewData
             ->count());
     }
 
+    /**
+     * @return Collection<int, Comments>
+     */
     public function rootComments(Model $post, string $type = 'post'): Collection
     {
         $contentId = $this->commentContentId($post, $type);
@@ -73,6 +85,9 @@ final class BladeViewData
             ->count());
     }
 
+    /**
+     * @return Collection<int, Comments>
+     */
     public function childComments(Model $comment): Collection
     {
         return $this->remember("child-comments:{$comment->comment_id}", fn (): Collection => $this->withCommentUsers(
@@ -85,11 +100,17 @@ final class BladeViewData
         ));
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function reacts(Model $model): array
     {
         return json_decode($model->user_reacts ?? '[]', true) ?: [];
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function taggedUserIds(Model $post): array
     {
         return json_decode($post->tagged_user_ids ?? '[]', true) ?: [];
@@ -129,6 +150,9 @@ final class BladeViewData
             ->first());
     }
 
+    /**
+     * @return Collection<int, Media_files>
+     */
     public function postMediaFiles(Model $post): Collection
     {
         return $this->remember("post-media:{$post->post_id}", fn (): Collection => Media_files::query()
@@ -158,6 +182,9 @@ final class BladeViewData
             ->count());
     }
 
+    /**
+     * @return Collection<int, Media_files>
+     */
     public function profileMediaFiles(?int $userId): Collection
     {
         if (! $userId) {
@@ -177,6 +204,9 @@ final class BladeViewData
             ->get());
     }
 
+    /**
+     * @return array{count: int, items: Collection<int, User>}
+     */
     public function profileFriends(User $user, int $limit = 6): array
     {
         return $this->remember("profile-friends:{$user->id}:{$limit}", function () use ($user, $limit): array {
@@ -207,6 +237,10 @@ final class BladeViewData
         });
     }
 
+    /**
+     * @param  iterable<int, Friendships>  $friendships
+     * @return Collection<int, FriendshipRow>
+     */
     public function friendshipRows(iterable $friendships, User $owner, ?User $viewer = null, bool $skipBlocked = false): Collection
     {
         $friendships = collect($friendships);
@@ -242,6 +276,10 @@ final class BladeViewData
             ->values();
     }
 
+    /**
+     * @param  iterable<int, Friendships>  $friendRequests
+     * @return Collection<int, FriendRequestRow>
+     */
     public function friendRequestRows(iterable $friendRequests, ?User $viewer): Collection
     {
         $friendRequests = collect($friendRequests);
@@ -270,6 +308,10 @@ final class BladeViewData
             ->values();
     }
 
+    /**
+     * @param  iterable<int, User>  $users
+     * @return Collection<int, User>
+     */
     public function suggestedFriendRows(iterable $users, ?User $viewer, int|string|null $currentProfileId = null): Collection
     {
         if (! $viewer) {
@@ -285,6 +327,9 @@ final class BladeViewData
             ->values();
     }
 
+    /**
+     * @return Collection<int, BlockedUserRow>
+     */
     public function blockedUserRows(?User $viewer): Collection
     {
         if (! $viewer) {
@@ -316,6 +361,9 @@ final class BladeViewData
         return $this->profileFriends($user, $limit);
     }
 
+    /**
+     * @return Collection<int, FriendshipRow>
+     */
     public function shareFriendRows(?User $viewer): Collection
     {
         if (! $viewer) {
@@ -333,6 +381,9 @@ final class BladeViewData
         return $this->friendshipRows($friendships, $viewer, $viewer);
     }
 
+    /**
+     * @return Collection<int, Group_member>
+     */
     public function shareGroupRows(?User $viewer): Collection
     {
         if (! $viewer) {
@@ -346,6 +397,9 @@ final class BladeViewData
             ->get());
     }
 
+    /**
+     * @return array{exists: bool, accepted: bool, requester_id: int|string|null, is_following: bool}
+     */
     public function friendshipStatus(User $target, ?User $viewer): array
     {
         if (! $viewer || $target->id === $viewer->id) {
@@ -379,6 +433,9 @@ final class BladeViewData
         return $pageIdentifier ?: 'user';
     }
 
+    /**
+     * @return array{gender: string, pronoun: string}
+     */
     public function profilePronouns(User $user): array
     {
         $gender = $user->gender === 'female' ? 'her' : 'his';
@@ -429,6 +486,9 @@ final class BladeViewData
         return (int) now($user?->timezone ?: config('app.timezone'))->format('H');
     }
 
+    /**
+     * @return Collection<int, Sponsor>
+     */
     public function activeSponsors(int $limit = 6): Collection
     {
         return $this->remember("active-sponsors:{$limit}", fn (): Collection => Sponsor::query()
@@ -440,6 +500,9 @@ final class BladeViewData
             ->get());
     }
 
+    /**
+     * @return Collection<int, FriendshipRow>
+     */
     public function onlineFriendRows(?User $viewer): Collection
     {
         if (! $viewer) {
@@ -451,6 +514,9 @@ final class BladeViewData
             ->values();
     }
 
+    /**
+     * @return array{going: int, interested: int}
+     */
     public function eventGuestStats(Model $event, int $invitedFriendGoing = 0): array
     {
         $goingUsers = json_decode($event->going_users_id ?? '[]', true);
@@ -462,6 +528,10 @@ final class BladeViewData
         ];
     }
 
+    /**
+     * @param  iterable<int, Friendships>  $friendships
+     * @return Collection<int, InviteRow>
+     */
     public function eventInviteRows(iterable $friendships, Model $event, User $viewer): Collection
     {
         $rows = $this->friendshipRows($friendships, $viewer, $viewer, true);
@@ -485,6 +555,9 @@ final class BladeViewData
             ->count());
     }
 
+    /**
+     * @return array{creator: PaidContentCreator|null, social: object}
+     */
     public function paidContentCreator(?User $viewer): array
     {
         if (! $viewer) {
@@ -522,6 +595,10 @@ final class BladeViewData
             ->count());
     }
 
+    /**
+     * @param  iterable<int, Friendships>  $friendships
+     * @return Collection<int, InviteRow>
+     */
     public function fundraiserInviteRows(iterable $friendships, Model $fundraiser, User $viewer): Collection
     {
         $rows = $this->friendshipRows($friendships, $viewer, $viewer, true);
@@ -644,6 +721,9 @@ final class BladeViewData
             : route('share.my.timeline');
     }
 
+    /**
+     * @return array<array-key, mixed>
+     */
     public function blogTags(Model $blog): array
     {
         $tags = json_decode($blog->tag ?? '[]', true);
@@ -662,6 +742,9 @@ final class BladeViewData
             ->first());
     }
 
+    /**
+     * @return array{friends: int, posts: int, pages: int, blogs: int, ads: int, products: int}
+     */
     public function dashboardStats(?User $viewer): array
     {
         if (! $viewer) {
@@ -690,6 +773,9 @@ final class BladeViewData
         ]);
     }
 
+    /**
+     * @return array{creator: bool, fundraiser: bool, donate: bool}
+     */
     public function addonAccess(?User $viewer): array
     {
         if (! $viewer) {
@@ -771,6 +857,9 @@ final class BladeViewData
             ->exists());
     }
 
+    /**
+     * @return Collection<int, Media_files>
+     */
     public function groupMediaFiles(Model $group, int $limit = 10): Collection
     {
         return $this->remember("group-media:{$group->id}:{$limit}", fn (): Collection => Media_files::query()
@@ -784,6 +873,9 @@ final class BladeViewData
             ->get());
     }
 
+    /**
+     * @return Collection<int, Group_member>
+     */
     public function recentGroupMembers(Model $group, int $limit = 8): Collection
     {
         return $this->remember("recent-group-members:{$group->id}:{$limit}", fn (): Collection => Group_member::query()
@@ -813,6 +905,9 @@ final class BladeViewData
         return $this->remember("group:{$groupId}", fn (): ?Group => Group::query()->find($groupId));
     }
 
+    /**
+     * @return Collection<int, Albums>
+     */
     public function albumsFor(string $ownerType, int|string|null $ownerId): Collection
     {
         if (! $ownerId) {
@@ -835,6 +930,9 @@ final class BladeViewData
         });
     }
 
+    /**
+     * @return Collection<int, Album_image>
+     */
     public function albumImages(int|string|null $albumId): Collection
     {
         if (! $albumId) {
@@ -858,6 +956,9 @@ final class BladeViewData
             ->exists());
     }
 
+    /**
+     * @return Collection<int, User>
+     */
     public function recentUsers(int $limit = 7): Collection
     {
         return $this->remember("recent-users:{$limit}", fn (): Collection => User::query()
@@ -867,6 +968,9 @@ final class BladeViewData
             ->get());
     }
 
+    /**
+     * @return Collection<int, Event>
+     */
     public function upcomingPublicGroupEvents(Model $group): Collection
     {
         return $this->remember("upcoming-public-group-events:{$group->id}", fn (): Collection => Event::query()
@@ -927,6 +1031,9 @@ final class BladeViewData
             ->count());
     }
 
+    /**
+     * @return Collection<int, Media_files>
+     */
     public function chatFiles(Model $message): Collection
     {
         return $this->remember("chat-files:{$message->id}", fn (): Collection => Media_files::query()
@@ -934,6 +1041,9 @@ final class BladeViewData
             ->get());
     }
 
+    /**
+     * @return array{color: string, 'bg-color': string, text: string}
+     */
     public function storyTextInfo(Model $story): array
     {
         return array_merge([
@@ -943,6 +1053,9 @@ final class BladeViewData
         ], json_decode($story->description ?? '[]', true) ?: []);
     }
 
+    /**
+     * @return Collection<int, Media_files>
+     */
     public function storyMediaFiles(Model $story): Collection
     {
         return $this->remember("story-media:{$story->story_id}", fn (): Collection => Media_files::query()
@@ -962,6 +1075,10 @@ final class BladeViewData
         return $segments[count($segments) - 2] ?? '';
     }
 
+    /**
+     * @param  Collection<int, Comments>  $comments
+     * @return Collection<int, Comments>
+     */
     private function withCommentUsers(Collection $comments): Collection
     {
         $users = User::query()
@@ -977,6 +1094,12 @@ final class BladeViewData
         });
     }
 
+    /**
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
     private function remember(string $key, callable $callback): mixed
     {
         return $this->cache[$key] ??= $callback();

@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class StoriesQuery
 {
+    /**
+     * @return Builder<Stories>
+     */
     public static function visibleFor(User|int $viewer, int $seconds = 86400): Builder
     {
         $viewerId = $viewer instanceof User ? (int) $viewer->id : (int) $viewer;
@@ -31,6 +34,9 @@ class StoriesQuery
             ->first();
     }
 
+    /**
+     * @return Builder<Stories>
+     */
     private static function withOwnerColumns(): Builder
     {
         return Stories::query()

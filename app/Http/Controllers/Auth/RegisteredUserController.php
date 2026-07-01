@@ -18,12 +18,7 @@ use Session;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     *
-     * @return View
-     */
-    public function create()
+    public function create(): View|RedirectResponse
     {
         if (get_settings('public_signup') != 1) {
             Session::flash('error_message', get_phrase('Public signup not allowed'));
@@ -37,13 +32,10 @@ class RegisteredUserController extends Controller
     /**
      * Handle an incoming registration request.
      *
-     * @return RedirectResponse
-     *
      * @throws ValidationException
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        // return $request->all();
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
