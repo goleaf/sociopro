@@ -41,10 +41,13 @@ require __DIR__.'/auth.php';
 
 Route::get('language/switch/{language}', LanguageSwitchController::class)->name('language.switch');
 
-Route::middleware('auth')->name('frontend.')->group(function () {
-    Route::get('/account-disable', [AccountStatusController::class, 'disabled'])->name('disable_view');
-    Route::get('/account-enble-req/{user}', [AccountStatusController::class, 'requestEnable'])->name('account_enble_req');
-});
+Route::middleware('auth')
+    ->name('frontend.')
+    ->controller(AccountStatusController::class)
+    ->group(function () {
+        Route::get('/account-disable', 'disabled')->name('disable_view');
+        Route::get('/account-enble-req/{user}', 'requestEnable')->name('account_enble_req');
+    });
 
 // Modal controllers group routing
 Route::controller(ModalController::class)->middleware('auth', 'user', 'verified', 'activity')->group(function () {
@@ -172,18 +175,21 @@ Route::controller(Profile::class)->middleware('auth', 'verified', 'user', 'activ
 });
 
 // Updater routes are here
-Route::controller(Updater::class)->middleware('auth', 'verified', 'activity', 'admin', 'prevent-back-history')->group(function () {
-    Route::post('admin/addon/create', 'update')->name('admin.addon.create');
-    Route::post('admin/addon/update', 'update')->name('admin.addon.update');
-    Route::post('admin/product/update', 'update')->name('admin.product.update');
+Route::prefix('admin')
+    ->controller(Updater::class)
+    ->middleware('auth', 'verified', 'activity', 'admin', 'prevent-back-history')
+    ->group(function () {
+        Route::post('addon/create', 'update')->name('admin.addon.create');
+        Route::post('addon/update', 'update')->name('admin.addon.update');
+        Route::post('product/update', 'update')->name('admin.product.update');
 
-    // addon install
-    Route::get('admin/addon/manager', 'addon_manager')->name('admin.addon.manager');
-    Route::post('admin/addon/install', 'update')->name('addon.install');
-    Route::get('admin/addon/status/{status}/{id}', 'addon_status')->name('addon.status');
-    Route::get('admin/addon/delete/{id}', 'addon_delete')->name('addon.delete');
-    Route::get('admin/addon/form', 'addon_form')->name('addon.form');
-});
+        // addon install
+        Route::get('addon/manager', 'addon_manager')->name('admin.addon.manager');
+        Route::post('addon/install', 'update')->name('addon.install');
+        Route::get('addon/status/{status}/{id}', 'addon_status')->name('addon.status');
+        Route::get('addon/delete/{id}', 'addon_delete')->name('addon.delete');
+        Route::get('addon/form', 'addon_form')->name('addon.form');
+    });
 // Installation routes
 Route::prefix('install')->name('install.')->controller(InstallController::class)->group(function () {
     Route::get('/', 'index')->name('index');
