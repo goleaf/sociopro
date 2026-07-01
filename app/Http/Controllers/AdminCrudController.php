@@ -342,7 +342,12 @@ class AdminCrudController extends Controller
 
         $purchase_code = $code;
 
-        $personal_token = "FkA9UyDiQT0YiKwYLK3ghyFNRVV9SeUn";
+        $personal_token = config('services.envato.personal_token');
+
+        if (! $personal_token) {
+            return false;
+        }
+
         $url = "https://api.envato.com/v3/market/author/sale?code=" . $purchase_code;
         $curl = curl_init($url);
 
@@ -365,9 +370,9 @@ class AdminCrudController extends Controller
         $cinit_verify_data = curl_exec($ch_verify);
         curl_close($ch_verify);
 
-        $response = json_decode($cinit_verify_data, true);
+        $response = json_decode($cinit_verify_data, true) ?: [];
 
-        if (is_array($response) && count($response['verify-purchase']) > 0) {
+        if (count($response['verify-purchase'] ?? []) > 0) {
             return true;
         } else {
             return false;

@@ -39,4 +39,8 @@ return [
         'industry_type' => env('PAYTM_INDUSTRY_TYPE'),
     ],
 
+    'envato' => [
+        'personal_token' => env('ENVATO_PERSONAL_TOKEN'),
+    ],
+
 ];

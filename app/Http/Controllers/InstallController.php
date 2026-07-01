@@ -74,7 +74,12 @@ class InstallController extends Controller
     public function api_request($code = '')
     {
         $product_code = $code;
-        $personal_token = "FkA9UyDiQT0YiKwYLK3ghyFNRVV9SeUn";
+        $personal_token = config('services.envato.personal_token');
+
+        if (! $personal_token) {
+            return false;
+        }
+
         $url = "https://api.envato.com/v3/market/author/sale?code=" . $product_code;
         $curl = curl_init($url);
     
@@ -84,22 +89,22 @@ class InstallController extends Controller
         $header[] = 'Content-length: 0';
         $header[] = 'Content-type: application/json; charset=utf-8';
         $header[] = 'Authorization: ' . $bearer;
-    
+
         $verify_url = 'https://api.envato.com/v1/market/private/user/verify-purchase:' . $product_code . '.json';
         $ch_verify = curl_init($verify_url . '?code=' . $product_code);
-    
+
         curl_setopt($ch_verify, CURLOPT_HTTPHEADER, $header);
         curl_setopt($ch_verify, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch_verify, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch_verify, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($ch_verify, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);
-    
+        curl_setopt($ch_verify, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT'] ?? 'Sociopro Installer');
+
         $cinit_verify_data = curl_exec($ch_verify);
         curl_close($ch_verify);
-    
-        $response = json_decode($cinit_verify_data, true);
-    
-        if (count($response['verify-purchase']) > 0) {
+
+        $response = json_decode($cinit_verify_data, true) ?: [];
+
+        if (count($response['verify-purchase'] ?? []) > 0) {
           return true;
         } else {
           return false;
