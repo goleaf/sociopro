@@ -3,14 +3,24 @@
 namespace App\Http\Controllers;
 
 use Anand\LaravelPaytmWallet\Facades\PaytmWallet;
+use App\Models\Payment_gateway;
 use App\Models\Users;
-use App\Models\Paystack;
-use DB;
 use Illuminate\Http\Request;
-use Session;
 
 class PaymentController extends Controller
 {
+    private const PAYMENT_GATEWAY_COLUMNS = [
+        'id',
+        'identifier',
+        'currency',
+        'title',
+        'description',
+        'keys',
+        'model_name',
+        'test_mode',
+        'status',
+        'is_addon',
+    ];
 
     public function index()
     {
@@ -25,89 +35,55 @@ class PaymentController extends Controller
         }
 
         $page_data['payment_details'] = $payment_details;
-        $page_data['payment_gateways'] = DB::table('payment_gateways')->get();
+        $page_data['payment_gateways'] = Payment_gateway::query()
+            ->select(self::PAYMENT_GATEWAY_COLUMNS)
+            ->get();
+
         return view('payment.index', $page_data);
     }
 
     public function show_payment_gateway_by_ajax($identifier)
     {
         $page_data['payment_details'] = session('payment_details');
-        $page_data['payment_gateway'] = DB::table('payment_gateways')->where('identifier', $identifier)->first();
+        $page_data['payment_gateway'] = $this->paymentGateway($identifier);
         return view('payment.' . $identifier . '.index', $page_data);
     }
-
-    // public function payment_success($identifier, Request $request)
-    // {
-    //     $payment_details = session('payment_details');
-    //     $payment_gateway = DB::table('payment_gateways')->where('identifier', $identifier)->first();
-    //     $model_name = $payment_gateway->model_name;
-    //     $model_full_path = str_replace(' ', '', 'App\Models\payment_gateway\ ' . $model_name);
-    //     $status = $model_full_path::payment_status($identifier, $request->all());
-    //     if ($status === true) {
-    //         $success_model = $payment_details['success_method']['model_name'];
-    //         $success_function = $payment_details['success_method']['function_name'];
-
-    //         $model_full_path = str_replace(' ', '', 'App\Models\ ' . $success_model);
-    //         return $model_full_path::$success_function($identifier);
-    //     } else {
-    //         flash()->addError(get_phrase('Payment failed! Please try again.'));
-    //         redirect()->to($payment_details['cancel_url']);
-    //     }
-    // }
 
     public function payment_success($identifier, Request $request)
     {
         $payment_details = session('payment_details');
-        $payment_gateway = DB::table('payment_gateways')->where('identifier', $identifier)->first();
-        $model_name = $payment_gateway->model_name;
-        $model_full_path = 'App\Models\payment_gateway\\' . str_replace(' ', '', $model_name);
-    
-        // Instantiate the payment gateway class
-        $paystack = new $model_full_path();
-    
-        // Call the payment_status method on the instantiated object
-        if($paystack){
-           $status = $paystack->payment_status($identifier, $request->all());
-        }else{
-            $status = $model_full_path::payment_status($identifier, $request->all());
-        }
- 
+        $payment_gateway = $this->paymentGateway($identifier);
+        $model_full_path = $this->gatewayModelClass($payment_gateway);
+
+        $paymentGateway = new $model_full_path();
+        $status = $paymentGateway->payment_status($identifier, $request->all());
+
         if ($status === true) {
             $success_model = $payment_details['success_method']['model_name'];
-           
+
             $success_function = $payment_details['success_method']['function_name'];
-            
+
             $model_full_path = 'App\Models\\' . str_replace(' ', '', $success_model);
-        
+
             return $model_full_path::$success_function($identifier);
         } else {
             flash()->addError(get_phrase('Payment failed! Please try again.'));
             return redirect()->to($payment_details['cancel_url']);
         }
     }
-    
-    
-
-
-
-
 
     public function payment_create($identifier)
     {
-        $payment_details = session('payment_details');
-        $payment_gateway = DB::table('payment_gateways')->where('identifier', $identifier)->first();
-        $model_name = $payment_gateway->model_name;
-        $model_full_path = str_replace(' ', '', 'App\Models\payment_gateway\ ' . $model_name);
+        $payment_gateway = $this->paymentGateway($identifier);
+        $model_full_path = $this->gatewayModelClass($payment_gateway);
         $created_payment_link = $model_full_path::payment_create($identifier);
         return redirect()->to($created_payment_link);
     }
 
     public function payment_razorpay($identifier)
     {
-        $payment_details = session('payment_details');
-        $payment_gateway = DB::table('payment_gateways')->where('identifier', $identifier)->first();
-        $model_name = $payment_gateway->model_name;
-        $model_full_path = str_replace(' ', '', 'App\Models\payment_gateway\ ' . $model_name);
+        $payment_gateway = $this->paymentGateway($identifier);
+        $model_full_path = $this->gatewayModelClass($payment_gateway);
         $data = $model_full_path::payment_create($identifier);
         return view('payment.razorpay.payment', compact('data'));
     }
@@ -152,36 +128,16 @@ class PaymentController extends Controller
         // $transaction->getOrderId(); // Get order id
     }
 
-    // Payment Paystack 
-    // public function payWithPaystack(Request $request , $identifier)
-    // {
-    //     $user = Users::where('id', $request->user)->first();
-    //     print_r($user);
-    //     die;
-    //     $paymentDetails = Session::get('payment_details');
+    private function paymentGateway(string $identifier): Payment_gateway
+    {
+        return Payment_gateway::query()
+            ->select(self::PAYMENT_GATEWAY_COLUMNS)
+            ->forIdentifier($identifier)
+            ->firstOrFail();
+    }
 
-
-    //     // Get keys and test mode from database
-    //     // You need to adjust this according to your Laravel database structure
-    //     $keys = []; // Fetch keys from database
-    //     $testMode = 0; // Fetch test mode from database
-
-    //     if ($testMode == 1) {
-    //         $key = $keys['public_test_key'];
-    //     } else {
-    //         $key = $keys['public_live_key'];
-    //     }
-
-    //     $amount = $paymentDetails['price'];
-
-    //     return view('payment.paystack', compact('key', 'amount', 'user'));
-    // }
-    // public function handlePaymentCallback(Request $request)
-    // {
-    //     $paystack = new Paystack();
-    //     $paymentStatus = $paystack->check_paystack_payment($request->identifier);
-    // }
-
-
-
+    private function gatewayModelClass(Payment_gateway $paymentGateway): string
+    {
+        return 'App\Models\payment_gateway\\' . str_replace(' ', '', $paymentGateway->model_name);
+    }
 }
