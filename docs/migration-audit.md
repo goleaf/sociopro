@@ -1,5 +1,82 @@
 # Migration Audit
 
+## 2026-07-02 Update: Full Migration Safety Pass
+
+### Scope
+
+Audited all Laravel migration files currently present in `database/migrations`:
+
+- `2026_07_01_150000_add_safe_legacy_lookup_indexes.php`
+- `2026_07_02_120000_add_marketplace_search_filter_indexes.php`
+- `2026_07_02_130000_add_safe_legacy_relationship_indexes.php`
+
+Also cross-checked the legacy schema source `public/assets/install.sql` and the local SQLite schema because this project is still dump-backed. No existing production migration was edited.
+
+### Safe Fix Applied
+
+Added `database/migrations/2026_07_02_130000_add_safe_legacy_relationship_indexes.php`.
+
+This migration adds guarded, non-unique indexes for existing high-traffic lookup columns:
+
+- `addons.unique_identifier`
+- unread chat checks by `chats.reciver_id`, `read_status`, and `id`
+- comment target counts by `comments.id_of_type`
+- public/group event lists by `events.privacy`, `group_id`, and `id`
+- feeling/activity picker lookups by `feeling_and_activities.type`
+- follower target lookups by `followers.page_id` and `followers.group_id`
+- invite target checks by receiver plus `page_id` or `post_id`
+- active language filtering by `languages.name`
+- Zoom/live-stream lookup by `live_streamings.publisher_id` and `user_id`
+- media lookups by product and album-image references
+- notification target/status lookups by event, page, and group
+- payment cleanup/reporting by `payment_histories.item_id`
+- save-for-later group lookups by `saveforlaters.user_id` and `group_id`
+- active/user-list filtering by `users.status` and `id`
+
+The migration intentionally avoids uniqueness, foreign keys, nullability changes, type changes, and indexes on MySQL `TEXT` columns. The `up()` and `down()` methods both guard table, column, and index existence.
+
+### Migration File Findings
+
+| Migration | Risk | Finding | Action |
+|---|---:|---|---|
+| `2026_07_01_150000_add_safe_legacy_lookup_indexes.php` | Medium | Additive and reversible, but `up()` does not check for existing indexes before creating them. It may fail on production databases where DBAs already added equivalent manual indexes. | Do not edit the existing migration. Compare production indexes before deployment. Future migrations must use `Schema::hasIndex()`. |
+| `2026_07_01_150000_add_safe_legacy_lookup_indexes.php` | High | Some indexed columns are `TEXT` in the legacy MySQL dump, including `groups.user_id`, `marketplaces.category`, `posts.album_image_id`, and `videos.category`. MySQL may reject full indexes on `TEXT` columns without prefix lengths. | Documented as deployment risk. Do not add more `TEXT` indexes without a type cleanup or explicit MySQL prefix strategy. |
+| `2026_07_02_120000_add_marketplace_search_filter_indexes.php` | Medium | Uses guards and rollback checks. The `status/title` composite can be wide because both columns are varchar-like in the dump; older MySQL/InnoDB settings may reject it. | Keep, but verify on the target MySQL version before production deployment. |
+| `2026_07_02_120000_add_marketplace_search_filter_indexes.php` | High | `marketplaces.price` is stored as text, so price sorting/filtering remains semantically fragile even with an index. | Defer a decimal money migration until data quality and UI/API compatibility are tested. |
+| `2026_07_02_130000_add_safe_legacy_relationship_indexes.php` | Low | Additive, guarded, reversible indexes only. | Applied as the safe fix for this pass. |
+
+### Schema Risks Still Deferred
+
+These are not safe one-step fixes:
+
+- No complete reversible baseline migration exists for the dump-backed application schema.
+- The legacy dump still has no application foreign keys or cascade rules.
+- Foreign-key-like columns have inconsistent types, for example `groups.user_id` as `text` and `marketplaces.category` as `text`.
+- Money-like fields use floating-point or text storage, including `payment_histories.amount`, `sponsors.paid_amount`, and `marketplaces.price`.
+- Timestamp columns mix `timestamp`, `varchar(100)`, text, nullable values, and `CURRENT_TIMESTAMP` defaults.
+- Many relationship columns are nullable even though application code assumes related owners or targets.
+- Unique constraints for pivot-like tables are still deferred because duplicate data must be checked first.
+
+### Required Safe Order From Here
+
+1. Apply and verify additive indexes only.
+2. Export production schema metadata and compare tables, columns, indexes, and MySQL version/settings against local SQLite and `public/assets/install.sql`.
+3. Run read-only orphan reports for posts, comments, media, friendships, notifications, payments, pages, groups, and marketplace rows.
+4. Clean duplicate/orphan data in reversible batches.
+5. Add foreign keys one domain at a time after delete behavior is explicitly chosen.
+6. Use expand-contract migrations for type, nullability, money precision, and timestamp normalization.
+7. Generate a baseline migration only after installer behavior is covered by tests and the dump/import path has a rollback plan.
+
+### Verification Added
+
+Added `tests/Feature/MigrationSafetyAuditTest.php`.
+
+The test suite now verifies:
+
+- every migration file defines a `down(): void` method;
+- the new safe relationship index migration can run `up()`, `down()`, and `up()` again;
+- all expected indexes exist after migration and are removed by rollback.
+
 Date: 2026-07-01
 
 ## Scope
