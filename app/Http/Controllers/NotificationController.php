@@ -13,12 +13,26 @@ use Session;
 
 class NotificationController extends Controller
 {
+    private const PER_PAGE = 25;
+
+    /**
+     * @var list<string>
+     */
+    private const RELATIONS = ['getUserData', 'getEventData', 'getGroupData', 'getFundraiserData'];
+
     public function notifications()
     {
         $date = Carbon::today();
-        $page_data['new_notification'] = Notification::where('reciver_user_id', auth()->user()->id)->where('status', '0')
-            ->orderBy('id', 'DESC')->get();
-        $page_data['older_notification'] = Notification::where('reciver_user_id', auth()->user()->id)->where('created_at', '<', $date)->orderBy('id', 'DESC')->get();
+        $page_data['new_notification'] = Notification::with(self::RELATIONS)
+            ->where('reciver_user_id', auth()->user()->id)
+            ->where('status', '0')
+            ->orderBy('id', 'DESC')
+            ->paginate(self::PER_PAGE, ['*'], 'new_page');
+        $page_data['older_notification'] = Notification::with(self::RELATIONS)
+            ->where('reciver_user_id', auth()->user()->id)
+            ->where('created_at', '<', $date)
+            ->orderBy('id', 'DESC')
+            ->paginate(self::PER_PAGE, ['*'], 'older_page');
         $page_data['view_path'] = 'frontend.notification.notification';
 
         return view('frontend.index', $page_data);

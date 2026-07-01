@@ -120,6 +120,45 @@ class ApiMarketplaceValidationTest extends TestCase
         $this->assertSame($latestVisibleProduct->id, $products[0]['id']);
     }
 
+    public function test_marketplace_index_uses_default_pagination_while_preserving_array_shape(): void
+    {
+        $owner = $this->authenticateApiUser();
+        [$category, $brand, $currency] = $this->createMarketplaceLookups();
+
+        $latestProduct = null;
+        for ($index = 1; $index <= 25; $index++) {
+            $latestProduct = $this->marketplace([
+                'user_id' => $owner->id,
+                'title' => sprintf('Index Product %02d', $index),
+                'price' => (string) (200 + $index),
+                'location' => 'Vilnius',
+                'category' => (string) $category->id,
+                'condition' => 'new',
+                'status' => '1',
+                'brand' => (string) $brand->id,
+                'currency_id' => $currency->id,
+                'description' => 'Marketplace index pagination fixture.',
+            ]);
+        }
+
+        $response = $this->withToken($this->apiToken)->getJson(route('api.marketplace.index'));
+
+        $response->assertOk();
+
+        $products = $response->json();
+
+        $this->assertIsArray($products);
+        $this->assertArrayNotHasKey('data', $products);
+        $this->assertCount(20, $products);
+        $this->assertSame($latestProduct->id, $products[0]['id']);
+
+        $secondPage = $this->withToken($this->apiToken)
+            ->getJson(route('api.marketplace.index', ['page' => 2]));
+
+        $secondPage->assertOk();
+        $this->assertCount(5, $secondPage->json());
+    }
+
     public function test_create_marketplace_rejects_invalid_json_body_without_creating_product(): void
     {
         $this->authenticateApiUser();

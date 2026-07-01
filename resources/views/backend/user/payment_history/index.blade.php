@@ -42,6 +42,11 @@
               </tbody>
             </table>
           </div>
+          @if (method_exists($payment_histories, 'links'))
+            <div class="mt-3">
+              {{ $payment_histories->withQueryString()->links() }}
+            </div>
+          @endif
         </div>
       </div>
     </div>
@@ -52,6 +57,5 @@
     @include('backend.footer')
     <!-- End Footer -->
   </div>
-
 
 

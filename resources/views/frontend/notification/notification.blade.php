@@ -3,7 +3,7 @@
         <div class="notify-inner shadow-sm">
             <h3 class="h4 py-4 border-bottom ">{{ get_phrase('Notifications') }}</h3>
             <div class="new-notif mt-4 pb-1">
-                <h4 class="notify-title">{{ get_phrase('New') }} <span>{{ count($new_notification) }}</span></h4>
+                <h4 class="notify-title">{{ get_phrase('New') }} <span>{{ method_exists($new_notification, 'total') ? $new_notification->total() : count($new_notification) }}</span></h4>
                 <ul>
                     @foreach ($new_notification as $newNotification)
                         @if ($newNotification->type == 'event')
@@ -251,10 +251,15 @@
                         @endif
                     @endforeach
                 </ul>
+                @if (method_exists($new_notification, 'links'))
+                    <div class="mt-3">
+                        {{ $new_notification->withQueryString()->links() }}
+                    </div>
+                @endif
             </div>
             <div class="new-notif mt-4 pb-1">
                 @if (count($older_notification) > 0)
-                    <h4 class="notify-title pb-1">{{get_phrase('Earlier')}} <span>{{ count($older_notification) }}</span></h4>
+                    <h4 class="notify-title pb-1">{{get_phrase('Earlier')}} <span>{{ method_exists($older_notification, 'total') ? $older_notification->total() : count($older_notification) }}</span></h4>
                 @endif
 
                 <ul>
@@ -479,6 +484,11 @@
                         @endif
                     @endforeach
                 </ul>
+                @if (method_exists($older_notification, 'links'))
+                    <div class="mt-3">
+                        {{ $older_notification->withQueryString()->links() }}
+                    </div>
+                @endif
             </div> <!-- Earlier widget End -->
 
         </div>

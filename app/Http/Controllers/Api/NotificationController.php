@@ -5,16 +5,24 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Friendships;
-use App\Models\Group;
 use App\Models\Invite;
 use App\Models\Notification;
-use App\Models\Page;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
+    private const PER_PAGE = 25;
+
+    private const MAX_PER_PAGE = 50;
+
+    /**
+     * @var list<string>
+     */
+    private const RELATIONS = ['getUserData', 'getEventData', 'getGroupData', 'getPageData'];
+
     public function notifications(Request $request)
     {
         $token = $request->bearerToken();
@@ -23,104 +31,70 @@ class NotificationController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
             $date = Carbon::today();
-            $new_notification = Notification::where('reciver_user_id', $user_id)->where('status', '0')
-                ->orderBy('id', 'DESC')->get();
-            $newnoti = [];
-            foreach ($new_notification as $post) {
-                $user = User::find($post->sender_user_id);
+            $perPage = $this->perPage($request);
+            $new_notification = Notification::with(self::RELATIONS)
+                ->where('reciver_user_id', $user_id)
+                ->where('status', '0')
+                ->orderBy('id', 'DESC')
+                ->simplePaginate($perPage, ['*'], 'new_page');
+            $older_notification = Notification::with(self::RELATIONS)
+                ->where('reciver_user_id', $user_id)
+                ->where('created_at', '<', $date)
+                ->orderBy('id', 'DESC')
+                ->simplePaginate($perPage, ['*'], 'older_page');
 
-                $createdDate = Carbon::createFromTimestamp(strtotime($post->created_at));
-                $formattedDate = $createdDate->diffForHumans();
-                $eventName = '';
-
-                if (! is_null($post->event_id)) {
-                    $event = Event::find($post->event_id);
-                    $eventName = $event ? $event->title : '';
-                }
-                $groupName = '';
-
-                if (! is_null($post->group_id)) {
-                    $group = Group::find($post->group_id);
-                    $groupName = $group ? $group->title : '';
-                }
-                $pageName = '';
-
-                if (! is_null($post->page_id)) {
-                    $page = Page::find($post->page_id);
-                    $pageName = $page ? $page->title : '';
-                }
-                $newnoti[] = [
-                    'id' => $post->id,
-                    'sender_user_id' => $post->sender_user_id,
-                    'reciver_user_id' => $post->reciver_user_id,
-                    'name' => $user->name,
-                    'photo' => get_user_images($user->id),
-                    'type' => $post->type,
-                    'event_id' => $post->event_id,
-                    'event_name' => $eventName,
-                    'page_id' => $post->page_id,
-                    'pageName' => $pageName,
-                    'group_id' => $post->group_id,
-                    'groupName' => $groupName,
-                    'status' => $post->status,
-                    'view' => $post->view,
-                    'created_at' => $formattedDate,
-                ];
-            }
-            $older_notification = Notification::where('reciver_user_id', $user_id)->where('created_at', '<', $date)->orderBy('id', 'DESC')->get();
-            $oldnoti = [];
-            foreach ($older_notification as $post) {
-                $user = User::find($post->sender_user_id);
-
-                $createdDate = Carbon::createFromTimestamp(strtotime($post->created_at));
-                $formattedDate = $createdDate->diffForHumans();
-
-                $eventName = '';
-
-                if (! is_null($post->event_id)) {
-                    $event = Event::find($post->event_id);
-                    $eventName = $event ? $event->title : '';
-                }
-                $groupName = '';
-
-                if (! is_null($post->group_id)) {
-                    $group = Group::find($post->group_id);
-                    $groupName = $group ? $group->title : '';
-                }
-                $pageName = '';
-
-                if (! is_null($post->page_id)) {
-                    $page = Page::find($post->page_id);
-                    $pageName = $page ? $page->title : '';
-                }
-
-                $oldnoti[] = [
-                    'id' => $post->id,
-                    'sender_user_id' => $post->sender_user_id,
-                    'reciver_user_id' => $post->reciver_user_id,
-                    'name' => $user->name,
-                    'photo' => get_user_images($user->id),
-                    'type' => $post->type,
-                    'event_id' => $post->event_id,
-                    'event_name' => $eventName,
-                    'page_id' => $post->page_id,
-                    'pageName' => $pageName,
-                    'group_id' => $post->group_id,
-                    'groupName' => $groupName,
-                    'status' => $post->status,
-                    'view' => $post->view,
-                    'created_at' => $formattedDate,
-                ];
-            }
-
-            $response['new_notifications'] = $newnoti;
-            $response['older_notifications'] = $oldnoti;
+            $response['new_notifications'] = $this->notificationRows($new_notification->getCollection());
+            $response['older_notifications'] = $this->notificationRows($older_notification->getCollection());
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
 
         return $response;
+    }
+
+    /**
+     * @param  Collection<int, Notification>  $notifications
+     * @return list<array<string, mixed>>
+     */
+    private function notificationRows(Collection $notifications): array
+    {
+        $rows = [];
+
+        foreach ($notifications as $post) {
+            $user = $post->getUserData;
+
+            $rows[] = [
+                'id' => $post->id,
+                'sender_user_id' => $post->sender_user_id,
+                'reciver_user_id' => $post->reciver_user_id,
+                'name' => $user?->name ?? '',
+                'photo' => $user ? get_user_images($user->id) : get_user_images(),
+                'type' => $post->type,
+                'event_id' => $post->event_id,
+                'event_name' => $post->getEventData?->title ?? '',
+                'page_id' => $post->page_id,
+                'pageName' => $post->getPageData?->title ?? '',
+                'group_id' => $post->group_id,
+                'groupName' => $post->getGroupData?->title ?? '',
+                'status' => $post->status,
+                'view' => $post->view,
+                'created_at' => Carbon::parse($post->created_at)->diffForHumans(),
+            ];
+        }
+
+        return $rows;
+    }
+
+    private function perPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', self::PER_PAGE);
+
+        if ($perPage < 1) {
+            return self::PER_PAGE;
+        }
+
+        return min($perPage, self::MAX_PER_PAGE);
     }
 
     public function accept_friend_notification(Request $request, $id)

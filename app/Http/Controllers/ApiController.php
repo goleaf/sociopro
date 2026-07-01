@@ -4435,7 +4435,8 @@ class ApiController extends Controller
 
             $marketplace = Marketplace::with(['getUser', 'getCategory', 'getBrand', 'getCurrency'])
                 ->orderBy('id', 'Desc')
-                ->get();
+                ->simplePaginate($this->marketplacePerPage($request))
+                ->getCollection();
 
             if ($marketplace->isEmpty()) {
                 $response['success'] = false;
@@ -4895,6 +4896,17 @@ class ApiController extends Controller
             ->where('reciver_id', $userId)
             ->orWhere('sender_id', $userId)
             ->value('id') ?? 0);
+    }
+
+    private function marketplacePerPage(Request $request): int
+    {
+        $perPage = $request->integer('per_page', FilterMarketplaceRequest::DEFAULT_PER_PAGE);
+
+        if ($perPage < 1) {
+            return FilterMarketplaceRequest::DEFAULT_PER_PAGE;
+        }
+
+        return min($perPage, FilterMarketplaceRequest::MAX_PER_PAGE);
     }
 
     private function loadedUserImageUrl(?string $fileName, string $optimized = ''): string

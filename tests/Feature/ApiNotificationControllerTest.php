@@ -75,6 +75,80 @@ class ApiNotificationControllerTest extends TestCase
             ->assertJsonPath('older_notifications.0.view', 1);
     }
 
+    public function test_notifications_endpoint_bounds_current_and_older_lists(): void
+    {
+        $receiver = User::factory()->create();
+        $sender = User::factory()->create(['name' => 'Sender User']);
+
+        for ($index = 1; $index <= 31; $index++) {
+            $this->notification([
+                'sender_user_id' => $sender->id,
+                'reciver_user_id' => $receiver->id,
+                'type' => 'friend_request',
+                'status' => 0,
+                'view' => 0,
+                'created_at' => now()->subMinutes($index),
+                'updated_at' => now()->subMinutes($index),
+            ]);
+            $this->notification([
+                'sender_user_id' => $sender->id,
+                'reciver_user_id' => $receiver->id,
+                'type' => 'group_invitation',
+                'status' => 1,
+                'view' => 1,
+                'created_at' => now()->subDays(2)->subMinutes($index),
+                'updated_at' => now()->subDays(2)->subMinutes($index),
+            ]);
+        }
+
+        $this->authenticateApiUser($receiver);
+
+        $this->withToken($this->apiToken)
+            ->getJson(route('api.notifications.index'))
+            ->assertOk()
+            ->assertJsonCount(25, 'new_notifications')
+            ->assertJsonCount(25, 'older_notifications');
+    }
+
+    public function test_notifications_endpoint_accepts_independent_page_parameters_for_each_list(): void
+    {
+        $receiver = User::factory()->create();
+        $sender = User::factory()->create(['name' => 'Sender User']);
+
+        for ($index = 1; $index <= 26; $index++) {
+            $this->notification([
+                'sender_user_id' => $sender->id,
+                'reciver_user_id' => $receiver->id,
+                'type' => 'friend_request',
+                'status' => 0,
+                'view' => 0,
+                'created_at' => now()->subMinutes($index),
+                'updated_at' => now()->subMinutes($index),
+            ]);
+            $this->notification([
+                'sender_user_id' => $sender->id,
+                'reciver_user_id' => $receiver->id,
+                'type' => 'group_invitation',
+                'status' => 1,
+                'view' => 1,
+                'created_at' => now()->subDays(2)->subMinutes($index),
+                'updated_at' => now()->subDays(2)->subMinutes($index),
+            ]);
+        }
+
+        $this->authenticateApiUser($receiver);
+
+        $this->withToken($this->apiToken)
+            ->getJson(route('api.notifications.index', [
+                'new_page' => 2,
+                'older_page' => 2,
+                'per_page' => 25,
+            ]))
+            ->assertOk()
+            ->assertJsonCount(1, 'new_notifications')
+            ->assertJsonCount(1, 'older_notifications');
+    }
+
     public function test_mark_as_read_updates_notification_status_and_view(): void
     {
         $receiver = User::factory()->create();

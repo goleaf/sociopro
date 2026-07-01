@@ -23,6 +23,7 @@ class Notification extends Model
             'event_id' => 'integer',
             'page_id' => 'integer',
             'group_id' => 'integer',
+            'fundraiser_id' => 'integer',
             'status' => 'integer',
             'view' => 'integer',
         ];
@@ -41,6 +42,11 @@ class Notification extends Model
     public function getGroupData(): BelongsTo
     {
         return $this->belongsTo(Group::class, 'group_id');
+    }
+
+    public function getPageData(): BelongsTo
+    {
+        return $this->belongsTo(Page::class, 'page_id');
     }
 
     public function getFundraiserData(): BelongsTo
