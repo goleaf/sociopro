@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FileUploader;
 use App\Models\Marketplace;
 use App\Models\Media_files;
 use App\Models\SavedProduct;
+use App\Support\Files\FileUploader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Image;

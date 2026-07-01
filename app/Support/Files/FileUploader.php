@@ -1,16 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace App\Support\Files;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Image;
 
-class FileUploader extends Model
+class FileUploader
 {
-    use HasFactory;
-
     public static function upload($uploaded_file, $upload_to, $width = null, $height = null, $optimized_width = 250, $optimized_height = null)
     {
         // EX: $upload_file = this is the uploaded temp file => $request->video_feild_name

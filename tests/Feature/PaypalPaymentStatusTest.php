@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Exceptions\Payments\PaymentGatewayException;
 use App\Models\Payment_gateway;
-use App\Models\payment_gateway\Paypal;
+use App\Services\Payments\Gateways\Paypal;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Exceptions;
@@ -15,7 +15,7 @@ class PaypalPaymentStatusTest extends TestCase
 {
     public function test_paypal_payment_status_does_not_use_curl(): void
     {
-        $contents = file_get_contents(app_path('Models/payment_gateway/Paypal.php'));
+        $contents = file_get_contents(app_path('Services/Payments/Gateways/Paypal.php'));
 
         $this->assertStringNotContainsString('curl_init', $contents);
         $this->assertStringNotContainsString('CURLOPT_SSL_VERIFYPEER', $contents);

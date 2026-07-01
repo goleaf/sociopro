@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FileUploader;
 use App\Models\Sponsor;
+use App\Support\Files\FileUploader;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 

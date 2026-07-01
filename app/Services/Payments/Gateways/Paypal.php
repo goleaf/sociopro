@@ -1,18 +1,14 @@
 <?php
 
-namespace App\Models\payment_gateway;
+namespace App\Services\Payments\Gateways;
 
 use App\Exceptions\Payments\PaymentGatewayException;
 use App\Models\Payment_gateway;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
-class Paypal extends Model
+class Paypal
 {
-    use HasFactory;
-
     public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
         $paymentGateway = Payment_gateway::where('identifier', $identifier)->first();

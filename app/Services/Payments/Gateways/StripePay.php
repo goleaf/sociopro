@@ -1,24 +1,20 @@
 <?php
 
-namespace App\Models\payment_gateway;
+namespace App\Services\Payments\Gateways;
 
 use App\Exceptions\Payments\PaymentGatewayException;
-use DB;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Payment_gateway;
 use Stripe\Checkout\Session as CheckoutSession;
 use Stripe\Exception\ApiErrorException;
 use Stripe\PaymentIntent;
 use Stripe\Stripe;
 use Throwable;
 
-class StripePay extends Model
+class StripePay
 {
-    use HasFactory;
-
     public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
-        $payment_gateway = DB::table('payment_gateways')->where('identifier', $identifier)->first();
+        $payment_gateway = Payment_gateway::query()->where('identifier', $identifier)->first();
         $keys = json_decode($payment_gateway->keys, true);
 
         if ($payment_gateway->test_mode == 1) {
@@ -57,7 +53,7 @@ class StripePay extends Model
 
     public static function payment_create(mixed $identifier)
     {
-        $payment_gateway = DB::table('payment_gateways')->where('identifier', $identifier)->first();
+        $payment_gateway = Payment_gateway::query()->where('identifier', $identifier)->first();
         $payment_details = session('payment_details');
         $keys = json_decode($payment_gateway->keys, true);
 

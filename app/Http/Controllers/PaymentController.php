@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Anand\LaravelPaytmWallet\Facades\PaytmWallet;
 use App\Models\Payment_gateway;
-use App\Models\payment_gateway\Paytm;
+use App\Models\PaymentHistoryEntry;
 use App\Models\Setting;
 use App\Models\Users;
 use Illuminate\Contracts\View\View;
@@ -129,15 +129,15 @@ class PaymentController extends Controller
 
         // update the db data as per result from api call
         if ($transaction->isSuccessful()) {
-            Paytm::where('order_id', $order_id)->update(['status' => 1, 'transaction_id' => $transaction->getTransactionId()]);
+            PaymentHistoryEntry::where('order_id', $order_id)->update(['status' => 1, 'transaction_id' => $transaction->getTransactionId()]);
 
             return redirect()->route('initiate.payment')->with('message', 'Your payment is successfull.');
         } elseif ($transaction->isFailed()) {
-            Paytm::where('order_id', $order_id)->update(['status' => 0, 'transaction_id' => $transaction->getTransactionId()]);
+            PaymentHistoryEntry::where('order_id', $order_id)->update(['status' => 0, 'transaction_id' => $transaction->getTransactionId()]);
 
             return redirect()->route('initiate.payment')->with('message', 'Your payment is failed.');
         } elseif ($transaction->isOpen()) {
-            Paytm::where('order_id', $order_id)->update(['status' => 2, 'transaction_id' => $transaction->getTransactionId()]);
+            PaymentHistoryEntry::where('order_id', $order_id)->update(['status' => 2, 'transaction_id' => $transaction->getTransactionId()]);
 
             return redirect()->route('initiate.payment')->with('message', 'Your payment is processing.');
         }
@@ -157,7 +157,7 @@ class PaymentController extends Controller
 
     private function gatewayModelClass(Payment_gateway $paymentGateway): string
     {
-        return 'App\Models\payment_gateway\\'.str_replace(' ', '', $paymentGateway->model_name);
+        return 'App\Services\Payments\Gateways\\'.str_replace(' ', '', $paymentGateway->model_name);
     }
 
     private function paymentPageSettings(): array

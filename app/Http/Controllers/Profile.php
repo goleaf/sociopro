@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Album_image;
 use App\Models\Albums;
-use App\Models\FileUploader;
 use App\Models\Follower;
 use App\Models\Friendships;
 use App\Models\Media_files;
@@ -13,6 +12,7 @@ use App\Models\Posts;
 use App\Models\User;
 use App\Models\Users;
 use App\Queries\FriendshipsQuery;
+use App\Support\Files\FileUploader;
 use App\ViewModels\ProfileFollowList;
 use DB;
 use Illuminate\Http\Request;

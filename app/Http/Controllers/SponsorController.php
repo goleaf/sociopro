@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FileUploader;
 use App\Models\Sponsor;
+use App\Support\Files\FileUploader;
 use Facade\FlareClient\Stacktrace\File;
 use Illuminate\Http\Request;
 use Image;

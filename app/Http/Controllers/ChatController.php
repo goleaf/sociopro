@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chat;
-use App\Models\FileUploader;
 use App\Models\Media_files;
 use App\Models\Message_thrade;
 use App\Models\User;
+use App\Support\Files\FileUploader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 

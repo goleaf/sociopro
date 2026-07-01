@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Albums;
-use App\Models\FileUploader;
 use App\Models\Friendships;
 use App\Models\Media_files;
 use App\Models\Page;
 use App\Models\Page_like;
 use App\Models\Posts;
 use App\Queries\FriendshipsQuery;
+use App\Support\Files\FileUploader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;

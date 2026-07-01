@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FileUploader;
 use App\Models\Posts;
 use App\Models\Saveforlater;
 use App\Models\Video;
+use App\Support\Files\FileUploader;
 // Used for Form data validation
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;

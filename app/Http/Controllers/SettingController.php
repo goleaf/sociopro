@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Mail\ContactMail;
 use App\Models\Currency;
-use App\Models\FileUploader;
 use App\Models\Language;
 use App\Models\Posts;
 use App\Models\Report;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\Files\FileUploader;
 use Illuminate\Http\Request;
 use Mail;
 

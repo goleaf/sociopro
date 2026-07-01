@@ -1,14 +1,9 @@
 <?php
 
-namespace App\Models\payment_gateway;
+namespace App\Services\Payments\Gateways;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class Flutterwave extends Model
+class Flutterwave
 {
-    use HasFactory;
-
     public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
         if ($transaction_keys != '') {

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\BlockUser;
 // used models
 use App\Models\Comments;
-use App\Models\FileUploader;
 use App\Models\Live_streamings;
 use App\Models\Media_files;
 use App\Models\Post_share;
@@ -15,7 +14,8 @@ use App\Models\Setting;
 use App\Models\Stories;
 use App\Models\User;
 use App\Queries\FriendshipsQuery;
-use App\Traits\ZoomMeetingTrait;
+use App\Support\Files\FileUploader;
+use App\Support\Zoom\ZoomMeetingTrait;
 use DB;
 use Exception;
 use Illuminate\Database\Query\JoinClause;

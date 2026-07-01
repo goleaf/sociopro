@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FileUploader;
 use App\Models\Media_files;
 use App\Models\Stories;
 use App\Queries\StoriesQuery;
+use App\Support\Files\FileUploader;
 use Illuminate\Http\Request;
 use Session;
 

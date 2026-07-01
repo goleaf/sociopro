@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Traits;
+namespace App\Support\Zoom;
 
 use DateTime;
 use DateTimeZone;

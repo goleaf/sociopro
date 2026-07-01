@@ -1,17 +1,14 @@
 <?php
 
-namespace App\Models\payment_gateway;
+namespace App\Services\Payments\Gateways;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
+use App\Models\Payment_gateway;
+use App\Models\Users;
 use Illuminate\Support\Str;
 use Razorpay\Api\Api;
 
-class Razorpay extends Model
+class Razorpay
 {
-    use HasFactory;
-
     public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
         if ($transaction_keys != '') {
@@ -27,12 +24,13 @@ class Razorpay extends Model
     public static function payment_create(mixed $identifier): array
     {
         $payment_details = session('payment_details');
-        $user = DB::table('users')->where('id', auth()->user()->id)->first();
+        $user = Users::query()->where('id', auth()->id())->first();
         $model = $payment_details['success_method']['model_name'];
         $description = '';
 
         if ($model == 'AuthorPayout' || $model == 'CampaignPayout') {
-            $settings = DB::table('users')->where('id', $payment_details['custom_field']['user_id'])
+            $settings = Users::query()
+                ->where('id', $payment_details['custom_field']['user_id'])
                 ->value('payment_settings');
             $keys = json_decode($settings);
 
@@ -46,7 +44,7 @@ class Razorpay extends Model
                 $description = 'Campaign payment.';
             }
         } elseif ($model == 'Subscription' || $model == 'Sponsor' || $model == 'Donation' || $model == 'Job' || 'Badge') {
-            $payment_gateway = DB::table('payment_gateways')
+            $payment_gateway = Payment_gateway::query()
                 ->where('identifier', $identifier)
                 ->first();
             $keys = json_decode($payment_gateway->keys, true);

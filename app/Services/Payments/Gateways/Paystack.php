@@ -1,18 +1,14 @@
 <?php
 
-namespace App\Models\payment_gateway;
+namespace App\Services\Payments\Gateways;
 
 use App\Exceptions\Payments\PaymentGatewayException;
 use App\Models\Payment_gateway;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
-class Paystack extends Model
+class Paystack
 {
-    use HasFactory;
-
     public function payment_status(mixed $identifier = '', array $transaction_keys = []): bool
     {
         $reference = trim((string) ($transaction_keys['reference'] ?? ''));
