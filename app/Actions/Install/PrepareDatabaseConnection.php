@@ -70,11 +70,11 @@ class PrepareDatabaseConnection
         Config::set('database.connections.'.$connectionName, [
             'driver' => 'mysql',
             'host' => $data['hostname'],
-            'port' => env('DB_PORT', '3306'),
+            'port' => config('database.connections.mysql.port', '3306'),
             'database' => $data['dbname'],
             'username' => $data['username'],
             'password' => $data['password'] ?? '',
-            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'charset' => config('database.connections.mysql.charset', 'utf8mb4'),
         ]);
 
         try {

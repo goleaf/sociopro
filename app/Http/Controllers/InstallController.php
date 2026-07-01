@@ -3,18 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Install\CheckInstallRequirements;
+use App\Actions\Install\FinalizeInstallation;
 use App\Actions\Install\ImportInstallSqlDump;
 use App\Actions\Install\PrepareDatabaseConnection;
 use App\Actions\Install\UpdateEnvironmentFile;
+use App\Http\Requests\Install\FinalizeInstallationRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-
-use App\Models\Blogcategory;
-use App\Models\Brand;
-use App\Models\Category;
-use App\Models\Pagecategory;
 use App\Models\User;
 
 class InstallController extends Controller
@@ -80,9 +75,6 @@ class InstallController extends Controller
             return false;
         }
 
-        $url = "https://api.envato.com/v3/market/author/sale?code=" . $product_code;
-        $curl = curl_init($url);
-    
         //setting the header for the rest of the api
         $bearer   = 'bearer ' . $personal_token;
         $header   = array();
@@ -104,11 +96,7 @@ class InstallController extends Controller
 
         $response = json_decode($cinit_verify_data, true) ?: [];
 
-        if (count($response['verify-purchase'] ?? []) > 0) {
-          return true;
-        } else {
-          return false;
-        }
+        return count($response['verify-purchase'] ?? []) > 0;
     }
 
     public function step3(Request $request, PrepareDatabaseConnection $prepareDatabaseConnection) {
@@ -152,27 +140,6 @@ class InstallController extends Controller
         }
 
         return null;
-    }
-
-    public function check_database_connection($hostname, $username, $password, $dbname) {
-
-        $newName = uniqid('db'); //example of unique name
-
-        Config::set("database.connections.".$newName, [
-            "host"      => $hostname,
-            "port"      => env('DB_PORT', '3306'),
-            "database"  => $dbname,
-            "username"  => $username,
-            "password"  => $password,
-            'driver'    => env('DB_CONNECTION', 'mysql'),
-            'charset'   => env('DB_CHARSET', 'utf8mb4'),
-        ]);
-        try {
-            DB::connection($newName)->getPdo();
-            return 'success';
-        } catch (\Exception $e) {
-            return 'Could not connect to the database.  Please check your configuration.';
-        }
     }
 
     public function step4(Request $request) {
@@ -230,7 +197,7 @@ class InstallController extends Controller
         $environment->handle([
             'DB_CONNECTION' => 'mysql',
             'DB_HOST' => session('hostname'),
-            'DB_PORT' => env('DB_PORT', '3306'),
+            'DB_PORT' => config('database.connections.mysql.port', '3306'),
             'DB_DATABASE' => session('dbname'),
             'DB_USERNAME' => session('username'),
             'DB_PASSWORD' => session('password'),
@@ -254,40 +221,15 @@ class InstallController extends Controller
         $importInstallSqlDump->handle(base_path('public/assets/install.sql'));
     }
 
-    public function finalizingSetup(Request $request) {
+    public function finalizingSetup(
+        FinalizeInstallationRequest $request,
+        FinalizeInstallation $finalizeInstallation
+    ) {
 
-        $data = $request->all();
-        if ($data) {
-            /*system data*/
-            $system_data['system_name']  = $data['system_name'];
-            if (session('purchase_code')) {
-                $system_data['purchase_code']  = session('purchase_code');
-            }
-
-            foreach($system_data as $key => $settings_data){
-                DB::table('settings')->where('type', $key)->update([
-                    'description' => $settings_data,
-                ]);
-            }
-
-            /*admin data*/
-            $admin_data['name']      = $data['admin_name'];
-            $admin_data['email']     = $data['admin_email'];
-            $admin_data['password']  = Hash::make($data['admin_password']);
-            $admin_data['user_role']      = 'admin';
-            $admin_data['friends']      = json_encode(array());
-            $admin_data['gender']      = 'male';
-            $admin_data['address']      = $data['admin_address'];
-            $admin_data['phone']      = $data['admin_phone'];
-            $admin_data['date_of_birth']      = time();
-            $admin_data['timezone'] = $data['timezone'];
-            $admin_data['email_verified_at'] = date('Y-m-d H:i:s', time());
-
-            DB::table('users')->insert($admin_data);
+        if ($request->isMethod('post')) {
+            $finalizeInstallation->handle($request->validated(), session('purchase_code'));
 
             return redirect()->route('success');
-
-            return view('install.success', ['admin_email' => $admin_data['email']]);
         }
 
         return view('install.finalizing_setup');
@@ -302,8 +244,6 @@ class InstallController extends Controller
 
         $admin_email = User::find('1')->email;
 
-        $page_data['admin_email'] = $admin_email;
-        $page_data['page_name'] = 'success';
         return view('install.success', ['admin_email' => $admin_email]);
     }
 
