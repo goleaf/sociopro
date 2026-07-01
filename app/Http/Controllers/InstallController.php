@@ -8,6 +8,7 @@ use App\Actions\Install\ImportInstallSqlDump;
 use App\Actions\Install\PrepareDatabaseConnection;
 use App\Actions\Install\UpdateEnvironmentFile;
 use App\Http\Requests\Install\FinalizeInstallationRequest;
+use App\Http\Requests\Install\PrepareDatabaseConnectionRequest;
 use App\Http\Requests\Install\ValidatePurchaseCodeRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -99,9 +100,11 @@ class InstallController extends Controller
         return count($response['verify-purchase'] ?? []) > 0;
     }
 
-    public function step3(Request $request, PrepareDatabaseConnection $prepareDatabaseConnection) {
+    public function step3(
+        PrepareDatabaseConnectionRequest $request,
+        PrepareDatabaseConnection $prepareDatabaseConnection
+    ) {
         $db_connection = "";
-        $data = $request->all();
 
         $purchaseCodeRedirect = $this->check_purchase_code_verification($request);
 
@@ -110,7 +113,7 @@ class InstallController extends Controller
         }
 
         if ($request->isMethod('post')) {
-            $result = $prepareDatabaseConnection->handle($data);
+            $result = $prepareDatabaseConnection->handle($request->validated());
 
             if ($result['status'] === 'success') {
                 foreach ($result['session'] as $key => $value) {

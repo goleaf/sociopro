@@ -40,6 +40,34 @@ class InstallWizardTest extends TestCase
         $response->assertSee('value="sqlite"', false);
     }
 
+    public function test_database_step_rejects_unknown_connection_type(): void
+    {
+        $response = $this->from('/install/step3')->post(route('install.step3'), [
+            'db_connection' => 'pgsql',
+        ]);
+
+        $response->assertRedirect('/install/step3');
+        $response->assertSessionHasErrors(['db_connection']);
+    }
+
+    public function test_database_step_prepares_sqlite_connection(): void
+    {
+        $sqlitePath = database_path('wizard-test.sqlite');
+
+        @unlink($sqlitePath);
+
+        $response = $this->post(route('install.step3'), [
+            'db_connection' => 'sqlite',
+            'sqlite_path' => $sqlitePath,
+        ]);
+
+        $response->assertRedirect(route('install.step4'));
+        $response->assertSessionHas('db_connection', 'sqlite');
+        $response->assertSessionHas('dbname', $sqlitePath);
+
+        @unlink($sqlitePath);
+    }
+
     public function test_purchase_code_validation_requires_a_code(): void
     {
         $response = $this->from('/install/step2')->post(route('install.validate'));
