@@ -50,6 +50,19 @@ class InstallWizardTest extends TestCase
         $response->assertSessionHasErrors(['db_connection']);
     }
 
+    public function test_database_step_displays_validation_errors(): void
+    {
+        $response = $this
+            ->followingRedirects()
+            ->from('/install/step3')
+            ->post(route('install.step3'), [
+                'db_connection' => 'pgsql',
+            ]);
+
+        $response->assertOk();
+        $response->assertSee('The selected db connection is invalid.');
+    }
+
     public function test_database_step_prepares_sqlite_connection(): void
     {
         $sqlitePath = database_path('wizard-test.sqlite');

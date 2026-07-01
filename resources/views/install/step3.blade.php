@@ -1,7 +1,19 @@
 @extends('install.index')
-   
+
 @section('content')
-<?php if(isset($db_connection) && $db_connection != "") { ?>
+@if ($errors->any())
+  <div class="row ins-seven">
+    <div class="col-md-8 col-md-offset-2">
+      <div class="alert alert-danger">
+        @foreach ($errors->all() as $error)
+          <strong>{{ $error }}</strong><br>
+        @endforeach
+      </div>
+    </div>
+  </div>
+@endif
+
+@if (! empty($db_connection))
   <div class="row ins-seven">
     <div class="col-md-8 col-md-offset-2">
       <div class="alert alert-danger">
@@ -9,7 +21,7 @@
       </div>
     </div>
   </div>
-<?php } ?>
+@endif
 <div class="row justify-content-center ins-two">
   <div class="col-md-6">
     <div class="card">
