@@ -22,6 +22,6 @@ class Paytm extends Model
             return true;
         }
 
-return false;
+        return false;
     }
 }
