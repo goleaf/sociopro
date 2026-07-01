@@ -29,7 +29,7 @@
             </p>
             <br>
             <p>
-              <a href="{{ route('step1') }}" class="btn btn-primary">
+              <a href="{{ route('install.step1') }}" class="btn btn-primary">
                 {{ __('Start Installation Process') }}
               </a>
             </p>

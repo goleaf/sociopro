@@ -25,7 +25,7 @@ class InstallController extends Controller
         if (DB::connection()->getDatabaseName() != 'db_name') {
            return redirect('/login');
         } else {
-            return redirect()->route('step0');
+            return redirect()->route('install.step0');
         }
     }
 
@@ -37,7 +37,7 @@ class InstallController extends Controller
         $isLocalInstall = $this->isLocalInstall($request);
         $requirements = $checkInstallRequirements->handle($isLocalInstall);
         $valid = collect($requirements)->every(fn ($requirement) => $requirement['passed']);
-        $nextUrl = $isLocalInstall ? route('step3') : route('step2');
+        $nextUrl = $isLocalInstall ? route('install.step3') : route('install.step2');
 
         return view('install.step1', [
             'isLocalInstall' => $isLocalInstall,
@@ -63,7 +63,7 @@ class InstallController extends Controller
 		session(['purchase_code' => $purchase_code]);
 		session(['purchase_code_verified' => 1]);
 		//move to step 3
-		return redirect()->route('step3');
+		return redirect()->route('install.step3');
     }
 
     public function api_request($code = '')
@@ -117,7 +117,7 @@ class InstallController extends Controller
                     session([$key => $value]);
                 }
 
-                return redirect()->route('step4');
+                return redirect()->route('install.step4');
             }
 
             $db_connection = $result['message'];
@@ -136,7 +136,7 @@ class InstallController extends Controller
         }
 
         if (! session('purchase_code_verified')) {
-            return redirect()->route('step2');
+            return redirect()->route('install.step2');
         }
 
         return null;
@@ -164,7 +164,7 @@ class InstallController extends Controller
         $this->run_blank_sql($importInstallSqlDump);
 
         // redirect to admin creation page
-        return redirect()->route('finalizing_setup');
+        return redirect()->route('install.finalizing');
     }
 
     public function configure_database() {
@@ -229,7 +229,7 @@ class InstallController extends Controller
         if ($request->isMethod('post')) {
             $finalizeInstallation->handle($request->validated(), session('purchase_code'));
 
-            return redirect()->route('success');
+            return redirect()->route('install.success');
         }
 
         return view('install.finalizing_setup');

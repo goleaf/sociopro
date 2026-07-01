@@ -51,7 +51,7 @@
       setTimeout(
       function()
       {
-        window.location.href = "{{ route('confirm_install') }}";
+        window.location.href = "{{ route('install.confirm') }}";
       }, 5000);
     });
   });

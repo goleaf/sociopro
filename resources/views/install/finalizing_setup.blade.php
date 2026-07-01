@@ -24,7 +24,7 @@
             <div class="row">
               <div class="col-md-12">
                 <form class="form-horizontal form-groups" method="post"
-                  action="{{ route('finalizing_setup') }}">
+                  action="{{ route('install.finalizing') }}">
                   @csrf 
                   <div class="form-group">
             				<label class="col-sm-3 control-label">{{ __('System Name') }}</label>

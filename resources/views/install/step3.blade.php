@@ -24,7 +24,7 @@
             <div class="row">
               <div class="col-md-12">
                 <form class="form-horizontal form-groups" method="post"
-                  action="{{ route('step3') }}">
+                  action="{{ route('install.step3') }}">
                   @csrf 
                   <hr>
                   <div class="form-group">

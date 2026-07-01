@@ -46,7 +46,7 @@
 		                  <a href="{{ $nextUrl }}" class="btn btn-primary disabled" aria-disabled="true">
 		                    {{ __('Continue') }}
 		                  </a>
-			                <a href="{{ route('step1') }}" class="btn btn-primary" >
+			                <a href="{{ route('install.step1') }}" class="btn btn-primary" >
 			                  <i class="mdi mdi-refresh"></i>{{ __('Reload') }}
 			                </a>
 			              </p>

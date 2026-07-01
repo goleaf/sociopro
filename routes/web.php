@@ -231,18 +231,17 @@ Route::controller(Updater::class)->middleware('auth', 'verified', 'activity')->g
 //End Updater routes
 
 //Installation routes
-Route::controller(InstallController::class)->group(function () {
-
-    Route::get('install', 'index')->name('install.index');
-    Route::get('install/step0', 'step0')->name('step0');
-    Route::get('install/step1', 'step1')->name('step1');
-    Route::get('install/step2', 'step2')->name('step2');
-    Route::any('install/step3', 'step3')->name('step3');
-    Route::get('install/step4', 'step4')->name('step4');
-    Route::get('install/step4/{confirm_import}', 'confirmImport')->name('step4.confirm_import');
-    Route::get('install/install', 'confirmInstall')->name('confirm_install');
-    Route::post('install/validate', 'validatePurchaseCode')->name('install.validate');
-    Route::any('install/finalizing_setup', 'finalizingSetup')->name('finalizing_setup');
-    Route::get('install/success', 'success')->name('success');
+Route::prefix('install')->name('install.')->controller(InstallController::class)->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('step0', 'step0')->name('step0');
+    Route::get('step1', 'step1')->name('step1');
+    Route::get('step2', 'step2')->name('step2');
+    Route::any('step3', 'step3')->name('step3');
+    Route::get('step4', 'step4')->name('step4');
+    Route::get('step4/{confirmation}', 'confirmImport')->name('step4.confirm');
+    Route::get('install', 'confirmInstall')->name('confirm');
+    Route::post('validate', 'validatePurchaseCode')->name('validate');
+    Route::any('finalizing_setup', 'finalizingSetup')->name('finalizing');
+    Route::get('success', 'success')->name('success');
 });
 //Installation routes

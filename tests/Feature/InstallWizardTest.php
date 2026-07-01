@@ -8,6 +8,14 @@ use Tests\TestCase;
 
 class InstallWizardTest extends TestCase
 {
+    public function test_install_routes_use_install_name_prefix(): void
+    {
+        $this->assertSame(url('/install/step1'), route('install.step1'));
+        $this->assertSame(url('/install/step3'), route('install.step3'));
+        $this->assertSame(url('/install/finalizing_setup'), route('install.finalizing'));
+        $this->assertSame(url('/install/success'), route('install.success'));
+    }
+
     public function test_local_requirement_check_skips_writable_file_gate(): void
     {
         $response = $this
@@ -44,7 +52,7 @@ class InstallWizardTest extends TestCase
             'timezone' => 'Europe/Vilnius',
         ]);
 
-        $response->assertRedirect(route('success'));
+        $response->assertRedirect(route('install.success'));
 
         $this->assertDatabaseHas('settings', [
             'type' => 'system_name',

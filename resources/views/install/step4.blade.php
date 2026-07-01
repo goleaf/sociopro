@@ -51,7 +51,7 @@
       setTimeout(
       function()
       {
-        window.location.href = "{{ route('step4.confirm_import', ['confirm_import' => 'confirm_install']) }}";
+        window.location.href = "{{ route('install.step4.confirm', ['confirmation' => 'confirm_install']) }}";
       }, 5000);
     });
   });
