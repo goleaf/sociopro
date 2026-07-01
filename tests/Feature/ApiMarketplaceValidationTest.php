@@ -58,6 +58,27 @@ class ApiMarketplaceValidationTest extends TestCase
             ]);
     }
 
+    public function test_marketplace_filter_rejects_overlong_search_query_with_legacy_error_shape(): void
+    {
+        $this->authenticateApiUser();
+
+        $response = $this->withToken($this->apiToken)->getJson($this->apiMarketplaceFilterUrl([
+            'search' => str_repeat('a', 121),
+            'filters' => [
+                'search' => str_repeat('b', 121),
+            ],
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure([
+                'validationError' => [
+                    'search',
+                    'filters.search',
+                ],
+            ]);
+    }
+
     public function test_marketplace_filter_rejects_invalid_nested_query_filters_with_legacy_error_shape(): void
     {
         $this->authenticateApiUser();

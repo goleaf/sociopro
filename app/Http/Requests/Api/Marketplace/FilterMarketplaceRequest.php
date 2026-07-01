@@ -14,6 +14,8 @@ class FilterMarketplaceRequest extends ApiFormRequest
 
     public const MAX_PER_PAGE = 100;
 
+    public const MAX_SEARCH_LENGTH = 120;
+
     /**
      * @var list<string>
      */
@@ -58,7 +60,7 @@ class FilterMarketplaceRequest extends ApiFormRequest
         }
 
         return [
-            'search' => ['nullable', 'string', 'max:255'],
+            'search' => ['nullable', 'string', 'max:'.self::MAX_SEARCH_LENGTH],
             'category' => ['nullable', 'integer', 'exists:categories,id'],
             'condition' => ['nullable', 'string', Rule::in(['new', 'used'])],
             'min' => ['nullable', 'numeric', 'min:0'],
@@ -72,7 +74,7 @@ class FilterMarketplaceRequest extends ApiFormRequest
             'date_from' => DateTimeRules::nullableBrowserDate(),
             'date_to' => ['nullable', 'date_format:'.DateTimeRules::BROWSER_DATE_FORMAT, 'after_or_equal:date_from'],
             'filters' => ['nullable', 'array'],
-            'filters.search' => ['nullable', 'string', 'max:255'],
+            'filters.search' => ['nullable', 'string', 'max:'.self::MAX_SEARCH_LENGTH],
             'filters.category' => ['nullable', 'integer', 'exists:categories,id'],
             'filters.condition' => ['nullable', 'string', Rule::in(['new', 'used'])],
             'filters.brand' => ['nullable', 'integer', 'exists:brands,id'],

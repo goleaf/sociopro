@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class MarketplaceQueryPerformanceTest extends TestCase
@@ -94,6 +95,20 @@ class MarketplaceQueryPerformanceTest extends TestCase
         });
 
         $this->assertLessThanOrEqual(self::API_MARKETPLACE_LOOKUP_QUERY_BUDGET, $lookupQueries);
+    }
+
+    public function test_marketplace_search_and_sort_indexes_exist(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_120000_add_marketplace_search_filter_indexes.php');
+        $migration->up();
+
+        $indexes = collect(Schema::getIndexes('marketplaces'))
+            ->mapWithKeys(fn (array $index): array => [$index['name'] => $index['columns']]);
+
+        $this->assertSame(['status', 'id'], $indexes->get('marketplaces_status_id_idx'));
+        $this->assertSame(['status', 'created_at', 'id'], $indexes->get('marketplaces_status_created_id_idx'));
+        $this->assertSame(['status', 'price', 'id'], $indexes->get('marketplaces_status_price_id_idx'));
+        $this->assertSame(['status', 'title', 'id'], $indexes->get('marketplaces_status_title_id_idx'));
     }
 
     private function activeUser(): User
