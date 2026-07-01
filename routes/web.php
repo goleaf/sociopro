@@ -236,12 +236,12 @@ Route::prefix('install')->name('install.')->controller(InstallController::class)
     Route::get('step0', 'step0')->name('step0');
     Route::get('step1', 'step1')->name('step1');
     Route::get('step2', 'step2')->name('step2');
-    Route::any('step3', 'step3')->name('step3');
+    Route::match(['GET', 'POST'], 'step3', 'step3')->name('step3');
     Route::get('step4', 'step4')->name('step4');
     Route::get('step4/{confirmation}', 'confirmImport')->name('step4.confirm');
     Route::get('install', 'confirmInstall')->name('confirm');
     Route::post('validate', 'validatePurchaseCode')->name('validate');
-    Route::any('finalizing_setup', 'finalizingSetup')->name('finalizing');
+    Route::match(['GET', 'POST'], 'finalizing_setup', 'finalizingSetup')->name('finalizing');
     Route::get('success', 'success')->name('success');
 });
 //Installation routes

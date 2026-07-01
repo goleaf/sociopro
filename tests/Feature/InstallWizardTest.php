@@ -51,6 +51,12 @@ class InstallWizardTest extends TestCase
         $response->assertSessionHasErrors(['db_connection']);
     }
 
+    public function test_install_post_steps_reject_unexpected_http_methods(): void
+    {
+        $this->put('/install/step3')->assertStatus(405);
+        $this->put('/install/finalizing_setup')->assertStatus(405);
+    }
+
     public function test_database_step_displays_validation_errors(): void
     {
         $response = $this
