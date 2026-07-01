@@ -53,6 +53,7 @@ use App\Models\Users;
 use App\Models\Video;
 use App\Providers\RouteServiceProvider;
 use App\Queries\FriendshipsQuery;
+use App\Queries\Marketplace\MarketplaceProductsQuery;
 use App\Support\Files\FileUploader;
 use App\Support\Validation\DateTimeRules;
 use Carbon\Carbon;
@@ -4759,7 +4760,7 @@ class ApiController extends Controller
         return response()->json($response);
     }
 
-    public function filter(FilterMarketplaceRequest $request)
+    public function filter(FilterMarketplaceRequest $request, MarketplaceProductsQuery $marketplaceProducts)
     {
         $token = $request->bearerToken();
         $response = [];
@@ -4768,66 +4769,7 @@ class ApiController extends Controller
             $user_id = auth('sanctum')->user()->id;
 
             $filters = $request->filters();
-            $search = $filters['search'];
-            $category = $filters['category'];
-            $condition = $filters['condition'];
-            $min = $filters['min'];
-            $max = $filters['max'];
-            $brand = $filters['brand'];
-            $location = $filters['location'];
-
-            $query = Marketplace::with(['getUser', 'getCategory', 'getBrand', 'getCurrency'])
-                ->where('status', 1)
-                ->orderBy($filters['sort'], $filters['direction']);
-
-            if (! empty($search) || ! empty($location)) {
-                $query->where(function ($query) use ($search, $location) {
-                    if (! empty($search)) {
-                        $query->where(function ($query) use ($search) {
-                            $query->where('title', 'like', '%'.$search.'%')
-                                ->orWhere('description', 'like', '%'.$search.'%');
-                        });
-                    }
-                    if (! empty($location)) {
-                        $query->orWhere('location', 'like', '%'.$location.'%');
-                    }
-                });
-            }
-            if (! empty($min) || ! empty($max)) {
-                $query->where(function ($query) use ($min, $max) {
-                    if (! empty($min)) {
-                        $query->where('price', '>=', $min);
-                    }
-                    if (! empty($max)) {
-                        $query->where('price', '<=', $max);
-                    }
-                });
-            }
-
-            if (isset($condition) && ! empty($condition)) {
-                $query->where('condition', $condition);
-            }
-
-            if (isset($category) && ! empty($category)) {
-                $query->where('category', $category);
-            }
-
-            if (isset($brand) && ! empty($brand)) {
-                $query->where('brand', $brand);
-            }
-
-            if (! empty($filters['date_from'])) {
-                $query->whereDate('created_at', '>=', $filters['date_from']);
-            }
-
-            if (! empty($filters['date_to'])) {
-                $query->whereDate('created_at', '<=', $filters['date_to']);
-            }
-
-            $query->forPage($filters['page'], $filters['per_page']);
-
-            $marketplace = $query->get();
-            // return $marketplace;
+            $marketplace = $marketplaceProducts->handle($filters);
             $response = $this->marketplaceResponseRows($marketplace, $user_id);
         } else {
             $response['success'] = false;
