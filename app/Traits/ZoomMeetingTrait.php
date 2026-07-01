@@ -2,6 +2,11 @@
 
 namespace App\Traits;
 
+use DateTime;
+use DateTimeZone;
+use Exception;
+use Firebase\JWT\JWT;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -34,7 +39,7 @@ trait ZoomMeetingTrait
             'exp' => strtotime('+1 minute'),
         ];
 
-        return \Firebase\JWT\JWT::encode($payload, $secret, 'HS256');
+        return JWT::encode($payload, $secret, 'HS256');
     }
 
     private function retrieveZoomUrl()
@@ -46,7 +51,7 @@ trait ZoomMeetingTrait
     {
         $jwt = $this->generateZoomToken();
 
-        return \Illuminate\Support\Facades\Http::withHeaders([
+        return Http::withHeaders([
             'authorization' => 'Bearer '.$jwt,
             'content-type' => 'application/json',
         ]);
@@ -89,10 +94,10 @@ trait ZoomMeetingTrait
         $date = date('d-m-Y H:i:s', (int) $dateTime);
 
         try {
-            $date = new \DateTime($date);
+            $date = new DateTime($date);
 
             return $date->format('Y-m-d\TH:i:s');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('ZoomJWT->toZoomTimeFormat : '.$e->getMessage());
 
             return '';
@@ -102,10 +107,10 @@ trait ZoomMeetingTrait
     public function toUnixTimeStamp(string $dateTime, string $timezone)
     {
         try {
-            $date = new \DateTime($dateTime, new \DateTimeZone($timezone));
+            $date = new DateTime($dateTime, new DateTimeZone($timezone));
 
             return $date->getTimestamp();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('ZoomJWT->toUnixTimeStamp : '.$e->getMessage());
 
             return '';

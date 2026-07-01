@@ -19,7 +19,7 @@ class UserActivity
     public function handle(Request $request, Closure $next)
     {
         $user = Auth::user();
-        $user->lastActive = \Carbon\Carbon::now();
+        $user->lastActive = Carbon::now();
         $user->save();
 
         if (Auth::check()) {

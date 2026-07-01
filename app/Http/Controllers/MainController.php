@@ -17,9 +17,10 @@ use App\Models\Stories;
 use App\Models\User;
 use App\Traits\ZoomMeetingTrait;
 use DB;
+use Exception;
 use Illuminate\Database\Query\JoinClause;
-use Illuminate\Http\Request;
 //For used ZOOM
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -1281,7 +1282,7 @@ class MainController extends Controller
             // ]);
 
             return response()->json(['image_url' => $imageUrl]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['error' => 'Server error'], 500);
         }
     }

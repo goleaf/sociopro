@@ -5,6 +5,7 @@ namespace App\Actions\Install;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Throwable;
 
 class PrepareDatabaseConnection
 {
@@ -46,7 +47,7 @@ class PrepareDatabaseConnection
                     'dbname' => $database,
                 ],
             ];
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             return [
                 'status' => 'error',
                 'message' => 'Could not prepare the SQLite database file. Please check storage permissions.',
@@ -90,7 +91,7 @@ class PrepareDatabaseConnection
                     'dbname' => $data['dbname'],
                 ],
             ];
-        } catch (\Throwable $exception) {
+        } catch (Throwable $exception) {
             return [
                 'status' => 'error',
                 'message' => 'Could not connect to the database. Please check your configuration.',

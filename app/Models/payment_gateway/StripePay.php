@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Session;
-//for stripe
-use Stripe;
+use Stripe\Checkout\Session as CheckoutSession;
+use Stripe\Exception\ApiErrorException;
+use Stripe\PaymentIntent;
+use Stripe\Stripe;
 
 class StripePay extends Model
 {
@@ -29,20 +31,20 @@ class StripePay extends Model
         $session_id = $transaction_keys['session_id'];
         if ($session_id != '') {
             // Set API key
-            \Stripe\Stripe::setApiKey($stripeSecretKey);
+            Stripe::setApiKey($stripeSecretKey);
 
             // Fetch the Checkout Session to display the JSON result on the success page
             try {
-                $checkout_session = \Stripe\Checkout\Session::retrieve($session_id);
-            } catch(Exception $e) {
+                $checkout_session = CheckoutSession::retrieve($session_id);
+            } catch (Exception $e) {
                 $api_error = $e->getMessage();
             }
 
             if (empty($api_error) && $checkout_session) {
                 // Retrieve the details of a PaymentIntent
                 try {
-                    $intent = \Stripe\PaymentIntent::retrieve($checkout_session->payment_intent);
-                } catch (\Stripe\Exception\ApiErrorException $e) {
+                    $intent = PaymentIntent::retrieve($checkout_session->payment_intent);
+                } catch (ApiErrorException $e) {
                     $api_error = $e->getMessage();
                 }
 
@@ -50,7 +52,7 @@ class StripePay extends Model
                 // try {
               //     // Create the PaymentIntent
               //     $customer = \Stripe\Customer::retrieve($checkout_session->customer);
-                // } catch (\Stripe\Exception\ApiErrorException $e) {
+                // } catch (ApiErrorException $e) {
               //     $api_error = $e->getMessage();
                 // }
 
@@ -102,12 +104,12 @@ class StripePay extends Model
             $stripeSecretKey = $keys['secret_live_key'];
         }
 
-        \Stripe\Stripe::setApiKey($stripeSecretKey);
+        Stripe::setApiKey($stripeSecretKey);
         header('Content-Type: application/json');
 
         $YOUR_DOMAIN = 'http://localhost:4242';
 
-        $checkout_session = \Stripe\Checkout\Session::create([
+        $checkout_session = CheckoutSession::create([
             'line_items' => [
                 [
                     //Provide the exact Price ID (e.g. pr_1234) of the product you want to sell

@@ -47,6 +47,7 @@ use App\Models\Video;
 use App\Providers\RouteServiceProvider;
 use Carbon\Carbon;
 use DB;
+use Exception;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
@@ -2596,7 +2597,7 @@ class ApiController extends Controller
                     // Handle the case where the post does not exist
                     return response()->json(['error' => 'Post not found'], 404);
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Handle database errors
                 return response()->json(['error' => $e->getMessage()], 500);
             }
@@ -3282,7 +3283,7 @@ class ApiController extends Controller
                     $response['success'] = true;
                     $response['message'] = 'User joined the group successfully';
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Handle any exceptions
                 $response['success'] = false;
                 $response['message'] = 'Error joining the group: '.$e->getMessage();

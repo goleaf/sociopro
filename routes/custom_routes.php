@@ -18,6 +18,7 @@ use App\Http\Controllers\Report\SearchController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SponsorController;
 use App\Http\Controllers\VideoController;
+use App\Models\Job;
 use Illuminate\Support\Facades\Route;
 
 // events route
@@ -338,7 +339,7 @@ Route::controller(AdminCrudController::class)->group(function () {
     // Badge Raoute Here
 
     //Job Route Start Here
-    if (class_exists(\App\Models\Job::class)) {
+    if (class_exists(Job::class)) {
         // Admin Control Route for job
         Route::get('admin/job/category/view/', 'view_job_category')->name('admin.view.job.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
         Route::get('admin/job/category/create/', 'create_job_category')->name('admin.create.job.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');

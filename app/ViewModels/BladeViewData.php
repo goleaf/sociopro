@@ -2,6 +2,7 @@
 
 namespace App\ViewModels;
 
+use App\Models\Account_active_request;
 use App\Models\Album_image;
 use App\Models\Albums;
 use App\Models\BlockUser;
@@ -12,9 +13,12 @@ use App\Models\Event;
 use App\Models\Feeling_and_activities;
 use App\Models\Follower;
 use App\Models\Friendships;
+use App\Models\Fundraiser;
+use App\Models\Fundraiser_donation;
 use App\Models\Group;
 use App\Models\Group_member;
 use App\Models\Invite;
+use App\Models\Marketplace;
 use App\Models\Media_files;
 use App\Models\Page;
 use App\Models\PaidContentCreator;
@@ -26,6 +30,7 @@ use App\Models\Sponsor;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 final class BladeViewData
 {
@@ -628,7 +633,7 @@ final class BladeViewData
 
     public function postShareCount(Model $post): int
     {
-        return $this->remember("post-share-count:{$post->post_id}", fn (): int => \App\Models\Post_share::query()
+        return $this->remember("post-share-count:{$post->post_id}", fn (): int => Post_share::query()
             ->where('post_id', $post->post_id)
             ->count());
     }
@@ -754,7 +759,7 @@ final class BladeViewData
 
     public function pendingAccountActivationCount(): int
     {
-        return $this->remember('pending-account-activation-count', fn (): int => \App\Models\Account_active_request::query()
+        return $this->remember('pending-account-activation-count', fn (): int => Account_active_request::query()
             ->where('status', 'pending')
             ->count());
     }

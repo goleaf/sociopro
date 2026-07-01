@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FileUploader;
 use App\Models\Sponsor;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -121,7 +122,7 @@ class UserController extends Controller
 
     public function ad_charge_by_daterange(Request $request)
     {
-        $total_days = \Carbon\Carbon::parse($request->start_date)->diffInDays($request->end_date);
+        $total_days = Carbon::parse($request->start_date)->diffInDays($request->end_date);
 
         if (strtotime($request->start_date) < strtotime($request->end_date)) {
             return $total_days * get_settings('ad_charge_per_day');
@@ -137,7 +138,7 @@ class UserController extends Controller
             'end_date' => 'required',
         ]);
 
-        $total_days = \Carbon\Carbon::parse($request->start_date)->diffInDays($request->end_date);
+        $total_days = Carbon::parse($request->start_date)->diffInDays($request->end_date);
         $payable_amount = ($total_days * get_settings('ad_charge_per_day')) + get_settings('ad_charge_per_day');
         $start_timestamp = strtotime($request->start_date.' '.date('H:i:s'));
         $end_timestamp = strtotime($request->end_date.' '.date('H:i:s'));
