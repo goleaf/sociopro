@@ -55,6 +55,23 @@ class MigrationSafetyAuditTest extends TestCase
         $this->assertIndexesExist($this->expectedQueryPatternIndexes());
     }
 
+    public function test_safe_legacy_foreign_key_constraints_are_present_and_reversible(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_150000_add_safe_legacy_foreign_key_constraints.php');
+
+        $migration->up();
+        $this->assertForeignKeysExist($this->expectedSafeForeignKeys());
+        $this->assertIndexesExist($this->expectedForeignKeyHelperIndexes());
+
+        $migration->down();
+        $this->assertForeignKeysDoNotExist($this->expectedSafeForeignKeys());
+        $this->assertIndexesDoNotExist($this->expectedForeignKeyHelperIndexes());
+
+        $migration->up();
+        $this->assertForeignKeysExist($this->expectedSafeForeignKeys());
+        $this->assertIndexesExist($this->expectedForeignKeyHelperIndexes());
+    }
+
     /**
      * @return iterable<SplFileInfo>
      */
@@ -93,6 +110,34 @@ class MigrationSafetyAuditTest extends TestCase
 
             foreach (array_keys($indexes) as $name) {
                 $this->assertArrayNotHasKey($name, $actualIndexes, "{$table}.{$name}");
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, list<array{columns: list<string>, foreign_table: string, foreign_columns: list<string>, on_delete: string}>>  $expectedForeignKeys
+     */
+    private function assertForeignKeysExist(array $expectedForeignKeys): void
+    {
+        foreach ($expectedForeignKeys as $table => $foreignKeys) {
+            $actualForeignKeys = $this->foreignKeysFor($table);
+
+            foreach ($foreignKeys as $foreignKey) {
+                $this->assertContains($foreignKey, $actualForeignKeys, $table.'.'.implode('_', $foreignKey['columns']));
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, list<array{columns: list<string>, foreign_table: string, foreign_columns: list<string>, on_delete: string}>>  $expectedForeignKeys
+     */
+    private function assertForeignKeysDoNotExist(array $expectedForeignKeys): void
+    {
+        foreach ($expectedForeignKeys as $table => $foreignKeys) {
+            $actualForeignKeys = $this->foreignKeysFor($table);
+
+            foreach ($foreignKeys as $foreignKey) {
+                $this->assertNotContains($foreignKey, $actualForeignKeys, $table.'.'.implode('_', $foreignKey['columns']));
             }
         }
     }
@@ -189,12 +234,133 @@ class MigrationSafetyAuditTest extends TestCase
     }
 
     /**
+     * @return array<string, list<array{columns: list<string>, foreign_table: string, foreign_columns: list<string>, on_delete: string}>>
+     */
+    private function expectedSafeForeignKeys(): array
+    {
+        return [
+            'album_images' => [
+                ['columns' => ['album_id'], 'foreign_table' => 'albums', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['page_id'], 'foreign_table' => 'pages', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['group_id'], 'foreign_table' => 'groups', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+            ],
+            'albums' => [
+                ['columns' => ['page_id'], 'foreign_table' => 'pages', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['group_id'], 'foreign_table' => 'groups', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+            ],
+            'blogs' => [
+                ['columns' => ['category_id'], 'foreign_table' => 'blogcategories', 'foreign_columns' => ['id'], 'on_delete' => 'set null'],
+            ],
+            'events' => [
+                ['columns' => ['group_id'], 'foreign_table' => 'groups', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+            ],
+            'followers' => [
+                ['columns' => ['page_id'], 'foreign_table' => 'pages', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['group_id'], 'foreign_table' => 'groups', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+            ],
+            'group_members' => [
+                ['columns' => ['group_id'], 'foreign_table' => 'groups', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+            ],
+            'invites' => [
+                ['columns' => ['event_id'], 'foreign_table' => 'events', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['page_id'], 'foreign_table' => 'pages', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['group_id'], 'foreign_table' => 'groups', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['post_id'], 'foreign_table' => 'posts', 'foreign_columns' => ['post_id'], 'on_delete' => 'cascade'],
+            ],
+            'marketplaces' => [
+                ['columns' => ['currency_id'], 'foreign_table' => 'currencies', 'foreign_columns' => ['id'], 'on_delete' => 'restrict'],
+            ],
+            'media_files' => [
+                ['columns' => ['post_id'], 'foreign_table' => 'posts', 'foreign_columns' => ['post_id'], 'on_delete' => 'cascade'],
+                ['columns' => ['story_id'], 'foreign_table' => 'stories', 'foreign_columns' => ['story_id'], 'on_delete' => 'cascade'],
+                ['columns' => ['album_id'], 'foreign_table' => 'albums', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['product_id'], 'foreign_table' => 'marketplaces', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['page_id'], 'foreign_table' => 'pages', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['group_id'], 'foreign_table' => 'groups', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['chat_id'], 'foreign_table' => 'chats', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['album_image_id'], 'foreign_table' => 'album_images', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+            ],
+            'notifications' => [
+                ['columns' => ['event_id'], 'foreign_table' => 'events', 'foreign_columns' => ['id'], 'on_delete' => 'set null'],
+                ['columns' => ['page_id'], 'foreign_table' => 'pages', 'foreign_columns' => ['id'], 'on_delete' => 'set null'],
+                ['columns' => ['group_id'], 'foreign_table' => 'groups', 'foreign_columns' => ['id'], 'on_delete' => 'set null'],
+            ],
+            'page_likes' => [
+                ['columns' => ['page_id'], 'foreign_table' => 'pages', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+            ],
+            'pages' => [
+                ['columns' => ['category_id'], 'foreign_table' => 'pagecategories', 'foreign_columns' => ['id'], 'on_delete' => 'set null'],
+            ],
+            'post_shares' => [
+                ['columns' => ['post_id'], 'foreign_table' => 'posts', 'foreign_columns' => ['post_id'], 'on_delete' => 'cascade'],
+            ],
+            'reports' => [
+                ['columns' => ['post_id'], 'foreign_table' => 'posts', 'foreign_columns' => ['post_id'], 'on_delete' => 'cascade'],
+            ],
+            'saved_products' => [
+                ['columns' => ['product_id'], 'foreign_table' => 'marketplaces', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+            ],
+            'saveforlaters' => [
+                ['columns' => ['video_id'], 'foreign_table' => 'videos', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['group_id'], 'foreign_table' => 'groups', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['post_id'], 'foreign_table' => 'posts', 'foreign_columns' => ['post_id'], 'on_delete' => 'cascade'],
+                ['columns' => ['marketplace_id'], 'foreign_table' => 'marketplaces', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['event_id'], 'foreign_table' => 'events', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+                ['columns' => ['blog_id'], 'foreign_table' => 'blogs', 'foreign_columns' => ['id'], 'on_delete' => 'cascade'],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function expectedForeignKeyHelperIndexes(): array
+    {
+        return [
+            'album_images' => [
+                'album_images_page_id_fk_idx' => ['page_id'],
+                'album_images_group_id_fk_idx' => ['group_id'],
+            ],
+            'invites' => [
+                'invites_event_id_fk_idx' => ['event_id'],
+                'invites_page_id_fk_idx' => ['page_id'],
+                'invites_group_id_fk_idx' => ['group_id'],
+                'invites_post_id_fk_idx' => ['post_id'],
+            ],
+            'saveforlaters' => [
+                'saveforlaters_video_id_fk_idx' => ['video_id'],
+                'saveforlaters_group_id_fk_idx' => ['group_id'],
+                'saveforlaters_post_id_fk_idx' => ['post_id'],
+                'saveforlaters_marketplace_id_fk_idx' => ['marketplace_id'],
+                'saveforlaters_event_id_fk_idx' => ['event_id'],
+                'saveforlaters_blog_id_fk_idx' => ['blog_id'],
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, list<string>>
      */
     private function indexesFor(string $table): array
     {
         return collect(Schema::getIndexes($table))
             ->mapWithKeys(fn (array $index): array => [$index['name'] => $index['columns']])
+            ->all();
+    }
+
+    /**
+     * @return list<array{columns: list<string>, foreign_table: string, foreign_columns: list<string>, on_delete: string}>
+     */
+    private function foreignKeysFor(string $table): array
+    {
+        return collect(Schema::getForeignKeys($table))
+            ->map(fn (array $foreignKey): array => [
+                'columns' => $foreignKey['columns'],
+                'foreign_table' => $foreignKey['foreign_table'],
+                'foreign_columns' => $foreignKey['foreign_columns'],
+                'on_delete' => strtolower(str_replace('no action', 'restrict', $foreignKey['on_delete'])),
+            ])
+            ->values()
             ->all();
     }
 }

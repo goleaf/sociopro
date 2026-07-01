@@ -1,5 +1,31 @@
 # Migration Audit
 
+## 2026-07-02 Update: Safe Foreign Key Constraint Pass
+
+### Scope
+
+Audited Eloquent relationship contracts, legacy MySQL dump column types, the local SQLite schema, orphan risk, and delete behavior for relationship columns. Full details are in `docs/foreign-key-audit.md`.
+
+### Safe Fix Applied
+
+Added `database/migrations/2026_07_02_150000_add_safe_legacy_foreign_key_constraints.php`.
+
+The migration adds guarded foreign keys only for relationships with compatible legacy MySQL column types and clear lifecycle behavior. It checks for tables, columns, existing foreign keys, leading child indexes, `nullOnDelete` column nullability, and orphan rows before adding a constraint. If production dirty data is present, the affected constraint is skipped instead of failing deployment.
+
+Delete behavior was chosen intentionally:
+
+- `cascadeOnDelete()` for dependent rows such as media, invites, saves, page likes, group members, album images, and target-scoped follow rows.
+- `nullOnDelete()` for optional categories and historical notification targets.
+- `restrictOnDelete()` for currency reference data used by marketplace products.
+
+### Deferred Unsafe Constraints
+
+Foreign keys to `users.id` remain deferred because the dump uses `users.id` as unsigned bigint while many child columns are signed `int(11)`. Other deferred relationships include text-backed pseudo-foreign keys (`groups.user_id`, `marketplaces.category`, `marketplaces.brand`, `posts.album_image_id`), polymorphic comment targets, root comments that use `0` instead of `NULL`, and addon tables not present in the dump-backed local schema.
+
+### Verification Added
+
+Updated `tests/Feature/MigrationSafetyAuditTest.php` to verify the new FK migration can run `up()`, `down()`, and `up()` again, including child columns, parent tables, parent columns, delete behavior, and helper-index reversibility.
+
 ## 2026-07-02 Update: Query Pattern Index Coverage
 
 ### Scope
