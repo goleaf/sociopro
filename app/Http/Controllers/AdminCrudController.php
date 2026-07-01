@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Jobs\StreamJobApplicationAttachmentAction;
 use App\Enums\MembershipRole;
 use App\Enums\UserRole;
 use App\Models\Account_active_request;
@@ -26,6 +27,7 @@ use App\Models\Posts;
 use App\Models\Setting;
 use App\Models\Sponsor;
 use App\Models\User;
+use App\Queries\Jobs\JobApplicationExportQuery;
 use App\Support\Files\FileUploader;
 use App\Support\Validation\DateTimeRules;
 use DB;
@@ -1081,9 +1083,11 @@ class AdminCrudController extends Controller
         return view('backend.index', $page_data);
     }
 
-    public function AllApplyList()
+    public function AllApplyList(?JobApplicationExportQuery $applications = null)
     {
-        $page_data['all_list'] = JobApply::where('owner_id', auth()->user()->id)->get();
+        $applications ??= app(JobApplicationExportQuery::class);
+
+        $page_data['all_list'] = $applications->forOwner(auth()->user()->id);
         $page_data['view_path'] = 'jobs.apply-list';
 
         return view('backend.index', $page_data);
@@ -1102,12 +1106,20 @@ class AdminCrudController extends Controller
         return redirect()->back();
     }
 
-    public function downloadPdf($id)
+    public function downloadPdf($id, ?StreamJobApplicationAttachmentAction $streamAttachment = null)
     {
-        $job = JobApply::find($id);
-        $filePath = public_path('storage/job/cv/'.$job->attachment);
+        $streamAttachment ??= app(StreamJobApplicationAttachmentAction::class);
 
-        return response()->download($filePath);
+        $job = JobApply::find($id);
+        $filePath = $job !== null && $job->attachment !== null
+            ? public_path('storage/job/cv/'.$job->attachment)
+            : null;
+
+        if ($filePath === null || ! is_file($filePath)) {
+            return back();
+        }
+
+        return $streamAttachment->handle($job);
     }
 
     public function jobPaymentHistory()
