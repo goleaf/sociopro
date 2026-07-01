@@ -40,6 +40,25 @@ class InstallWizardTest extends TestCase
         $response->assertSee('value="sqlite"', false);
     }
 
+    public function test_purchase_code_validation_requires_a_code(): void
+    {
+        $response = $this->from('/install/step2')->post(route('install.validate'));
+
+        $response->assertRedirect('/install/step2');
+        $response->assertSessionHasErrors(['purchase_code']);
+    }
+
+    public function test_purchase_code_validation_stores_verified_session(): void
+    {
+        $response = $this->post(route('install.validate'), [
+            'purchase_code' => 'purchase-code-123',
+        ]);
+
+        $response->assertRedirect(route('install.step3'));
+        $response->assertSessionHas('purchase_code', 'purchase-code-123');
+        $response->assertSessionHas('purchase_code_verified', 1);
+    }
+
     public function test_finalizing_setup_updates_settings_and_creates_admin_user(): void
     {
         $response = $this->post('/install/finalizing_setup', [

@@ -8,6 +8,7 @@ use App\Actions\Install\ImportInstallSqlDump;
 use App\Actions\Install\PrepareDatabaseConnection;
 use App\Actions\Install\UpdateEnvironmentFile;
 use App\Http\Requests\Install\FinalizeInstallationRequest;
+use App\Http\Requests\Install\ValidatePurchaseCodeRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
@@ -56,10 +57,9 @@ class InstallController extends Controller
         return view('install.step2', ['error' => $error]);
     }
 
-    public function validatePurchaseCode(Request $request) 
+    public function validatePurchaseCode(ValidatePurchaseCodeRequest $request)
     {
-        $data = $request->all();
-        $purchase_code = $data['purchase_code'];
+        $purchase_code = $request->validated('purchase_code');
 		session(['purchase_code' => $purchase_code]);
 		session(['purchase_code_verified' => 1]);
 		//move to step 3
