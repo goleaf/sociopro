@@ -75,7 +75,7 @@ This document inventories the business modules and feature surfaces found in the
 ### Authentication and Account Lifecycle
 
 - Routes: `routes/auth.php`; `routes/web.php` for `account-disable`, `account-enble-req/{user}`, `auth-checker`; `routes/api.php` for `api/login`, `api/signup`, `api/forgot_password`, `api/update_password`, `api/user`.
-- Controllers: Breeze auth controllers under `app/Http/Controllers/Auth`, `ApiController`, `CustomUserController`, `Profile`, `AdminCrudController`, closure routes in `web.php`.
+- Controllers: Breeze auth controllers under `app/Http/Controllers/Auth`, including invokable one-command email verification notification routing; `ApiController`, `CustomUserController`, `Profile`, `AdminCrudController`, and invokable web utility controllers.
 - Requests: `App\Http\Requests\Auth\LoginRequest`; API auth uses inline validation.
 - Models: `User`, `Users`, `Account_active_request`.
 - Database tables: `users`, `account_active_requests`, `personal_access_tokens`, `password_resets`.

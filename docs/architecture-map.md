@@ -106,6 +106,7 @@ Primary controller roles:
 - `PaymentController`: payment gateway selection, Paytm callback, gateway model dispatch, gateway view data, and payment creation/status routes.
 - `Updater`: product/addon update and addon manager/status/delete routes.
 - Smaller domain controllers: `BlogController`, `EventController`, `GroupController`, `MarketplaceController`, `PageController`, `VideoController`, `ChatController`, `NotificationController`, `FollowController`, `SponsorController`, `StoryController`, `LanguageController`, `BadgeController`, `UserController`, `CustomUserController`, `MemoriesController`, `ModalController`, and `SearchController`.
+- Single-command auth controllers use invokable routing where it clarifies intent; `EmailVerificationNotificationController` handles only the `verification.send` resend command.
 
 ## Models and Tables
 

@@ -17,12 +17,14 @@ Audited all loaded route files: `routes/web.php`, `routes/api.php`, `routes/auth
 - Removed the duplicated `save/video/short/{id}` route declaration.
 - Added `admin` protection to updater/addon routes under `admin/addon/*` and `admin/product/update`.
 - Added missing admin middleware to public admin-prefixed routes for Amazon S3 settings, Jitsi settings update, server-side users data, system about/license settings, and paid-content author/payout administration.
+- Converted the one-command email verification resend controller to invokable routing while preserving the `verification.send` URL, method, name, middleware, and redirect/session behavior.
 
 ## Verification
 
 - `php artisan route:cache` was checked before and after changes.
 - `composer ci` passed after the route fixes.
 - Added route audit regression tests for HTTP closure routes, `/clear-cache` protection, admin-prefixed middleware, and duplicate route declarations.
+- Added focused auth route coverage proving `verification.send` remains a POST route and now targets the invokable email verification notification controller.
 
 ## Risky Findings To Refactor Next
 
@@ -37,6 +39,7 @@ Audited all loaded route files: `routes/web.php`, `routes/api.php`, `routes/auth
 | P2 | Medium | Install routes | Installation routes remain publicly accessible. | Add an installed-state middleware or environment guard once install lifecycle behavior is documented. |
 | P2 | Medium | Payment routes | Public payment callback routes are necessary, but route-level signature/webhook validation is not visible. | Document each provider callback contract and add tests for invalid callback payloads. |
 | P2 | Low | Console routes | `routes/console.php` uses a closure for the `inspire` command. | Leave as-is unless route/command serialization policy changes; it does not affect HTTP route caching. |
+| P2 | Low | Single-action routes | Most registered single-action controllers are already invokable. `ModalController::common_view_function` remains a dynamic modal loader and `PaymentHistory@index` remains a conventional list action. | Convert either only with focused response tests if the surrounding module is refactored. |
 
 ## Suggested Implementation Order
 

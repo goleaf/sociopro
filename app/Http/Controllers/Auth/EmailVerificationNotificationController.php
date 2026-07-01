@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class EmailVerificationNotificationController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function __invoke(Request $request): RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
             return redirect()->intended(RouteServiceProvider::HOME);
