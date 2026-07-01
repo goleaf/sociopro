@@ -3,12 +3,18 @@
 namespace App\Models;
 
 use DB;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Sponsor extends Model
 {
     use HasFactory;
+
+    public function scopeForUser(Builder $query, int $userId): Builder
+    {
+        return $query->where('user_id', $userId);
+    }
 
     /**
      * @return array<string, string>
