@@ -144,6 +144,21 @@ class InstallWizardTest extends TestCase
         ]);
     }
 
+    public function test_finalizing_setup_displays_validation_errors_and_old_input(): void
+    {
+        $response = $this
+            ->followingRedirects()
+            ->from('/install/finalizing_setup')
+            ->post('/install/finalizing_setup', [
+                'system_name' => 'Sociopro Local',
+            ]);
+
+        $response->assertOk();
+        $response->assertSee('The admin name field is required.');
+        $response->assertSee('The admin email field is required.');
+        $response->assertSee('value="Sociopro Local"', false);
+    }
+
     public function test_finalizing_setup_view_does_not_build_timezone_options(): void
     {
         $view = File::get(resource_path('views/install/finalizing_setup.blade.php'));

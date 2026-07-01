@@ -21,53 +21,87 @@
               </strong>
             </center>
             <br>
+            @if ($errors->any())
+              <div class="alert alert-danger">
+                @foreach ($errors->all() as $error)
+                  <strong>{{ $error }}</strong><br>
+                @endforeach
+              </div>
+            @endif
             <div class="row">
               <div class="col-md-12">
                 <form class="form-horizontal form-groups" method="post"
                   action="{{ route('install.finalizing') }}">
-                  @csrf 
+                  @csrf
                   <div class="form-group">
-            				<label class="col-sm-3 control-label">{{ __('System Name') }}</label>
-            				
-            					<input type="text" class="form-control eForm-control" name="system_name"
-                        required autofocus>
+                    <label class="col-sm-3 control-label">{{ __('System Name') }}</label>
+                    <input
+                      type="text"
+                      class="form-control eForm-control"
+                      name="system_name"
+                      value="{{ old('system_name') }}"
+                      required
+                      autofocus
+                    >
                     <div>
                       {{ __('The name of your application') }}
                     </div>
-            			</div>
+                  </div>
                   <hr>
                   <div class="form-group">
-            				<label class="col-sm-3 control-label">{{ __('Your name') }}</label>
-            				
-            					<input type="text" class="form-control eForm-control" name="admin_name" placeholder="Ex: John Doe" required>
+                    <label class="col-sm-3 control-label">{{ __('Your name') }}</label>
+                    <input
+                      type="text"
+                      class="form-control eForm-control"
+                      name="admin_name"
+                      value="{{ old('admin_name') }}"
+                      placeholder="Ex: John Doe"
+                      required
+                    >
                     <div>
                       {{ __('Full name of Administrator') }}
                     </div>
-            			</div>
+                  </div>
                   <hr>
                   <div class="form-group">
-            				<label class="col-sm-3 control-label">{{ __('Your Email') }}</label>
-            				
-            					<input type="email" class="form-control eForm-control" name="admin_email" placeholder="Ex: john@example.com" required>
+                    <label class="col-sm-3 control-label">{{ __('Your Email') }}</label>
+                    <input
+                      type="email"
+                      class="form-control eForm-control"
+                      name="admin_email"
+                      value="{{ old('admin_email') }}"
+                      placeholder="Ex: john@example.com"
+                      required
+                    >
                     <div>
                       {{ __('Email address for administrator login') }}
                     </div>
-            			</div>
+                  </div>
                   <hr>
                   <div class="form-group">
-            				<label class="col-sm-3 control-label">{{ __('Password') }}</label>
-            				
-            					<input type="password" class="form-control eForm-control" name="admin_password" placeholder=""
-                        required>
+                    <label class="col-sm-3 control-label">{{ __('Password') }}</label>
+                    <input
+                      type="password"
+                      class="form-control eForm-control"
+                      name="admin_password"
+                      placeholder=""
+                      required
+                    >
                     <div>
                       {{ __('Admin login password') }}
                     </div>
-            			</div>
+                  </div>
                   <hr>
                   <div class="form-group">
                     <label class="col-sm-3 control-label">{{ __('Your Address') }}</label>
-                    
-                      <input type="text" class="form-control eForm-control" name="admin_address" placeholder="Ex: Your Address" required>
+                    <input
+                      type="text"
+                      class="form-control eForm-control"
+                      name="admin_address"
+                      value="{{ old('admin_address') }}"
+                      placeholder="Ex: Your Address"
+                      required
+                    >
                     <div>
                       {{ __('Address of Administrator') }}
                     </div>
@@ -75,8 +109,14 @@
                   <hr>
                   <div class="form-group">
                     <label class="col-sm-3 control-label">{{ __('Your Phone') }}</label>
-                    
-                      <input type="number" class="form-control eForm-control" name="admin_phone" placeholder="Ex: +9020040060" required>
+                    <input
+                      type="number"
+                      class="form-control eForm-control"
+                      name="admin_phone"
+                      value="{{ old('admin_phone') }}"
+                      placeholder="Ex: +9020040060"
+                      required
+                    >
                     <div>
                       {{ __('Phone of Administrator') }}
                     </div>
