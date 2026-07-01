@@ -2,11 +2,15 @@
     "preset": "laravel",
     "paths": [
         "app",
+        "artisan",
         "bootstrap",
         "config",
         "database",
+        "index.php",
+        "public/index.php",
         "resources/lang",
         "routes",
+        "server.php",
         "tests"
     ]
 }
