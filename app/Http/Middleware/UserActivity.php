@@ -2,11 +2,11 @@
 
 namespace App\Http\Middleware;
 
-use Cache;
+use App\Models\User;
 use Carbon\Carbon;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 class UserActivity
@@ -16,14 +16,17 @@ class UserActivity
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = Auth::user();
+        $user = $request->user();
+
+        if (! $user instanceof User) {
+            return $next($request);
+        }
+
         $user->lastActive = Carbon::now();
         $user->save();
 
-        if (Auth::check()) {
-            $expiresat = Carbon::now()->addMinutes(5);
-            Cache::put('user-is-online-'.Auth::user()->id, true, $expiresat);
-        }
+        $expiresat = Carbon::now()->addMinutes(5);
+        Cache::put('user-is-online-'.$user->id, true, $expiresat);
 
         return $next($request);
     }
