@@ -11,6 +11,7 @@ use App\Models\Marketplace;
 use App\Models\SavedProduct;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -130,6 +131,129 @@ class MarketplaceAuthorizationTest extends TestCase
                 'view_path' => 'frontend.marketplace.edit_product',
                 'product_id' => $product->id,
             ]));
+
+        $response->assertForbidden();
+    }
+
+    public function test_marketplace_policy_allows_non_owner_to_message_seller_and_denies_owner(): void
+    {
+        $owner = $this->activeUser();
+        $buyer = $this->activeUser();
+        $product = $this->marketplace($owner);
+
+        $this->assertFalse(Gate::forUser($owner)->allows('messageSeller', $product));
+        $this->assertTrue(Gate::forUser($buyer)->allows('messageSeller', $product));
+    }
+
+    public function test_single_product_page_uses_policy_visibility_for_seller_message_action(): void
+    {
+        $owner = $this->activeUser();
+        $buyer = $this->activeUser();
+        $product = $this->marketplace($owner, [
+            'title' => 'Policy visible product',
+        ]);
+        $chatUrl = route('chat', [
+            'reciver' => $owner->id,
+            'product' => $product->id,
+        ]);
+
+        $this
+            ->actingAs($owner)
+            ->get(route('single.product', ['id' => $product->id]))
+            ->assertOk()
+            ->assertSee('Sold')
+            ->assertDontSee($chatUrl);
+
+        $this
+            ->actingAs($buyer)
+            ->get(route('single.product', ['id' => $product->id]))
+            ->assertOk()
+            ->assertSee('Message')
+            ->assertSee($chatUrl);
+    }
+
+    public function test_web_owner_cannot_open_chat_for_their_own_marketplace_product(): void
+    {
+        $owner = $this->activeUser();
+        $product = $this->marketplace($owner);
+
+        $response = $this
+            ->actingAs($owner)
+            ->get(route('chat', [
+                'reciver' => $owner->id,
+                'product' => $product->id,
+            ]));
+
+        $response->assertForbidden();
+    }
+
+    public function test_web_user_cannot_open_marketplace_chat_with_mismatched_receiver(): void
+    {
+        $seller = $this->activeUser();
+        $otherUser = $this->activeUser();
+        $buyer = $this->activeUser();
+        $product = $this->marketplace($seller);
+
+        $response = $this
+            ->actingAs($buyer)
+            ->get(route('chat', [
+                'reciver' => $otherUser->id,
+                'product' => $product->id,
+            ]));
+
+        $response->assertForbidden();
+    }
+
+    public function test_web_user_can_open_chat_for_marketplace_seller(): void
+    {
+        $seller = $this->activeUser();
+        $buyer = $this->activeUser();
+        $product = $this->marketplace($seller);
+
+        $response = $this
+            ->actingAs($buyer)
+            ->get(route('chat', [
+                'reciver' => $seller->id,
+                'product' => $product->id,
+            ]));
+
+        $response->assertOk();
+    }
+
+    public function test_web_user_cannot_send_marketplace_chat_message_to_wrong_receiver(): void
+    {
+        $seller = $this->activeUser();
+        $otherUser = $this->activeUser();
+        $buyer = $this->activeUser();
+        $product = $this->marketplace($seller);
+
+        $response = $this
+            ->actingAs($buyer)
+            ->post(route('chat.save'), [
+                'reciver_id' => $otherUser->id,
+                'product_id' => $product->id,
+                'message' => 'Is this still available?',
+                'messagecenter' => null,
+                'thumbsup' => 0,
+            ]);
+
+        $response->assertForbidden();
+    }
+
+    public function test_web_owner_cannot_send_marketplace_chat_message_to_themselves(): void
+    {
+        $owner = $this->activeUser();
+        $product = $this->marketplace($owner);
+
+        $response = $this
+            ->actingAs($owner)
+            ->post(route('chat.save'), [
+                'reciver_id' => $owner->id,
+                'product_id' => $product->id,
+                'message' => 'Is my product still available?',
+                'messagecenter' => null,
+                'thumbsup' => 0,
+            ]);
 
         $response->assertForbidden();
     }
@@ -407,6 +531,7 @@ class MarketplaceAuthorizationTest extends TestCase
         return User::factory()->create([
             'user_role' => $role->value,
             'status' => UserAccountStatus::Active->value,
+            'timezone' => 'UTC',
         ]);
     }
 

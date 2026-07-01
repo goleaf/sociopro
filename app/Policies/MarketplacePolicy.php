@@ -10,6 +10,10 @@ class MarketplacePolicy
 {
     public function before(User $user, string $ability): ?bool
     {
+        if ($ability === 'messageSeller') {
+            return null;
+        }
+
         if ($user->user_role === UserRole::Admin->value) {
             return true;
         }
@@ -30,5 +34,10 @@ class MarketplacePolicy
     public function delete(User $user, Marketplace $marketplace): bool
     {
         return (int) $user->id === (int) $marketplace->user_id;
+    }
+
+    public function messageSeller(User $user, Marketplace $marketplace): bool
+    {
+        return (int) $user->id !== (int) $marketplace->user_id;
     }
 }

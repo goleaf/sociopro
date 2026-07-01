@@ -3,17 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chat;
+use App\Models\Marketplace;
 use App\Models\Media_files;
 use App\Models\Message_thrade;
 use App\Models\User;
 use App\Support\Files\FileUploader;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 
 class ChatController extends Controller
 {
     public function chat($reciver = null, $product = null)
     {
+        if ($product !== null) {
+            $this->authorizeMarketplaceProductChat((int) $reciver, (int) $product);
+        }
+
         $user_id = auth()->user()->id;
         $messageThrade = Message_thrade::where(function ($query) use ($reciver, $user_id) {
             $query->where('sender_id', $reciver)
@@ -44,6 +50,10 @@ class ChatController extends Controller
     {
         $reciver = $request->reciver_id;
         $user_id = auth()->user()->id;
+
+        if ($request->filled('product_id')) {
+            $this->authorizeMarketplaceProductChat((int) $reciver, $request->integer('product_id'));
+        }
 
         $firstmessageThrade = Message_thrade::where(function ($query) use ($reciver, $user_id) {
             $query->where('sender_id', $reciver)
@@ -285,5 +295,14 @@ class ChatController extends Controller
 
             return $done;
         }
+    }
+
+    private function authorizeMarketplaceProductChat(int $receiverId, int $productId): void
+    {
+        $marketplace = Marketplace::findOrFail($productId);
+
+        abort_unless($receiverId === (int) $marketplace->user_id, 403);
+
+        Gate::authorize('messageSeller', $marketplace);
     }
 }

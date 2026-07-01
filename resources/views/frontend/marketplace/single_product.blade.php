@@ -48,12 +48,11 @@
                                     </div>
                                 </div>
                                 <div class="pb-share e_market d-flex justify-content-between">
-                                    @if ($product->user_id != auth()->user()->id)
-                                     
-                                      <a href="{{ route('chat',['reciver'=>$product->user_id,'product'=>$product->id]) }}" class="btn sold_btn common_btn"> {{get_phrase('Message')}} </a>
+                                    @can('messageSeller', $product)
+                                        <a href="{{ route('chat',['reciver'=>$product->user_id,'product'=>$product->id]) }}" class="btn sold_btn common_btn"> {{get_phrase('Message')}} </a>
                                     @else
-                                    <a href="javascript:void(0)" class="btn sold_btn common_btn"> {{get_phrase('Sold')}} </a>
-                                    @endif
+                                        <a href="javascript:void(0)" class="btn sold_btn common_btn"> {{get_phrase('Sold')}} </a>
+                                    @endcan
                                     <span>
                                         @if ($viewData->isProductSaved($product, auth()->user()))
                                         <a href="javascript:void(0)" class="common_btn_2" onclick="ajaxAction('{{ route('unsave.product.later',$product->id) }}')"> <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -173,5 +172,3 @@
 
     </div> <!-- row end -->
 </div>
-
-

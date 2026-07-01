@@ -108,6 +108,7 @@ class ViewServiceProvider extends ServiceProvider
 
         View::composer(['frontend.header', 'frontend.disable_view'], function ($view): void {
             $settings = $this->settings(['system_light_logo']);
+            $themeColor = Session::get('theme_color', 'default');
             $user = Auth::user();
             $lastMessage = null;
             $messageTo = null;
@@ -152,6 +153,10 @@ class ViewServiceProvider extends ServiceProvider
 
             $view->with([
                 'systemLightLogo' => $settings->get('system_light_logo', ''),
+                'theme_color' => $themeColor,
+                'image' => $themeColor === 'dark'
+                    ? asset('assets/frontend/images/white_sun.svg')
+                    : asset('assets/frontend/images/white_moon.svg'),
                 'msg_to' => $messageTo,
                 'unread_msg' => $unreadMessageCount,
                 'unread_notification' => $unreadNotificationCount,
