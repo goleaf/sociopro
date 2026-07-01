@@ -19,7 +19,7 @@ class Comments extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'comment_id', 'user_id', 'parent_id', 'is_type', 'id_of_type', 'description', 'user_reacts', 'created_at', 'updated_at',
+        'user_id', 'parent_id', 'is_type', 'id_of_type', 'description', 'user_reacts', 'created_at', 'updated_at',
     ];
 
     /**

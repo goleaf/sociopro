@@ -2,10 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\Comments;
+use App\Models\Feeling_and_activities;
 use App\Models\Payment_gateway;
 use App\Models\PaymentHistoryEntry;
+use App\Models\Posts;
+use App\Models\Stories;
 use App\Models\User;
 use App\Models\Users;
+use Illuminate\Database\Eloquent\MassAssignmentException;
 use Illuminate\Database\Eloquent\Model;
 use ReflectionClass;
 use Tests\TestCase;
@@ -114,6 +119,35 @@ class EloquentModelAuditTest extends TestCase
         ]);
 
         $this->assertNull($model->getKey());
+    }
+
+    public function test_legacy_primary_key_models_do_not_mass_assign_primary_keys(): void
+    {
+        $expectedPrimaryKeys = [
+            Comments::class => 'comment_id',
+            Feeling_and_activities::class => 'feeling_and_activity_id',
+            Posts::class => 'post_id',
+            Stories::class => 'story_id',
+        ];
+
+        foreach (self::modelClasses() as $class) {
+            $primaryKey = $expectedPrimaryKeys[$class] ?? (new $class)->getKeyName();
+            $model = new $class;
+
+            $this->assertSame($primaryKey, $model->getKeyName());
+
+            try {
+                $model = new $class([$primaryKey => 123]);
+            } catch (MassAssignmentException) {
+                $model = new $class;
+            }
+
+            $this->assertFalse(
+                $model->offsetExists($primaryKey),
+                "{$class} allows primary key [{$primaryKey}] mass assignment."
+            );
+            $this->assertNull($model->getKey(), "{$class} mass assigned its primary key.");
+        }
     }
 
     public function test_payment_models_block_sensitive_mass_assignment_fields(): void

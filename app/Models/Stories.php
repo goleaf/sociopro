@@ -18,6 +18,6 @@ class Stories extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'story_id', 'user_id', 'publisher', 'publisher_id', 'privacy', 'content_type', 'description', 'created_at', 'updated_at', 'status',
+        'user_id', 'publisher', 'publisher_id', 'privacy', 'content_type', 'description', 'created_at', 'updated_at', 'status',
     ];
 }

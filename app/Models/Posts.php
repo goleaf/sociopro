@@ -23,7 +23,7 @@ class Posts extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'post_id', 'user_id', 'publisher', 'publisher_id', 'post_type', 'privacy', 'tagged_user_ids', 'feel_and_activity', 'location', 'description', 'user_reacts', 'status', 'created_at', 'updated_at', 'album_image_id',
+        'user_id', 'publisher', 'publisher_id', 'post_type', 'privacy', 'tagged_user_ids', 'feel_and_activity', 'location', 'description', 'user_reacts', 'status', 'created_at', 'updated_at', 'album_image_id',
     ];
 
     public function scopeActive(Builder $query): Builder
