@@ -13,4 +13,12 @@ class PaymentControllerGatewayQueryTest extends TestCase
         $this->assertStringNotContainsString("DB::table('payment_gateways')", $contents);
         $this->assertStringNotContainsString('use DB;', $contents);
     }
+
+    public function test_payment_controller_delegates_gateway_service_resolution(): void
+    {
+        $contents = file_get_contents(app_path('Http/Controllers/PaymentController.php'));
+
+        $this->assertStringNotContainsString('new $model_full_path', $contents);
+        $this->assertStringNotContainsString('gatewayModelClass', $contents);
+    }
 }

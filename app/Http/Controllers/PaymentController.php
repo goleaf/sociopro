@@ -9,6 +9,7 @@ use App\Models\Payment_gateway;
 use App\Models\PaymentHistoryEntry;
 use App\Models\Setting;
 use App\Models\Users;
+use App\Services\Payments\PaymentGatewayResolver;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,8 @@ class PaymentController extends Controller
         'status',
         'is_addon',
     ];
+
+    public function __construct(private readonly PaymentGatewayResolver $paymentGatewayResolver) {}
 
     public function index(): View|RedirectResponse
     {
@@ -64,10 +67,8 @@ class PaymentController extends Controller
     {
         $payment_details = session('payment_details');
         $payment_gateway = $this->paymentGateway($identifier);
-        $model_full_path = $this->gatewayModelClass($payment_gateway);
 
-        $paymentGateway = new $model_full_path;
-        $status = $paymentGateway->payment_status($identifier, $request->all());
+        $status = $this->paymentGatewayResolver->paymentStatus($payment_gateway, $identifier, $request->all());
 
         if ($status === true) {
             $success_model = $payment_details['success_method']['model_name'];
@@ -87,8 +88,7 @@ class PaymentController extends Controller
     public function payment_create(string $identifier): RedirectResponse
     {
         $payment_gateway = $this->paymentGateway($identifier);
-        $model_full_path = $this->gatewayModelClass($payment_gateway);
-        $created_payment_link = $model_full_path::payment_create($identifier);
+        $created_payment_link = $this->paymentGatewayResolver->createPayment($payment_gateway, $identifier);
 
         return redirect()->to($created_payment_link);
     }
@@ -96,8 +96,7 @@ class PaymentController extends Controller
     public function payment_razorpay(string $identifier): View
     {
         $payment_gateway = $this->paymentGateway($identifier);
-        $model_full_path = $this->gatewayModelClass($payment_gateway);
-        $data = $model_full_path::payment_create($identifier);
+        $data = $this->paymentGatewayResolver->createPayment($payment_gateway, $identifier);
 
         return view('payment.razorpay.payment', [
             'page_data' => $data['page_data'],
@@ -155,12 +154,6 @@ class PaymentController extends Controller
             ->select(self::PAYMENT_GATEWAY_COLUMNS)
             ->forIdentifier($identifier)
             ->firstOrFail();
-    }
-
-    private function gatewayModelClass(Payment_gateway $paymentGateway): string
-    {
-        return PaymentGatewayIdentifier::tryFrom($paymentGateway->identifier)?->serviceClass()
-            ?? 'App\Services\Payments\Gateways\\'.str_replace(' ', '', $paymentGateway->model_name);
     }
 
     private function paymentPageSettings(): array
