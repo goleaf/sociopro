@@ -168,13 +168,13 @@
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                         <li><a class="dropdown-item"
                                                 href="{{ route('profile') }}">{{ get_phrase('My Profile') }}</a></li>
-                                        @if ($user_info->user_role == 'admin')
+                                        @if ($user_info->user_role == \App\Enums\UserRole::Admin->value)
                                             <li><a class="dropdown-item"
                                                     href="{{ route('admin.dashboard') }}">{{ get_phrase('Go to admin panel') }}</a>
                                             </li>
                                         @endif
     
-                                        @if ($user_info->user_role == 'general')
+                                        @if ($user_info->user_role == \App\Enums\UserRole::General->value)
                                             <li><a class="dropdown-item"
                                                     href="{{ route('user.dashboard') }}">{{ get_phrase('Dashboard') }}</a>
                                             </li>

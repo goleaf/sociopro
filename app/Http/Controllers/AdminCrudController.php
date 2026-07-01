@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MembershipRole;
 use App\Enums\UserRole;
 use App\Models\Account_active_request;
 use App\Models\Badge;
@@ -535,7 +536,7 @@ class AdminCrudController extends Controller
             $group_member = new Group_member;
             $group_member->group_id = $group->id;
             $group_member->user_id = auth()->user()->id;
-            $group_member->role = 'admin';
+            $group_member->role = MembershipRole::Admin->value;
             $group_member->is_accepted = '1';
             $done = $group_member->save();
             if ($done) {

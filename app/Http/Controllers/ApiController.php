@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\MediaFileType;
+use App\Enums\MembershipRole;
+use App\Enums\UserRole;
 use App\Enums\Visibility;
 use App\Http\Requests\Api\Marketplace\FilterMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\StoreMarketplaceRequest;
@@ -96,7 +98,7 @@ class ApiController extends Controller
                     'message' => 'User not found!',
                 ], 401);
             }
-        } elseif ($user->user_role == 'general') {
+        } elseif ($user->user_role == UserRole::General->value) {
             // $user->tokens()->delete();
 
             $token = $user->createToken('auth-token')->plainTextToken;
@@ -138,7 +140,7 @@ class ApiController extends Controller
         $validated = $validator->validated();
         // return $response;
         $user = User::create([
-            'user_role' => 'general',
+            'user_role' => UserRole::General->value,
             'username' => rand(100000, 999999),
             'name' => $request->name,
             'email' => $request->email,
@@ -3141,7 +3143,7 @@ class ApiController extends Controller
                 $group_member = new Group_member;
                 $group_member->group_id = $group->id;
                 $group_member->user_id = $user_id;
-                $group_member->role = 'admin';
+                $group_member->role = MembershipRole::Admin->value;
                 $group_member->is_accepted = '1';
                 $done = $group_member->save();
                 if ($done) {
@@ -3276,7 +3278,7 @@ class ApiController extends Controller
                 $group_member = new Group_member;
                 $group_member->group_id = $id;
                 $group_member->user_id = $user_id;
-                $group_member->role = 'general';
+                $group_member->role = MembershipRole::General->value;
                 $group_member->is_accepted = '1';
 
                 $member = Group_member::where('user_id', $user_id)->where('group_id', $id)->first();
@@ -3888,7 +3890,7 @@ class ApiController extends Controller
             $pagelike = new Page_like;
             $pagelike->page_id = $id;
             $pagelike->user_id = $user_id;
-            $pagelike->role = 'general';
+            $pagelike->role = MembershipRole::General->value;
 
             $member = Page_like::where('user_id', $user_id)->where('page_id', $id)->first();
             if ($member) {
