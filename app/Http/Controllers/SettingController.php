@@ -293,32 +293,32 @@ class SettingController extends Controller
         return redirect()->route('admin.live-video.view');
     }
 
-   // Admin Color Save
+    // Admin Color Save
 
-   public function system_settings_color_save(Request $request, $themeColor)
-   {
-       Setting::where('type', 'theme_color')->update(['description' => $themeColor]);
-       flash()->addSuccess('System  Color Updated Successfully');
+    public function system_settings_color_save(Request $request, $themeColor)
+    {
+        Setting::where('type', 'theme_color')->update(['description' => $themeColor]);
+        flash()->addSuccess('System  Color Updated Successfully');
 
-       return redirect()->back();
-   }
+        return redirect()->back();
+    }
 
- // Zitsi Live
-  public function zitsi_video_edit_form()
-  {
-      $page_data['view_path'] = 'setting.zitsi_live_settings';
+    // Zitsi Live
+    public function zitsi_video_edit_form()
+    {
+        $page_data['view_path'] = 'setting.zitsi_live_settings';
 
-      return view('backend.index', $page_data);
-  }
+        return view('backend.index', $page_data);
+    }
 
-  public function zitsi_live_video_update(Request $request)
-  {
-      $data['description'] = json_encode(['account_email' => $request->account_email, 'jitsi_app_id' => $request->jitsi_app_id, 'jitsi_jwt' => $request->jitsi_jwt]);
-      Setting::where('type', 'zitsi_configuration')->update($data);
-      flash()->addSuccess('Zitsi Live Settings Updated Successfully');
+    public function zitsi_live_video_update(Request $request)
+    {
+        $data['description'] = json_encode(['account_email' => $request->account_email, 'jitsi_app_id' => $request->jitsi_app_id, 'jitsi_jwt' => $request->jitsi_jwt]);
+        Setting::where('type', 'zitsi_configuration')->update($data);
+        flash()->addSuccess('Zitsi Live Settings Updated Successfully');
 
-      return redirect()->route('admin.zitsi-video.view');
-  }
+        return redirect()->route('admin.zitsi-video.view');
+    }
 
     public function all_settings_view()
     {

@@ -46,7 +46,7 @@ class MarketplaceController extends Controller
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
 
-        $marketplace = new Marketplace();
+        $marketplace = new Marketplace;
         $marketplace->user_id = auth()->user()->id;
         $marketplace->title = $request->title;
         $marketplace->currency_id = $request->currency;
@@ -62,7 +62,7 @@ class MarketplaceController extends Controller
         $product_id = $marketplace->id;
         if ($product_id) {
             if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                //Data validation
+                // Data validation
                 $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
                 $validator = Validator::make($request->multiple_files, $rules);
                 if ($validator->fails()) {
@@ -124,7 +124,7 @@ class MarketplaceController extends Controller
         $product_id = $id;
         if ($product_id) {
             if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                //Data validation
+                // Data validation
                 $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
                 $validator = Validator::make($request->multiple_files, $rules);
                 if ($validator->fails()) {
@@ -234,7 +234,7 @@ class MarketplaceController extends Controller
         if (isset($search) && ! empty($search)) {
             $query->where(function ($query) use ($search) {
                 $query->where('title', 'like', '%'.$search.'%')
-                ->orWhere('description', 'like', '%'.$search.'%');
+                    ->orWhere('description', 'like', '%'.$search.'%');
             });
         }
 
@@ -308,7 +308,7 @@ class MarketplaceController extends Controller
 
     public function save_for_later($id)
     {
-        $saveproduct = new SavedProduct();
+        $saveproduct = new SavedProduct;
         $saveproduct->user_id = auth()->user()->id;
         $saveproduct->product_id = $id;
         $saveproduct->save();

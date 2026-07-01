@@ -23,7 +23,7 @@ class SearchController extends Controller
         // $page_data['posts']= Posts::where('description','Like','%'.$search_param.'%')->limit(50)->get();
         $page_data['posts'] = Posts::where(function ($query) use ($search_param) {
             $query->where('description', 'LIKE', '%'.$search_param.'%')
-                  ->orWhere('hashtag', 'LIKE', '%'.$search_param.'%');
+                ->orWhere('hashtag', 'LIKE', '%'.$search_param.'%');
         })->limit(50)->get();
 
         if (strpos($search_param, '#') === 0) {

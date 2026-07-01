@@ -9,6 +9,8 @@ use App\Http\Controllers\Profile;
 use App\Http\Controllers\StoryController;
 use App\Http\Controllers\Updater;
 use App\Models\Account_active_request;
+use App\Models\User;
+use App\ViewModels\BladeViewData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,7 +48,7 @@ Route::get('/auth-checker', function () {
     }
 })->name('auth-checker');
 
-//Passing param
+// Passing param
 Route::get('/users/{user_id}', function ($user_id) {
     return view('welcome');
 });
@@ -63,25 +65,33 @@ Route::get('language/switch/{language}', function (Request $request, $language) 
     return redirect()->back();
 })->name('language.switch');
 
-Route::get('/account-disable', function () {
-    return view('frontend.disable_view');
-})->name('frontend.disable_view');
+Route::middleware('auth')->name('frontend.')->group(function () {
+    Route::get('/account-disable', function (Request $request, BladeViewData $viewData) {
+        return view('frontend.disable_view', [
+            'accountActivationRequest' => $viewData->accountActivationRequest($request->user()),
+        ]);
+    })->name('disable_view');
 
-Route::get('/account-enble-req/{id}', function (Request $request, $id) {
-    $data['user_id'] = $id;
-    $data['status'] = 'pending';
-    Account_active_request::create($data);
-    flash()->addSuccess('Account enable request successfully');
+    Route::get('/account-enble-req/{user}', function (Request $request, User $user) {
+        abort_unless($request->user()->is($user), 403);
 
-    return redirect()->back();
-})->name('frontend.account_enble_req');
+        Account_active_request::updateOrCreate(
+            ['user_id' => $user->id],
+            ['status' => 'pending']
+        );
 
-//Modal controllers group routing
+        flash()->addSuccess('Account enable request successfully');
+
+        return redirect()->back();
+    })->name('account_enble_req');
+});
+
+// Modal controllers group routing
 Route::controller(ModalController::class)->middleware('auth', 'user', 'verified', 'activity')->group(function () {
     Route::any('/load_modal_content/{view_path}', 'common_view_function')->name('load_modal_content');
 });
 
-//Home controllers group routing
+// Home controllers group routing
 Route::controller(MainController::class)->middleware('auth', 'user', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {
     Route::get('/', 'timeline')->name('timeline');
     Route::post('/create_post', 'create_post')->name('create_post');
@@ -117,7 +127,7 @@ Route::controller(MainController::class)->middleware('auth', 'user', 'user', 've
     // share page view
     Route::get('custom/shared/post/view/{id}', 'custom_shared_post_view')->name('custom.shared.post.view');
 
-    //remove media files
+    // remove media files
     Route::get('media/file/delete/{id}', 'delete_media_file')->name('media.file.delete');
 
     // main addon layout
@@ -154,7 +164,7 @@ Route::controller(BadgeController::class)->middleware('auth', 'user', 'verified'
     Route::post('badge/payment_configuration/{id}', 'payment_configuration')->name('badge.payment_configuration');
 });
 
-//Story controllers group routing
+// Story controllers group routing
 Route::controller(StoryController::class)->middleware('auth', 'user', 'verified', 'activity')->group(function () {
     Route::post('/create_story', 'create_story')->name('create_story');
 
@@ -165,7 +175,7 @@ Route::controller(StoryController::class)->middleware('auth', 'user', 'verified'
     Route::any('/single_story_details/{story_id}', 'single_story_details')->name('single_story_details');
 });
 
-//Profile controllers group routing
+// Profile controllers group routing
 Route::controller(Profile::class)->middleware('auth', 'verified', 'user', 'activity', 'prevent-back-history')->group(function () {
     Route::get('/profile', 'profile')->name('profile');
     Route::get('/profile/load_post_by_scrolling', 'load_post_by_scrolling')->name('profile.load_post_by_scrolling');
@@ -203,7 +213,7 @@ Route::controller(Profile::class)->middleware('auth', 'verified', 'user', 'activ
     Route::get('/profile/check-ins', 'checkinsView')->name('profile.checkins_list');
 });
 
-//Updater routes are here
+// Updater routes are here
 Route::controller(Updater::class)->middleware('auth', 'verified', 'activity')->group(function () {
     Route::post('admin/addon/create', 'update')->name('admin.addon.create');
     Route::post('admin/addon/update', 'update')->name('admin.addon.update');
@@ -216,9 +226,9 @@ Route::controller(Updater::class)->middleware('auth', 'verified', 'activity')->g
     Route::get('admin/addon/delete/{id}', 'addon_delete')->name('addon.delete');
     Route::get('admin/addon/form', 'addon_form')->name('addon.form');
 });
-//End Updater routes
+// End Updater routes
 
-//Installation routes
+// Installation routes
 Route::prefix('install')->name('install.')->controller(InstallController::class)->group(function () {
     Route::get('/', 'index')->name('index');
     Route::get('step0', 'step0')->name('step0');
@@ -232,4 +242,4 @@ Route::prefix('install')->name('install.')->controller(InstallController::class)
     Route::match(['GET', 'POST'], 'finalizing_setup', 'finalizingSetup')->name('finalizing');
     Route::get('success', 'success')->name('success');
 });
-//Installation routes
+// Installation routes

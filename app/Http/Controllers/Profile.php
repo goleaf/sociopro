@@ -34,7 +34,7 @@ class Profile extends Controller
 
     public function profile()
     {
-        //For my own profile
+        // For my own profile
         $posts = Posts::where(function ($query) {
             $query->whereJsonContains('posts.tagged_user_ids', [$this->user->id])
                 ->where('posts.privacy', '!=', 'private')
@@ -56,7 +56,7 @@ class Profile extends Controller
 
     public function load_post_by_scrolling(Request $request)
     {
-        //For my own profile
+        // For my own profile
         $posts = Posts::where(function ($query) {
             $query->whereJsonContains('posts.tagged_user_ids', [$this->user->id])
                 ->where('posts.privacy', '!=', 'private')
@@ -270,7 +270,7 @@ class Profile extends Controller
     public function accept_friend_request(Request $request)
     {
         $response = [];
-        $follwer = new Follower();
+        $follwer = new Follower;
         $follwer->follow_id = $request->user_id;
         $follwer->user_id = auth()->user()->id;
         $follwer->save();
@@ -280,7 +280,7 @@ class Profile extends Controller
             ->update(['is_accepted' => 1]);
 
         if ($is_updated == 1) {
-            //update my friends id to my friend list
+            // update my friends id to my friend list
             $my_friends = User::where('id', $this->user->id)->value('friends');
             $my_friends = json_decode($my_friends);
             if (is_array($my_friends)) {
@@ -292,7 +292,7 @@ class Profile extends Controller
 
             User::where('id', $this->user->id)->update(['friends' => $my_friends]);
 
-            //update my id to my friend list
+            // update my id to my friend list
             $my_friends_of_friends = User::where('id', $request->user_id)->value('friends');
             $my_friends_of_friends = json_decode($my_friends_of_friends);
 
@@ -305,9 +305,9 @@ class Profile extends Controller
 
             User::where('id', $request->user_id)->update(['friends' => $my_friends_of_friends]);
 
-            //Send notification
+            // Send notification
             Notification::where('sender_user_id', (int) $request->user_id)->where('reciver_user_id', $this->user->id)->update(['status' => '1', 'view' => '1']);
-            $notify = new Notification();
+            $notify = new Notification;
             $notify->sender_user_id = auth()->user()->id;
             $notify->reciver_user_id = (int) $request->user_id;
             $notify->type = 'friend_request_accept';
@@ -384,11 +384,11 @@ class Profile extends Controller
 
             $file_name = FileUploader::upload($request->cover_photo, 'public/storage/cover_photo', 1120);
 
-            //Update to database
+            // Update to database
             $data['cover_photo'] = $file_name;
             Users::where('id', $this->user->id)->update($data);
 
-            //Ajax flush message
+            // Ajax flush message
             Session::flash('success_message', get_phrase('Cover photo updated'));
 
             return json_encode(['reload' => 1]);
@@ -415,10 +415,10 @@ class Profile extends Controller
         if ($request->profile_photo && ! empty($request->profile_photo)) {
             $file_name = FileUploader::upload($request->profile_photo, 'public/storage/userimage', 800);
 
-            //Create post for updating profile photo
+            // Create post for updating profile photo
             $this->create_profile_photo_post($request->profile_photo, $file_name);
 
-            //Update to database
+            // Update to database
             $data['photo'] = $file_name;
         }
 
@@ -429,7 +429,7 @@ class Profile extends Controller
         $data['date_of_birth'] = strtotime($request->date_of_birth);
         Users::where('id', $this->user->id)->update($data);
 
-        //Ajax flush message
+        // Ajax flush message
         Session::flash('success_message', get_phrase('Profile updated successfully'));
 
         return json_encode(['reload' => 1]);
@@ -454,7 +454,7 @@ class Profile extends Controller
         $data['updated_at'] = $data['created_at'];
         $post_id = Posts::insertGetId($data);
 
-        //Stored to media files table
+        // Stored to media files table
         $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => 'public'];
         $media_file_data['created_at'] = time();
         $media_file_data['updated_at'] = $media_file_data['created_at'];
@@ -480,14 +480,14 @@ class Profile extends Controller
         $data['updated_at'] = $data['created_at'];
         $post_id = Posts::insertGetId($data);
 
-        //Stored to media files table
+        // Stored to media files table
         $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => 'public'];
         $media_file_data['created_at'] = time();
         $media_file_data['updated_at'] = $media_file_data['created_at'];
         Media_files::create($media_file_data);
     }
 
-// Album
+    // Album
     public function single_post2($id)
     {
         $album_image = Album_image::where('id', $id)->first();

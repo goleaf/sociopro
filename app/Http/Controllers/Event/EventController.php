@@ -58,10 +58,10 @@ class EventController extends Controller
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
         if ($request->coverphoto && ! empty($request->coverphoto)) {
-            //Upload image
+            // Upload image
             $file_name = rand(1, 35000).'.'.$request->coverphoto->getClientOriginalExtension();
 
-            //thumbnail
+            // thumbnail
             $img = Image::make($request->coverphoto);
             $img->resize(325, null, function ($constraint) {
                 $constraint->aspectRatio();
@@ -77,7 +77,7 @@ class EventController extends Controller
             });
             $img->save(uploadTo('event/coverphoto').$file_name);
         }
-        $event = new Event();
+        $event = new Event;
 
         $event->user_id = Auth::user()->id;
         $event->title = $request->eventname;
@@ -128,10 +128,10 @@ class EventController extends Controller
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
         if ($request->coverphoto && ! empty($request->coverphoto)) {
-            //Upload image
+            // Upload image
             $file_name = rand(1, 35000).'.'.$request->coverphoto->getClientOriginalExtension();
 
-            //thumbnail
+            // thumbnail
             $img = Image::make($request->coverphoto);
             $img->resize(325, null, function ($constraint) {
                 $constraint->aspectRatio();
@@ -335,7 +335,7 @@ class EventController extends Controller
         return json_encode($response);
     }
 
-     // event Cancel
+    // event Cancel
     public function event_cancel($id)
     {
         $response = [];
@@ -368,13 +368,13 @@ class EventController extends Controller
     // invite to friend
     public function event_invite($invited_friend_id, $requester_id, $event_id)
     {
-        $invite = new Invite();
+        $invite = new Invite;
         $invite->invite_reciver_id = $invited_friend_id;
         $invite->invite_sender_id = $requester_id;
         $invite->event_id = $event_id;
         $done = $invite->save();
         if ($done) {
-            $notify = new Notification();
+            $notify = new Notification;
             $notify->sender_user_id = auth()->user()->id;
             $notify->reciver_user_id = $invited_friend_id;
             $notify->type = 'event';
@@ -405,7 +405,7 @@ class EventController extends Controller
         $url = url('/').'/event/'.$id;
 
         $response = [];
-        $sahre = new Share();
+        $sahre = new Share;
         $sahre->share_user_id = auth()->user()->id;
         $sahre->event_id = $id;
         $sahre->url = $url;
@@ -435,14 +435,14 @@ class EventController extends Controller
         $count = count($invited_event_users_id);
 
         for ($i = 0; $i < $count; $i++) {
-            $invite = new Invite();
+            $invite = new Invite;
             $invite->invite_sender_id = auth()->user()->id;
             $invite->invite_reciver_id = $invited_event_users_id[$i];
             $invite->is_accepted = '0';
             $invite->event_id = $request->event_id;
             $invite->save();
 
-            $notify = new Notification();
+            $notify = new Notification;
             $notify->sender_user_id = auth()->user()->id;
             $notify->reciver_user_id = $invited_event_users_id[$i];
             $notify->type = 'event';

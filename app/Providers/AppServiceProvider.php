@@ -26,8 +26,8 @@ class AppServiceProvider extends ServiceProvider
         //     dd("this is my third service container");
         // });
 
-        //Call from hole application
-        //Pattern: app()->make('first_service_helper');
+        // Call from hole application
+        // Pattern: app()->make('first_service_helper');
     }
 
     /**

@@ -9,6 +9,8 @@ class Stories extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'story_id';
+
     public $timestamps = false;
 
     /**

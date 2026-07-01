@@ -7,9 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class ConfigureDatabase
 {
-    public function __construct(private UpdateEnvironmentFile $environment)
-    {
-    }
+    public function __construct(private UpdateEnvironmentFile $environment) {}
 
     public function handle(): void
     {

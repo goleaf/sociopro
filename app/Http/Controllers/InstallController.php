@@ -12,6 +12,7 @@ use App\Http\Requests\Install\PrepareDatabaseConnectionRequest;
 use App\Http\Requests\Install\ValidatePurchaseCodeRequest;
 use App\Models\User;
 use DateTimeZone;
+use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,13 +23,12 @@ class InstallController extends Controller
 
     public function __construct(
         private ConfigureDatabase $configureDatabase
-    ) {
-    }
+    ) {}
 
     /**
      * Show the application dashboard.
      *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * @return Renderable
      */
     public function index()
     {
@@ -75,7 +75,8 @@ class InstallController extends Controller
         $purchase_code = $request->validated('purchase_code');
         session(['purchase_code' => $purchase_code]);
         session(['purchase_code_verified' => 1]);
-        //move to step 3
+
+        // move to step 3
         return redirect()->route('install.step3');
     }
 
@@ -199,9 +200,7 @@ class InstallController extends Controller
         return view('install.success', ['admin_email' => $admin->email]);
     }
 
-    private function configureRoutes(): void
-    {
-    }
+    private function configureRoutes(): void {}
 
     private function isLocalInstall(Request $request): bool
     {

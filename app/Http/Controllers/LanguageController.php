@@ -18,7 +18,7 @@ class LanguageController extends Controller
 
     public function language_add(Request $request)
     {
-        $lang = new Language();
+        $lang = new Language;
         $lang->name = $request->language;
         $lang->phrase = $request->language;
         $lang->translated = $request->language;

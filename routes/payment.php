@@ -16,6 +16,6 @@ Route::controller(PaymentController::class)->group(function () {
     Route::post('payment/make/order/{identifier}', 'payment_paytm')->name('make.order');
     Route::get('payment/make/{identifier}/status', 'paytm_paymentCallback')->name('payment.status');
 
-    //Paystack Pay
+    // Paystack Pay
     Route::post('paystack/payment/{identifier}', 'payment_success')->name('make.payment');
 });

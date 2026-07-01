@@ -38,12 +38,12 @@ class GroupController extends Controller
     {
         $page_data['group'] = Group::find($id);
         $posts = Posts::where('posts.privacy', '!=', 'private')
-                        ->where('posts.publisher', 'group')
-                        ->where('posts.publisher_id', $id)
-                        ->where('posts.status', 'active')
-                        ->join('users', 'posts.user_id', '=', 'users.id')
-                        ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
-                        ->orderBy('posts.post_id', 'DESC')->get();
+            ->where('posts.publisher', 'group')
+            ->where('posts.publisher_id', $id)
+            ->where('posts.status', 'active')
+            ->join('users', 'posts.user_id', '=', 'users.id')
+            ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
+            ->orderBy('posts.post_id', 'DESC')->get();
         $totalmember = Group_member::where('group_id', $id)->where('is_accepted', '1')->count();
 
         $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
@@ -71,7 +71,7 @@ class GroupController extends Controller
             $file_name = FileUploader::upload($request->image, 'public/storage/groups/logo', 300);
         }
 
-        $group = new Group();
+        $group = new Group;
         $group->user_id = auth()->user()->id;
         $group->title = $request->name;
         $group->subtitle = $request->subtitle;
@@ -83,7 +83,7 @@ class GroupController extends Controller
         }
         $done = $group->save();
         if ($done) {
-            $group_member = new Group_member();
+            $group_member = new Group_member;
             $group_member->group_id = $group->id;
             $group_member->user_id = auth()->user()->id;
             $group_member->role = 'admin';
@@ -109,7 +109,7 @@ class GroupController extends Controller
         }
 
         $group = Group::find($id);
-        //previous image name
+        // previous image name
         $imagename = $group->logo;
         if ($request->image && ! empty($request->image)) {
             $file_name = FileUploader::upload($request->image, 'public/storage/groups/logo', 300);
@@ -146,9 +146,9 @@ class GroupController extends Controller
         $imagename = $group->coverphoto;
 
         if ($request->cover_photo && ! empty($request->cover_photo)) {
-            //Upload image
+            // Upload image
             $file_name = rand(1, 35000).'.'.$request->cover_photo->getClientOriginalExtension();
-            //logo
+            // logo
             $img = Image::make($request->cover_photo);
             $img->resize(1120, null, function ($constraint) {
                 $constraint->aspectRatio();
@@ -174,7 +174,7 @@ class GroupController extends Controller
     public function join($id)
     {
         $response = [];
-        $group_member = new Group_member();
+        $group_member = new Group_member;
         $group_member->group_id = $id;
         $group_member->user_id = auth()->user()->id;
         $group_member->role = 'general';
@@ -238,7 +238,7 @@ class GroupController extends Controller
         $page_data['group'] = Group::find($id);
         $group_events = Event::where('group_id', $id)->where(function ($query) {
             $query->where('privacy', '!=', 'private')
-            ->orWhere('user_id', auth()->user()->id);
+                ->orWhere('user_id', auth()->user()->id);
         })->get();
         $page_data['group_events'] = $group_events;
         $page_data['view_path'] = 'frontend.groups.event';
@@ -250,7 +250,7 @@ class GroupController extends Controller
     {
         $response = [];
         if (is_array($request->images) && $request->images[0] != null) {
-            //Data validation
+            // Data validation
             $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
             $validator = Validator::make($request->images, $rules);
             if ($validator->fails()) {
@@ -260,7 +260,7 @@ class GroupController extends Controller
                 $file_name = FileUploader::upload($media_file, 'public/storage/album/images', 1000, null, 300);
                 $file_type = 'image';
 
-                $albumimage = new Album_image();
+                $albumimage = new Album_image;
                 $albumimage->user_id = auth()->user()->id;
                 $albumimage->album_id = $request->album;
                 $albumimage->image = $file_name;
@@ -384,14 +384,14 @@ class GroupController extends Controller
         $count = count($invited_group_users_id);
 
         for ($i = 0; $i < $count; $i++) {
-            $invite = new Invite();
+            $invite = new Invite;
             $invite->invite_sender_id = auth()->user()->id;
             $invite->invite_reciver_id = $invited_group_users_id[$i];
             $invite->is_accepted = '0';
             $invite->group_id = $request->group_id;
             $invite->save();
 
-            $notify = new Notification();
+            $notify = new Notification;
             $notify->sender_user_id = auth()->user()->id;
             $notify->reciver_user_id = $invited_group_users_id[$i];
             $notify->type = 'group';
@@ -403,30 +403,30 @@ class GroupController extends Controller
         return json_encode(['reload' => 1]);
     }
 
-  //New Album List
-  public function album_details_list($identifire, $album_id)
-  {
-      if ($identifire == 'profile') {
-          $view_path = 'frontend.profile.index';
-      } elseif ($identifire == 'customer') {
-          $view_path = 'frontend.profile.index';
-      } elseif ($identifire == 'albums') {
-          $view_path = 'frontend.profile.single_album_list_details';
-          $list = Albums::where('id', $album_id)->first();
-          $page_data['group'] = Group::find($list->group_id);
-      } else {
-          $view_path = 'frontend.profile.single_album_list_details';
-          $list = Albums::where('id', $album_id)->first();
-          $page_data['page'] = Page::find($list->page_id);
-      }
+    // New Album List
+    public function album_details_list($identifire, $album_id)
+    {
+        if ($identifire == 'profile') {
+            $view_path = 'frontend.profile.index';
+        } elseif ($identifire == 'customer') {
+            $view_path = 'frontend.profile.index';
+        } elseif ($identifire == 'albums') {
+            $view_path = 'frontend.profile.single_album_list_details';
+            $list = Albums::where('id', $album_id)->first();
+            $page_data['group'] = Group::find($list->group_id);
+        } else {
+            $view_path = 'frontend.profile.single_album_list_details';
+            $list = Albums::where('id', $album_id)->first();
+            $page_data['page'] = Page::find($list->page_id);
+        }
 
-      $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
-        ->take(15)->get();
+        $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
+            ->take(15)->get();
 
-      $page_data['album_id'] = $album_id;
-      $page_data['identifire'] = $identifire;
-      $page_data['view_path'] = $view_path;
+        $page_data['album_id'] = $album_id;
+        $page_data['identifire'] = $identifire;
+        $page_data['view_path'] = $view_path;
 
-      return view('frontend.index', $page_data);
-  }
+        return view('frontend.index', $page_data);
+    }
 }

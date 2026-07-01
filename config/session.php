@@ -196,7 +196,7 @@ return [
     |
      */
 
-    //'same_site' => 'lax',
-    'same_site' => null, //set null
+    // 'same_site' => 'lax',
+    'same_site' => null, // set null
 
 ];

@@ -53,7 +53,7 @@ if (! function_exists('remove_file')) {
     }
 }
 
-//All common helper functions
+// All common helper functions
 if (! function_exists('get_user_image')) {
     function get_user_image($file_name_or_user_id = '', $optimized = '')
     {
@@ -73,7 +73,7 @@ if (! function_exists('get_user_image')) {
             $user_id = $file_name_or_user_id;
             $file_name = DB::table('users')->where('id', $user_id)->value('photo');
 
-            //this file comes from another online link as like amazon s3 server
+            // this file comes from another online link as like amazon s3 server
             if (strpos($file_name, 'https://') !== false) {
                 return $file_name;
             }
@@ -86,7 +86,7 @@ if (! function_exists('get_user_image')) {
         } elseif (File::exists('public/storage/userimage/'.$optimized.$file_name) && is_file('public/storage/userimage/'.$optimized.$file_name)) {
             return asset('storage/userimage/'.$optimized.$file_name);
         } elseif (strpos($file_name, 'https://') !== false) {
-            //this file comes from another online link as like amazon s3 server
+            // this file comes from another online link as like amazon s3 server
             return $file_name;
         } else {
             return asset('storage/userimage/default.png');
@@ -113,7 +113,7 @@ if (! function_exists('get_cover_photo')) {
             $user_id = $file_name_or_user_id;
             $file_name = DB::table('users')->where('id', $user_id)->value('photo');
 
-            //this file comes from another online link as like amazon s3 server
+            // this file comes from another online link as like amazon s3 server
             if (strpos($file_name, 'https://') !== false) {
                 return $file_name;
             }
@@ -126,7 +126,7 @@ if (! function_exists('get_cover_photo')) {
         } elseif (File::exists('public/storage/cover_photo/'.$optimized.$file_name) && is_file('public/storage/cover_photo/'.$optimized.$file_name)) {
             return asset('storage/cover_photo/'.$optimized.$file_name);
         } elseif (strpos($file_name, 'https://') !== false) {
-            //this file comes from another online link as like amazon s3 server
+            // this file comes from another online link as like amazon s3 server
             return $file_name;
         } else {
             return asset('storage/cover_photo/default.jpg');
@@ -140,7 +140,7 @@ if (! function_exists('get_album_thumbnail')) {
         $optimized = $optimized.'/';
         $file_name = DB::table('albums')->where('id', $id)->value('thumbnail');
 
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -161,7 +161,7 @@ if (! function_exists('get_album_thumbnail')) {
 if (! function_exists('get_post_image')) {
     function get_post_image($file_name = '', $optimized = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -178,7 +178,7 @@ if (! function_exists('get_post_image')) {
 if (! function_exists('get_post_video')) {
     function get_post_video($file_name = '', $optimized = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -293,7 +293,7 @@ if (! function_exists('date_formatter')) {
             if ($time_difference <= 10) {
                 return get_phrase('Just now');
             }
-            //864000 = 10 days
+            // 864000 = 10 days
             if ($time_difference > 864000) {
                 return date_formatter($strtotime, 3);
             }
@@ -472,11 +472,11 @@ function aasort(&$array, $key)
     $array = $ret;
 }
 
-//get marketplace product image
+// get marketplace product image
 if (! function_exists('get_product_image')) {
     function get_product_image($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -495,11 +495,11 @@ if (! function_exists('get_product_image')) {
     }
 }
 
-//get sponsor post  image
+// get sponsor post  image
 if (! function_exists('get_sponsor_image')) {
     function get_sponsor_image($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -518,11 +518,11 @@ if (! function_exists('get_sponsor_image')) {
     }
 }
 
-//get blog product image
+// get blog product image
 if (! function_exists('get_blog_image')) {
     function get_blog_image($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -544,7 +544,7 @@ if (! function_exists('get_blog_image')) {
 if (! function_exists('get_job_image')) {
     function get_job_image($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -563,11 +563,11 @@ if (! function_exists('get_job_image')) {
     }
 }
 
-//get page logo
+// get page logo
 if (! function_exists('get_page_logo')) {
     function get_page_logo($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -586,11 +586,11 @@ if (! function_exists('get_page_logo')) {
     }
 }
 
-//get page cover photo
+// get page cover photo
 if (! function_exists('get_page_cover_photo')) {
     function get_page_cover_photo($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -609,11 +609,11 @@ if (! function_exists('get_page_cover_photo')) {
     }
 }
 
-//get page logo
+// get page logo
 if (! function_exists('get_group_logo')) {
     function get_group_logo($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -632,11 +632,11 @@ if (! function_exists('get_group_logo')) {
     }
 }
 
-//get group cover photo
+// get group cover photo
 if (! function_exists('get_group_cover_photo')) {
     function get_group_cover_photo($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -655,11 +655,11 @@ if (! function_exists('get_group_cover_photo')) {
     }
 }
 
-//get system dark logo
+// get system dark logo
 if (! function_exists('get_system_logo_favicon')) {
     function get_system_logo_favicon($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }

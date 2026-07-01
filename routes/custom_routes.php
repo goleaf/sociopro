@@ -62,7 +62,7 @@ Route::controller(MarketplaceController::class)->middleware('auth', 'user', 'ver
     Route::get('/load_product_by_scrolling', 'load_product_by_scrolling')->name('load_product_by_scrolling');
     Route::get('product/view/{id}', 'single_product')->name('single.product');
 
-    //Route::get('/product/filter/{category?}/{max?}/{min?}/{brand?}/{location?}', 'filter')->name('filter.product');
+    // Route::get('/product/filter/{category?}/{max?}/{min?}/{brand?}/{location?}', 'filter')->name('filter.product');
     Route::get('/product/filter/{max?}/{min?}/{location?}', 'filter')->name('filter.product');
 
     Route::get('/product/saved/', 'saved_product')->name('product.saved');
@@ -270,7 +270,7 @@ Route::controller(SettingController::class)->group(function () {
     // Admin Color Save
     Route::get('admin/system/settings/color/save/{themeColor}', 'system_settings_color_save')->name('admin.system.settings.color.save')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
-    //Zitsi  Settings
+    // Zitsi  Settings
     Route::get('admin/zitsi-video/setting/view', 'zitsi_video_edit_form')->name('admin.zitsi-video.view')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
     Route::post('admin/jitsi/live/settings/update', 'zitsi_live_video_update')->name('admin.zitsi.live.settings.update');
 });
@@ -338,7 +338,7 @@ Route::controller(AdminCrudController::class)->group(function () {
 
     // Badge Raoute Here
 
-    //Job Route Start Here
+    // Job Route Start Here
     if (class_exists(Job::class)) {
         // Admin Control Route for job
         Route::get('admin/job/category/view/', 'view_job_category')->name('admin.view.job.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
@@ -367,7 +367,7 @@ Route::controller(AdminCrudController::class)->group(function () {
         Route::get('admin/job/price/view/', 'settings_view')->name('admin.job.price.view')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
         Route::POST('admin/job/price/save/', 'settings_save')->name('admin.job.price.view.save')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
     }
-    //Job Route End Here
+    // Job Route End Here
 
     Route::get('admin/page/category/view/', 'view_category')->name('admin.view.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
     Route::get('admin/page/category/create/', 'create_category')->name('admin.create.category')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
@@ -406,7 +406,7 @@ Route::controller(AdminCrudController::class)->group(function () {
     Route::get('admin/payment_gateway/status/{id}', 'payment_gateway_status')->name('admin.payment_gateway.status')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
     Route::get('admin/payment_gateway/environment/{id}', 'payment_gateway_environment')->name('admin.payment_gateway.environment')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
-    //System About routes
+    // System About routes
     Route::get('admin/settings/about', 'about')->name('admin.about');
     Route::any('admin/save_valid_purchase_code/{action_type?}', 'save_valid_purchase_code')->name('admin.save_valid_purchase_code');
 });
@@ -434,7 +434,7 @@ Route::controller(NotificationController::class)->middleware('auth', 'verified',
     Route::get('/decline/event/request/notification/{id}/{event_id}', 'decline_event_notification')->name('decline.event.request.from.notification');
 
     Route::get('/mark/as/read/notification/{id}', 'mark_as_read')->name('mark.as.read.notification');
-    //fundraiser
+    // fundraiser
     Route::get('/accept/fundraiser/request/notification/{id}/{fundraiser_id}', 'accept_fundraiser_notification')->name('accept.fundraiser.request.from.notification');
     Route::get('/decline/fundraiser/request/notification/{id}/{fundraiser_id}', 'decline_fundraiser_notification')->name('decline.fundraiser.request.from.notification');
 });

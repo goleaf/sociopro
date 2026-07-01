@@ -53,7 +53,7 @@ class BlogController extends Controller
             FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
         }
 
-        $blog = new Blog();
+        $blog = new Blog;
         $blog->user_id = Auth::user()->id;
         $blog->title = $request->title;
         $blog->category_id = $request->category;
@@ -158,10 +158,10 @@ class BlogController extends Controller
     {
         $page_data['comments'] = Comments::where('is_type', 'blog')->where('id_of_type', $id)->get();
         $page_data['socailshare'] = Share::currentPage()
-                            ->facebook()
-                            ->twitter()
-                            ->linkedin()
-                            ->telegram()->getRawLinks();
+            ->facebook()
+            ->twitter()
+            ->linkedin()
+            ->telegram()->getRawLinks();
         $blog = Blog::find($id);
         $blog_view_data = json_decode($blog->view);
         if (! in_array(auth()->user()->id, $blog_view_data)) {

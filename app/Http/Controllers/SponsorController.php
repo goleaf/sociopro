@@ -35,7 +35,7 @@ class SponsorController extends Controller
         $file_ext = $request->file('image')->extension();
         $filename = rand(0, 1000).'.'.$file_ext;
 
-        $sponsor = new Sponsor();
+        $sponsor = new Sponsor;
         $sponsor->user_id = auth()->user()->id;
         $sponsor->name = $request->name;
         $sponsor->image = $filename;

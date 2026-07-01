@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Addon;
 use DB;
-//database migration
+// database migration
 
-//Used for Form data validation
+// Used for Form data validation
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use ZipArchive;
@@ -17,7 +17,7 @@ class Updater extends Controller
     {
         $addons_parent_id = null;
 
-        //check required version
+        // check required version
         $product_current_version = DB::table('settings')->where('type', 'version')->value('description');
 
         $rules = ['file' => 'required|file|mimes:zip'];
@@ -26,18 +26,18 @@ class Updater extends Controller
             return redirect()->back()->with('error', get_phrase('Select a valid zip file'));
         }
 
-        //Create update directory
+        // Create update directory
         $dir = 'upload';
         if (! is_dir($dir)) {
             mkdir($dir, 0777, true);
         }
 
-        //Uploaded file name
+        // Uploaded file name
         $file_name = $request->file->getClientOriginalName();
         $path = $dir.'/'.$file_name;
 
         if (class_exists('ZipArchive')) {
-            //File uploading..
+            // File uploading..
             $request->file->move(base_path($dir), $request->file->getClientOriginalName());
 
             // Unzip uploaded update file and remove zip file.
@@ -67,9 +67,9 @@ class Updater extends Controller
         // print_r($config);
         // die();
 
-        //check ias addon or main product update
+        // check ias addon or main product update
         if (array_key_exists('is_addon', $config) && strval($config['is_addon']) == '1') {
-            //check required main product version to install this addon
+            // check required main product version to install this addon
             if ($config['product_version']['minimum_required_version'] > $product_current_version) {
                 return redirect()->back()->with('error', get_phrase("You have to update your main application's version.").'('.$config['product_version']['minimum_required_version'].') '.get_phrase(' to install the addon'));
             }
@@ -81,7 +81,7 @@ class Updater extends Controller
                 $addons_current_version = '0';
             }
 
-            //check required addon version to update this addon
+            // check required addon version to update this addon
             // if (strval($config['addon_version']['minimum_required_version']) != strval($addons_current_version)) {
             // 	return redirect()->back()->with('error', get_phrase('It looks like you are skipping a version') . '. ' . get_phrase('Please update version') . ' ' . $config['addon_version']['minimum_required_version'] . ' ' . get_phrase('first'));
             // }
@@ -105,16 +105,16 @@ class Updater extends Controller
                 }
             }
         } else {
-            //check required main product version
+            // check required main product version
             if (strval($config['product_version']['minimum_required_version']) != strval($product_current_version)) {
                 return redirect()->back()->with('error', get_phrase('It looks like you are skipping a version').'. '.get_phrase('Please update version').' '.$config['product_version']['minimum_required_version'].' '.get_phrase('first'));
             }
         }
 
-        //Update files, folders and libraries
+        // Update files, folders and libraries
         $this->fileAndFolderDistributor($uploaded_folder_name);
 
-        //run SQL file
+        // run SQL file
         $sql = file_get_contents(base_path($dir.'/'.$uploaded_folder_name.'/step3_database.sql'));
         if ($sql) {
             DB::unprepared($sql);
@@ -155,7 +155,7 @@ class Updater extends Controller
                 $all_available_sub_paths = count(glob($uploaded_sub_dir_path.'/*'));
 
                 if ($all_available_sub_paths == 0) {
-                    //Create directory
+                    // Create directory
                     $application_dir_path = str_replace('upload/'.$param2.'/sources/', '', $uploaded_sub_dir_path);
                     if (! is_dir($application_dir_path)) {
                         mkdir($application_dir_path, 0777, true);
@@ -166,7 +166,7 @@ class Updater extends Controller
             } else {
                 $application_file_path = str_replace('upload/'.$param2.'/sources/', '', $uploaded_sub_dir_path);
 
-                //Check dir. If not exist then created
+                // Check dir. If not exist then created
                 $file_path_arr = explode('/', $application_file_path);
                 $file_name = $file_path_arr[count($file_path_arr) - 1];
                 $application_dir_path = str_replace('/'.$file_name, '', $application_file_path);
@@ -174,10 +174,10 @@ class Updater extends Controller
                     mkdir($application_dir_path, 0777, true);
                 }
 
-                //Copy file to application path
+                // Copy file to application path
                 copy($uploaded_sub_dir_path, $application_file_path);
 
-                //Zip file extract for any big size libraries
+                // Zip file extract for any big size libraries
                 if (pathinfo($file_name, PATHINFO_EXTENSION) == 'zip') {
                     // PATH OF EXTRACTING LIBRARY FILE
                     array_pop($file_path_arr);

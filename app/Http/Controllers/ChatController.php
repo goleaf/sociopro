@@ -52,7 +52,7 @@ class ChatController extends Controller
             $query->where('sender_id', $user_id)
                 ->where('reciver_id', $reciver);
         })
-        ->first();
+            ->first();
 
         $messageThradeCount = Message_thrade::where(function ($query) use ($reciver, $user_id) {
             $query->where('sender_id', $reciver)
@@ -61,16 +61,16 @@ class ChatController extends Controller
             $query->where('sender_id', $user_id)
                 ->where('reciver_id', $reciver);
         })
-        ->count();
+            ->count();
 
         if ($messageThradeCount <= 0) {
-            $messageThrade = new Message_thrade();
+            $messageThrade = new Message_thrade;
             $messageThrade->sender_id = auth()->user()->id;
             $messageThrade->reciver_id = $request->reciver_id;
             $messageThrade->chatcenter = $request->messagecenter;
             $done = $messageThrade->save();
             if ($done) {
-                $chat = new Chat();
+                $chat = new Chat;
                 $chat->reciver_id = $request->reciver_id;
                 $chat->sender_id = auth()->user()->id;
                 $chat->chatcenter = $request->messagecenter;
@@ -82,7 +82,7 @@ class ChatController extends Controller
                 $last_chat_id = $chat->id;
 
                 if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                    //Data validation
+                    // Data validation
                     $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
                     $validator = Validator::make($request->multiple_files, $rules);
                     if ($validator->fails()) {
@@ -119,7 +119,7 @@ class ChatController extends Controller
                 return json_encode($response);
             }
         } else {
-            $chat = new Chat();
+            $chat = new Chat;
             $chat->reciver_id = $request->reciver_id;
             $chat->sender_id = auth()->user()->id;
             $chat->chatcenter = $request->messagecenter;
@@ -131,7 +131,7 @@ class ChatController extends Controller
             $last_chat_id = $chat->id;
 
             if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                //Data validation
+                // Data validation
                 $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
                 $validator = Validator::make($request->multiple_files, $rules);
                 if ($validator->fails()) {
@@ -148,7 +148,7 @@ class ChatController extends Controller
                         FileUploader::upload($media_file, 'public/storage/chat/images/'.$file_name, 1000, null, 300);
                         $file_type = 'image';
                     }
-                    //$file_name = $file_name.'.'.$file_extention;
+                    // $file_name = $file_name.'.'.$file_extention;
 
                     $media_file_data = ['user_id' => auth()->user()->id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public'];
 
@@ -217,9 +217,9 @@ class ChatController extends Controller
             $lastMsg = Chat::where(function ($query) use ($user) {
                 $query->where('reciver_id', $user->id)->where('sender_id', auth()->user()->id);
             })
-            ->orWhere(function ($query) use ($user) {
-                $query->where('sender_id', $user->id)->where('reciver_id', auth()->user()->id);
-            })->limit(1)->orderBy('id', 'desc')->first();
+                ->orWhere(function ($query) use ($user) {
+                    $query->where('sender_id', $user->id)->where('reciver_id', auth()->user()->id);
+                })->limit(1)->orderBy('id', 'desc')->first();
 
             $lastText = $lastMsg->thumbsup == '1' ? "<i class='fa-solid fa-thumbs-up'></i>" : $lastMsg->message;
             $output .= '<div class="single-contact d-flex align-items-center justify-content-between">
@@ -271,7 +271,7 @@ class ChatController extends Controller
         }
     }
 
-//not using right now if need then we can use this
+    // not using right now if need then we can use this
     public function chat_read_optionN()
     {
         $id = $_GET['id'];

@@ -162,19 +162,19 @@
                                 <div class="profile-control dropdown">
                                     <button class="dropdown-toggle" type="button" id="dropdownMenuButton1"
                                         data-bs-toggle="dropdown" aria-expanded="false">
-                                        <img src="{{ get_user_image(auth()->user()->photo, 'optimized') }}"
+                                        <img src="{{ get_user_image($user_info->photo, 'optimized') }}"
                                             class="rounded-circle" alt="">
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                         <li><a class="dropdown-item"
                                                 href="{{ route('profile') }}">{{ get_phrase('My Profile') }}</a></li>
-                                        @if (auth()->user()->user_role == 'admin')
+                                        @if ($user_info->user_role == 'admin')
                                             <li><a class="dropdown-item"
                                                     href="{{ route('admin.dashboard') }}">{{ get_phrase('Go to admin panel') }}</a>
                                             </li>
                                         @endif
     
-                                        @if (auth()->user()->user_role == 'general')
+                                        @if ($user_info->user_role == 'general')
                                             <li><a class="dropdown-item"
                                                     href="{{ route('user.dashboard') }}">{{ get_phrase('Dashboard') }}</a>
                                             </li>
@@ -191,10 +191,10 @@
                                             </a>
                                         </li>
                                         
-                                        @if (auth()->user()->status == 1)
+                                        @if ($user_info->status == 1)
                                             <li>
-                                                <a href="javascript:void(0)" 
-                                                onclick="confirmAction('{{ route('user.status', ['id' => auth()->user()->id]) }}', true)" 
+                                                <a href="javascript:void(0)"
+                                                onclick="confirmAction('{{ route('user.status', ['id' => $user_info->id]) }}', true)"
                                                 class="dropdown-item">{{ get_phrase('Account Deactivate') }}</a>
     
                                                 {{-- <a class="dropdown-item" href="javascript:void(0)"
@@ -242,27 +242,21 @@
                     <!-- Timeline Navigation End -->
 
                     <!-- Content Section Start -->
-                    @php
-                       $acc_act_req = DB::table('account_active_requests')
-                     ->where('user_id', auth()->user()->id)
-                     ->first();
-                          
-                    @endphp
                     <div class="col-lg-6 col-sm-12 order-3 order-lg-2">
                         <div class="newsfeed-form single-entry mt-5">
                             <div class="entry-inner current-entry">
                                 <h4 class="widget-title">{{get_phrase('Your account has been Deactivate')}}</h4>
                                 <p class="ellipsis-line-3 pe-2 text-dark p-2 ">{{get_phrase('Click the button to request account activation from the admin.')}}</p>
-                                @if($acc_act_req)
-                                    @if($acc_act_req->status == 'pending')
+                                @if($accountActivationRequest)
+                                    @if($accountActivationRequest->status == 'pending')
                                         <button class="btn common_btn w-100 mb-4">{{ get_phrase('Account Active Request Pending') }}</button>
                                     @else
-                                        <form action="{{ route('frontend.account_enble_req', ['id' => auth()->user()->id]) }}">
+                                        <form action="{{ route('frontend.account_enble_req', ['user' => $user_info->id]) }}">
                                             <button type="submit" class="btn common_btn w-100 mb-4">{{ get_phrase('Account Active Request') }}</button>
                                         </form>
                                     @endif
                                 @else
-                                    <form action="{{ route('frontend.account_enble_req', ['id' => auth()->user()->id]) }}">
+                                    <form action="{{ route('frontend.account_enble_req', ['user' => $user_info->id]) }}">
                                         <button type="submit" class="btn common_btn w-100">{{ get_phrase('Request Account Activation') }}</button>
                                     </form>
                                 @endif

@@ -6,7 +6,7 @@ use App\Models\FileUploader;
 use App\Models\Posts;
 use App\Models\Saveforlater;
 use App\Models\Video;
-//Used for Form data validation
+// Used for Form data validation
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Session;
@@ -33,7 +33,7 @@ class VideoController extends Controller
 
         $mobile_app_image = FileUploader::upload($request->mobile_app_image, 'public/storage/videos');
 
-        $video = new Video();
+        $video = new Video;
         $video->title = $request->title;
         $video->user_id = auth()->user()->id;
         $video->privacy = $request->privacy;
@@ -43,7 +43,7 @@ class VideoController extends Controller
         $video->view = json_encode([]);
         $done = $video->save();
         if ($done) {
-            $post = new Posts();
+            $post = new Posts;
             $post->user_id = auth()->user()->id;
             $post->publisher = 'video_and_shorts';
             $post->publisher_id = $video->id;
@@ -66,10 +66,10 @@ class VideoController extends Controller
     public function videoinfo($id)
     {
         $page_data['post'] = Posts::where('posts.privacy', '!=', 'private')
-        ->where('posts.publisher', 'video_and_shorts')
-        ->where('posts.publisher_id', $id)
-        ->where('posts.status', 'active')
-        ->first();
+            ->where('posts.publisher', 'video_and_shorts')
+            ->where('posts.publisher_id', $id)
+            ->where('posts.status', 'active')
+            ->first();
 
         $video = Video::find($id);
         $page_data['video'] = $video;
@@ -117,7 +117,7 @@ class VideoController extends Controller
 
     public function save_for_later($id)
     {
-        $saveforlater = new Saveforlater();
+        $saveforlater = new Saveforlater;
         $saveforlater->user_id = auth()->user()->id;
         $saveforlater->video_id = $id;
         $saveforlater->save();

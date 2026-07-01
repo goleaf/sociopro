@@ -15,13 +15,16 @@ use App\Models\Follower;
 use App\Models\Friendships;
 use App\Models\Fundraiser;
 use App\Models\Fundraiser_donation;
+use App\Models\Fundraiser_payout;
 use App\Models\Group;
 use App\Models\Group_member;
 use App\Models\Invite;
+use App\Models\Job;
 use App\Models\Marketplace;
 use App\Models\Media_files;
 use App\Models\Page;
 use App\Models\PaidContentCreator;
+use App\Models\PaidContentPayout;
 use App\Models\Post_share;
 use App\Models\Posts;
 use App\Models\Saveforlater;
@@ -729,21 +732,21 @@ final class BladeViewData
 
     public function pendingPaidContentPayoutCount(): int
     {
-        return $this->remember('pending-paid-content-payout-count', fn (): int => \App\Models\PaidContentPayout::query()
+        return $this->remember('pending-paid-content-payout-count', fn (): int => PaidContentPayout::query()
             ->where('status', false)
             ->count());
     }
 
     public function pendingFundraiserPayoutCount(): int
     {
-        return $this->remember('pending-fundraiser-payout-count', fn (): int => \App\Models\Fundraiser_payout::query()
+        return $this->remember('pending-fundraiser-payout-count', fn (): int => Fundraiser_payout::query()
             ->where('status', false)
             ->count());
     }
 
     public function pendingJobCount(): int
     {
-        return $this->remember('pending-job-count', fn (): int => \App\Models\Job::query()
+        return $this->remember('pending-job-count', fn (): int => Job::query()
             ->where('status', 0)
             ->count());
     }

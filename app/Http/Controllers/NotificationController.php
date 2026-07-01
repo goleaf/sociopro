@@ -31,7 +31,7 @@ class NotificationController extends Controller
         Notification::where('sender_user_id', $id)->where('reciver_user_id', auth()->user()->id)->update(['status' => '1', 'view' => '1']);
 
         if ($is_updated == 1) {
-            //update my id to my friend list
+            // update my id to my friend list
             $my_friends = User::where('id', auth()->user()->id)->value('friends');
             $my_friends = json_decode($my_friends);
             if (is_array($my_friends)) {
@@ -43,7 +43,7 @@ class NotificationController extends Controller
 
             User::where('id', auth()->user()->id)->update(['friends' => $my_friends]);
 
-            //update my id to my friend list
+            // update my id to my friend list
             $my_friends_of_friends = User::where('id', $id)->value('friends');
             $my_friends_of_friends = json_decode($my_friends_of_friends);
 
@@ -57,7 +57,7 @@ class NotificationController extends Controller
             User::where('id', $id)->update(['friends' => $my_friends_of_friends]);
         }
 
-        $notify = new Notification();
+        $notify = new Notification;
         $notify->sender_user_id = auth()->user()->id;
         $notify->reciver_user_id = $id;
         $notify->type = 'friend_request_accept';
@@ -87,7 +87,7 @@ class NotificationController extends Controller
         $is_updated = Invite::where('invite_sender_id', $id)->where('invite_reciver_id', auth()->user()->id)->where('group_id', $group_id)->update(['is_accepted' => '1']);
         $notify = Notification::where('sender_user_id', $id)->where('reciver_user_id', auth()->user()->id)->update(['status' => '1', 'view' => '1']);
 
-        $notify = new Notification();
+        $notify = new Notification;
         $notify->sender_user_id = auth()->user()->id;
         $notify->reciver_user_id = $id;
         $notify->type = 'group_invitation_accept';
@@ -117,7 +117,7 @@ class NotificationController extends Controller
         $notify = Notification::where('sender_user_id', $id)->where('reciver_user_id', auth()->user()->id)->update(['status' => '1', 'view' => '1']);
 
         if ($is_updated == '1') {
-            //update my friends id to my friend list
+            // update my friends id to my friend list
             $going_users_id = Event::where('id', $event_id)->value('going_users_id');
             $going_users_id = json_decode($going_users_id);
             array_push($going_users_id, (int) $id);
@@ -126,7 +126,7 @@ class NotificationController extends Controller
             Event::where('id', $event_id)->update(['going_users_id' => $going_users_id]);
         }
 
-        $notify = new Notification();
+        $notify = new Notification;
         $notify->sender_user_id = auth()->user()->id;
         $notify->reciver_user_id = $id;
         $notify->type = 'event_invitation_accept';
@@ -161,7 +161,7 @@ class NotificationController extends Controller
         return json_encode($response);
     }
 
-//fundraiser................
+    // fundraiser................
 
     public function accept_fundraiser_notification($id, $fundraiser_id)
     {
@@ -169,7 +169,7 @@ class NotificationController extends Controller
         $is_updated = Invite::where('invite_sender_id', $id)->where('invite_reciver_id', auth()->user()->id)->where('fundraiser_id', $fundraiser_id)->update(['is_accepted' => '1']);
         $notify = Notification::where('sender_user_id', $id)->where('reciver_user_id', auth()->user()->id)->update(['status' => '1', 'view' => '1']);
 
-        $notify = new Notification();
+        $notify = new Notification;
         $notify->sender_user_id = auth()->user()->id;
         $notify->reciver_user_id = $id;
         $notify->type = 'fundraiser_request_accept';

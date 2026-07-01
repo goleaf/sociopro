@@ -6,16 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Providers\RouteServiceProvider;
 use DB;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
      *
-     * @return \Illuminate\View\View
+     * @return View
      */
     public function create()
     {
@@ -25,7 +27,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(LoginRequest $request)
     {
@@ -43,7 +45,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Destroy an authenticated session.
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function destroy(Request $request)
     {
@@ -62,17 +64,17 @@ class AuthenticatedSessionController extends Controller
 
     public function dataReplace($type = '')
     {
-        //Need to add the schema on top of class, before using this function
-        //use Illuminate\Support\Facades\Schema;
-        //use DB;
+        // Need to add the schema on top of class, before using this function
+        // use Illuminate\Support\Facades\Schema;
+        // use DB;
 
-        //Restore data only for demo
+        // Restore data only for demo
         if ($type == 'logout') {
             DB::unprepared(file_get_contents(base_path('public/assets/restore.sql')));
         }
 
-        //Date update to show demo data every time
-        $databaseName = \DB::connection()->getDatabaseName();
+        // Date update to show demo data every time
+        $databaseName = DB::connection()->getDatabaseName();
         $databaseNameObject = 'Tables_in_'.$databaseName;
         $tables = DB::select('SHOW TABLES');
         foreach ($tables as $key => $table) {

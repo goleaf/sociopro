@@ -61,7 +61,7 @@ class PaymentController extends Controller
         $payment_gateway = $this->paymentGateway($identifier);
         $model_full_path = $this->gatewayModelClass($payment_gateway);
 
-        $paymentGateway = new $model_full_path();
+        $paymentGateway = new $model_full_path;
         $status = $paymentGateway->payment_status($identifier, $request->all());
 
         if ($status === true) {
@@ -138,7 +138,7 @@ class PaymentController extends Controller
 
             return redirect()->route('initiate.payment')->with('message', 'Your payment is processing.');
         }
-        $transaction->getResponseMessage(); //Get Response Message If Available
+        $transaction->getResponseMessage(); // Get Response Message If Available
 
         // $transaction->getOrderId(); // Get order id
     }

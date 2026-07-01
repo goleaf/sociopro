@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FileUploader;
 use App\Models\Media_files;
 use App\Models\Stories;
-//used models
-use DB;
+use App\Queries\StoriesQuery;
 use Illuminate\Http\Request;
 use Session;
 
@@ -25,18 +24,10 @@ class StoryController extends Controller
 
     public function stories($offset = 0, $limit = 5)
     {
-        //Stories
-        $stories = DB::table('stories')
-            ->join('users', 'stories.user_id', '=', 'users.id')
-            ->select('stories.*', 'users.name', 'users.photo', 'users.friends', 'stories.created_at as created_at')
-            ->where(function ($query) {
-                $query->whereJsonContains('users.friends', [$this->user->id])
-                ->where('stories.privacy', '!=', 'private')
-                ->orWhere('stories.user_id', $this->user->id);
-            })
-            ->where('stories.status', 'active')
-            ->where('stories.created_at', '>=', (time() - 86400))
-            ->skip($offset)->take($limit)->orderBy('stories.story_id', 'DESC')->get();
+        $stories = StoriesQuery::visibleFor($this->user)
+            ->skip($offset)
+            ->take($limit)
+            ->get();
 
         $page_data['stories'] = $stories;
 
@@ -45,24 +36,12 @@ class StoryController extends Controller
 
     public function story_details($story_id = '', $offset = 0, $limit = 10)
     {
-        //First 10 stories
-        $stories = DB::table('stories')
-            ->join('users', 'stories.user_id', '=', 'users.id')
-            ->select('stories.*', 'users.name', 'users.photo', 'users.friends', 'stories.created_at as created_at')
-            ->where(function ($query) {
-                $query->whereJsonContains('users.friends', [$this->user->id])
-                ->orWhere('stories.user_id', [$this->user->id]);
-            })
+        $stories = StoriesQuery::visibleFor($this->user)
             ->where('stories.privacy', '!=', 'private')
-            ->where('stories.created_at', '>=', (time() - 86400))
-            ->where('stories.status', 'active')
-            ->whereNotIn('stories.story_id', [$story_id])->orderBy('stories.story_id', 'DESC')->get();
+            ->whereNotIn('stories.story_id', [$story_id])
+            ->get();
 
-        //Stories
-        $story_details = DB::table('stories')
-        ->select('stories.*', 'users.name', 'users.photo', 'users.friends', 'stories.created_at as created_at')
-        ->join('users', 'stories.user_id', '=', 'users.id')
-        ->where('stories.story_id', $story_id)->get()->first();
+        $story_details = StoriesQuery::findWithOwner($story_id);
 
         $page_data['stories'] = $stories;
         $page_data['story_details'] = $story_details;
@@ -72,11 +51,7 @@ class StoryController extends Controller
 
     public function single_story_details($story_id = '')
     {
-        //Stories
-        $story_details = DB::table('stories')
-        ->select('stories.*', 'users.name', 'users.photo', 'users.friends', 'stories.created_at as created_at')
-        ->join('users', 'stories.user_id', '=', 'users.id')
-        ->where('stories.story_id', $story_id)->get()->first();
+        $story_details = StoriesQuery::findWithOwner($story_id);
 
         $page_data['story_details'] = $story_details;
 
@@ -120,7 +95,7 @@ class StoryController extends Controller
                 return redirect()->route('timeline');
             }
 
-            //add media files
+            // add media files
             foreach ($request->story_files as $key => $media_file) {
                 if (! empty($media_file)) {
                     $file_extention = $media_file->getClientOriginalExtension();

@@ -44,8 +44,8 @@ use App\Models\Stories;
 use App\Models\User;
 use App\Models\Users;
 use App\Models\Video;
-use App\Queries\FriendshipsQuery;
 use App\Providers\RouteServiceProvider;
+use App\Queries\FriendshipsQuery;
 use Carbon\Carbon;
 use DB;
 use Exception;
@@ -107,7 +107,7 @@ class ApiController extends Controller
 
             return response($response, 201);
         } else {
-            //user not authorized
+            // user not authorized
             return response()->json([
                 'message' => 'User not found!',
             ], 400);
@@ -406,6 +406,7 @@ class ApiController extends Controller
         //     $response = array();
         // }
         $data = $users;
+
         // }
         return $data;
         // }
@@ -453,7 +454,7 @@ class ApiController extends Controller
             $user_id = auth('sanctum')->user()->id;
             $user = User::find($user_id);
 
-            //First 10 stories
+            // First 10 stories
             $stories = Stories::where(function ($query) use ($user_id) {
                 $query->whereJsonContains('users.friends', [$user_id])
                     ->where('stories.privacy', '!=', 'private')
@@ -514,13 +515,13 @@ class ApiController extends Controller
             //     $timeline_story = [];
             //    }
 
-            //First 10 posts
+            // First 10 posts
             $posts = Posts::where(function ($query) use ($user_id) {
                 $query->whereJsonContains('users.friends', [$user_id])
                     ->where('posts.privacy', '!=', 'private')
                     ->orWhere('posts.user_id', $user_id)
 
-                    //if folowing any users, pages, groups and others if not friend listed
+                    // if folowing any users, pages, groups and others if not friend listed
                     ->orWhere(function ($query3) {
                         $query3->where('posts.privacy', 'public')
                             ->where(function ($query4) {
@@ -967,7 +968,7 @@ class ApiController extends Controller
             $story_id = Stories::insertGetId($data);
 
             if ($request->content_type != 'text') {
-                //add media files
+                // add media files
                 // foreach ($request->story_files as $key => $media_file) {
                 // Check if media file is not empty and handle file upload
                 $media_file = $request->story_files;
@@ -994,7 +995,7 @@ class ApiController extends Controller
                 }
             }
 
-        // }
+            // }
         } else {
             $response['success'] = false;
             $response['message'] = 'Invalid token.';
@@ -1021,7 +1022,7 @@ class ApiController extends Controller
                     ->where('posts.privacy', '!=', 'private')
                     ->orWhere('posts.user_id', $user_id)
 
-                    //if following any users, pages, groups and others if not friend listed
+                    // if following any users, pages, groups and others if not friend listed
                     ->orWhere(function ($query3) {
                         $query3->where('posts.privacy', 'public')
                             ->where(function ($query4) {
@@ -1183,13 +1184,13 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $friendship = new Friendships();
+            $friendship = new Friendships;
             $friendship->accepter = $id;
             $friendship->requester = $user_id;
             $friendship->is_accepted = '0';
             $friendship->save();
 
-            $notify = new Notification();
+            $notify = new Notification;
             $notify->sender_user_id = $user_id;
             $notify->reciver_user_id = $id;
             $notify->type = 'profile';
@@ -1220,7 +1221,7 @@ class ApiController extends Controller
                 $query->where('requester', $id)->where('accepter', $user_id);
             })->delete();
 
-            //remove my id from this user table
+            // remove my id from this user table
             $unfriended_user_friends = User::where('id', $id)->value('friends');
             $unfriended_user_friends = json_decode($unfriended_user_friends, true);
             if (is_array($unfriended_user_friends)) {
@@ -1232,7 +1233,7 @@ class ApiController extends Controller
             $unfriended_user_friends = json_encode($unfriended_user_friends);
             User::where('id', $id)->update(['friends' => $unfriended_user_friends]);
 
-            //remove user id from my user friend list
+            // remove user id from my user friend list
             $unfriended_user_friends = User::where('id', $user_id)->value('friends');
             $unfriended_user_friends = json_decode($unfriended_user_friends, true);
             if (is_array($unfriended_user_friends)) {
@@ -1287,12 +1288,13 @@ class ApiController extends Controller
                 $response['friendsList'][$key]['cover_photo'] = get_cover_photos($user->id);
             }
 
-        // $page_data['friendships'] = $friendships;
-        // $page_data['friend_requests'] = $friend_requests;
+            // $page_data['friendships'] = $friendships;
+            // $page_data['friend_requests'] = $friend_requests;
         } else {
             $response['status'] = false;
             $response['message'] = 'unauthorised access';
         }
+
         // $response = $page_data;
         return $response;
     }
@@ -1306,7 +1308,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $follwer = new Follower();
+            $follwer = new Follower;
             $follwer->follow_id = $id;
             $follwer->user_id = $user_id;
             $follow = $follwer->save();
@@ -1363,7 +1365,7 @@ class ApiController extends Controller
             // }
 
             if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                //Data validation
+                // Data validation
 
                 $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
                 // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
@@ -1401,7 +1403,7 @@ class ApiController extends Controller
             } else {
                 $data['publisher_id'] = $user_id;
             }
-            //post type
+            // post type
             if (isset($request->post_type) && ! empty($request->post_type)) {
                 $data['post_type'] = $request->post_type;
             } else {
@@ -1456,9 +1458,9 @@ class ApiController extends Controller
                 $response['message'] = 'Your post successfully publidhed';
             }
 
-            //add media files
+            // add media files
             if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                //Data validation
+                // Data validation
                 // $response['message'] = 'check image for upload';
                 $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
                 $validator = Validator::make($request->all(), $rules);
@@ -1502,7 +1504,7 @@ class ApiController extends Controller
             }
 
             if ($data['post_type'] == 'live_streaming') {
-                //Live streaming
+                // Live streaming
                 $live['publisher'] = $data['publisher'];
                 $live['publisher_id'] = $post_id;
                 $live['user_id'] = $user_id;
@@ -1513,7 +1515,7 @@ class ApiController extends Controller
                 Live_streamings::insert($live);
                 $response = ['open_new_tab' => url('/streaming/live/'.$post_id), 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline')];
             } else {
-                //Ajax flush message
+                // Ajax flush message
                 // Session::flash('success_message', get_phrase('Your post has been published'));
                 // $response = array('reload' => 1);
             }
@@ -1521,7 +1523,7 @@ class ApiController extends Controller
             return $response;
         }
 
-        //Data validation
+        // Data validation
     }
 
     public function edit_post($id, Request $request)
@@ -1532,7 +1534,7 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            //$posts = Posts::where('id', $id)->first();
+            // $posts = Posts::where('id', $id)->first();
 
             // $rules = array('privacy' => ['required', Rule::in(['private', 'public', 'friends'])]);
             // $validator = Validator::make($request->all(), $rules);
@@ -1541,7 +1543,7 @@ class ApiController extends Controller
             // }
 
             if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                //Data validation
+                // Data validation
 
                 $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
                 // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
@@ -1583,9 +1585,9 @@ class ApiController extends Controller
 
             Posts::where('post_id', $id)->update($data);
 
-            //add media files
+            // add media files
             if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                //Data validation
+                // Data validation
 
                 $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
                 $validator = Validator::make($request->all(), $rules);
@@ -1630,7 +1632,7 @@ class ApiController extends Controller
             $response['status'] = 200;
             $response['message'] = 'Your post successfully updated';
 
-            //Ajax flush message
+            // Ajax flush message
         }
 
         return $response;
@@ -1661,7 +1663,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $report = new Report();
+            $report = new Report;
             $report->user_id = $user_id;
             $report->post_id = $request->post_id;
             $report->report = $request->report;
@@ -2227,10 +2229,10 @@ class ApiController extends Controller
             if ($request->profile_photo && ! empty($request->profile_photo)) {
                 $file_name = FileUploader::upload($request->profile_photo, 'public/storage/userimage', 800);
 
-                //Create post for updating profile photo
+                // Create post for updating profile photo
                 $this->create_profile_photo_post($request->profile_photo, $file_name);
 
-                //Update to database
+                // Update to database
                 $data['photo'] = $file_name;
             }
 
@@ -2266,7 +2268,7 @@ class ApiController extends Controller
         $data['updated_at'] = $data['created_at'];
         $post_id = Posts::insertGetId($data);
 
-        //Stored to media files table
+        // Stored to media files table
         $media_file_data = ['user_id' => auth('sanctum')->user()->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => 'public'];
         $media_file_data['created_at'] = time();
         $media_file_data['updated_at'] = $media_file_data['created_at'];
@@ -2289,7 +2291,7 @@ class ApiController extends Controller
 
             $file_name = FileUploader::upload($request->cover_photo, 'public/storage/cover_photo', 1120);
 
-            //Update to database
+            // Update to database
             $data['cover_photo'] = $file_name;
             $done = Users::where('id', $user_id)->update($data);
             if ($done) {
@@ -3104,7 +3106,7 @@ class ApiController extends Controller
                 $file_name = FileUploader::upload($request->image, 'public/storage/groups/logo', 300);
             }
 
-            $group = new Group();
+            $group = new Group;
             $group->user_id = $user_id;
             $group->title = $request->name;
             $group->subtitle = $request->subtitle;
@@ -3116,7 +3118,7 @@ class ApiController extends Controller
             }
             $done = $group->save();
             if ($done) {
-                $group_member = new Group_member();
+                $group_member = new Group_member;
                 $group_member->group_id = $group->id;
                 $group_member->user_id = $user_id;
                 $group_member->role = 'admin';
@@ -3155,7 +3157,7 @@ class ApiController extends Controller
             }
 
             $group = Group::find($group_id);
-            //previous image name
+            // previous image name
             $imagename = $group->logo;
             if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/groups/logo', 300);
@@ -3206,9 +3208,9 @@ class ApiController extends Controller
             $imagename = $group->coverphoto;
 
             if ($request->cover_photo && ! empty($request->cover_photo)) {
-                //Upload image
+                // Upload image
                 $file_name = rand(1, 35000).'.'.$request->cover_photo->getClientOriginalExtension();
-                //logo
+                // logo
                 $img = Image::make($request->cover_photo);
                 $img->resize(1120, null, function ($constraint) {
                     $constraint->aspectRatio();
@@ -3250,7 +3252,7 @@ class ApiController extends Controller
                 $user_id = auth('sanctum')->user()->id;
 
                 // Create a new group member
-                $group_member = new Group_member();
+                $group_member = new Group_member;
                 $group_member->group_id = $id;
                 $group_member->user_id = $user_id;
                 $group_member->role = 'general';
@@ -3757,7 +3759,7 @@ class ApiController extends Controller
             }
 
             $page = Page::find($id);
-            //previous image name
+            // previous image name
             $imagename = $page->logo;
             if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
@@ -3858,7 +3860,7 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $pagelike = new Page_like();
+            $pagelike = new Page_like;
             $pagelike->page_id = $id;
             $pagelike->user_id = $user_id;
             $pagelike->role = 'general';
@@ -3878,6 +3880,7 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         // return json_encode($response);
         return response()->json($response);
     }
@@ -3924,7 +3927,7 @@ class ApiController extends Controller
                 $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
             }
 
-            $page = new Page();
+            $page = new Page;
             $page->user_id = $user_id;
             $page->title = $request->name;
             $page->category_id = $request->category;
@@ -3980,6 +3983,7 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         // return json_encode(array('reload' => 1));
         return response()->json($response);
     }
@@ -3992,7 +3996,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $blogs = PageCategory::orderBy('id', 'desc')->get();
+            $blogs = Pagecategory::orderBy('id', 'desc')->get();
 
             if ($blogs->isEmpty()) {
                 $response['success'] = false;
@@ -4151,7 +4155,7 @@ class ApiController extends Controller
                     ];
                 }
 
-            // }
+                // }
             } else {
                 $response['success'] = false;
                 $response['message'] = 'No page found';
@@ -4320,7 +4324,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
             if (is_array($request->images) && $request->images[0] != null) {
-                //Data validation
+                // Data validation
                 $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
                 $validator = Validator::make($request->images, $rules);
                 if ($validator->fails()) {
@@ -4330,7 +4334,7 @@ class ApiController extends Controller
                     $file_name = FileUploader::upload($media_file, 'public/storage/album/images', 1000, null, 300);
                     $file_type = 'image';
 
-                    $albumimage = new Album_image();
+                    $albumimage = new Album_image;
                     $albumimage->user_id = $user_id;
                     $albumimage->album_id = $request->album;
                     $albumimage->image = $file_name;
@@ -4492,7 +4496,7 @@ class ApiController extends Controller
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
-            $marketplace = new Marketplace();
+            $marketplace = new Marketplace;
             $marketplace->user_id = $user_id;
             $marketplace->title = $request->title;
             $marketplace->currency_id = $request->currency;
@@ -4508,7 +4512,7 @@ class ApiController extends Controller
             $product_id = $marketplace->id;
             if ($product_id) {
                 if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                    //Data validation
+                    // Data validation
                     $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
                     $validator = Validator::make($request->multiple_files, $rules);
                     if ($validator->fails()) {
@@ -4544,6 +4548,7 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         // return json_encode(array('reload' => 1));
         return response()->json($response);
     }
@@ -4584,7 +4589,7 @@ class ApiController extends Controller
             $product_id = $id;
             if ($product_id) {
                 if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                    //Data validation
+                    // Data validation
                     $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
                     $validator = Validator::make($request->multiple_files, $rules);
                     if ($validator->fails()) {
@@ -4634,6 +4639,7 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         // return json_encode(array('reload' => 1));
         return response()->json($response);
     }
@@ -4906,7 +4912,7 @@ class ApiController extends Controller
         return $response;
     }
 
-    //save for later in marketplace product
+    // save for later in marketplace product
     public function save_for_later(Request $request, $id)
     {
         $token = $request->bearerToken();
@@ -4915,7 +4921,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $saveproduct = new SavedProduct();
+            $saveproduct = new SavedProduct;
             $saveproduct->user_id = $user_id;
             $saveproduct->product_id = $id;
 
@@ -4931,17 +4937,18 @@ class ApiController extends Controller
                 $response['success'] = true;
                 $response['message'] = 'User saved the product';
             }
-        // if ($save) {
+            // if ($save) {
             //     $response['success'] = true;
             //     $response['message'] = 'save successfully';
-        // } else {
+            // } else {
             //     $response['success'] = false;
             //     $response['message'] = 'Failed to save';
-        // }
+            // }
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         // return json_encode($response);
         return response()->json($response);
     }
@@ -5144,7 +5151,7 @@ class ApiController extends Controller
 
             $mobile_app_image = FileUploader::upload($request->mobile_app_image, 'public/storage/videos');
 
-            $video = new Video();
+            $video = new Video;
             $video->title = $request->title;
             $video->user_id = $user_id;
             $video->privacy = $request->privacy;
@@ -5154,7 +5161,7 @@ class ApiController extends Controller
             $video->view = json_encode([]);
             $done = $video->save();
             if ($done) {
-                $post = new Posts();
+                $post = new Posts;
                 $post->user_id = $user_id;
                 $post->publisher = 'video_and_shorts';
                 $post->publisher_id = $video->id;
@@ -5190,7 +5197,7 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $saveforlater = new Saveforlater();
+            $saveforlater = new Saveforlater;
             $saveforlater->user_id = $user_id;
             $saveforlater->video_id = $id;
             $done = $saveforlater->save();
@@ -5385,10 +5392,10 @@ class ApiController extends Controller
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
             if ($request->coverphoto && ! empty($request->coverphoto)) {
-                //Upload image
+                // Upload image
                 $file_name = rand(1, 35000).'.'.$request->coverphoto->getClientOriginalExtension();
 
-                //thumbnail
+                // thumbnail
                 $img = Image::make($request->coverphoto);
                 $img->resize(325, null, function ($constraint) {
                     $constraint->aspectRatio();
@@ -5404,7 +5411,7 @@ class ApiController extends Controller
                 });
                 $img->save(uploadTo('event/coverphoto').$file_name);
             }
-            $event = new Event();
+            $event = new Event;
 
             $event->user_id = $user_id;
             $event->title = $request->eventname;
@@ -5445,6 +5452,7 @@ class ApiController extends Controller
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
+
         // return json_encode(array('reload' => 1));
         return $response;
     }
@@ -5469,10 +5477,10 @@ class ApiController extends Controller
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
             if ($request->coverphoto && ! empty($request->coverphoto)) {
-                //Upload image
+                // Upload image
                 $file_name = rand(1, 35000).'.'.$request->coverphoto->getClientOriginalExtension();
 
-                //thumbnail
+                // thumbnail
                 $img = Image::make($request->coverphoto);
                 $img->resize(325, null, function ($constraint) {
                     $constraint->aspectRatio();
@@ -6055,7 +6063,7 @@ class ApiController extends Controller
                 FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
             }
 
-            $blog = new Blog();
+            $blog = new Blog;
             $blog->user_id = $user_id;
             $blog->title = $request->title;
             $blog->category_id = $request->category;
@@ -6442,7 +6450,7 @@ class ApiController extends Controller
                 'category' => 'required',
             ]);
 
-            $job = new Job();
+            $job = new Job;
             $job->user_id = $user_id;
             $job->title = $request->title;
             $job->category_id = $request->category;
@@ -6605,7 +6613,7 @@ class ApiController extends Controller
             }
 
             $owner_id = Job::where('id', $id)->first()->user_id;
-            $apply = new JobApply();
+            $apply = new JobApply;
             $apply->job_id = $request->id;
             $apply->owner_id = $owner_id;
             $apply->user_id = $user_id;
@@ -6718,7 +6726,7 @@ class ApiController extends Controller
                 }
                 $image = $image_name;
             }
-            $campaign = new Fundraiser();
+            $campaign = new Fundraiser;
             $campaign->user_id = $user_id;
             $campaign->title = $request->title;
             $campaign->description = $request->description;
@@ -6820,13 +6828,13 @@ class ApiController extends Controller
 
             Fundraiser::where('id', $fundraiser_id)->update(['invited' => $invited]);
 
-            $invite = new Invite();
+            $invite = new Invite;
             $invite->invite_reciver_id = $invited_friend_id;
             $invite->invite_sender_id = $user_id;
             $invite->fundraiser_id = $fundraiser_id;
             $done = $invite->save();
             if ($done) {
-                $notify = new Notification();
+                $notify = new Notification;
                 $notify->sender_user_id = $user_id;
                 $notify->reciver_user_id = $invited_friend_id;
                 $notify->type = 'fundraiser';
@@ -6999,7 +7007,7 @@ class ApiController extends Controller
             Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->update(['status' => '1', 'view' => '1']);
 
             if ($is_updated == 1) {
-                //update my id to my friend list
+                // update my id to my friend list
                 $my_friends = User::where('id', $user_id)->value('friends');
                 $my_friends = json_decode($my_friends);
                 if (is_array($my_friends)) {
@@ -7011,7 +7019,7 @@ class ApiController extends Controller
 
                 User::where('id', $user_id)->update(['friends' => $my_friends]);
 
-                //update my id to my friend list
+                // update my id to my friend list
                 $my_friends_of_friends = User::where('id', $id)->value('friends');
                 $my_friends_of_friends = json_decode($my_friends_of_friends);
 
@@ -7025,7 +7033,7 @@ class ApiController extends Controller
                 User::where('id', $id)->update(['friends' => $my_friends_of_friends]);
             }
 
-            $notify = new Notification();
+            $notify = new Notification;
             $notify->sender_user_id = $user_id;
             $notify->reciver_user_id = $id;
             $notify->type = 'friend_request_accept';
@@ -7074,7 +7082,7 @@ class ApiController extends Controller
             $is_updated = Invite::where('invite_sender_id', $id)->where('invite_reciver_id', $user_id)->where('group_id', $group_id)->update(['is_accepted' => '1']);
             $notify = Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->update(['status' => '1', 'view' => '1']);
 
-            $notify = new Notification();
+            $notify = new Notification;
             $notify->sender_user_id = $user_id;
             $notify->reciver_user_id = $id;
             $notify->type = 'group_invitation_accept';
@@ -7125,7 +7133,7 @@ class ApiController extends Controller
             $notify = Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->update(['status' => '1', 'view' => '1']);
 
             if ($is_updated == '1') {
-                //update my friends id to my friend list
+                // update my friends id to my friend list
                 $going_users_id = Event::where('id', $event_id)->value('going_users_id');
                 $going_users_id = json_decode($going_users_id);
                 array_push($going_users_id, (int) $id);
@@ -7134,7 +7142,7 @@ class ApiController extends Controller
                 Event::where('id', $event_id)->update(['going_users_id' => $going_users_id]);
             }
 
-            $notify = new Notification();
+            $notify = new Notification;
             $notify->sender_user_id = $user_id;
             $notify->reciver_user_id = $id;
             $notify->type = 'event_invitation_accept';
@@ -7201,7 +7209,7 @@ class ApiController extends Controller
         return $response;
     }
 
-    //fundraiser................
+    // fundraiser................
 
     public function accept_fundraiser_notification(Request $request, $id, $fundraiser_id)
     {
@@ -7213,7 +7221,7 @@ class ApiController extends Controller
             $is_updated = Invite::where('invite_sender_id', $id)->where('invite_reciver_id', $user_id)->where('fundraiser_id', $fundraiser_id)->update(['is_accepted' => '1']);
             $notify = Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->update(['status' => '1', 'view' => '1']);
 
-            $notify = new Notification();
+            $notify = new Notification;
             $notify->sender_user_id = $user_id;
             $notify->reciver_user_id = $id;
             $notify->type = 'fundraiser_request_accept';
@@ -7360,13 +7368,13 @@ class ApiController extends Controller
                 ->count();
 
             if ($messageThradeCount <= 0) {
-                $messageThrade = new Message_thrade();
+                $messageThrade = new Message_thrade;
                 $messageThrade->sender_id = auth('sanctum')->user()->id;
                 $messageThrade->reciver_id = $request->reciver_id;
                 $messageThrade->chatcenter = $request->messagecenter;
                 $done = $messageThrade->save();
                 if ($done) {
-                    $chat = new Chat();
+                    $chat = new Chat;
                     $chat->reciver_id = $request->reciver_id;
                     $chat->sender_id = auth('sanctum')->user()->id;
                     $chat->chatcenter = $request->messagecenter;
@@ -7378,7 +7386,7 @@ class ApiController extends Controller
                     $last_chat_id = $chat->id;
 
                     if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                        //Data validation
+                        // Data validation
                         $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
                         $validator = Validator::make($request->multiple_files, $rules);
                         if ($validator->fails()) {
@@ -7415,7 +7423,7 @@ class ApiController extends Controller
                     // return $response;
                 }
             } else {
-                $chat = new Chat();
+                $chat = new Chat;
                 $chat->reciver_id = $request->reciver_id;
                 $chat->sender_id = auth('sanctum')->user()->id;
                 $chat->chatcenter = $request->messagecenter;
@@ -7427,7 +7435,7 @@ class ApiController extends Controller
                 $last_chat_id = $chat->id;
 
                 if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                    //Data validation
+                    // Data validation
                     $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
                     $validator = Validator::make($request->multiple_files, $rules);
                     if ($validator->fails()) {
@@ -7468,7 +7476,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $messageThrade = new Message_thrade();
+            $messageThrade = new Message_thrade;
             $messageThrade->sender_id = auth('sanctum')->user()->id;
             $messageThrade->reciver_id = $request->reciver_id;
             $messageThrade->chatcenter = $request->messagecenter;
@@ -7748,14 +7756,14 @@ class ApiController extends Controller
             // $count = count($invited_group_users_id);
 
             // for ($i = 0; $i < $count; $i++) {
-            $invite = new Invite();
+            $invite = new Invite;
             $invite->invite_sender_id = $user_id;
             $invite->invite_reciver_id = $request->invited_user_id;
             $invite->is_accepted = '0';
             $invite->group_id = $request->group_id;
             $invite->save();
 
-            $notify = new Notification();
+            $notify = new Notification;
             $notify->sender_user_id = $user_id;
             $notify->reciver_user_id = $request->invited_user_id;
             $notify->type = 'group';
@@ -7783,14 +7791,14 @@ class ApiController extends Controller
             // $count = count($invited_event_users_id);
 
             // for ($i = 0; $i < $count; $i++) {
-            $invite = new Invite();
+            $invite = new Invite;
             $invite->invite_sender_id = $user_id;
             $invite->invite_reciver_id = $request->invited_user_id;
             $invite->is_accepted = '0';
             $invite->event_id = $request->event_id;
             $invite->save();
 
-            $notify = new Notification();
+            $notify = new Notification;
             $notify->sender_user_id = $user_id;
             $notify->reciver_user_id = $request->invited_user_id;
             $notify->type = 'event';

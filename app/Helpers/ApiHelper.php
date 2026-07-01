@@ -34,7 +34,7 @@ if (! function_exists('get_user_images')) {
             $user_id = $file_name_or_user_id;
             $file_name = DB::table('users')->where('id', $user_id)->value('photo');
 
-            //this file comes from another online link as like amazon s3 server
+            // this file comes from another online link as like amazon s3 server
             if (strpos($file_name, 'https://') !== false) {
                 return $file_name;
             }
@@ -47,7 +47,7 @@ if (! function_exists('get_user_images')) {
         } elseif (File::exists('public/storage/userimage/'.$optimized.$file_name) && is_file('public/storage/userimage/'.$optimized.$file_name)) {
             return url('public/storage/userimage/'.$optimized.$file_name);
         } elseif (strpos($file_name, 'https://') !== false) {
-            //this file comes from another online link as like amazon s3 server
+            // this file comes from another online link as like amazon s3 server
             return $file_name;
         } else {
             return url('public/storage/userimage/default.png');
@@ -74,7 +74,7 @@ if (! function_exists('get_cover_photos')) {
             $user_id = $file_name_or_user_id;
             $file_name = DB::table('users')->where('id', $user_id)->value('cover_photo');
 
-            //this file comes from another online link as like amazon s3 server
+            // this file comes from another online link as like amazon s3 server
             if (strpos($file_name, 'https://') !== false) {
                 return $file_name;
             }
@@ -87,7 +87,7 @@ if (! function_exists('get_cover_photos')) {
         } elseif (File::exists('public/storage/cover_photo/'.$optimized.$file_name) && is_file('public/storage/cover_photo/'.$optimized.$file_name)) {
             return url('public/storage/cover_photo/'.$optimized.$file_name);
         } elseif (strpos($file_name, 'https://') !== false) {
-            //this file comes from another online link as like amazon s3 server
+            // this file comes from another online link as like amazon s3 server
             return $file_name;
         } else {
             return url('public/storage/cover_photo/default.jpg');
@@ -98,7 +98,7 @@ if (! function_exists('get_cover_photos')) {
 if (! function_exists('get_post_images')) {
     function get_post_images($file_name = '', $optimized = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -114,7 +114,7 @@ if (! function_exists('get_post_images')) {
 if (! function_exists('get_post_videos')) {
     function get_post_videos($file_name = '', $optimized = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -132,7 +132,7 @@ if (! function_exists('get_post_videos')) {
 if (! function_exists('get_story_images')) {
     function get_story_images($file_name = '', $optimized = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -148,7 +148,7 @@ if (! function_exists('get_story_images')) {
 if (! function_exists('get_story_videos')) {
     function get_story_videos($file_name = '', $optimized = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -163,11 +163,11 @@ if (! function_exists('get_story_videos')) {
         }
     }
 }
-//get page logo
+// get page logo
 if (! function_exists('get_group_logos')) {
     function get_group_logos($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -187,11 +187,11 @@ if (! function_exists('get_group_logos')) {
     }
 }
 
-//get group cover photo
+// get group cover photo
 if (! function_exists('get_group_cover_photos')) {
     function get_group_cover_photos($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -201,19 +201,19 @@ if (! function_exists('get_group_cover_photos')) {
         if (! empty($file_name)) {
             // if (File::exists('public/storage/groups/' . $foldername . $file_name)) {
             return url('public/storage/groups/'.$foldername.$file_name);
-        // } else {
+            // } else {
             //     return url('public/storage/groups/' . $foldername . 'default/default.jpg');
-        // }
+            // }
         } else {
             return url('public/storage/groups/'.$foldername.'default/default.jpg');
         }
     }
 }
-//get all assets photo
+// get all assets photo
 if (! function_exists('get_all_assets_photos')) {
     function get_all_assets_photos($file_name = '', $foldername = '', $main_foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -224,19 +224,19 @@ if (! function_exists('get_all_assets_photos')) {
         if (! empty($file_name)) {
             // if (File::exists('public/storage/groups/' . $foldername . $file_name)) {
             return url('public/assets/frontend/'.$main_foldername.$foldername.$file_name);
-        // } else {
+            // } else {
             //     return url('public/storage/groups/' . $foldername . 'default/default.jpg');
-        // }
+            // }
         } else {
             return url('public/assets/frontend/'.$main_foldername.$foldername.'default/default.jpg');
         }
     }
 }
-//get assets photo
+// get assets photo
 if (! function_exists('get_group_event_photos')) {
     function get_group_event_photos($file_name = '', $foldername = '', $main_foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -247,19 +247,19 @@ if (! function_exists('get_group_event_photos')) {
         if (! empty($file_name)) {
             // if (File::exists('public/storage/groups/' . $foldername . $file_name)) {
             return url('public/storage/'.$main_foldername.$foldername.$file_name);
-        // } else {
+            // } else {
             //     return url('public/storage/groups/' . $foldername . 'default/default.jpg');
-        // }
+            // }
         } else {
             return url('public/storage/'.$main_foldername.$foldername.'default/default.jpg');
         }
     }
 }
-//get one folders file
+// get one folders file
 if (! function_exists('get_one_folder_files')) {
     function get_one_folder_files($file_name = '', $foldername = '')
     {
-        //this file comes from another online link as like amazon s3 server
+        // this file comes from another online link as like amazon s3 server
         if (strpos($file_name, 'https://') !== false) {
             return $file_name;
         }
@@ -269,9 +269,9 @@ if (! function_exists('get_one_folder_files')) {
         if (! empty($file_name)) {
             // if (File::exists('public/storage/groups/' . $foldername . $file_name)) {
             return url('public/storage/'.$foldername.$file_name);
-        // } else {
+            // } else {
             //     return url('public/storage/groups/' . $foldername . 'default/default.jpg');
-        // }
+            // }
         } else {
             return url('public/storage/'.$foldername.'default/default.jpg');
         }

@@ -35,7 +35,7 @@ class AdminCrudController extends Controller
 {
     public function __construct()
     {
-        //Don't remove it
+        // Don't remove it
         session(['admin_login' => 1]);
     }
 
@@ -73,7 +73,7 @@ class AdminCrudController extends Controller
         $user->address = $request->address;
         if ($request->profile_photo && ! empty($request->profile_photo)) {
             $file_name = FileUploader::upload($request->profile_photo, 'public/storage/userimage', 800, null, 200, 200);
-            //Update to database
+            // Update to database
             $user->photo = $file_name;
         }
 
@@ -134,7 +134,7 @@ class AdminCrudController extends Controller
         $validated = $request->validate([
             'pagecategory' => 'required|max:255|string|unique:pagecategories,name',
         ]);
-        $pagecategory = new Pagecategory();
+        $pagecategory = new Pagecategory;
         $pagecategory->name = $request->pagecategory;
         $done = $pagecategory->save();
         if ($done) {
@@ -197,7 +197,7 @@ class AdminCrudController extends Controller
         $validated = $request->validate([
             'productcategory' => 'required|max:255|string|unique:categories,name',
         ]);
-        $productcategory = new Category();
+        $productcategory = new Category;
         $productcategory->name = $request->productcategory;
         $done = $productcategory->save();
         if ($done) {
@@ -260,7 +260,7 @@ class AdminCrudController extends Controller
         $validated = $request->validate([
             'brand' => 'required|max:255|string|unique:brands,name',
         ]);
-        $brand = new Brand();
+        $brand = new Brand;
         $brand->name = $request->brand;
         $done = $brand->save();
         if ($done) {
@@ -323,7 +323,7 @@ class AdminCrudController extends Controller
         $validated = $request->validate([
             'blogcategory' => 'required|max:255|string|unique:blogcategories,name',
         ]);
-        $blogcategories = new Blogcategory();
+        $blogcategories = new Blogcategory;
         $blogcategories->name = $request->blogcategory;
         $done = $blogcategories->save();
         if ($done) {
@@ -385,7 +385,7 @@ class AdminCrudController extends Controller
         return view('backend.index', $page_data);
     }
 
-    //Don't remove this code for security reasons
+    // Don't remove this code for security reasons
     public function save_valid_purchase_code($action_type, Request $request)
     {
         if ($action_type == 'update') {
@@ -444,7 +444,7 @@ class AdminCrudController extends Controller
         } else {
             $logo_file_name = null;
         }
-        $group = new Group();
+        $group = new Group;
         $group->user_id = auth()->user()->id;
         $group->title = $request->title;
         $group->subtitle = $request->subtitle;
@@ -456,7 +456,7 @@ class AdminCrudController extends Controller
         }
         $done = $group->save();
         if ($done) {
-            $group_member = new Group_member();
+            $group_member = new Group_member;
             $group_member->group_id = $group->id;
             $group_member->user_id = auth()->user()->id;
             $group_member->role = 'admin';
@@ -566,7 +566,7 @@ class AdminCrudController extends Controller
             $coverphoto_file_name = null;
         }
 
-        $page = new Page();
+        $page = new Page;
         $page->user_id = auth()->user()->id;
         $page->title = $request->title;
         $page->category_id = $request->category;
@@ -789,46 +789,46 @@ class AdminCrudController extends Controller
         return redirect()->back();
     }
 
-  //=========== job Addon  Start Here  ============//
+    // =========== job Addon  Start Here  ============//
 
-   //  Category View
-   public function view_job_category()
-   {
-       $page_data['all_category'] = JobCategory::all();
-       $page_data['view_path'] = 'jobs.job_category';
+    //  Category View
+    public function view_job_category()
+    {
+        $page_data['all_category'] = JobCategory::all();
+        $page_data['view_path'] = 'jobs.job_category';
 
-       return view('backend.index', $page_data);
-   }
+        return view('backend.index', $page_data);
+    }
 
-   public function create_job_category()
-   {
-       $page_data['view_path'] = 'jobs.create_category';
+    public function create_job_category()
+    {
+        $page_data['view_path'] = 'jobs.create_category';
 
-       return view('backend.index', $page_data);
-   }
+        return view('backend.index', $page_data);
+    }
 
-   public function save_job_category(Request $request)
-   {
-       $validated = $request->validate([
-           'jobcategory' => 'required|max:255|string|unique:job_categories,name',
-       ]);
-       $jobcategories = new JobCategory();
-       $jobcategories->name = $request->jobcategory;
-       $done = $jobcategories->save();
-       if ($done) {
-           flash()->addSuccess('Job Category has been added successfully!');
-       }
+    public function save_job_category(Request $request)
+    {
+        $validated = $request->validate([
+            'jobcategory' => 'required|max:255|string|unique:job_categories,name',
+        ]);
+        $jobcategories = new JobCategory;
+        $jobcategories->name = $request->jobcategory;
+        $done = $jobcategories->save();
+        if ($done) {
+            flash()->addSuccess('Job Category has been added successfully!');
+        }
 
-       return redirect()->back();
-   }
+        return redirect()->back();
+    }
 
-   public function edit_job_category($id)
-   {
-       $page_data['jobcategories'] = JobCategory::find($id);
-       $page_data['view_path'] = 'jobs.edit_category';
+    public function edit_job_category($id)
+    {
+        $page_data['jobcategories'] = JobCategory::find($id);
+        $page_data['view_path'] = 'jobs.edit_category';
 
-       return view('backend.index', $page_data);
-   }
+        return view('backend.index', $page_data);
+    }
 
     public function update_job_category(Request $request, $id)
     {
@@ -912,64 +912,64 @@ class AdminCrudController extends Controller
         return redirect()->route('admin.job');
     }
 
-   public function job_edit($id = '')
-   {
-       $page_data['job_details'] = Job::find($id);
-       $page_data['view_path'] = 'jobs.job_edit';
+    public function job_edit($id = '')
+    {
+        $page_data['job_details'] = Job::find($id);
+        $page_data['view_path'] = 'jobs.job_edit';
 
-       return view('backend.index', $page_data);
-   }
+        return view('backend.index', $page_data);
+    }
 
- public function job_updated(Request $request, $id)
- {
-     if ($request->category == 'Select a category') {
-         flash()->addError('Please select a category');
+    public function job_updated(Request $request, $id)
+    {
+        if ($request->category == 'Select a category') {
+            flash()->addError('Please select a category');
 
-         return redirect()->back()->withInput();
-     }
+            return redirect()->back()->withInput();
+        }
 
-     $request->validate([
-         'title' => 'required|max:255',
-         'category' => 'required',
-     ]);
+        $request->validate([
+            'title' => 'required|max:255',
+            'category' => 'required',
+        ]);
 
-     if ($request->image) {
-         $random_name = rand();
-         $new_thumbnail = $random_name.'.'.$request->image->getClientOriginalExtension();
-         $request->image->move(public_path('storage/job/thumbnail/'), $new_thumbnail);
+        if ($request->image) {
+            $random_name = rand();
+            $new_thumbnail = $random_name.'.'.$request->image->getClientOriginalExtension();
+            $request->image->move(public_path('storage/job/thumbnail/'), $new_thumbnail);
 
-         if (! empty($request->old_image) && file_exists(public_path('storage/job/thumbnail/'.$request->old_image))) {
-             unlink(public_path('storage/job/thumbnail/'.$request->old_image));
-         }
-     } else {
-         $new_thumbnail = $request->old_image;
-     }
+            if (! empty($request->old_image) && file_exists(public_path('storage/job/thumbnail/'.$request->old_image))) {
+                unlink(public_path('storage/job/thumbnail/'.$request->old_image));
+            }
+        } else {
+            $new_thumbnail = $request->old_image;
+        }
 
-     $job = Job::find($id);
+        $job = Job::find($id);
 
-     // store image name for delete file operation
-     $job->thumbnail = $new_thumbnail;
-     $job->title = $request->title;
-     $job->category_id = $request->category;
-     $job->company = $request->company;
-     $job->starting_salary_range = $request->starting_salary_range;
-     $job->ending_salary_range = $request->ending_salary_range;
-     $job->type = $request->type;
-     $job->location = $request->location;
+        // store image name for delete file operation
+        $job->thumbnail = $new_thumbnail;
+        $job->title = $request->title;
+        $job->category_id = $request->category;
+        $job->company = $request->company;
+        $job->starting_salary_range = $request->starting_salary_range;
+        $job->ending_salary_range = $request->ending_salary_range;
+        $job->type = $request->type;
+        $job->location = $request->location;
 
-     $job->status = $request->status;
-     $job->start_date = date('Y-m-d H:i:s', strtotime($request->start_date));
-     $job->end_date = date('Y-m-d H:i:s', strtotime($request->end_date));
-     $job->is_published = $request->has('is_published') ? 1 : 0;
+        $job->status = $request->status;
+        $job->start_date = date('Y-m-d H:i:s', strtotime($request->start_date));
+        $job->end_date = date('Y-m-d H:i:s', strtotime($request->end_date));
+        $job->is_published = $request->has('is_published') ? 1 : 0;
 
-     $job->description = $request->description;
-     $done = $job->save();
-     if ($done) {
-         flash()->addSuccess('Job updated successfully');
+        $job->description = $request->description;
+        $done = $job->save();
+        if ($done) {
+            flash()->addSuccess('Job updated successfully');
 
-         return redirect()->route('admin.job');
-     }
- }
+            return redirect()->route('admin.job');
+        }
+    }
 
     public function delete_job($id)
     {
@@ -1032,14 +1032,14 @@ class AdminCrudController extends Controller
         return view('backend.index', $page_data);
     }
 
-      public function jobDeleteHistory($id)
-      {
-          $paymentHistory = DB::table('payment_histories')->where('id', $id)->delete();
-          // $paymentHistory->delete();
-          flash()->addSuccess('Job Payment History has been Deleted successfully!');
+    public function jobDeleteHistory($id)
+    {
+        $paymentHistory = DB::table('payment_histories')->where('id', $id)->delete();
+        // $paymentHistory->delete();
+        flash()->addSuccess('Job Payment History has been Deleted successfully!');
 
-          return redirect()->back();
-      }
+        return redirect()->back();
+    }
 
     public function settings_view()
     {
@@ -1059,7 +1059,7 @@ class AdminCrudController extends Controller
         return redirect()->back();
     }
 
-  //============ job Addon  End Here ===============//
+    // ============ job Addon  End Here ===============//
 
     public function users()
     {
@@ -1080,7 +1080,7 @@ class AdminCrudController extends Controller
 
     public function user_store(Request $request)
     {
-        //password validation
+        // password validation
         //  $request->validate([
         //     'current_password' => ['required', new MatchOldPassword],
         //     'new_password' => ['required'],
@@ -1097,7 +1097,7 @@ class AdminCrudController extends Controller
         if ($request->photo && ! empty($request->photo)) {
             // $file_name = FileUploader::upload($request->photo, 'public/storage/userimage', 800);
             $file_name = FileUploader::upload($request->file('photo'), 'public/storage/userimage', 800);
-            //Update to database
+            // Update to database
             $data['photo'] = $file_name;
         }
 
@@ -1132,7 +1132,7 @@ class AdminCrudController extends Controller
 
     public function user_update($id, Request $request)
     {
-        //password validation
+        // password validation
         //  $request->validate([
         //     'current_password' => ['required', new MatchOldPassword],
         //     'new_password' => ['required'],
@@ -1156,7 +1156,7 @@ class AdminCrudController extends Controller
                 unlink($previous_image2);
             }
 
-            //Update to database
+            // Update to database
             $data['photo'] = $file_name;
         }
 
@@ -1219,7 +1219,7 @@ class AdminCrudController extends Controller
         // die;
 
         $data = [];
-        //mentioned all with colum of database table that related with number of html table
+        // mentioned all with colum of database table that related with number of html table
         $columns = ['id', 'id', 'name', 'email', 'status', 'id'];
 
         $limit = $request->length;
@@ -1246,10 +1246,10 @@ class AdminCrudController extends Controller
         }
 
         foreach ($users as $key => $user) {
-            //photo
+            // photo
             $photo = '<img src="'.User::get_user_image($user['photo']).'" alt="" height="50" width="50" class="img-fluid rounded-circle img-thumbnail">';
 
-            //user name
+            // user name
             if ($user['email_verified_at'] == null) {
                 $status = '<small><br><span class="badge bg-danger">'.get_phrase('Unverified').'</span></small>';
             } else {
@@ -1257,10 +1257,10 @@ class AdminCrudController extends Controller
             }
             $name = $user['name'].$status;
 
-            //user email
+            // user email
             $email = $user['email'];
 
-            //Status
+            // Status
             if ($user['status'] != 1) {
                 $status = '<span class="badge bg-danger">'.get_phrase('Disabled').'</span>';
             } else {

@@ -5,7 +5,6 @@ namespace App\Models\payment_gateway;
 use DB;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
 use Session;
 use Stripe\Checkout\Session as CheckoutSession;
 use Stripe\Exception\ApiErrorException;
@@ -50,13 +49,13 @@ class StripePay extends Model
 
                 // // Retrieves the details of customer
                 // try {
-              //     // Create the PaymentIntent
-              //     $customer = \Stripe\Customer::retrieve($checkout_session->customer);
+                //     // Create the PaymentIntent
+                //     $customer = \Stripe\Customer::retrieve($checkout_session->customer);
                 // } catch (ApiErrorException $e) {
-              //     $api_error = $e->getMessage();
+                //     $api_error = $e->getMessage();
                 // }
 
-                //if(empty($api_error) && $intent){
+                // if(empty($api_error) && $intent){
                 if ($intent) {
                     // Check whether the charge is successful
                     if ($intent->status == 'succeeded') {
@@ -65,15 +64,15 @@ class StripePay extends Model
                         return false;
                     }
                 } else {
-                    //return get_phrase("Unable_to_fetch_the_transaction_details"). ' ' .$api_error;
+                    // return get_phrase("Unable_to_fetch_the_transaction_details"). ' ' .$api_error;
                     return false;
                 }
             } else {
-                //return get_phrase("Transaction_has_been_failed").' '.$api_error;
+                // return get_phrase("Transaction_has_been_failed").' '.$api_error;
                 return false;
             }
         } else {
-            //return get_phrase("Invalid_Request");
+            // return get_phrase("Invalid_Request");
             return false;
         }
 
@@ -112,8 +111,8 @@ class StripePay extends Model
         $checkout_session = CheckoutSession::create([
             'line_items' => [
                 [
-                    //Provide the exact Price ID (e.g. pr_1234) of the product you want to sell
-                    //'price' => '{{PRICE_ID}}', This structure for pre-created stripe payment or product
+                    // Provide the exact Price ID (e.g. pr_1234) of the product you want to sell
+                    // 'price' => '{{PRICE_ID}}', This structure for pre-created stripe payment or product
                     // OR
                     'price_data' => [
                         'product_data' => [
@@ -125,7 +124,7 @@ class StripePay extends Model
                     'quantity' => 1,
                 ],
             ],
-            'mode' => 'payment', //Checkout has three modes: payment, subscription, or setup. Use payment mode for one-time purchases. Learn more about subscription and setup modes in the docs.
+            'mode' => 'payment', // Checkout has three modes: payment, subscription, or setup. Use payment mode for one-time purchases. Learn more about subscription and setup modes in the docs.
             'success_url' => $payment_details['success_url'].'/'.$identifier.'?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => $payment_details['cancel_url'],
         ]);

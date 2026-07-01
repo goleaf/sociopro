@@ -208,18 +208,24 @@
         if ($('#user-timeline-posts').height()) {
             loadContentByScrolling("#user-timeline-posts", "{{ route('user.load_post_by_scrolling') }}");
         }
-        if ($('#paid_content_post').height()) {
-            loadContentByScrolling("#paid_content_post", "{{ route('load.paid.content.post') }}");
-        }
+        @if (Route::has('load.paid.content.post'))
+            if ($('#paid_content_post').height()) {
+                loadContentByScrolling("#paid_content_post", "{{ route('load.paid.content.post') }}");
+            }
+        @endif
         if ($('#memories_content').height()) {
             loadContentByScrolling("#memories_content", "{{ route('load.memories') }}");
         }
-        if ($('#pc-timeline-posts').height()) {
-            loadContentByScrolling("#pc-timeline-posts", "{{ route('load.timeline.post') }}");
-        }
-        if ($('#show_more_items').height()) {
-            loadContentByScrolling("#show_more_items", "{{ route('search.type', 'show_more') }}");
-        }
+        @if (Route::has('load.timeline.post'))
+            if ($('#pc-timeline-posts').height()) {
+                loadContentByScrolling("#pc-timeline-posts", "{{ route('load.timeline.post') }}");
+            }
+        @endif
+        @if (Route::has('search.type'))
+            if ($('#show_more_items').height()) {
+                loadContentByScrolling("#show_more_items", "{{ route('search.type', 'show_more') }}");
+            }
+        @endif
         if ($('#my-friends-list').height()) {
             loadContentByScrolling("#my-friends-list", "{{ route('profile.load_my_friends') }}");
         }

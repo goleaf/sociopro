@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\BlockUser;
-//used models
+// used models
 use App\Models\Comments;
 use App\Models\FileUploader;
-use App\Models\Friendships;
 use App\Models\Live_streamings;
 use App\Models\Media_files;
 use App\Models\Post_share;
@@ -20,14 +19,14 @@ use App\Traits\ZoomMeetingTrait;
 use DB;
 use Exception;
 use Illuminate\Database\Query\JoinClause;
-//For used ZOOM
+// For used ZOOM
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Intervention\Image\Facades\Image;
 
-//Used for Form data validation
+// Used for Form data validation
 
 class MainController extends Controller
 {
@@ -54,7 +53,7 @@ class MainController extends Controller
 
     public function timeline()
     {
-        //First 10 stories
+        // First 10 stories
         $stories = Stories::where(function ($query) {
             $query->whereJsonContains('users.friends', [$this->user->id])
                 ->where('stories.privacy', '!=', 'private')
@@ -66,13 +65,13 @@ class MainController extends Controller
             ->select('stories.*', 'users.name', 'users.photo', 'users.friends', 'stories.created_at as created_at')
             ->take(5)->orderBy('stories.story_id', 'DESC')->get();
 
-        //First 10 posts
+        // First 10 posts
         $posts = Posts::where(function ($query) {
             $query->whereJsonContains('users.friends', [$this->user->id])
                 ->where('posts.privacy', '!=', 'private')
                 ->orWhere('posts.user_id', $this->user->id)
 
-                //if folowing any users, pages, groups and others if not friend listed
+                // if folowing any users, pages, groups and others if not friend listed
                 ->orWhere(function ($query3) {
                     $query3->where('posts.privacy', 'public')
                         ->where(function ($query4) {
@@ -140,7 +139,7 @@ class MainController extends Controller
                 ->where('posts.privacy', '!=', 'private')
                 ->orWhere('posts.user_id', $this->user->id)
 
-                //if following any users, pages, groups and others if not friend listed
+                // if following any users, pages, groups and others if not friend listed
                 ->orWhere(function ($query3) {
                     $query3->where('posts.privacy', 'public')
                         ->where(function ($query4) {
@@ -190,7 +189,7 @@ class MainController extends Controller
 
     public function create_post(Request $request)
     {
-        //Data validation
+        // Data validation
 
         $rules = ['privacy' => ['required', Rule::in(['private', 'public', 'friends'])]];
         $validator = Validator::make($request->all(), $rules);
@@ -199,7 +198,7 @@ class MainController extends Controller
         }
 
         if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-            //Data validation
+            // Data validation
 
             $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
             // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
@@ -236,7 +235,7 @@ class MainController extends Controller
         } else {
             $data['publisher_id'] = $this->user->id;
         }
-        //post type
+        // post type
         if (isset($request->post_type) && ! empty($request->post_type)) {
             $data['post_type'] = $request->post_type;
         } else {
@@ -331,9 +330,9 @@ class MainController extends Controller
             unlink($tempImagePath);
         }
 
-        //add media files
+        // add media files
         if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-            //Data validation
+            // Data validation
 
             $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
             $validator = Validator::make($request->all(), $rules);
@@ -377,7 +376,7 @@ class MainController extends Controller
         }
 
         if ($data['post_type'] == 'live_streaming') {
-            //Live streaming
+            // Live streaming
             $live['publisher'] = $data['publisher'];
             $live['publisher_id'] = $post_id;
             $live['user_id'] = auth()->user()->id;
@@ -388,7 +387,7 @@ class MainController extends Controller
             Live_streamings::insert($live);
             $response = ['open_new_tab' => url('/streaming/live/'.$post_id), 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline')];
         } else {
-            //Ajax flush message
+            // Ajax flush message
             Session::flash('success_message', get_phrase('Your post has been published'));
             $response = ['reload' => 1];
         }
@@ -421,7 +420,7 @@ class MainController extends Controller
 
     public function edit_post($id, Request $request)
     {
-        //$posts = Posts::where('id', $id)->first();
+        // $posts = Posts::where('id', $id)->first();
 
         $rules = ['privacy' => ['required', Rule::in(['private', 'public', 'friends'])]];
         $validator = Validator::make($request->all(), $rules);
@@ -430,7 +429,7 @@ class MainController extends Controller
         }
 
         if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-            //Data validation
+            // Data validation
 
             $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
             // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
@@ -497,9 +496,9 @@ class MainController extends Controller
 
         Posts::where('post_id', $id)->update($data);
 
-        //add media files
+        // add media files
         if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-            //Data validation
+            // Data validation
 
             $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
             $validator = Validator::make($request->all(), $rules);
@@ -542,7 +541,7 @@ class MainController extends Controller
             }
         }
 
-        //Ajax flush message
+        // Ajax flush message
         Session::flash('success_message', get_phrase('Your post has been updated'));
         $response = ['reload' => 1];
 
@@ -560,7 +559,7 @@ class MainController extends Controller
             ->where('user_id', $this->user->id)->where('publisher_id', $publisher_id);
 
         if ($live_streaming->count() > 0) {
-            //Update
+            // Update
             $meeting_details = json_decode($live_streaming->value('details'), true);
             if (! empty($post_details->description)) {
                 $live_topic = ellipsis($post_details->description, 200);
@@ -597,7 +596,7 @@ class MainController extends Controller
                 $live_topic = 'Live';
             }
 
-            //Create
+            // Create
             $path = 'users/me/meetings';
             $response = $this->zoomPost($path, [
                 'topic' => $live_topic,
@@ -834,7 +833,7 @@ class MainController extends Controller
 
     public function preview_post(Request $request)
     {
-        //Previw post
+        // Previw post
         $posts = Posts::where(function ($query) {
             $query->where('posts.privacy', '!=', 'private')
                 ->orWhere('posts.user_id', $this->user->id);
@@ -893,7 +892,7 @@ class MainController extends Controller
 
     public function save_post_report(Request $request)
     {
-        $report = new Report();
+        $report = new Report;
 
         $report->user_id = auth()->user()->id;
         $report->post_id = $request->post_id;
@@ -918,13 +917,13 @@ class MainController extends Controller
 
     public function share_group(Request $request)
     {
-        $postshare = new Post_share();
+        $postshare = new Post_share;
         $postshare->user_id = auth()->user()->id;
         $postshare->post_id = $request->shared_post_id;
         $postshare->shared_on = 'group';
         $postshare->save();
 
-        $post = new Posts();
+        $post = new Posts;
         $post->user_id = auth()->user()->id;
         $post->publisher = 'group';
         $post->publisher_id = $request->group_id;
@@ -952,13 +951,13 @@ class MainController extends Controller
 
     public function share_my_timeline(Request $request)
     {
-        $postshare = new Post_share();
+        $postshare = new Post_share;
         $postshare->user_id = auth()->user()->id;
         $postshare->post_id = $request->shared_post_id;
         $postshare->shared_on = 'group';
         $postshare->save();
 
-        $post = new Posts();
+        $post = new Posts;
         $post->user_id = auth()->user()->id;
         $post->publisher = 'post';
         $post->publisher_id = auth()->user()->id;
@@ -1110,7 +1109,7 @@ class MainController extends Controller
         return redirect()->back();
     }
 
-   // Theme Color
+    // Theme Color
     public function updateThemeColor(Request $request)
     {
         $themeColor = $request->input('themeColor');
@@ -1119,48 +1118,48 @@ class MainController extends Controller
         return response()->json(['success' => true]);
     }
 
-      //New Album Page  Details
-      public function details_album($id)
-      {
-          $posts = Posts::where('post_id', $id)->get();
-          $post_album = Posts::where('post_id', $id)->first();
-          $user_info = $this->user;
+    // New Album Page  Details
+    public function details_album($id)
+    {
+        $posts = Posts::where('post_id', $id)->get();
+        $post_album = Posts::where('post_id', $id)->first();
+        $user_info = $this->user;
 
-          $friendships = FriendshipsQuery::importantForUser(auth()->user())
+        $friendships = FriendshipsQuery::importantForUser(auth()->user())
             ->take(15)->get();
 
-          $page_data = [
-              'post_id' => $id,
-              'post_album' => $post_album,
-              'posts' => $posts,
-              'user_info' => $user_info,
-              'friendships' => $friendships,
-              'layout' => 'album_details',
-              'view_path' => 'frontend.album_details.album_details',
-          ];
+        $page_data = [
+            'post_id' => $id,
+            'post_album' => $post_album,
+            'posts' => $posts,
+            'user_info' => $user_info,
+            'friendships' => $friendships,
+            'layout' => 'album_details',
+            'view_path' => 'frontend.album_details.album_details',
+        ];
 
-          return view('frontend.index', $page_data);
-      }
+        return view('frontend.index', $page_data);
+    }
 
-     public function block_user($id)
-     {
-         $page_data['post'] = Posts::where('post_id', $id)->first();
+    public function block_user($id)
+    {
+        $page_data['post'] = Posts::where('post_id', $id)->first();
 
-         return view('frontend.main_content.block_modal', $page_data);
-     }
+        return view('frontend.main_content.block_modal', $page_data);
+    }
 
-     public function block_user_post($id)
-     {
-         $block_post = Posts::find($id);
-         $user_block = User::where('id', $block_post->user_id)->first();
-         $user_block = new BlockUser();
-         $user_block->user_id = auth()->user()->id;
-         $user_block->block_user = $block_post->user_id;
-         $user_block->save();
-         Session::flash('success_message', get_phrase('Block Successfully'));
+    public function block_user_post($id)
+    {
+        $block_post = Posts::find($id);
+        $user_block = User::where('id', $block_post->user_id)->first();
+        $user_block = new BlockUser;
+        $user_block->user_id = auth()->user()->id;
+        $user_block->block_user = $block_post->user_id;
+        $user_block->save();
+        Session::flash('success_message', get_phrase('Block Successfully'));
 
-         return redirect()->route('timeline');
-     }
+        return redirect()->route('timeline');
+    }
 
     //  UnBlock User
     public function unblock_user($id)

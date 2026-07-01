@@ -50,7 +50,7 @@ class PageController extends Controller
             $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
         }
 
-        $page = new Page();
+        $page = new Page;
         $page->user_id = auth()->user()->id;
         $page->title = $request->name;
         $page->category_id = $request->category;
@@ -86,7 +86,7 @@ class PageController extends Controller
         }
 
         $page = Page::find($id);
-        //previous image name
+        // previous image name
         $imagename = $page->logo;
         if ($request->image && ! empty($request->image)) {
             $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
@@ -149,15 +149,15 @@ class PageController extends Controller
         return redirect()->back();
     }
 
-     // load event on scroll
+    // load event on scroll
 
-     public function load_page_by_scrolling(Request $request)
-     {
-         $mypages = Page::where('user_id', auth()->user()->id)->skip($request->offset)->take(6)->orderBy('id', 'DESC')->get();
-         $page_data['mypages'] = $mypages;
+    public function load_page_by_scrolling(Request $request)
+    {
+        $mypages = Page::where('user_id', auth()->user()->id)->skip($request->offset)->take(6)->orderBy('id', 'DESC')->get();
+        $page_data['mypages'] = $mypages;
 
-         return view('frontend.pages.single-page', $page_data);
-     }
+        return view('frontend.pages.single-page', $page_data);
+    }
 
     public function single_page($id)
     {
@@ -170,22 +170,22 @@ class PageController extends Controller
         }
 
         $all_videos = Media_files::where('page_id', $id)
-        ->where('file_type', 'video')
-        ->take(20)->orderBy('id', 'DESC')->get();
+            ->where('file_type', 'video')
+            ->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;
 
         $all_photos = Media_files::where('page_id', $id)
-        ->take(30)->orderBy('id', 'DESC')->get();
+            ->take(30)->orderBy('id', 'DESC')->get();
         $page_data['all_photos'] = $all_photos;
 
         $posts = Posts::where('posts.privacy', '!=', 'private')
-                        ->where('posts.publisher', 'page')
-                        ->where('posts.publisher_id', $id)
-                        ->where('posts.status', 'active')
-                        ->join('pages', 'posts.publisher_id', '=', 'pages.id')
-                        ->select('posts.*', 'pages.id', 'pages.title', 'pages.logo', 'posts.created_at as created_at')
-                        ->orderBy('posts.post_id', 'DESC')->get();
+            ->where('posts.publisher', 'page')
+            ->where('posts.publisher_id', $id)
+            ->where('posts.status', 'active')
+            ->join('pages', 'posts.publisher_id', '=', 'pages.id')
+            ->select('posts.*', 'pages.id', 'pages.title', 'pages.logo', 'posts.created_at as created_at')
+            ->orderBy('posts.post_id', 'DESC')->get();
 
         $page_data['posts'] = $posts;
         $page_data['suggestedpages'] = Page_like::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
@@ -210,15 +210,15 @@ class PageController extends Controller
         }
 
         $all_photos = Media_files::where('page_id', $id)
-        ->where('file_type', 'image')
-        ->take(20)->orderBy('id', 'DESC')->get();
+            ->where('file_type', 'image')
+            ->take(20)->orderBy('id', 'DESC')->get();
 
         $all_albums = Albums::where('page_id', $id)
-        ->take(6)->orderBy('id', 'DESC')->get();
+            ->take(6)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = Media_files::where('page_id', $id)
-        ->where('file_type', 'video')
-        ->take(20)->orderBy('id', 'DESC')->get();
+            ->where('file_type', 'video')
+            ->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['all_photos'] = $all_photos;
         $page_data['all_albums'] = $all_albums;
@@ -242,15 +242,15 @@ class PageController extends Controller
         }
 
         $all_videos = Media_files::where('page_id', $id)
-        ->where('file_type', 'video')
-        ->take(20)->orderBy('id', 'DESC')->get();
+            ->where('file_type', 'video')
+            ->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;
 
         $page_data['page'] = Page::find($id);
         $all_photos = Media_files::where('page_id', $id)
-        ->where('file_type', 'image')
-        ->take(20)->orderBy('id', 'DESC')->get();
+            ->where('file_type', 'image')
+            ->take(20)->orderBy('id', 'DESC')->get();
         $page_data['all_photos'] = $all_photos;
 
         $page_data['suggestedpages'] = Page_like::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
@@ -262,8 +262,8 @@ class PageController extends Controller
     public function load_videos(Request $request)
     {
         $all_videos = Media_files::where('user_id', $this->user->id)
-        ->where('file_type', 'video')
-        ->skip($request->offset)->take(12)->orderBy('id', 'DESC')->get();
+            ->where('file_type', 'video')
+            ->skip($request->offset)->take(12)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;
         $page_data['user_info'] = $this->user;
@@ -274,7 +274,7 @@ class PageController extends Controller
     public function like($id)
     {
         $response = [];
-        $pagelike = new Page_like();
+        $pagelike = new Page_like;
         $pagelike->page_id = $id;
         $pagelike->user_id = auth()->user()->id;
         $pagelike->role = 'general';

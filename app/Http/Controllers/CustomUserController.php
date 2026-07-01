@@ -74,19 +74,19 @@ class CustomUserController extends Controller
     public function friend($id)
     {
         $response = [];
-        $friendship = new Friendships();
+        $friendship = new Friendships;
         $friendship->accepter = $id;
         $friendship->requester = auth()->user()->id;
         $friendship->is_accepted = '0';
         $friendship->save();
 
-        $notify = new Notification();
+        $notify = new Notification;
         $notify->sender_user_id = auth()->user()->id;
         $notify->reciver_user_id = $id;
         $notify->type = 'profile';
         $notify->save();
 
-        $follwer = new Follower();
+        $follwer = new Follower;
         $follwer->follow_id = $id;
         $follwer->user_id = auth()->user()->id;
         $follwer->save();
@@ -144,10 +144,10 @@ class CustomUserController extends Controller
         // Remove the friendship from the friendships table
         Friendships::where(function ($query) use ($id) {
             $query->where('accepter', $id)
-                  ->where('requester', auth()->user()->id);
+                ->where('requester', auth()->user()->id);
         })->orWhere(function ($query) use ($id) {
             $query->where('requester', $id)
-                  ->where('accepter', auth()->user()->id);
+                ->where('accepter', auth()->user()->id);
         })->delete();
 
         // Update the unfriended user's friends list
@@ -186,13 +186,13 @@ class CustomUserController extends Controller
 
         // Remove notifications between these users
         Notification::where('sender_user_id', auth()->user()->id)
-                    ->where('reciver_user_id', $id)
-                    ->delete();
+            ->where('reciver_user_id', $id)
+            ->delete();
 
         // Optionally, you might want to remove notifications the other way as well
         Notification::where('sender_user_id', $id)
-                    ->where('reciver_user_id', auth()->user()->id)
-                    ->delete();
+            ->where('reciver_user_id', auth()->user()->id)
+            ->delete();
 
         $follwer = Follower::where('follow_id', $id)->delete();
         // Provide feedback to the user

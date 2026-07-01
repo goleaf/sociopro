@@ -94,6 +94,6 @@ class PaystackPaymentStatusTest extends TestCase
 
     private function makeGateway(): Paystack
     {
-        return new Paystack();
+        return new Paystack;
     }
 }

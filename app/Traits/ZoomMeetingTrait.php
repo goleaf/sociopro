@@ -20,9 +20,7 @@ trait ZoomMeetingTrait
 
     private $zoom_api_url;
 
-    private function get_zoom_keys()
-    {
-    }
+    private function get_zoom_keys() {}
 
     private function generateZoomToken()
     {
@@ -44,7 +42,7 @@ trait ZoomMeetingTrait
 
     private function retrieveZoomUrl()
     {
-        return  'https://api.zoom.us/v2/';
+        return 'https://api.zoom.us/v2/';
     }
 
     private function zoomRequest()

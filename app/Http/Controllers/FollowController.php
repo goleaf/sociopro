@@ -10,7 +10,7 @@ class FollowController extends Controller
     public function follow($id)
     {
         $response = [];
-        $follwer = new Follower();
+        $follwer = new Follower;
         $follwer->follow_id = $id;
         $follwer->user_id = auth()->user()->id;
         $follwer->save();
