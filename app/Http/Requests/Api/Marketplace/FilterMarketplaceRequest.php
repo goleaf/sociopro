@@ -8,6 +8,30 @@ use Illuminate\Validation\Rule;
 class FilterMarketplaceRequest extends ApiFormRequest
 {
     /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'condition.in' => __('marketplace.validation.messages.in_values'),
+            'filters.condition.in' => __('marketplace.validation.messages.in_values'),
+            'sort.in' => __('marketplace.validation.messages.in_values'),
+            'direction.in' => __('marketplace.validation.messages.in_values'),
+            'per_page.max' => __('marketplace.validation.messages.per_page_max'),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        $attributes = trans('marketplace.validation.attributes');
+
+        return is_array($attributes) ? $attributes : [];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function rules(): array

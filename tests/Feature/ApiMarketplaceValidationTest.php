@@ -125,6 +125,31 @@ class ApiMarketplaceValidationTest extends TestCase
         ]);
     }
 
+    public function test_marketplace_payload_validation_messages_are_standardized(): void
+    {
+        $this->authenticateApiUser();
+
+        $response = $this->withToken('test-token')->postJson(route('api.marketplace.store'), [
+            'title' => '',
+            'price' => 'free',
+            'condition' => 'ancient',
+            'status' => 7,
+            'multiple_files' => [
+                UploadedFile::fake()->create('payload.pdf', 12, 'application/pdf'),
+            ],
+        ]);
+
+        $response->assertOk();
+
+        $errors = $response->json('validationError');
+
+        $this->assertSame('The marketplace title field is required.', $errors['title'][0]);
+        $this->assertSame('The marketplace price must be a number.', $errors['price'][0]);
+        $this->assertSame('The marketplace condition must be one of the following values: new, used.', $errors['condition'][0]);
+        $this->assertSame('The marketplace status must be one of the following values: 0, 1.', $errors['status'][0]);
+        $this->assertSame('Each marketplace image must be an image.', $errors['multiple_files.0'][0]);
+    }
+
     public function test_create_marketplace_rejects_invalid_upload_array_before_creating_product(): void
     {
         $this->authenticateApiUser();
@@ -278,6 +303,33 @@ class ApiMarketplaceValidationTest extends TestCase
 
         $this->assertSame('Original Product Title', $product->title);
         $this->assertSame('15.00', $product->price);
+    }
+
+    public function test_marketplace_filter_validation_messages_are_standardized(): void
+    {
+        $this->authenticateApiUser();
+
+        $response = $this->withToken('test-token')->getJson($this->apiMarketplaceFilterUrl([
+            'filters' => [
+                'condition' => 'broken',
+                'price' => [
+                    'min' => 'free',
+                ],
+            ],
+            'sort' => 'password',
+            'direction' => 'sideways',
+            'per_page' => 101,
+        ]));
+
+        $response->assertOk();
+
+        $errors = $response->json('validationError');
+
+        $this->assertSame('The filter condition must be one of the following values: new, used.', $errors['filters.condition'][0]);
+        $this->assertSame('The minimum price must be a number.', $errors['filters.price.min'][0]);
+        $this->assertSame('The sort field must be one of the following values: id, created_at, price, title.', $errors['sort'][0]);
+        $this->assertSame('The sort direction must be one of the following values: asc, desc.', $errors['direction'][0]);
+        $this->assertSame('The items per page may not be greater than 100.', $errors['per_page'][0]);
     }
 
     private function authenticateApiUser(): User
