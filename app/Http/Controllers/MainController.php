@@ -17,8 +17,8 @@ use App\Models\Setting;
 use App\Models\Stories;
 use App\Models\User;
 use App\Queries\FriendshipsQuery;
+use App\Services\Zoom\ZoomMeetingClient;
 use App\Support\Files\FileUploader;
-use App\Support\Zoom\ZoomMeetingTrait;
 use DB;
 use Exception;
 use Illuminate\Database\Query\JoinClause;
@@ -34,8 +34,6 @@ use Intervention\Image\Facades\Image;
 
 class MainController extends Controller
 {
-    use ZoomMeetingTrait;
-
     const MEETING_TYPE_INSTANT = 1;
 
     const MEETING_TYPE_SCHEDULE = 2;
@@ -46,7 +44,7 @@ class MainController extends Controller
 
     private $user;
 
-    public function __construct()
+    public function __construct(private readonly ZoomMeetingClient $zoomMeetingClient)
     {
         $this->middleware(function ($request, $next) {
             $this->user = Auth()->user();
@@ -572,10 +570,10 @@ class MainController extends Controller
             }
 
             $meeting_details['topic'] = $live_topic;
-            $meeting_details['start_time'] = $this->toZoomTimeFormat(time());
+            $meeting_details['start_time'] = $this->zoomMeetingClient->toZoomTimeFormat(time());
 
             $path = 'meetings/'.$meeting_details['id'];
-            $response = $this->zoomPatch($path, [
+            $response = $this->zoomMeetingClient->patch($path, [
                 'topic' => $meeting_details['topic'],
                 'type' => self::MEETING_TYPE_SCHEDULE,
                 'start_time' => $meeting_details['start_time'],
@@ -602,10 +600,10 @@ class MainController extends Controller
 
             // Create
             $path = 'users/me/meetings';
-            $response = $this->zoomPost($path, [
+            $response = $this->zoomMeetingClient->post($path, [
                 'topic' => $live_topic,
                 'type' => self::MEETING_TYPE_SCHEDULE,
-                'start_time' => $this->toZoomTimeFormat(time()),
+                'start_time' => $this->zoomMeetingClient->toZoomTimeFormat(time()),
                 'duration' => 40,
                 'agenda' => null,
                 'settings' => [

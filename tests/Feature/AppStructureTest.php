@@ -24,6 +24,16 @@ class AppStructureTest extends TestCase
         $this->assertFileExists(app_path('Support/Files/FileUploader.php'));
 
         $this->assertDirectoryDoesNotExist(app_path('Traits'));
-        $this->assertFileExists(app_path('Support/Zoom/ZoomMeetingTrait.php'));
+    }
+
+    public function test_zoom_integration_uses_a_service_not_a_trait(): void
+    {
+        $this->assertFileDoesNotExist(app_path('Support/Zoom/ZoomMeetingTrait.php'));
+        $this->assertFileExists(app_path('Services/Zoom/ZoomMeetingClient.php'));
+
+        $mainController = file_get_contents(app_path('Http/Controllers/MainController.php'));
+
+        $this->assertStringNotContainsString('use ZoomMeetingTrait;', $mainController);
+        $this->assertStringContainsString('ZoomMeetingClient', $mainController);
     }
 }
