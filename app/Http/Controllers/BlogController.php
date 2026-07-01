@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Blog\StoreBlogRequest;
+use App\Http\Requests\Blog\UpdateBlogRequest;
 use App\Models\Blog;
 use App\Models\Blogcategory;
 use App\Models\Comments;
@@ -46,24 +48,22 @@ class BlogController extends Controller
         return view('frontend.index', $page_data);
     }
 
-    public function store(Request $request)
+    public function store(StoreBlogRequest $request)
     {
-        $request->validate([
-            'title' => 'required|max:255',
-            'category' => 'required',
-        ]);
+        $validated = $request->validated();
 
         $file_name = null;
-        if ($request->image && ! empty($request->image)) {
-            $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
-            FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
+        $image = $validated['image'] ?? null;
+        if (! empty($image)) {
+            $file_name = FileUploader::upload($image, 'public/storage/blog/thumbnail', 370);
+            FileUploader::upload($image, 'public/storage/blog/coverphoto/'.$file_name, 900);
         }
 
         $blog = new Blog;
         $blog->user_id = Auth::user()->id;
-        $blog->title = $request->title;
-        $blog->category_id = $request->category;
-        $tags = json_decode($request->tag, true);
+        $blog->title = $validated['title'];
+        $blog->category_id = $validated['category'];
+        $tags = json_decode((string) ($validated['tag'] ?? ''), true);
         $tag_array = [];
         if (is_array($tags)) {
             foreach ($tags as $key => $tag) {
@@ -71,7 +71,7 @@ class BlogController extends Controller
             }
         }
         $blog->tag = json_encode($tag_array);
-        $blog->description = $request->description;
+        $blog->description = $validated['description'] ?? null;
         if ($file_name !== null) {
             $blog->thumbnail = $file_name;
         }
@@ -91,17 +91,15 @@ class BlogController extends Controller
         return view('frontend.index', $page_data);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateBlogRequest $request, $id)
     {
-        $request->validate([
-            'title' => 'required|max:255',
-            'category' => 'required',
-        ]);
+        $validated = $request->validated();
 
         $file_name = null;
-        if ($request->image && ! empty($request->image)) {
-            $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
-            FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
+        $image = $validated['image'] ?? null;
+        if (! empty($image)) {
+            $file_name = FileUploader::upload($image, 'public/storage/blog/thumbnail', 370);
+            FileUploader::upload($image, 'public/storage/blog/coverphoto/'.$file_name, 900);
         }
 
         $blog = Blog::find($id);
@@ -111,9 +109,9 @@ class BlogController extends Controller
         $imagename = $blog->thumbnail;
 
         $blog->user_id = Auth::user()->id;
-        $blog->title = $request->title;
-        $blog->category_id = $request->category;
-        $tags = json_decode($request->tag, true);
+        $blog->title = $validated['title'];
+        $blog->category_id = $validated['category'];
+        $tags = json_decode((string) ($validated['tag'] ?? ''), true);
         $tag_array = [];
 
         if (is_array($tags)) {
@@ -122,14 +120,14 @@ class BlogController extends Controller
             }
         }
         $blog->tag = json_encode($tag_array);
-        $blog->description = $request->description;
+        $blog->description = $validated['description'] ?? null;
         if ($file_name !== null) {
             $blog->thumbnail = $file_name;
         }
         $done = $blog->save();
         if ($done) {
             // just put the file name and folder name nothing more :)
-            if (! empty($request->image)) {
+            if (! empty($image)) {
                 removeFile('blog', $imagename);
             }
             Session::flash('success_message', get_phrase('Blog Updated Successfully'));
