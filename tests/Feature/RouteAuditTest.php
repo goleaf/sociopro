@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Models\User;
+use Closure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
@@ -31,6 +32,17 @@ class RouteAuditTest extends TestCase
                 '/Route::(?:get|post|put|patch|delete|match|any)\s*\([^;]*function\s*\(/s',
                 $contents,
                 "{$routeFile} contains an HTTP closure route."
+            );
+        }
+    }
+
+    public function test_registered_http_routes_do_not_use_closure_actions(): void
+    {
+        foreach (Route::getRoutes() as $route) {
+            $this->assertNotInstanceOf(
+                Closure::class,
+                $route->getAction('uses'),
+                "{$route->methods()[0]} {$route->uri()} is registered as a closure route."
             );
         }
     }
