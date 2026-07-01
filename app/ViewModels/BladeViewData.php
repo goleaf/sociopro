@@ -62,17 +62,6 @@ final class BladeViewData
         ));
     }
 
-    public function rootCommentCount(Model $model, string $type = 'post'): int
-    {
-        $contentId = $this->commentContentId($model, $type);
-
-        return $this->remember("root-comment-count:{$type}:{$contentId}", fn (): int => Comments::query()
-            ->where('is_type', $type)
-            ->where('id_of_type', $contentId)
-            ->where('parent_id', 0)
-            ->count());
-    }
-
     public function childCommentCount(Model $comment, string $type): int
     {
         return $this->remember("child-comment-count:{$type}:{$comment->comment_id}", fn (): int => Comments::query()
@@ -137,19 +126,6 @@ final class BladeViewData
             ->first());
     }
 
-    public function feelingsByType(string $type): Collection
-    {
-        return $this->remember("feelings:{$type}", fn (): Collection => Feeling_and_activities::query()
-            ->select(['feeling_and_activity_id', 'type', 'title', 'icon'])
-            ->where('type', $type)
-            ->get());
-    }
-
-    public function activityIconExtension(Model $activity): string
-    {
-        return pathinfo((string) $activity->icon, PATHINFO_EXTENSION);
-    }
-
     public function postMediaFiles(Model $post): Collection
     {
         return $this->remember("post-media:{$post->post_id}", fn (): Collection => Media_files::query()
@@ -195,19 +171,6 @@ final class BladeViewData
             ->whereNull('chat_id')
             ->orderByDesc('id')
             ->take(9)
-            ->get());
-    }
-
-    public function friendTagRows(?User $viewer, int $limit = 5): Collection
-    {
-        if (! $viewer) {
-            return collect();
-        }
-
-        return $this->remember("friend-tag-rows:{$viewer->id}:{$limit}", fn (): Collection => User::query()
-            ->select(['id', 'name', 'photo', 'friends'])
-            ->whereJsonContains('friends', [(int) $viewer->id])
-            ->limit($limit)
             ->get());
     }
 
@@ -836,103 +799,6 @@ final class BladeViewData
         }
 
         return $this->remember("page:{$pageId}", fn (): ?Page => Page::query()->find($pageId));
-    }
-
-    public function pageLikeCount(Model $page): int
-    {
-        return $this->remember("page-like-count:{$page->id}", fn (): int => Page_like::query()
-            ->where('page_id', $page->id)
-            ->count());
-    }
-
-    public function userLikedPage(Model $page, ?User $viewer): bool
-    {
-        if (! $viewer) {
-            return false;
-        }
-
-        return $this->remember("page-liked:{$page->id}:{$viewer->id}", fn (): bool => Page_like::query()
-            ->where('page_id', $page->id)
-            ->where('user_id', $viewer->id)
-            ->exists());
-    }
-
-    public function pagePostCount(Model $page): int
-    {
-        return $this->remember("page-post-count:{$page->id}", fn (): int => Posts::query()
-            ->where('publisher', 'page')
-            ->where('publisher_id', $page->id)
-            ->count());
-    }
-
-    public function pageCategories(): Collection
-    {
-        return $this->remember('page-categories', fn (): Collection => Pagecategory::query()
-            ->orderBy('name')
-            ->get());
-    }
-
-    public function productCategories(): Collection
-    {
-        return $this->remember('product-categories', fn (): Collection => Category::query()
-            ->select(['id', 'name'])
-            ->orderBy('name')
-            ->get());
-    }
-
-    public function brands(): Collection
-    {
-        return $this->remember('brands', fn (): Collection => Brand::query()
-            ->select(['id', 'name'])
-            ->orderBy('name')
-            ->get());
-    }
-
-    public function currencies(): Collection
-    {
-        return $this->remember('currencies', fn (): Collection => Currency::query()
-            ->select(['id', 'name', 'symbol'])
-            ->orderBy('name')
-            ->get());
-    }
-
-    public function product(int|string|null $productId): ?Marketplace
-    {
-        if (! $productId) {
-            return null;
-        }
-
-        return $this->remember("product:{$productId}", fn (): ?Marketplace => Marketplace::query()
-            ->with(['getUser:id,name,photo', 'getCurrency:id,name,symbol'])
-            ->find($productId));
-    }
-
-    public function productImages(Model|int|string|null $product): Collection
-    {
-        $productId = $product instanceof Model ? $product->id : $product;
-
-        if (! $productId) {
-            return collect();
-        }
-
-        return $this->remember("product-images:{$productId}", fn (): Collection => Media_files::query()
-            ->select(['id', 'product_id', 'file_name', 'file_type'])
-            ->where('product_id', $productId)
-            ->get());
-    }
-
-    public function isProductSaved(Model|int|string|null $product, ?User $viewer): bool
-    {
-        $productId = $product instanceof Model ? $product->id : $product;
-
-        if (! $productId || ! $viewer) {
-            return false;
-        }
-
-        return $this->remember("product-saved:{$viewer->id}:{$productId}", fn (): bool => SavedProduct::query()
-            ->where('product_id', $productId)
-            ->where('user_id', $viewer->id)
-            ->exists());
     }
 
     public function group(int|string|null $groupId): ?Group
