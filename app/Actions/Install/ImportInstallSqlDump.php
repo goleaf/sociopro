@@ -240,7 +240,7 @@ class ImportInstallSqlDump
     {
         $statement = preg_replace('/`([^`]+)`/', '"$1"', $statement) ?? $statement;
 
-        return str_replace("\\'", "''", $statement);
+        return str_replace(["\\'", '\\"'], ["''", '"'], $statement);
     }
 
     private function sqliteIndexes(string $sql): array

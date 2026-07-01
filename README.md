@@ -20,3 +20,15 @@ Run Composer scripts with `composer <script>` from the project root.
 | `composer ci` | Run Composer validation, Composer audit, formatting checks, optional static analysis, and tests. |
 
 Current installed PHP quality tools are PHPUnit and Laravel Pint. PHPStan and Rector are intentionally guarded so these scripts remain compatible before those tools are added.
+
+## Database Seeding
+
+The default `DatabaseSeeder` imports the legacy install SQL dump only when the database has not already been initialized. Treat it as production-safe schema/reference data: it must not create demo users, real personal data, provider credentials, API keys, mail passwords, or other secrets.
+
+Local/demo records are separated into `Database\Seeders\LocalDemoSeeder` and are intentionally opt-in:
+
+```bash
+php artisan db:seed --class=Database\\Seeders\\LocalDemoSeeder
+```
+
+`LocalDemoSeeder` is guarded to run only in `local` or `testing` environments, uses factories for demo records, and is repeat-safe. Real production credentials must be configured after installation through the application settings or environment-backed config, never committed into seeders or `public/assets/install.sql`.

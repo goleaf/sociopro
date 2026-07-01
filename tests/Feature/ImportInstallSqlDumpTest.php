@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
+use RuntimeException;
 use Tests\TestCase;
 
 class ImportInstallSqlDumpTest extends TestCase
@@ -86,5 +87,109 @@ SQL);
         $this->assertTrue(Schema::hasTable('settings'));
         $this->assertGreaterThan(0, DB::table('settings')->count());
         $this->assertGreaterThan(0, DB::table('currencies')->count());
+    }
+
+    public function test_database_seeder_imports_sanitized_reference_data_without_demo_users_or_secrets(): void
+    {
+        $this->seed();
+
+        $this->assertSame(0, DB::table('users')->count());
+        $this->assertSame('support@example.test', DB::table('settings')->where('type', 'system_email')->value('description'));
+        $this->assertSame('', DB::table('settings')->where('type', 'hugging_face_auth_key')->value('description'));
+
+        $this->assertSame([
+            'smtp_protocol' => 'smtp',
+            'smtp_crypto' => 'tls',
+            'smtp_host' => '',
+            'smtp_port' => '',
+            'smtp_user' => '',
+            'smtp_pass' => '',
+        ], $this->settingPayload('smtp'));
+
+        $this->assertSame([
+            'account_email' => '',
+            'jitsi_app_id' => '',
+            'jitsi_jwt' => '',
+        ], $this->settingPayload('zitsi_configuration'));
+
+        foreach (DB::table('payment_gateways')->pluck('keys', 'identifier') as $identifier => $keys) {
+            $decodedKeys = json_decode((string) $keys, true);
+
+            $this->assertIsArray($decodedKeys, "Gateway [{$identifier}] keys must remain JSON.");
+
+            foreach ($this->scalarValues($decodedKeys) as $value) {
+                $this->assertSame('', $value, "Gateway [{$identifier}] seeds must not include credential values.");
+            }
+        }
+    }
+
+    public function test_local_demo_seeder_refuses_production_environment(): void
+    {
+        $this->assertTrue(class_exists('Database\\Seeders\\LocalDemoSeeder'));
+
+        $this->app->detectEnvironment(fn (): string => 'production');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Local demo seeder may only run in local or testing environments.');
+
+        app('Database\\Seeders\\LocalDemoSeeder')->run();
+    }
+
+    public function test_local_demo_seeder_uses_factories_and_is_repeat_safe(): void
+    {
+        $this->assertTrue(class_exists('Database\\Seeders\\LocalDemoSeeder'));
+
+        $this->seed();
+        app('Database\\Seeders\\LocalDemoSeeder')->run();
+
+        $firstCounts = $this->demoCounts();
+
+        app('Database\\Seeders\\LocalDemoSeeder')->run();
+
+        $this->assertSame($firstCounts, $this->demoCounts());
+        $this->assertSame(1, DB::table('users')->where('email', 'local-demo@example.test')->count());
+        $this->assertSame(1, DB::table('marketplaces')->where('title', 'Local demo marketplace product')->count());
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function settingPayload(string $type): array
+    {
+        $payload = json_decode((string) DB::table('settings')->where('type', $type)->value('description'), true);
+
+        $this->assertIsArray($payload);
+
+        return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $values
+     * @return list<string>
+     */
+    private function scalarValues(array $values): array
+    {
+        $scalars = [];
+
+        array_walk_recursive($values, function (mixed $value) use (&$scalars): void {
+            if (is_scalar($value) || $value === null) {
+                $scalars[] = (string) $value;
+            }
+        });
+
+        return $scalars;
+    }
+
+    /**
+     * @return array{users: int, categories: int, brands: int, marketplaces: int}
+     */
+    private function demoCounts(): array
+    {
+        return [
+            'users' => DB::table('users')->where('email', 'local-demo@example.test')->count(),
+            'categories' => DB::table('categories')->where('name', 'Local Demo Electronics')->count(),
+            'brands' => DB::table('brands')->where('name', 'Local Demo Brand')->count(),
+            'marketplaces' => DB::table('marketplaces')->where('title', 'Local demo marketplace product')->count(),
+        ];
     }
 }

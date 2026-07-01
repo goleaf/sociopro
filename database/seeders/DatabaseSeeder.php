@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Schema;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * Seed production-safe schema and reference data only.
+     *
+     * Local/demo rows live in LocalDemoSeeder and are intentionally opt-in.
      */
     public function run(ImportInstallSqlDump $importInstallSqlDump): void
     {
