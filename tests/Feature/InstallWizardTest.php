@@ -159,6 +159,32 @@ class InstallWizardTest extends TestCase
         $response->assertSee('value="Sociopro Local"', false);
     }
 
+    public function test_success_page_redirects_to_final_setup_when_admin_is_missing(): void
+    {
+        $response = $this->get(route('install.success'));
+
+        $response->assertRedirect(route('install.finalizing'));
+    }
+
+    public function test_success_page_displays_admin_email_without_assuming_user_id(): void
+    {
+        User::factory()->create([
+            'email' => 'member@example.test',
+            'user_role' => 'member',
+        ]);
+
+        User::factory()->create([
+            'email' => 'admin@example.test',
+            'user_role' => 'admin',
+        ]);
+
+        $response = $this->get(route('install.success'));
+
+        $response->assertOk();
+        $response->assertSee('admin@example.test');
+        $response->assertDontSee('member@example.test');
+    }
+
     public function test_finalizing_setup_view_does_not_build_timezone_options(): void
     {
         $view = File::get(resource_path('views/install/finalizing_setup.blade.php'));

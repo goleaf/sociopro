@@ -247,13 +247,21 @@ class InstallController extends Controller
     public function success($param1 = '') {
         $this->configure_routes();
 
-        if ($param1 == 'login') {
+        if ($param1 === 'login') {
             return view('auth.login');
         }
 
-        $admin_email = User::find('1')->email;
+        $admin = User::query()
+            ->select(['id', 'email'])
+            ->where('user_role', 'admin')
+            ->oldest('id')
+            ->first();
 
-        return view('install.success', ['admin_email' => $admin_email]);
+        if (! $admin) {
+            return redirect()->route('install.finalizing');
+        }
+
+        return view('install.success', ['admin_email' => $admin->email]);
     }
 
     public function configure_routes() {
