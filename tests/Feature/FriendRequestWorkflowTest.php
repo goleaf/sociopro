@@ -76,6 +76,31 @@ class FriendRequestWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_send_friend_request_reuses_existing_follower_pair(): void
+    {
+        $requester = $this->activeUser();
+        $accepter = $this->activeUser();
+
+        $existingFollower = new Follower;
+        $existingFollower->user_id = $requester->id;
+        $existingFollower->follow_id = $accepter->id;
+        $existingFollower->save();
+
+        app(SendFriendRequestAction::class)->handle($requester, $accepter->id);
+
+        $this->assertSame(1, Follower::where('user_id', $requester->id)->where('follow_id', $accepter->id)->count());
+        $this->assertDatabaseHas('friendships', [
+            'requester' => $requester->id,
+            'accepter' => $accepter->id,
+            'is_accepted' => 0,
+        ]);
+        $this->assertDatabaseHas('notifications', [
+            'sender_user_id' => $requester->id,
+            'reciver_user_id' => $accepter->id,
+            'type' => 'profile',
+        ]);
+    }
+
     private function activeUser(): User
     {
         return User::factory()->create([

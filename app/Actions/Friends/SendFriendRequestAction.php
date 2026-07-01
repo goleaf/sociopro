@@ -53,6 +53,14 @@ class SendFriendRequestAction
 
     protected function createFollower(User $requester, int $accepterId): Follower
     {
+        $existingFollower = Follower::where('follow_id', $accepterId)
+            ->where('user_id', $requester->id)
+            ->first();
+
+        if ($existingFollower instanceof Follower) {
+            return $existingFollower;
+        }
+
         $follower = new Follower;
         $follower->follow_id = $accepterId;
         $follower->user_id = $requester->id;

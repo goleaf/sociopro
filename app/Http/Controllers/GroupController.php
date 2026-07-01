@@ -179,12 +179,17 @@ class GroupController extends Controller
     public function join($id)
     {
         $response = [];
-        $group_member = new Group_member;
-        $group_member->group_id = $id;
-        $group_member->user_id = auth()->user()->id;
-        $group_member->role = MembershipRole::General->value;
-        $group_member->is_accepted = '1';
-        $group_member->save();
+        $userId = auth()->user()->id;
+
+        if (! Group_member::where('group_id', $id)->where('user_id', $userId)->exists()) {
+            $group_member = new Group_member;
+            $group_member->group_id = $id;
+            $group_member->user_id = $userId;
+            $group_member->role = MembershipRole::General->value;
+            $group_member->is_accepted = '1';
+            $group_member->save();
+        }
+
         Session::flash('success_message', get_phrase('Group Joind  Successfully'));
         $response = ['reload' => 1];
 

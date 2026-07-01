@@ -1,5 +1,27 @@
 # Migration Audit
 
+## 2026-07-02 Update: Safe Unique Constraint Pass
+
+### Scope
+
+Audited validation-only uniqueness rules, natural keys, global reference tables, owner-target relationship tables, tenant-scope availability, duplicate data, and legacy dump definitions. Full details are in `docs/unique-constraint-audit.md`.
+
+### Safe Fix Applied
+
+Added `database/migrations/2026_07_02_160000_add_safe_legacy_unique_constraints.php`.
+
+The migration adds guarded unique indexes only where the business invariant is clear and the current schema has compatible columns. It checks for tables, columns, existing unique indexes, index-name collisions, and duplicate values before adding each constraint. If production dirty data is present, the affected unique index is skipped instead of failing deployment.
+
+The pass adds global unique constraints for validation-backed lookup names and natural keys, plus owner-target composite unique constraints for duplicate-sensitive interaction tables such as follows, blocks, group memberships, page likes, saved products, and save-for-later rows.
+
+### Deferred Unsafe Constraints
+
+No tenant model or tenant key exists in this checkout, so no tenant-scoped unique constraints were added. Deferred cleanup-first candidates include `languages(name, phrase)` because the dump contains a duplicate `english` / `404 page not found` row, `settings.type` because the dump contains duplicate `about`, `policy`, and `term` rows, and invite/friendship uniqueness because legacy state transitions are not yet explicit enough for safe constraints.
+
+### Verification Added
+
+Updated `tests/Feature/MigrationSafetyAuditTest.php` to verify the unique migration can run `up()`, `down()`, and `up()` again, including uniqueness metadata. It also verifies duplicate dirty data causes a candidate unique index to be skipped until cleanup is performed.
+
 ## 2026-07-02 Update: Safe Foreign Key Constraint Pass
 
 ### Scope

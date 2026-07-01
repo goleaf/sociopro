@@ -1319,10 +1319,14 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $follwer = new Follower;
-            $follwer->follow_id = $id;
-            $follwer->user_id = $user_id;
-            $follow = $follwer->save();
+            $follow = true;
+            if (! Follower::where('follow_id', $id)->where('user_id', $user_id)->exists()) {
+                $follwer = new Follower;
+                $follwer->follow_id = $id;
+                $follwer->user_id = $user_id;
+                $follow = $follwer->save();
+            }
+
             if ($follow) {
                 $response['status'] = true;
                 $response['message'] = 'Follow Successfully';
@@ -5165,10 +5169,14 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $saveforlater = new Saveforlater;
-            $saveforlater->user_id = $user_id;
-            $saveforlater->video_id = $id;
-            $done = $saveforlater->save();
+            $done = true;
+            if (! Saveforlater::where('video_id', $id)->where('user_id', $user_id)->exists()) {
+                $saveforlater = new Saveforlater;
+                $saveforlater->user_id = $user_id;
+                $saveforlater->video_id = $id;
+                $done = $saveforlater->save();
+            }
+
             if ($done) {
                 $response['success'] = true;
                 $response['message'] = 'save successfully';

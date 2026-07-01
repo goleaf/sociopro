@@ -119,10 +119,15 @@ class VideoController extends Controller
 
     public function save_for_later($id)
     {
-        $saveforlater = new Saveforlater;
-        $saveforlater->user_id = auth()->user()->id;
-        $saveforlater->video_id = $id;
-        $saveforlater->save();
+        $userId = auth()->user()->id;
+
+        if (! Saveforlater::where('video_id', $id)->where('user_id', $userId)->exists()) {
+            $saveforlater = new Saveforlater;
+            $saveforlater->user_id = $userId;
+            $saveforlater->video_id = $id;
+            $saveforlater->save();
+        }
+
         Session::flash('success_message', get_phrase('Saved Successfully'));
         $response = ['reload' => 1];
 

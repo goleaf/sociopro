@@ -292,10 +292,14 @@ class MarketplaceController extends Controller
 
     public function save_for_later($id)
     {
-        $saveproduct = new SavedProduct;
-        $saveproduct->user_id = auth()->user()->id;
-        $saveproduct->product_id = $id;
-        $saveproduct->save();
+        $userId = auth()->user()->id;
+
+        if (! SavedProduct::where('product_id', $id)->where('user_id', $userId)->exists()) {
+            $saveproduct = new SavedProduct;
+            $saveproduct->user_id = $userId;
+            $saveproduct->product_id = $id;
+            $saveproduct->save();
+        }
 
         Session::flash('success_message', get_phrase('Saved Successfully'));
         $response = ['reload' => 1];

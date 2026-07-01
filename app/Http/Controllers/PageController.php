@@ -269,11 +269,16 @@ class PageController extends Controller
     public function like($id)
     {
         $response = [];
-        $pagelike = new Page_like;
-        $pagelike->page_id = $id;
-        $pagelike->user_id = auth()->user()->id;
-        $pagelike->role = MembershipRole::General->value;
-        $pagelike->save();
+        $userId = auth()->user()->id;
+
+        if (! Page_like::where('page_id', $id)->where('user_id', $userId)->exists()) {
+            $pagelike = new Page_like;
+            $pagelike->page_id = $id;
+            $pagelike->user_id = $userId;
+            $pagelike->role = MembershipRole::General->value;
+            $pagelike->save();
+        }
+
         Session::flash('success_message', get_phrase('Page Liked Successfully'));
         $response = ['reload' => 1];
 

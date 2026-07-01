@@ -277,10 +277,12 @@ class Profile extends Controller
     public function accept_friend_request(Request $request)
     {
         $response = [];
-        $follwer = new Follower;
-        $follwer->follow_id = $request->user_id;
-        $follwer->user_id = auth()->user()->id;
-        $follwer->save();
+        if (! Follower::where('follow_id', $request->user_id)->where('user_id', auth()->user()->id)->exists()) {
+            $follwer = new Follower;
+            $follwer->follow_id = $request->user_id;
+            $follwer->user_id = auth()->user()->id;
+            $follwer->save();
+        }
 
         $is_updated = Friendships::where('accepter', $this->user->id)
             ->where('requester', $request->user_id)

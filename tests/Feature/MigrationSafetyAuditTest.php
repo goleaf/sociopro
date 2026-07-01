@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use SplFileInfo;
 use Tests\TestCase;
@@ -72,6 +73,48 @@ class MigrationSafetyAuditTest extends TestCase
         $this->assertIndexesExist($this->expectedForeignKeyHelperIndexes());
     }
 
+    public function test_safe_legacy_unique_constraints_are_present_and_reversible(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_160000_add_safe_legacy_unique_constraints.php');
+
+        $migration->up();
+        $this->assertUniqueIndexesExist($this->expectedSafeUniqueIndexes());
+
+        $migration->down();
+        $this->assertIndexesDoNotExist($this->expectedSafeUniqueIndexes());
+
+        $migration->up();
+        $this->assertUniqueIndexesExist($this->expectedSafeUniqueIndexes());
+    }
+
+    public function test_safe_legacy_unique_constraints_skip_dirty_duplicate_data(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_160000_add_safe_legacy_unique_constraints.php');
+
+        $migration->down();
+
+        DB::table('brands')->insert([
+            ['name' => 'Dirty Duplicate', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Dirty Duplicate', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        $migration->up();
+        $this->assertIndexesDoNotExist([
+            'brands' => [
+                'brands_name_unique' => ['name'],
+            ],
+        ]);
+
+        DB::table('brands')->where('name', 'Dirty Duplicate')->delete();
+
+        $migration->up();
+        $this->assertUniqueIndexesExist([
+            'brands' => [
+                'brands_name_unique' => ['name'],
+            ],
+        ]);
+    }
+
     /**
      * @return iterable<SplFileInfo>
      */
@@ -138,6 +181,22 @@ class MigrationSafetyAuditTest extends TestCase
 
             foreach ($foreignKeys as $foreignKey) {
                 $this->assertNotContains($foreignKey, $actualForeignKeys, $table.'.'.implode('_', $foreignKey['columns']));
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, array<string, list<string>>>  $expectedIndexes
+     */
+    private function assertUniqueIndexesExist(array $expectedIndexes): void
+    {
+        foreach ($expectedIndexes as $table => $indexes) {
+            $actualIndexes = $this->indexesFor($table);
+            $actualUniqueIndexes = $this->uniqueIndexesFor($table);
+
+            foreach ($indexes as $name => $columns) {
+                $this->assertSame($columns, $actualIndexes[$name] ?? null, "{$table}.{$name}");
+                $this->assertContains($name, $actualUniqueIndexes, "{$table}.{$name} is not unique");
             }
         }
     }
@@ -339,12 +398,79 @@ class MigrationSafetyAuditTest extends TestCase
     }
 
     /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function expectedSafeUniqueIndexes(): array
+    {
+        return [
+            'addons' => [
+                'addons_unique_identifier_unique' => ['unique_identifier'],
+            ],
+            'blogcategories' => [
+                'blogcategories_name_unique' => ['name'],
+            ],
+            'brands' => [
+                'brands_name_unique' => ['name'],
+            ],
+            'categories' => [
+                'categories_name_unique' => ['name'],
+            ],
+            'currencies' => [
+                'currencies_code_unique' => ['code'],
+            ],
+            'payment_gateways' => [
+                'payment_gateways_identifier_unique' => ['identifier'],
+            ],
+            'pagecategories' => [
+                'pagecategories_name_unique' => ['name'],
+            ],
+            'block_users' => [
+                'block_users_user_block_unique' => ['user_id', 'block_user'],
+            ],
+            'followers' => [
+                'followers_user_follow_unique' => ['user_id', 'follow_id'],
+                'followers_user_page_unique' => ['user_id', 'page_id'],
+                'followers_user_group_unique' => ['user_id', 'group_id'],
+            ],
+            'group_members' => [
+                'group_members_user_group_unique' => ['user_id', 'group_id'],
+            ],
+            'page_likes' => [
+                'page_likes_user_page_unique' => ['user_id', 'page_id'],
+            ],
+            'saved_products' => [
+                'saved_products_user_product_unique' => ['user_id', 'product_id'],
+            ],
+            'saveforlaters' => [
+                'saveforlaters_user_video_unique' => ['user_id', 'video_id'],
+                'saveforlaters_user_group_unique' => ['user_id', 'group_id'],
+                'saveforlaters_user_post_unique' => ['user_id', 'post_id'],
+                'saveforlaters_user_marketplace_unique' => ['user_id', 'marketplace_id'],
+                'saveforlaters_user_event_unique' => ['user_id', 'event_id'],
+                'saveforlaters_user_blog_unique' => ['user_id', 'blog_id'],
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, list<string>>
      */
     private function indexesFor(string $table): array
     {
         return collect(Schema::getIndexes($table))
             ->mapWithKeys(fn (array $index): array => [$index['name'] => $index['columns']])
+            ->all();
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function uniqueIndexesFor(string $table): array
+    {
+        return collect(Schema::getIndexes($table))
+            ->filter(fn (array $index): bool => ($index['unique'] ?? false) === true)
+            ->pluck('name')
+            ->values()
             ->all();
     }
 

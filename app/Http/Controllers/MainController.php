@@ -1165,11 +1165,15 @@ class MainController extends Controller
     public function block_user_post($id)
     {
         $block_post = Posts::find($id);
-        $user_block = User::where('id', $block_post->user_id)->first();
-        $user_block = new BlockUser;
-        $user_block->user_id = auth()->user()->id;
-        $user_block->block_user = $block_post->user_id;
-        $user_block->save();
+        $userId = auth()->user()->id;
+
+        if (! BlockUser::where('user_id', $userId)->where('block_user', $block_post->user_id)->exists()) {
+            $user_block = new BlockUser;
+            $user_block->user_id = $userId;
+            $user_block->block_user = $block_post->user_id;
+            $user_block->save();
+        }
+
         Session::flash('success_message', get_phrase('Block Successfully'));
 
         return redirect()->route('timeline');
