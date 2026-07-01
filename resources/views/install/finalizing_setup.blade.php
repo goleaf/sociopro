@@ -86,10 +86,9 @@
             				<label class="col-sm-3 control-label">{{ __('TimeZone') }}</label>
             				
                       <select class="form-select eForm-select eChoice-multiple-with-remove" id="timezone" name="timezone">
-                        <?php $tzlist = DateTimeZone::listIdentifiers(DateTimeZone::ALL); ?>
-                        <?php foreach ($tzlist as $tz): ?>
-                          <option value="{{ $tz  }}" {{ $tz == 'Asia/Dhaka' ?  'selected':'' }}>{{ $tz  }}</option>
-                        <?php endforeach; ?>
+                        @foreach ($timezones as $timezone)
+                          <option value="{{ $timezone }}" @selected($timezone === old('timezone', $defaultTimezone))>{{ $timezone }}</option>
+                        @endforeach
                       </select>
                     <div class="">
                       {{ __('Choose System TimeZone') }}

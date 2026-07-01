@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -141,5 +142,12 @@ class InstallWizardTest extends TestCase
             'admin_phone',
             'timezone',
         ]);
+    }
+
+    public function test_finalizing_setup_view_does_not_build_timezone_options(): void
+    {
+        $view = File::get(resource_path('views/install/finalizing_setup.blade.php'));
+
+        $this->assertStringNotContainsString('DateTimeZone::listIdentifiers', $view);
     }
 }

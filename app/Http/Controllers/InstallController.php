@@ -10,12 +10,15 @@ use App\Actions\Install\UpdateEnvironmentFile;
 use App\Http\Requests\Install\FinalizeInstallationRequest;
 use App\Http\Requests\Install\PrepareDatabaseConnectionRequest;
 use App\Http\Requests\Install\ValidatePurchaseCodeRequest;
+use App\Models\User;
+use DateTimeZone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\User;
 
 class InstallController extends Controller
 {
+    private const DEFAULT_INSTALL_TIMEZONE = 'Asia/Dhaka';
+
 
     /**
      * Show the application dashboard.
@@ -235,7 +238,10 @@ class InstallController extends Controller
             return redirect()->route('install.success');
         }
 
-        return view('install.finalizing_setup');
+        return view('install.finalizing_setup', [
+            'defaultTimezone' => self::DEFAULT_INSTALL_TIMEZONE,
+            'timezones' => DateTimeZone::listIdentifiers(DateTimeZone::ALL),
+        ]);
     }
 
     public function success($param1 = '') {
