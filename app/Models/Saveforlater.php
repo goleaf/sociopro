@@ -12,6 +12,22 @@ class Saveforlater extends Model
 
     protected $guarded = ['*'];
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'video_id' => 'integer',
+            'group_id' => 'integer',
+            'post_id' => 'integer',
+            'marketplace_id' => 'integer',
+            'event_id' => 'integer',
+            'blog_id' => 'integer',
+        ];
+    }
+
     public function getVideo(): BelongsTo
     {
         return $this->belongsTo(Video::class, 'video_id');

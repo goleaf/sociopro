@@ -21,6 +21,24 @@ class Media_files extends Model
         'user_id', 'post_id', 'story_id', 'album_id', 'file_name', 'product_id', 'page_id', 'group_id', 'chat_id', 'file_type', 'privacy', 'created_at', 'updated_at', 'album_image_id',
     ];
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'post_id' => 'integer',
+            'story_id' => 'integer',
+            'album_id' => 'integer',
+            'product_id' => 'integer',
+            'page_id' => 'integer',
+            'group_id' => 'integer',
+            'chat_id' => 'integer',
+            'album_image_id' => 'integer',
+        ];
+    }
+
     public function scopeOfType(Builder $query, string|MediaFileType $type): Builder
     {
         $type = $type instanceof MediaFileType ? $type->value : $type;

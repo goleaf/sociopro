@@ -12,6 +12,17 @@ class Page_like extends Model
 
     protected $guarded = ['*'];
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'page_id' => 'integer',
+        ];
+    }
+
     public function pageData(): BelongsTo
     {
         return $this->belongsTo(Page::class, 'page_id');

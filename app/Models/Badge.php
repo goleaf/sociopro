@@ -22,6 +22,8 @@ class Badge extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'status' => 'integer',
             'start_date' => 'datetime',
             'end_date' => 'datetime',
         ];

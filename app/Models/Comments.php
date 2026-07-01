@@ -23,6 +23,18 @@ class Comments extends Model
     ];
 
     /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'parent_id' => 'integer',
+            'user_id' => 'integer',
+            'id_of_type' => 'integer',
+        ];
+    }
+
+    /**
      * @return BelongsTo<User, Comments>
      */
     public function user(): BelongsTo

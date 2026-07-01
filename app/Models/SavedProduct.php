@@ -13,6 +13,17 @@ class SavedProduct extends Model
     protected $guarded = ['*'];
 
     /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'product_id' => 'integer',
+        ];
+    }
+
+    /**
      * @return BelongsTo<Marketplace, SavedProduct>
      */
     public function productData(): BelongsTo

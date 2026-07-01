@@ -3,9 +3,39 @@
 namespace Tests\Feature;
 
 use App\Enums\PaytmTransactionStatus;
+use App\Models\Account_active_request;
+use App\Models\Addon;
+use App\Models\Album_image;
+use App\Models\Albums;
+use App\Models\Badge;
+use App\Models\BlockUser;
+use App\Models\Blog;
+use App\Models\Chat;
+use App\Models\Comments;
+use App\Models\Currency;
+use App\Models\Event;
+use App\Models\Follower;
+use App\Models\Friendships;
+use App\Models\Invite;
+use App\Models\Live_streamings;
+use App\Models\Marketplace;
+use App\Models\Media_files;
+use App\Models\Message_thrade;
+use App\Models\Notification;
+use App\Models\Page;
+use App\Models\Page_like;
 use App\Models\Payment_gateway;
 use App\Models\PaymentHistoryEntry;
+use App\Models\Post_share;
+use App\Models\Posts;
+use App\Models\Report;
+use App\Models\SavedProduct;
+use App\Models\Saveforlater;
+use App\Models\Share;
 use App\Models\Sponsor;
+use App\Models\Stories;
+use App\Models\Users;
+use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -96,5 +126,120 @@ class EloquentCastAuditTest extends TestCase
         $this->assertSame(1, $sponsor->status);
         $this->assertSame('2026-07-01 09:00:00', $sponsor->start_date->format('Y-m-d H:i:s'));
         $this->assertSame('2026-07-31 17:30:00', $sponsor->end_date->format('Y-m-d H:i:s'));
+    }
+
+    public function test_legacy_models_cast_numeric_identifiers_and_flags_before_persistence(): void
+    {
+        foreach ($this->legacyIntegerCastContracts() as $class => $attributes) {
+            $model = new $class;
+            $model->forceFill(array_fill_keys($attributes, '7'));
+
+            foreach ($attributes as $attribute) {
+                $this->assertSame(7, $model->getAttribute($attribute), "{$class}::{$attribute} is not cast to integer.");
+                $this->assertSame(7, $model->toArray()[$attribute], "{$class}::{$attribute} is not serialized as integer.");
+            }
+        }
+
+        $currency = new Currency;
+        $currency->forceFill([
+            'paypal_supported' => '1',
+            'stripe_supported' => '0',
+        ]);
+
+        $this->assertTrue($currency->paypal_supported);
+        $this->assertFalse($currency->stripe_supported);
+        $this->assertTrue($currency->toArray()['paypal_supported']);
+        $this->assertFalse($currency->toArray()['stripe_supported']);
+    }
+
+    public function test_legacy_model_casts_persist_through_database_reads(): void
+    {
+        $post = new Posts;
+        $post->forceFill([
+            'user_id' => '7',
+            'publisher_id' => '8',
+            'activity_id' => '9',
+            'report_status' => '1',
+        ])->save();
+
+        $comment = new Comments;
+        $comment->forceFill([
+            'parent_id' => '2',
+            'user_id' => '7',
+            'id_of_type' => '9',
+        ])->save();
+
+        $notification = new Notification;
+        $notification->forceFill([
+            'sender_user_id' => '3',
+            'reciver_user_id' => '4',
+            'status' => '1',
+            'view' => '0',
+        ])->save();
+
+        $legacyUser = new Users;
+        $legacyUser->forceFill([
+            'email' => 'legacy-cast@example.com',
+            'date_of_birth' => '709948800',
+        ])->save();
+
+        $this->assertSame(7, $post->refresh()->user_id);
+        $this->assertSame(8, $post->publisher_id);
+        $this->assertSame(9, $post->activity_id);
+        $this->assertSame(1, $post->report_status);
+
+        $this->assertSame(2, $comment->refresh()->parent_id);
+        $this->assertSame(7, $comment->user_id);
+        $this->assertSame(9, $comment->id_of_type);
+
+        $currency = Currency::query()->where('paypal_supported', 0)->where('stripe_supported', 1)->firstOrFail();
+
+        $this->assertFalse($currency->paypal_supported);
+        $this->assertTrue($currency->stripe_supported);
+
+        $this->assertSame(3, $notification->refresh()->sender_user_id);
+        $this->assertSame(4, $notification->reciver_user_id);
+        $this->assertSame(1, $notification->status);
+        $this->assertSame(0, $notification->view);
+
+        $this->assertSame(709948800, $legacyUser->refresh()->date_of_birth);
+    }
+
+    /**
+     * @return array<class-string, list<string>>
+     */
+    private function legacyIntegerCastContracts(): array
+    {
+        return [
+            Account_active_request::class => ['user_id'],
+            Addon::class => ['parent_id', 'status'],
+            Album_image::class => ['album_id', 'user_id', 'page_id', 'group_id'],
+            Albums::class => ['user_id', 'page_id', 'group_id'],
+            Badge::class => ['user_id', 'status'],
+            BlockUser::class => ['user_id', 'block_user'],
+            Blog::class => ['user_id', 'category_id'],
+            Chat::class => ['message_thrade', 'reciver_id', 'sender_id', 'thumbsup', 'reply_id', 'read_status'],
+            Comments::class => ['parent_id', 'user_id', 'id_of_type'],
+            Event::class => ['user_id', 'group_id', 'publisher_id'],
+            Follower::class => ['user_id', 'follow_id', 'page_id', 'group_id'],
+            Friendships::class => ['requester', 'accepter', 'importance', 'is_accepted'],
+            Invite::class => ['invite_sender_id', 'invite_reciver_id', 'is_accepted', 'event_id', 'page_id', 'group_id', 'post_id'],
+            Live_streamings::class => ['publisher_id', 'user_id'],
+            Marketplace::class => ['user_id', 'currency_id'],
+            Media_files::class => ['user_id', 'post_id', 'story_id', 'album_id', 'product_id', 'page_id', 'group_id', 'chat_id', 'album_image_id'],
+            Message_thrade::class => ['reciver_id', 'sender_id'],
+            Notification::class => ['sender_user_id', 'reciver_user_id', 'event_id', 'page_id', 'group_id', 'status', 'view'],
+            Page::class => ['user_id', 'category_id'],
+            Page_like::class => ['user_id', 'page_id'],
+            Post_share::class => ['user_id', 'post_id'],
+            Posts::class => ['user_id', 'publisher_id', 'activity_id', 'report_status'],
+            Report::class => ['user_id', 'post_id', 'status'],
+            SavedProduct::class => ['user_id', 'product_id'],
+            Saveforlater::class => ['user_id', 'video_id', 'group_id', 'post_id', 'marketplace_id', 'event_id', 'blog_id'],
+            Share::class => ['event_id', 'page_id', 'group_id'],
+            Stories::class => ['user_id', 'publisher_id'],
+            Users::class => ['date_of_birth'],
+            Video::class => ['user_id'],
+        ];
     }
 }

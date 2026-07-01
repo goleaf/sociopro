@@ -17,4 +17,16 @@ class Albums extends Model
     protected $fillable = [
         'user_id', 'title', 'sub_title', 'thumbnail', 'privacy', 'page_id', 'created_at', 'updated_at',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'page_id' => 'integer',
+            'group_id' => 'integer',
+        ];
+    }
 }

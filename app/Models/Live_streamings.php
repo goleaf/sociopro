@@ -17,4 +17,15 @@ class Live_streamings extends Model
     protected $fillable = [
         'streaming_id', 'publisher', 'publisher_id', 'user_id', 'details', 'created_at', 'updated_at',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'publisher_id' => 'integer',
+            'user_id' => 'integer',
+        ];
+    }
 }

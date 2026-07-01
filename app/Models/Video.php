@@ -12,6 +12,16 @@ class Video extends Model
 
     protected $guarded = ['*'];
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+        ];
+    }
+
     public function getUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

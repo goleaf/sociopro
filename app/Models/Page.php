@@ -12,6 +12,17 @@ class Page extends Model
 
     protected $guarded = ['*'];
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'category_id' => 'integer',
+        ];
+    }
+
     public function getCategory(): BelongsTo
     {
         return $this->belongsTo(Pagecategory::class, 'category_id');

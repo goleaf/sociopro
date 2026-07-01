@@ -12,6 +12,18 @@ class Report extends Model
 
     protected $guarded = ['*'];
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'post_id' => 'integer',
+            'status' => 'integer',
+        ];
+    }
+
     public function userData(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

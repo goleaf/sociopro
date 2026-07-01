@@ -20,4 +20,15 @@ class Stories extends Model
     protected $fillable = [
         'user_id', 'publisher', 'publisher_id', 'privacy', 'content_type', 'description', 'created_at', 'updated_at', 'status',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'publisher_id' => 'integer',
+        ];
+    }
 }

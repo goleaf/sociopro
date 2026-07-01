@@ -20,6 +20,19 @@ class Friendships extends Model
     ];
 
     /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'requester' => 'integer',
+            'accepter' => 'integer',
+            'importance' => 'integer',
+            'is_accepted' => 'integer',
+        ];
+    }
+
+    /**
      * @return BelongsTo<User, Friendships>
      */
     public function getFriend(): BelongsTo

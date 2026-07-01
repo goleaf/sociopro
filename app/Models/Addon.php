@@ -12,4 +12,15 @@ class Addon extends Model
     protected $fillable = [
         'title', 'parent_id', 'features', 'unique_identifier', 'version', 'status',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'parent_id' => 'integer',
+            'status' => 'integer',
+        ];
+    }
 }

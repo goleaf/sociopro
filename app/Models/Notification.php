@@ -12,6 +12,22 @@ class Notification extends Model
 
     protected $guarded = ['*'];
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'sender_user_id' => 'integer',
+            'reciver_user_id' => 'integer',
+            'event_id' => 'integer',
+            'page_id' => 'integer',
+            'group_id' => 'integer',
+            'status' => 'integer',
+            'view' => 'integer',
+        ];
+    }
+
     public function getUserData(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_user_id');
