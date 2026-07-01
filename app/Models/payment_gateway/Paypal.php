@@ -12,7 +12,7 @@ class Paypal extends Model
 {
     use HasFactory;
 
-    public static function payment_status($identifier, $transaction_keys = []): bool
+    public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
         $paymentGateway = Payment_gateway::where('identifier', $identifier)->first();
 

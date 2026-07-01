@@ -9,7 +9,7 @@ class Flutterwave extends Model
 {
     use HasFactory;
 
-    public static function payment_status($identifier, $transaction_keys = [])
+    public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
         if ($transaction_keys != '') {
             array_shift($transaction_keys);

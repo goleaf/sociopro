@@ -6,6 +6,8 @@ use DateTime;
 use DateTimeZone;
 use Exception;
 use Firebase\JWT\JWT;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -20,9 +22,9 @@ trait ZoomMeetingTrait
 
     private $zoom_api_url;
 
-    private function get_zoom_keys() {}
+    private function get_zoom_keys(): void {}
 
-    private function generateZoomToken()
+    private function generateZoomToken(): string
     {
         $zoom_configuration = get_settings('zoom_configuration', 'decoded');
 
@@ -40,12 +42,12 @@ trait ZoomMeetingTrait
         return JWT::encode($payload, $secret, 'HS256');
     }
 
-    private function retrieveZoomUrl()
+    private function retrieveZoomUrl(): string
     {
         return 'https://api.zoom.us/v2/';
     }
 
-    private function zoomRequest()
+    private function zoomRequest(): PendingRequest
     {
         $jwt = $this->generateZoomToken();
 
@@ -55,7 +57,7 @@ trait ZoomMeetingTrait
         ]);
     }
 
-    public function zoomGet(string $path, array $query = [])
+    public function zoomGet(string $path, array $query = []): Response
     {
         $url = $this->retrieveZoomUrl();
         $request = $this->zoomRequest();
@@ -63,7 +65,7 @@ trait ZoomMeetingTrait
         return $request->get($url.$path, $query);
     }
 
-    public function zoomPost(string $path, array $body = [])
+    public function zoomPost(string $path, array $body = []): Response
     {
         $url = $this->retrieveZoomUrl();
         $request = $this->zoomRequest();
@@ -71,7 +73,7 @@ trait ZoomMeetingTrait
         return $request->post($url.$path, $body);
     }
 
-    public function zoomPatch(string $path, array $body = [])
+    public function zoomPatch(string $path, array $body = []): Response
     {
         $url = $this->retrieveZoomUrl();
         $request = $this->zoomRequest();
@@ -79,7 +81,7 @@ trait ZoomMeetingTrait
         return $request->patch($url.$path, $body);
     }
 
-    public function zoomDelete(string $path, array $body = [])
+    public function zoomDelete(string $path, array $body = []): Response
     {
         $url = $this->retrieveZoomUrl();
         $request = $this->zoomRequest();
@@ -87,7 +89,7 @@ trait ZoomMeetingTrait
         return $request->delete($url.$path, $body);
     }
 
-    public function toZoomTimeFormat(string $dateTime)
+    public function toZoomTimeFormat(string $dateTime): string
     {
         $date = date('d-m-Y H:i:s', (int) $dateTime);
 
@@ -102,7 +104,7 @@ trait ZoomMeetingTrait
         }
     }
 
-    public function toUnixTimeStamp(string $dateTime, string $timezone)
+    public function toUnixTimeStamp(string $dateTime, string $timezone): int|string
     {
         try {
             $date = new DateTime($dateTime, new DateTimeZone($timezone));

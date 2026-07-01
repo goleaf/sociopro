@@ -15,7 +15,7 @@ class StripePay extends Model
 {
     use HasFactory;
 
-    public static function payment_status($identifier, $transaction_keys = [])
+    public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
         $payment_gateway = DB::table('payment_gateways')->where('identifier', $identifier)->first();
         $keys = json_decode($payment_gateway->keys, true);
@@ -79,7 +79,7 @@ class StripePay extends Model
         return false;
     }
 
-    public static function payment_create($identifier)
+    public static function payment_create(mixed $identifier)
     {
         // require_once '../vendor/autoload.php';
         // require_once '../secrets.php';

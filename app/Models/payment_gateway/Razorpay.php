@@ -12,7 +12,7 @@ class Razorpay extends Model
 {
     use HasFactory;
 
-    public static function payment_status($identifier, $transaction_keys = [])
+    public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
         if ($transaction_keys != '') {
             array_shift($transaction_keys);
@@ -24,7 +24,7 @@ class Razorpay extends Model
         return false;
     }
 
-    public static function payment_create($identifier)
+    public static function payment_create(mixed $identifier): array
     {
         $payment_details = session('payment_details');
         $user = DB::table('users')->where('id', auth()->user()->id)->first();

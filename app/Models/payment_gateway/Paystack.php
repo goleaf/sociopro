@@ -12,7 +12,7 @@ class Paystack extends Model
 {
     use HasFactory;
 
-    public function payment_status($identifier = '', array $transaction_keys = []): bool
+    public function payment_status(mixed $identifier = '', array $transaction_keys = []): bool
     {
         $reference = trim((string) ($transaction_keys['reference'] ?? ''));
 

@@ -6,6 +6,8 @@ use Anand\LaravelPaytmWallet\Facades\PaytmWallet;
 use App\Models\Payment_gateway;
 use App\Models\Setting;
 use App\Models\Users;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -23,7 +25,7 @@ class PaymentController extends Controller
         'is_addon',
     ];
 
-    public function index()
+    public function index(): View|RedirectResponse
     {
         $payment_details = session('payment_details');
         if (! $payment_details || ! is_array($payment_details) || count($payment_details) <= 0) {
@@ -46,7 +48,7 @@ class PaymentController extends Controller
         return view('payment.index', $page_data);
     }
 
-    public function show_payment_gateway_by_ajax($identifier)
+    public function show_payment_gateway_by_ajax(string $identifier): View
     {
         $page_data['payment_details'] = session('payment_details');
         $page_data['payment_gateway'] = $this->paymentGateway($identifier);
@@ -55,7 +57,7 @@ class PaymentController extends Controller
         return view('payment.'.$identifier.'.index', $page_data);
     }
 
-    public function payment_success($identifier, Request $request)
+    public function payment_success(string $identifier, Request $request)
     {
         $payment_details = session('payment_details');
         $payment_gateway = $this->paymentGateway($identifier);
@@ -79,7 +81,7 @@ class PaymentController extends Controller
         }
     }
 
-    public function payment_create($identifier)
+    public function payment_create(string $identifier): RedirectResponse
     {
         $payment_gateway = $this->paymentGateway($identifier);
         $model_full_path = $this->gatewayModelClass($payment_gateway);
@@ -88,7 +90,7 @@ class PaymentController extends Controller
         return redirect()->to($created_payment_link);
     }
 
-    public function payment_razorpay($identifier)
+    public function payment_razorpay(string $identifier): View
     {
         $payment_gateway = $this->paymentGateway($identifier);
         $model_full_path = $this->gatewayModelClass($payment_gateway);
@@ -117,7 +119,7 @@ class PaymentController extends Controller
         return $payment->receive();
     }
 
-    public function paytm_paymentCallback()
+    public function paytm_paymentCallback(): ?RedirectResponse
     {
         $transaction = PaytmWallet::with('receive');
         $response = $transaction->response();

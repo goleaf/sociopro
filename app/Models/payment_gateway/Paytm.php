@@ -13,7 +13,7 @@ class Paytm extends Model
 
     protected $fillable = ['item_type', 'item_id', 'user_id', 'amount', 'currency', 'identifier', 'transaction_keys'];
 
-    public static function payment_status($identifier, $transaction_keys = [])
+    public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
         if ($transaction_keys != '') {
             array_shift($transaction_keys);
