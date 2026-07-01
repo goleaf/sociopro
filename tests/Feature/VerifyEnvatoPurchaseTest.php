@@ -10,6 +10,21 @@ use Tests\TestCase;
 
 class VerifyEnvatoPurchaseTest extends TestCase
 {
+    public function test_envato_verification_does_not_use_curl_in_controllers(): void
+    {
+        $controllers = [
+            app_path('Http/Controllers/AdminCrudController.php'),
+            app_path('Http/Controllers/InstallController.php'),
+        ];
+
+        foreach ($controllers as $controller) {
+            $contents = file_get_contents($controller);
+
+            $this->assertStringNotContainsString('curl_init', $contents, basename($controller));
+            $this->assertStringNotContainsString('CURLOPT_SSL_VERIFYPEER', $contents, basename($controller));
+        }
+    }
+
     public function test_it_does_not_call_envato_without_a_token(): void
     {
         config(['services.envato.personal_token' => null]);

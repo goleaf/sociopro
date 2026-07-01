@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Install\VerifyEnvatoPurchase;
 use App\Models\Blog;
 use App\Models\Blogcategory;
 use App\Models\Job;
@@ -33,7 +34,7 @@ use App\Models\Badge;
 class AdminCrudController extends Controller
 {
 
-    public function __construct()
+    public function __construct(private VerifyEnvatoPurchase $verifyEnvatoPurchase)
     {
 
         //Don't remove it
@@ -337,46 +338,9 @@ class AdminCrudController extends Controller
         return view('backend.index', $page_data);
     }
 
-    public function curl_request($code = '')
+    public function curl_request($code = ''): bool
     {
-
-        $purchase_code = $code;
-
-        $personal_token = config('services.envato.personal_token');
-
-        if (! $personal_token) {
-            return false;
-        }
-
-        $url = "https://api.envato.com/v3/market/author/sale?code=" . $purchase_code;
-        $curl = curl_init($url);
-
-        //setting the header for the rest of the api
-        $bearer = 'bearer ' . $personal_token;
-        $header = array();
-        $header[] = 'Content-length: 0';
-        $header[] = 'Content-type: application/json; charset=utf-8';
-        $header[] = 'Authorization: ' . $bearer;
-
-        $verify_url = 'https://api.envato.com/v1/market/private/user/verify-purchase:' . $purchase_code . '.json';
-        $ch_verify = curl_init($verify_url . '?code=' . $purchase_code);
-
-        curl_setopt($ch_verify, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($ch_verify, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch_verify, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch_verify, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($ch_verify, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13');
-
-        $cinit_verify_data = curl_exec($ch_verify);
-        curl_close($ch_verify);
-
-        $response = json_decode($cinit_verify_data, true) ?: [];
-
-        if (count($response['verify-purchase'] ?? []) > 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return $this->verifyEnvatoPurchase->handle($code);
     }
 
     //Don't remove this code for security reasons
