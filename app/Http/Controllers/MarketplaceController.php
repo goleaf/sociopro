@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\MediaFileType;
+use App\Http\Requests\Marketplace\DestroyMarketplaceRequest;
+use App\Http\Requests\Marketplace\StoreMarketplaceRequest;
+use App\Http\Requests\Marketplace\UpdateMarketplaceRequest;
 use App\Models\Marketplace;
 use App\Models\Media_files;
 use App\Models\SavedProduct;
@@ -32,24 +35,8 @@ class MarketplaceController extends Controller
         return view('frontend.index', $page_data);
     }
 
-    public function store(Request $request)
+    public function store(StoreMarketplaceRequest $request)
     {
-        $rules = [
-            'title' => 'required|max:255',
-            'price' => 'required',
-            'location' => 'required',
-            // 'category' => 'required',
-            'condition' => 'required',
-            // 'status' => 'required',
-            // 'brand' => 'required',
-        ];
-        $validator = Validator::make($request->only(array_keys($rules)), $rules);
-        if ($validator->fails()) {
-            return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
-        }
-
-        Gate::authorize('create', Marketplace::class);
-
         $marketplace = new Marketplace;
         $marketplace->user_id = auth()->user()->id;
         $marketplace->title = $request->title;
@@ -97,22 +84,8 @@ class MarketplaceController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateMarketplaceRequest $request, $id)
     {
-        $rules = [
-            'title' => 'required|max:255',
-            'price' => 'required',
-            'location' => 'required',
-            // 'category' => 'required',
-            'condition' => 'required',
-            'status' => 'required',
-            // 'brand' => 'required',
-        ];
-        $validator = Validator::make($request->only(array_keys($rules)), $rules);
-        if ($validator->fails()) {
-            return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
-        }
-
         $marketplace = Marketplace::findOrFail($id);
 
         Gate::authorize('update', $marketplace);
@@ -176,7 +149,7 @@ class MarketplaceController extends Controller
         }
     }
 
-    public function product_delete(Request $request)
+    public function product_delete(DestroyMarketplaceRequest $request)
     {
         $response = [];
         $market = Marketplace::findOrFail($request->integer('product_id'));

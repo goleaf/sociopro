@@ -4,6 +4,10 @@ namespace Tests\Feature;
 
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
+use App\Http\Controllers\MarketplaceController;
+use App\Http\Requests\Marketplace\DestroyMarketplaceRequest;
+use App\Http\Requests\Marketplace\StoreMarketplaceRequest;
+use App\Http\Requests\Marketplace\UpdateMarketplaceRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Currency;
@@ -13,11 +17,26 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Sanctum\Sanctum;
+use ReflectionMethod;
 use Tests\TestCase;
 
 class MarketplaceAuthorizationTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_web_marketplace_write_actions_use_form_request_authorization(): void
+    {
+        $this->assertControllerRequestType('store', StoreMarketplaceRequest::class);
+        $this->assertControllerRequestType('update', UpdateMarketplaceRequest::class);
+        $this->assertControllerRequestType('product_delete', DestroyMarketplaceRequest::class);
+    }
+
+    public function test_web_guest_is_redirected_from_marketplace_store(): void
+    {
+        $response = $this->post(route('product.store'), $this->marketplacePayload());
+
+        $response->assertRedirect(route('login'));
+    }
 
     public function test_web_guest_is_redirected_from_marketplace_update(): void
     {
@@ -27,6 +46,81 @@ class MarketplaceAuthorizationTest extends TestCase
         $response = $this->post(route('product.update', ['id' => $product->id]), $this->marketplacePayload());
 
         $response->assertRedirect(route('login'));
+    }
+
+    public function test_web_guest_is_redirected_from_marketplace_delete(): void
+    {
+        $owner = $this->activeUser();
+        $product = $this->marketplace($owner);
+
+        $response = $this->get(route('product.delete').'?product_id='.$product->id);
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_web_marketplace_store_validation_keeps_legacy_ok_error_shape(): void
+    {
+        $user = $this->activeUser();
+
+        $response = $this
+            ->actingAs($user)
+            ->post(route('product.store'), [
+                'title' => '',
+                'price' => '',
+                'location' => '',
+                'condition' => '',
+            ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure([
+                'validationError' => [
+                    'title',
+                    'price',
+                    'location',
+                    'condition',
+                ],
+            ]);
+    }
+
+    public function test_web_marketplace_update_validation_still_runs_before_model_authorization(): void
+    {
+        $owner = $this->activeUser();
+        $otherUser = $this->activeUser();
+        $product = $this->marketplace($owner);
+
+        $response = $this
+            ->actingAs($otherUser)
+            ->post(route('product.update', ['id' => $product->id]), [
+                'title' => '',
+                'price' => '',
+                'location' => '',
+                'condition' => '',
+                'status' => '',
+            ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure([
+                'validationError' => [
+                    'title',
+                    'price',
+                    'location',
+                    'condition',
+                    'status',
+                ],
+            ]);
+    }
+
+    public function test_web_marketplace_delete_with_missing_id_keeps_not_found_status(): void
+    {
+        $user = $this->activeUser();
+
+        $response = $this
+            ->actingAs($user)
+            ->get(route('product.delete'));
+
+        $response->assertNotFound();
     }
 
     public function test_web_user_cannot_update_another_users_marketplace_product(): void
@@ -533,6 +627,16 @@ class MarketplaceAuthorizationTest extends TestCase
             'status' => UserAccountStatus::Active->value,
             'timezone' => 'UTC',
         ]);
+    }
+
+    private function assertControllerRequestType(string $method, string $requestClass): void
+    {
+        $parameterType = (new ReflectionMethod(MarketplaceController::class, $method))
+            ->getParameters()[0]
+            ->getType();
+
+        $this->assertSame($requestClass, $parameterType?->getName());
+        $this->assertTrue(method_exists($requestClass, 'authorize'));
     }
 
     /**
