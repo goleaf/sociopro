@@ -25,6 +25,10 @@ class AdminMiddleware
             return $next($request);
         }
 
-        return redirect()->back();
+        if ($request->expectsJson()) {
+            abort(403);
+        }
+
+        return redirect()->route('timeline');
     }
 }
