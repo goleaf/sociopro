@@ -1,4 +1,8 @@
 <div class="main_content">
+    @php
+      $dashboardStats = $viewData->dashboardStats(auth()->user());
+    @endphp
+
     <!-- Mani section header and breadcrumb -->
     <div class="mainSection-title">
       <div class="row">
@@ -31,13 +35,7 @@
                       <i class="bi bi-people-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                    @php
-                      $total_friends = DB::table('friendships')->where(function($query){
-                        $query->where('accepter', auth()->user()->id)->orWhere('requester', auth()->user()->id);
-                      })
-                      ->where('is_accepted', 1);
-                    @endphp
-                      <h4>{{$total_friends->count()}}</h4>
+                      <h4>{{ $dashboardStats['friends'] }}</h4>
                       <p>{{get_phrase('Your total friends')}}</p>
                   </div>
               </div>
@@ -57,7 +55,7 @@
                       <i class="bi bi-postcard-heart-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                      <h4>{{DB::table('posts')->where('user_id', auth()->user()->id)->get()->count()}}</h4>
+                      <h4>{{ $dashboardStats['posts'] }}</h4>
                       <p>{{get_phrase('Your total posts')}}</p>
                   </div>
               </div>
@@ -77,7 +75,7 @@
                       <i class="bi bi-file-richtext-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                      <h4>{{DB::table('pages')->where('user_id', auth()->user()->id)->get()->count()}}</h4>
+                      <h4>{{ $dashboardStats['pages'] }}</h4>
                       <p>{{get_phrase('Your total pages')}}</p>
                   </div>
               </div>
@@ -98,7 +96,7 @@
                       <i class="bi bi-file-text-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                      <h4>{{DB::table('blogs')->where('user_id', auth()->user()->id)->get()->count()}}</h4>
+                      <h4>{{ $dashboardStats['blogs'] }}</h4>
                       <p>{{get_phrase('Your total Blogs')}}</p>
                   </div>
               </div>
@@ -118,7 +116,7 @@
                       <i class="bi bi-badge-ad-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                      <h4>{{DB::table('sponsors')->where('user_id', auth()->user()->id)->get()->count()}}</h4>
+                      <h4>{{ $dashboardStats['ads'] }}</h4>
                       <p>{{get_phrase('Your total ads')}}</p>
                   </div>
               </div>
@@ -138,7 +136,7 @@
                       <i class="bi bi-bag-heart-fill text-30px"></i>
                   </div>
                   <div class="reader-count">
-                      <h4>{{DB::table('marketplaces')->where('user_id', auth()->user()->id)->get()->count()}}</h4>
+                      <h4>{{ $dashboardStats['products'] }}</h4>
                       <p>{{get_phrase('Your total products')}}</p>
                   </div>
               </div>

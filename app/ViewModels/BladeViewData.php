@@ -81,6 +81,17 @@ final class BladeViewData
         ));
     }
 
+    public function rootCommentCount(Model $post, string $type = 'post'): int
+    {
+        $contentId = $this->commentContentId($post, $type);
+
+        return $this->remember("root-comment-count:{$type}:{$contentId}", fn (): int => Comments::query()
+            ->where('is_type', $type)
+            ->where('id_of_type', $contentId)
+            ->where('parent_id', 0)
+            ->count());
+    }
+
     public function childCommentCount(Model $comment, string $type): int
     {
         return $this->remember("child-comment-count:{$type}:{$comment->comment_id}", fn (): int => Comments::query()

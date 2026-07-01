@@ -11,7 +11,7 @@ if(isset($page_identifire)) {
             </div>
             <div class="card-details">
                 <h6><a href="{{route('album.details.list', ['album_id' => $album->id , 'identifire' => $identifires,])}}">{{$album->title}}</a></h6>
-                <span class="mute">{{DB::table('album_images')->where('album_id', $album->id)->get()->count()}} {{get_phrase('Items')}}</span>
+                <span class="mute">{{ $viewData->albumImages($album->id)->count() }} {{get_phrase('Items')}}</span>
             </div>
         </div>
     </div> <!-- Card End -->
