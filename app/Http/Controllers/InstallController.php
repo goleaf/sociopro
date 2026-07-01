@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Install\CheckInstallRequirements;
+use App\Actions\Install\ConfigureDatabase;
 use App\Actions\Install\FinalizeInstallation;
 use App\Actions\Install\ImportInstallSqlDump;
 use App\Actions\Install\PrepareDatabaseConnection;
-use App\Actions\Install\UpdateEnvironmentFile;
 use App\Http\Requests\Install\FinalizeInstallationRequest;
 use App\Http\Requests\Install\PrepareDatabaseConnectionRequest;
 use App\Http\Requests\Install\ValidatePurchaseCodeRequest;
@@ -19,6 +19,9 @@ class InstallController extends Controller
 {
     private const DEFAULT_INSTALL_TIMEZONE = 'Asia/Dhaka';
 
+    public function __construct(private ConfigureDatabase $configureDatabase)
+    {
+    }
 
     /**
      * Show the application dashboard.
@@ -157,7 +160,7 @@ class InstallController extends Controller
     public function confirmImport($param1='')
     {
         if (in_array($param1, ['confirm_import', 'confirm_install'], true)) {
-            $this->configure_database();
+            $this->configureDatabase();
 
             // redirect to admin creation page
             return view('install.install');
@@ -167,64 +170,22 @@ class InstallController extends Controller
     public function confirmInstall(ImportInstallSqlDump $importInstallSqlDump)
     {
         // run sql
-        $this->run_blank_sql($importInstallSqlDump);
+        $this->importInstallSql($importInstallSqlDump);
 
         // redirect to admin creation page
         return redirect()->route('install.finalizing');
     }
 
-    public function configure_database() {
-        $connection = session('db_connection', 'mysql');
-        $environment = app(UpdateEnvironmentFile::class);
-
-        if ($connection === 'sqlite') {
-            $database = session('dbname', database_path('database.sqlite'));
-
-            $environment->handle([
-                'DB_CONNECTION' => 'sqlite',
-                'DB_DATABASE' => $database,
-                'DB_HOST' => '',
-                'DB_PORT' => '',
-                'DB_USERNAME' => '',
-                'DB_PASSWORD' => '',
-            ]);
-
-            config([
-                'database.default' => 'sqlite',
-                'database.connections.sqlite.database' => $database,
-            ]);
-
-            DB::setDefaultConnection('sqlite');
-            DB::purge('sqlite');
-
-            return;
-        }
-
-        $environment->handle([
-            'DB_CONNECTION' => 'mysql',
-            'DB_HOST' => session('hostname'),
-            'DB_PORT' => config('database.connections.mysql.port', '3306'),
-            'DB_DATABASE' => session('dbname'),
-            'DB_USERNAME' => session('username'),
-            'DB_PASSWORD' => session('password'),
-        ]);
-
-        config([
-            'database.default' => 'mysql',
-            'database.connections.mysql.host' => session('hostname'),
-            'database.connections.mysql.database' => session('dbname'),
-            'database.connections.mysql.username' => session('username'),
-            'database.connections.mysql.password' => session('password'),
-        ]);
-
-        DB::setDefaultConnection('mysql');
-        DB::purge('mysql');
-    }
-
-    public function run_blank_sql(ImportInstallSqlDump $importInstallSqlDump) {
-        $this->configure_database();
+    private function importInstallSql(ImportInstallSqlDump $importInstallSqlDump): void
+    {
+        $this->configureDatabase();
 
         $importInstallSqlDump->handle(base_path('public/assets/install.sql'));
+    }
+
+    private function configureDatabase(): void
+    {
+        $this->configureDatabase->handle();
     }
 
     public function finalizingSetup(
