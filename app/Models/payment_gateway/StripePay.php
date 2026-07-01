@@ -29,6 +29,8 @@ class StripePay extends Model
         $session_id = $transaction_keys['session_id'];
         if ($session_id != '') {
             Stripe::setApiKey($stripeSecretKey);
+            $api_error = null;
+            $checkout_session = null;
 
             try {
                 $checkout_session = CheckoutSession::retrieve($session_id);
@@ -37,6 +39,8 @@ class StripePay extends Model
             }
 
             if (empty($api_error) && $checkout_session) {
+                $intent = null;
+
                 try {
                     $intent = PaymentIntent::retrieve($checkout_session->payment_intent);
                 } catch (ApiErrorException $e) {

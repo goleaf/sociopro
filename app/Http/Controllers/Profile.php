@@ -327,7 +327,7 @@ class Profile extends Controller
             ->where('requester', $request->user_id)
             ->where('is_accepted', '!=', 1);
 
-        if ($row->get()->count() > 0) {
+        if ($row->exists()) {
             Friendships::where('id', $row->value('id'))->delete();
             $response = ['alertMessage' => get_phrase('Friend request deleted'), 'fadeOutElem' => "#friendRequest$request->user_id"];
         }

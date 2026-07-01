@@ -635,16 +635,15 @@ class MainController extends Controller
             ->where('posts.status', 'active')
             ->join('users', 'posts.user_id', '=', 'users.id');
 
-        if ($post_details->count() > 0) {
-            $post_details = $post_details->first();
+        $post_details = $post_details->first();
 
+        if ($post_details) {
             $live_streaming = Live_streamings::where('publisher', 'post')
                 ->where('publisher_id', $post_id)
-                ->where('user_id', $post_details->user_id);
+                ->where('user_id', $post_details->user_id)
+                ->first();
 
-            if ($live_streaming->get()->count() > 0) {
-                $live_streaming = $live_streaming->first();
-
+            if ($live_streaming) {
                 $page_data['meeting_details'] = json_decode($live_streaming->details, true);
 
                 if ($post_details->user_id == $this->user->id) {
@@ -691,7 +690,7 @@ class MainController extends Controller
         $form_data = $request->all();
 
         if ($form_data['type'] == 'post') {
-            $post_data = Posts::where('post_id', $form_data['post_id'])->get()->first();
+            $post_data = Posts::where('post_id', $form_data['post_id'])->first();
 
             $all_reacts = json_decode($post_data['user_reacts'], true);
 
@@ -728,7 +727,7 @@ class MainController extends Controller
     {
         $form_data = $request->all();
 
-        $comment_data = Comments::where('comment_id', $form_data['comment_id'])->get()->first();
+        $comment_data = Comments::where('comment_id', $form_data['comment_id'])->first();
 
         $all_reacts = json_decode($comment_data['user_reacts'], true);
 
@@ -761,7 +760,7 @@ class MainController extends Controller
         $post = Posts::where('posts.status', 'active')
             ->where('posts.post_id', $request->post_id)
             ->join('users', 'posts.user_id', '=', 'users.id')
-            ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')->get()->first();
+            ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')->first();
 
         $comments = DB::table('comments')
             ->join('users', 'comments.user_id', '=', 'users.id')
@@ -808,7 +807,7 @@ class MainController extends Controller
 
         $post = Posts::where('posts.post_id', $form_data['post_id'])
             ->join('users', 'posts.user_id', '=', 'users.id')
-            ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')->get()->first();
+            ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')->first();
 
         $comments = DB::table('comments')
             ->join('users', 'comments.user_id', '=', 'users.id')
@@ -818,8 +817,6 @@ class MainController extends Controller
         $page_data['post'] = $post;
         $page_data['type'] = $form_data['type'];
         $page_data['post_id'] = $form_data['post_id'];
-
-        $total_comments = Comments::where('is_type', $form_data['type'])->where('id_of_type', $form_data['post_id'])->get()->count();
 
         if ($request->parent_id == 0) {
             $page_data['comments'] = $comments;
@@ -859,7 +856,7 @@ class MainController extends Controller
     {
         $form_data = $request->all();
 
-        return $total_child_comments = Comments::where('is_type', $form_data['type'])->where('id_of_type', $form_data['post_id'])->get()->count();
+        return Comments::where('is_type', $form_data['type'])->where('id_of_type', $form_data['post_id'])->count();
     }
 
     public function single_post($id, $type = null)
@@ -1248,5 +1245,18 @@ class MainController extends Controller
         } catch (Exception) {
             return response()->json(['error' => 'Server error'], 500);
         }
+    }
+
+    private function saveImage(string $imageData): string
+    {
+        $folderPath = public_path('storage/ai_images');
+        if (! is_dir($folderPath)) {
+            mkdir($folderPath, 0755, true);
+        }
+
+        $fileName = uniqid('generated_image_', true).'.png';
+        file_put_contents($folderPath.'/'.$fileName, $imageData);
+
+        return url('public/storage/ai_images/'.$fileName);
     }
 }

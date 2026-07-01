@@ -449,6 +449,8 @@ class ApiController extends Controller
     {
         $token = $request->bearerToken();
         $response = [];
+        $timeline_story = [];
+        $timeline = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -1008,6 +1010,8 @@ class ApiController extends Controller
     {
         $token = $request->bearerToken();
         $response = [];
+        $timeline = [];
+
         if (! $request->offset) {
             $offset = 0;
         } else {
@@ -2226,6 +2230,7 @@ class ApiController extends Controller
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
+            $data = [];
             if ($request->profile_photo && ! empty($request->profile_photo)) {
                 $file_name = FileUploader::upload($request->profile_photo, 'public/storage/userimage', 800);
 
@@ -2234,6 +2239,13 @@ class ApiController extends Controller
 
                 // Update to database
                 $data['photo'] = $file_name;
+            }
+
+            if ($data === []) {
+                $response['success'] = false;
+                $response['message'] = 'Profile pic not updated';
+
+                return $response;
             }
 
             $done = Users::where('id', $user_id)->update($data);
@@ -3102,6 +3114,7 @@ class ApiController extends Controller
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
+            $file_name = null;
             if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/groups/logo', 300);
             }
@@ -3113,7 +3126,7 @@ class ApiController extends Controller
             $group->about = $request->about;
             $group->privacy = $request->privacy;
             $group->status = $request->status;
-            if ($request->image && ! empty($request->image)) {
+            if ($file_name !== null) {
                 $group->logo = $file_name;
             }
             $done = $group->save();
@@ -3159,6 +3172,7 @@ class ApiController extends Controller
             $group = Group::find($group_id);
             // previous image name
             $imagename = $group->logo;
+            $file_name = null;
             if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/groups/logo', 300);
             }
@@ -3171,7 +3185,7 @@ class ApiController extends Controller
             $group->location = $request->location;
             $group->group_type = $request->group_type;
 
-            if ($request->image && ! empty($request->image)) {
+            if ($file_name !== null) {
                 $group->logo = $file_name;
             }
             $done = $group->save();
@@ -3450,6 +3464,7 @@ class ApiController extends Controller
             $group_members = Group_member::where('group_id', $group->id)->get();
             $matchingFriendsCount = 0; // Initialize outside the loop
             $is_Joined = 0; // Initialize outside the loop
+            $countfriends = 0;
             $response1 = [];
 
             if ($group_members->count() > 0) {
@@ -3457,7 +3472,7 @@ class ApiController extends Controller
                     $user1 = User::where('id', $member->user_id)->first();
 
                     $user = User::where('id', $user_id)->first();
-                    $friendsList = json_decode($user->friends, true);
+                    $friendsList = json_decode($user->friends, true) ?: [];
                     $countfriends = count($friendsList);
 
                     $isFriend = in_array($member->user_id, $friendsList) ? 1 : 0;
@@ -3481,7 +3496,7 @@ class ApiController extends Controller
                     // $mutualFriendsCount = $this->countMutualFriends($friendsList, $member->user_id);
 
                     // Count mutual friends
-                    $memberFriendsList = json_decode($user1->friends, true);
+                    $memberFriendsList = json_decode($user1->friends, true) ?: [];
 
                     $mutualFriendsCount = count(array_intersect($friendsList, $memberFriendsList));
                     // Count matching friends
@@ -3761,6 +3776,7 @@ class ApiController extends Controller
             $page = Page::find($id);
             // previous image name
             $imagename = $page->logo;
+            $file_name = null;
             if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
             }
@@ -3772,7 +3788,7 @@ class ApiController extends Controller
             $page->location = $request->location;
             $page->category_id = $request->category;
             $page->description = $request->description;
-            if ($request->image && ! empty($request->image)) {
+            if ($file_name !== null) {
                 $page->logo = $file_name;
             }
             $done = $page->save();
@@ -3923,6 +3939,7 @@ class ApiController extends Controller
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
+            $file_name = null;
             if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
             }
@@ -3932,7 +3949,7 @@ class ApiController extends Controller
             $page->title = $request->name;
             $page->category_id = $request->category;
             $page->description = $request->description;
-            if ($request->image && ! empty($request->image)) {
+            if ($file_name !== null) {
                 $page->logo = $file_name;
             }
             $done = $page->save();
@@ -5391,6 +5408,7 @@ class ApiController extends Controller
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
+            $file_name = null;
             if ($request->coverphoto && ! empty($request->coverphoto)) {
                 // Upload image
                 $file_name = rand(1, 35000).'.'.$request->coverphoto->getClientOriginalExtension();
@@ -5422,7 +5440,9 @@ class ApiController extends Controller
             if (isset($request->group_id)) {
                 $event->group_id = $request->group_id;
             }
-            ! empty($request->coverphoto) ? $event->banner = $file_name : '';
+            if ($file_name !== null) {
+                $event->banner = $file_name;
+            }
             $event->going_users_id = '[]';
             $event->interested_users_id = '[]';
             $event->privacy = $request->privacy;
@@ -5476,6 +5496,7 @@ class ApiController extends Controller
             if ($validator->fails()) {
                 return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
+            $file_name = null;
             if ($request->coverphoto && ! empty($request->coverphoto)) {
                 // Upload image
                 $file_name = rand(1, 35000).'.'.$request->coverphoto->getClientOriginalExtension();
@@ -5507,7 +5528,9 @@ class ApiController extends Controller
             $event->event_date = $request->eventdate;
             $event->event_time = $request->eventtime;
             $event->location = $request->eventlocation;
-            ! empty($request->coverphoto) ? $event->banner = $file_name : $event->banner;
+            if ($file_name !== null) {
+                $event->banner = $file_name;
+            }
             $event->privacy = $request->privacy;
             $done = $event->save();
             if ($done) {
@@ -6058,6 +6081,7 @@ class ApiController extends Controller
                 'category' => 'required',
             ]);
 
+            $file_name = null;
             if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
                 FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
@@ -6079,7 +6103,7 @@ class ApiController extends Controller
             if ($request->description && ! empty($request->description)) {
                 $blog->description = $request->description;
             }
-            if ($request->image && ! empty($request->image)) {
+            if ($file_name !== null) {
                 $blog->thumbnail = $file_name;
             }
             $blog->view = json_encode([]);
@@ -6111,6 +6135,7 @@ class ApiController extends Controller
                 'category' => 'required',
             ]);
 
+            $file_name = null;
             if ($request->image && ! empty($request->image)) {
                 $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
                 FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
@@ -6136,7 +6161,9 @@ class ApiController extends Controller
             // $blog->tag = json_encode($tag_array);
             $blog->tag = json_encode(array_filter(explode(',', $request->tag)));
             $blog->description = $request->description;
-            ! empty($request->image) ? $blog->thumbnail = $file_name : $blog->thumbnail;
+            if ($file_name !== null) {
+                $blog->thumbnail = $file_name;
+            }
             $done = $blog->save();
             if ($done) {
                 // just put the file name and folder name nothing more :)
@@ -6605,6 +6632,7 @@ class ApiController extends Controller
                 'image' => 'file|mimes:pdf|max:10240',
             ]);
 
+            $file_name = null;
             if ($request->hasFile('image') && $request->file('image')->isValid()) {
                 $file = $request->file('image');
                 $file_extension = $file->getClientOriginalExtension();
@@ -6619,7 +6647,7 @@ class ApiController extends Controller
             $apply->user_id = $user_id;
             $apply->email = $request->email;
             $apply->phone = $request->phone;
-            if ($request->image && ! empty($request->image)) {
+            if ($file_name !== null) {
                 $apply->attachment = $file_name;
             }
             $applies = $apply->save();
@@ -7255,6 +7283,7 @@ class ApiController extends Controller
     {
         $token = $request->bearerToken();
         $response = [];
+        $chatList = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -7303,6 +7332,7 @@ class ApiController extends Controller
     {
         $token = $request->bearerToken();
         $response = [];
+        $chatList = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;

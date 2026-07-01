@@ -10,8 +10,8 @@ use App\Queries\FriendshipsQuery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Image;
+use Jorenvh\Share\Share as ShareService;
 use Session;
-use Share;
 
 class BlogController extends Controller
 {
@@ -48,6 +48,7 @@ class BlogController extends Controller
             'category' => 'required',
         ]);
 
+        $file_name = null;
         if ($request->image && ! empty($request->image)) {
             $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
             FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
@@ -66,7 +67,7 @@ class BlogController extends Controller
         }
         $blog->tag = json_encode($tag_array);
         $blog->description = $request->description;
-        if ($request->image && ! empty($request->image)) {
+        if ($file_name !== null) {
             $blog->thumbnail = $file_name;
         }
         $blog->view = json_encode([]);
@@ -92,6 +93,7 @@ class BlogController extends Controller
             'category' => 'required',
         ]);
 
+        $file_name = null;
         if ($request->image && ! empty($request->image)) {
             $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
             FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
@@ -116,7 +118,9 @@ class BlogController extends Controller
         }
         $blog->tag = json_encode($tag_array);
         $blog->description = $request->description;
-        ! empty($request->image) ? $blog->thumbnail = $file_name : $blog->thumbnail;
+        if ($file_name !== null) {
+            $blog->thumbnail = $file_name;
+        }
         $done = $blog->save();
         if ($done) {
             // just put the file name and folder name nothing more :)
@@ -157,7 +161,7 @@ class BlogController extends Controller
     public function single_blog($id)
     {
         $page_data['comments'] = Comments::where('is_type', 'blog')->where('id_of_type', $id)->get();
-        $page_data['socailshare'] = Share::currentPage()
+        $page_data['socailshare'] = app(ShareService::class)->currentPage()
             ->facebook()
             ->twitter()
             ->linkedin()

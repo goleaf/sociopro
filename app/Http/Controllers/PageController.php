@@ -57,6 +57,7 @@ class PageController extends Controller
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
 
+        $file_name = null;
         if ($request->image && ! empty($request->image)) {
             $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
         }
@@ -66,7 +67,7 @@ class PageController extends Controller
         $page->title = $request->name;
         $page->category_id = $request->category;
         $page->description = $request->description;
-        if ($request->image && ! empty($request->image)) {
+        if ($file_name !== null) {
             $page->logo = $file_name;
         }
         $done = $page->save();
@@ -99,6 +100,7 @@ class PageController extends Controller
         $page = Page::find($id);
         // previous image name
         $imagename = $page->logo;
+        $file_name = null;
         if ($request->image && ! empty($request->image)) {
             $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
         }
@@ -107,7 +109,7 @@ class PageController extends Controller
         $page->title = $request->name;
         $page->category_id = $request->category;
         $page->description = $request->description;
-        if ($request->image && ! empty($request->image)) {
+        if ($file_name !== null) {
             $page->logo = $file_name;
         }
         $done = $page->save();

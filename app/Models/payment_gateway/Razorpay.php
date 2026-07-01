@@ -29,6 +29,7 @@ class Razorpay extends Model
         $payment_details = session('payment_details');
         $user = DB::table('users')->where('id', auth()->user()->id)->first();
         $model = $payment_details['success_method']['model_name'];
+        $description = '';
 
         if ($model == 'AuthorPayout' || $model == 'CampaignPayout') {
             $settings = DB::table('users')->where('id', $payment_details['custom_field']['user_id'])

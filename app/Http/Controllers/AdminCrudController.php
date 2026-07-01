@@ -682,6 +682,7 @@ class AdminCrudController extends Controller
             'category' => 'required',
         ]);
 
+        $file_name = null;
         if ($request->image && ! empty($request->image)) {
             $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
             FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
@@ -701,7 +702,7 @@ class AdminCrudController extends Controller
         }
         $data['tag'] = json_encode($tag_array);
         $data['description'] = $request->description;
-        if ($request->image && ! empty($request->image)) {
+        if ($file_name !== null) {
             $data['thumbnail'] = $file_name;
         }
         $data['view'] = json_encode([]);
@@ -725,6 +726,7 @@ class AdminCrudController extends Controller
             'category' => 'required',
         ]);
 
+        $file_name = null;
         if ($request->image && ! empty($request->image)) {
             $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
             FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
@@ -749,7 +751,9 @@ class AdminCrudController extends Controller
         }
         $blog->tag = json_encode($tag_array);
         $blog->description = $request->description;
-        ! empty($request->image) ? $blog->thumbnail = $file_name : $blog->thumbnail;
+        if ($file_name !== null) {
+            $blog->thumbnail = $file_name;
+        }
         $done = $blog->save();
         if ($done) {
             // just put the file name and folder name nothing more :)
@@ -883,6 +887,7 @@ class AdminCrudController extends Controller
             'category' => 'required',
         ]);
 
+        $file_name = null;
         if ($request->image && ! empty($request->image)) {
             $file_name = FileUploader::upload($request->image, 'public/storage/job/thumbnail', 370);
             // FileUploader::upload($request->image, 'public/storage/job/coverphoto/' . $file_name, 900);
@@ -903,7 +908,7 @@ class AdminCrudController extends Controller
         $data['start_date'] = date('Y-m-d H:i:s', strtotime($request->start_date));
         $data['end_date'] = date('Y-m-d H:i:s', strtotime($request->end_date));
         $data['is_published'] = $request->is_published ?? 0;
-        if ($request->image && ! empty($request->image)) {
+        if ($file_name !== null) {
             $data['thumbnail'] = $file_name;
         }
         DB::Table('jobs')->insert($data);

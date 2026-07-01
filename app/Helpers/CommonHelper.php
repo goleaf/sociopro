@@ -219,7 +219,7 @@ if (! function_exists('get_phrase')) {
 
             if ($all_language->count() > 0) {
                 foreach ($all_language as $language) {
-                    if (DB::table('languages')->where('name', $language->name)->where('phrase', $phrase)->get()->count() == 0) {
+                    if (! DB::table('languages')->where('name', $language->name)->where('phrase', $phrase)->exists()) {
                         DB::table('languages')->insert(['name' => strtolower($language->name), 'phrase' => $phrase, 'translated' => $phrase]);
                     }
                 }

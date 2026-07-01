@@ -57,6 +57,7 @@ class EventController extends Controller
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
+        $file_name = null;
         if ($request->coverphoto && ! empty($request->coverphoto)) {
             // Upload image
             $file_name = rand(1, 35000).'.'.$request->coverphoto->getClientOriginalExtension();
@@ -88,7 +89,9 @@ class EventController extends Controller
         if (isset($request->group_id)) {
             $event->group_id = $request->group_id;
         }
-        ! empty($request->coverphoto) ? $event->banner = $file_name : '';
+        if ($file_name !== null) {
+            $event->banner = $file_name;
+        }
         $event->going_users_id = '[]';
         $event->interested_users_id = '[]';
         $event->privacy = $request->privacy;
@@ -127,6 +130,7 @@ class EventController extends Controller
         if ($validator->fails()) {
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
+        $file_name = null;
         if ($request->coverphoto && ! empty($request->coverphoto)) {
             // Upload image
             $file_name = rand(1, 35000).'.'.$request->coverphoto->getClientOriginalExtension();
@@ -158,7 +162,9 @@ class EventController extends Controller
         $event->event_date = $request->eventdate;
         $event->event_time = $request->eventtime;
         $event->location = $request->eventlocation;
-        ! empty($request->coverphoto) ? $event->banner = $file_name : $event->banner;
+        if ($file_name !== null) {
+            $event->banner = $file_name;
+        }
         $event->privacy = $request->privacy;
         $done = $event->save();
         if ($done) {

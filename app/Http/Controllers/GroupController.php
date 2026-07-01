@@ -67,6 +67,7 @@ class GroupController extends Controller
             return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
         }
 
+        $file_name = null;
         if ($request->image && ! empty($request->image)) {
             $file_name = FileUploader::upload($request->image, 'public/storage/groups/logo', 300);
         }
@@ -78,7 +79,7 @@ class GroupController extends Controller
         $group->about = $request->about;
         $group->privacy = $request->privacy;
         $group->status = $request->status;
-        if ($request->image && ! empty($request->image)) {
+        if ($file_name !== null) {
             $group->logo = $file_name;
         }
         $done = $group->save();
@@ -111,6 +112,7 @@ class GroupController extends Controller
         $group = Group::find($id);
         // previous image name
         $imagename = $group->logo;
+        $file_name = null;
         if ($request->image && ! empty($request->image)) {
             $file_name = FileUploader::upload($request->image, 'public/storage/groups/logo', 300);
         }
@@ -123,7 +125,7 @@ class GroupController extends Controller
         $group->status = $request->status;
         $group->location = $request->location;
         $group->group_type = $request->group_type;
-        if ($request->image && ! empty($request->image)) {
+        if ($file_name !== null) {
             $group->logo = $file_name;
         }
         $done = $group->save();

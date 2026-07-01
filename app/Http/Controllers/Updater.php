@@ -75,7 +75,7 @@ class Updater extends Controller
             }
 
             $addons_current_version = DB::table('addons')->where('unique_identifier', $config['addons'][0]['unique_identifier']);
-            if ($addons_current_version->get()->count() > 0) {
+            if ($addons_current_version->exists()) {
                 $addons_current_version = $addons_current_version->value('version');
             } else {
                 $addons_current_version = '0';
@@ -209,6 +209,8 @@ class Updater extends Controller
         } elseif ($status == 'deactivate') {
             Addon::where('id', $id)->update(['status' => 0]);
             $msg = 'Addon deactivated.';
+        } else {
+            $msg = 'Addon status unchanged.';
         }
         flash()->addSuccess($msg);
 
