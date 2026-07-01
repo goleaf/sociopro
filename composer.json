@@ -57,6 +57,24 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "test": "@php artisan test",
+        "test:unit": "@php artisan test --testsuite=Unit",
+        "test:feature": "@php artisan test --testsuite=Feature",
+        "pint": "vendor/bin/pint",
+        "pint:test": "vendor/bin/pint --test",
+        "analyse": "@php -r \"if (file_exists('vendor/bin/phpstan')) { passthru('vendor/bin/phpstan analyse', $code); exit($code); } fwrite(STDERR, 'PHPStan is not installed; skipping analyse.'.PHP_EOL);\"",
+        "rector:dry": "@php -r \"if (file_exists('vendor/bin/rector')) { passthru('vendor/bin/rector --dry-run', $code); exit($code); } fwrite(STDERR, 'Rector is not installed; skipping rector:dry.'.PHP_EOL);\"",
+        "rector": "@php -r \"if (file_exists('vendor/bin/rector')) { passthru('vendor/bin/rector', $code); exit($code); } fwrite(STDERR, 'Rector is not installed; skipping rector.'.PHP_EOL);\"",
+        "quality": [
+            "@pint:test",
+            "@analyse",
+            "@test"
+        ],
+        "ci": [
+            "@composer validate --strict --no-interaction",
+            "@composer audit --no-interaction",
+            "@quality"
         ]
     },
     "extra": {
