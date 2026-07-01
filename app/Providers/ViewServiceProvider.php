@@ -184,7 +184,7 @@ class ViewServiceProvider extends ServiceProvider
                 ->select(['type', 'description'])
                 ->whereIn('type', $types)
                 ->pluck('description', 'type');
-        } catch (Throwable $exception) {
+        } catch (Throwable) {
             return collect();
         }
     }

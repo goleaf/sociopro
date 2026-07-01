@@ -47,7 +47,7 @@ class PrepareDatabaseConnection
                     'dbname' => $database,
                 ],
             ];
-        } catch (Throwable $exception) {
+        } catch (Throwable) {
             return [
                 'status' => 'error',
                 'message' => 'Could not prepare the SQLite database file. Please check storage permissions.',
@@ -91,7 +91,7 @@ class PrepareDatabaseConnection
                     'dbname' => $data['dbname'],
                 ],
             ];
-        } catch (Throwable $exception) {
+        } catch (Throwable) {
             return [
                 'status' => 'error',
                 'message' => 'Could not connect to the database. Please check your configuration.',

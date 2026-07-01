@@ -57,7 +57,7 @@ class RouteServiceProvider extends ServiceProvider
             }
 
             return Schema::hasTable('addons') && addon_status('fundraiser') == 1;
-        } catch (Throwable $exception) {
+        } catch (Throwable) {
             return false;
         }
     }

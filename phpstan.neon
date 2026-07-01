@@ -1,0 +1,16 @@
+parameters:
+	level: 0
+	paths:
+		- app/Actions/Install
+		- app/Helpers
+		- app/Providers/RouteServiceProvider.php
+		- app/Providers/ViewServiceProvider.php
+		- phpstan-bootstrap.php
+		- rector.php
+	bootstrapFiles:
+		- vendor/autoload.php
+		- phpstan-bootstrap.php
+	excludePaths:
+		- bootstrap/cache
+		- storage
+		- vendor
