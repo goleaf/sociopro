@@ -176,7 +176,6 @@ Route::controller(VideoController::class)->middleware('auth', 'user', 'verified'
     Route::get('/load_videos_by_scrolling', 'load_videos_by_scrolling')->name('load_videos_by_scrolling');
     Route::get('/load_shorts_by_scrolling', 'load_shorts_by_scrolling')->name('load_shorts_by_scrolling');
 
-    Route::get('save/video/short/{id}', 'save_for_later')->name('save.video.later');
     Route::get('unsave/video/short/{id}', 'unsave_for_later')->name('unsave.video.later');
 
     Route::get('saved/video/view', 'save_all')->name('save.all.view');
@@ -263,15 +262,15 @@ Route::controller(SettingController::class)->group(function () {
     Route::POST('admin/system/setting/save/', 'system_settings_save')->name('admin.system.settings.view.save')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
     Route::POST('admin/system/setting/logo/save/', 'system_settings_logo_save')->name('admin.system.settings.logo.view.save')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
-    Route::get('admin/settings/amazon_s3', 'amazon_s3')->name('admin.settings.amazon_s3');
-    Route::post('admin/settings/amazon_s3/update', 'amazon_s3_update')->name('admin.settings.amazon_s3.update');
+    Route::get('admin/settings/amazon_s3', 'amazon_s3')->name('admin.settings.amazon_s3')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
+    Route::post('admin/settings/amazon_s3/update', 'amazon_s3_update')->name('admin.settings.amazon_s3.update')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
     // Admin Color Save
     Route::get('admin/system/settings/color/save/{themeColor}', 'system_settings_color_save')->name('admin.system.settings.color.save')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
     // Zitsi  Settings
     Route::get('admin/zitsi-video/setting/view', 'zitsi_video_edit_form')->name('admin.zitsi-video.view')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
-    Route::post('admin/jitsi/live/settings/update', 'zitsi_live_video_update')->name('admin.zitsi.live.settings.update');
+    Route::post('admin/jitsi/live/settings/update', 'zitsi_live_video_update')->name('admin.zitsi.live.settings.update')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 });
 
 //  admin all crud
@@ -286,7 +285,7 @@ Route::controller(AdminCrudController::class)->group(function () {
     Route::get('admin/user/delete/{id}', 'user_delete')->name('admin.user.delete')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
     Route::get('admin/user/status/{id}', 'user_status')->name('admin.user.status')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
-    Route::any('admin/server_side_users_data', 'server_side_users_data')->name('admin.server_side_users_data');
+    Route::any('admin/server_side_users_data', 'server_side_users_data')->name('admin.server_side_users_data')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
     Route::get('admin/users/account-active-Req', 'accountActiveReq')->name('admin.users.accountActiveReq')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
@@ -397,8 +396,8 @@ Route::controller(AdminCrudController::class)->group(function () {
     Route::get('admin/payment_gateway/environment/{id}', 'payment_gateway_environment')->name('admin.payment_gateway.environment')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 
     // System About routes
-    Route::get('admin/settings/about', 'about')->name('admin.about');
-    Route::any('admin/save_valid_purchase_code/{action_type?}', 'save_valid_purchase_code')->name('admin.save_valid_purchase_code');
+    Route::get('admin/settings/about', 'about')->name('admin.about')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
+    Route::any('admin/save_valid_purchase_code/{action_type?}', 'save_valid_purchase_code')->name('admin.save_valid_purchase_code')->middleware('auth', 'verified', 'admin', 'prevent-back-history');
 });
 
 //  setting frontend
@@ -486,13 +485,13 @@ if (class_exists(PaidContent::class)) {
         Route::get('/load/timeline/post/', 'load_timeline_post')->name('load.timeline.post');
 
         // admin
-        Route::get('/admin/author/list', 'author_list')->name('author.list');
-        Route::get('/admin/author/status/{id}', 'author_status')->name('author.status');
-        Route::get('/admin/author/delete/{id}', 'author_delete')->name('author.delete');
-        Route::get('/admin/author/review/request/{id}', 'review_request')->name('author.review.request');
-        Route::get('/admin/author/payout/', 'payout_report')->name('payout.report');
-        Route::get('/admin/author/pending/report', 'pending_report')->name('pending.report');
-        Route::get('/admin/make/payment/{id}', 'author_payout')->name('author.payout');
-        Route::get('/admin/payout/delete/{id}', 'delete_payout')->name('admin.delete.payout');
+        Route::get('/admin/author/list', 'author_list')->name('author.list')->middleware('admin');
+        Route::get('/admin/author/status/{id}', 'author_status')->name('author.status')->middleware('admin');
+        Route::get('/admin/author/delete/{id}', 'author_delete')->name('author.delete')->middleware('admin');
+        Route::get('/admin/author/review/request/{id}', 'review_request')->name('author.review.request')->middleware('admin');
+        Route::get('/admin/author/payout/', 'payout_report')->name('payout.report')->middleware('admin');
+        Route::get('/admin/author/pending/report', 'pending_report')->name('pending.report')->middleware('admin');
+        Route::get('/admin/make/payment/{id}', 'author_payout')->name('author.payout')->middleware('admin');
+        Route::get('/admin/payout/delete/{id}', 'delete_payout')->name('admin.delete.payout')->middleware('admin');
     });
 }

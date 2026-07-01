@@ -1,17 +1,19 @@
 <?php
 
+use App\Http\Controllers\Account\AccountStatusController;
+use App\Http\Controllers\AuthCheckerController;
 use App\Http\Controllers\BadgeController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InstallController;
+use App\Http\Controllers\LanguageSwitchController;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\MemoriesController;
 use App\Http\Controllers\ModalController;
 use App\Http\Controllers\Profile;
 use App\Http\Controllers\StoryController;
+use App\Http\Controllers\System\ClearApplicationCacheController;
 use App\Http\Controllers\Updater;
-use App\Models\Account_active_request;
-use App\Models\User;
-use App\ViewModels\BladeViewData;
-use Illuminate\Http\Request;
+use App\Http\Controllers\UserWelcomeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,58 +27,23 @@ use Illuminate\Support\Facades\Route;
 |
  */
 
-Route::get('/clear-cache', function () {
-    Artisan::call('cache:clear');
-    Artisan::call('config:clear');
-    Artisan::call('route:clear');
-    Artisan::call('view:clear');
+Route::get('/clear-cache', ClearApplicationCacheController::class)
+    ->middleware(['auth', 'verified', 'admin'])
+    ->name('system.clear-cache');
 
-    return 'Application cache cleared';
-});
+Route::get('/auth-checker', AuthCheckerController::class)->name('auth-checker');
 
-Route::get('/auth-checker', function () {
-    if (auth::check()) {
-        return true;
-    } else {
-        return false;
-    }
-})->name('auth-checker');
+Route::get('/users/{user_id}', UserWelcomeController::class)->name('users.welcome');
 
-Route::get('/users/{user_id}', function ($user_id) {
-    return view('welcome');
-});
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified'])->name('dashboard');
 
 require __DIR__.'/auth.php';
 
-Route::get('language/switch/{language}', function (Request $request, $language) {
-    $request->session()->put('active_language', $language);
-
-    return redirect()->back();
-})->name('language.switch');
+Route::get('language/switch/{language}', LanguageSwitchController::class)->name('language.switch');
 
 Route::middleware('auth')->name('frontend.')->group(function () {
-    Route::get('/account-disable', function (Request $request, BladeViewData $viewData) {
-        return view('frontend.disable_view', [
-            'accountActivationRequest' => $viewData->accountActivationRequest($request->user()),
-        ]);
-    })->name('disable_view');
-
-    Route::get('/account-enble-req/{user}', function (Request $request, User $user) {
-        abort_unless($request->user()->is($user), 403);
-
-        Account_active_request::updateOrCreate(
-            ['user_id' => $user->id],
-            ['status' => 'pending']
-        );
-
-        flash()->addSuccess('Account enable request successfully');
-
-        return redirect()->back();
-    })->name('account_enble_req');
+    Route::get('/account-disable', [AccountStatusController::class, 'disabled'])->name('disable_view');
+    Route::get('/account-enble-req/{user}', [AccountStatusController::class, 'requestEnable'])->name('account_enble_req');
 });
 
 // Modal controllers group routing
@@ -85,7 +52,7 @@ Route::controller(ModalController::class)->middleware('auth', 'user', 'verified'
 });
 
 // Home controllers group routing
-Route::controller(MainController::class)->middleware('auth', 'user', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {
+Route::controller(MainController::class)->middleware('auth', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {
     Route::get('/', 'timeline')->name('timeline');
     Route::post('/create_post', 'create_post')->name('create_post');
     Route::get('/edit_post_form/{id}', 'edit_post_form')->name('edit_post_form');
@@ -162,8 +129,6 @@ Route::controller(StoryController::class)->middleware('auth', 'user', 'verified'
     Route::post('/create_story', 'create_story')->name('create_story');
 
     Route::any('/stories/{offset?}/{limit?}', 'stories')->name('stories');
-
-    Route::any('/stories/{offset?}/{limit?}', 'stories')->name('stories');
     Route::any('/story_details/{story_id}/{offset?}/{limit?}', 'story_details')->name('story_details');
     Route::any('/single_story_details/{story_id}', 'single_story_details')->name('single_story_details');
 });
@@ -207,7 +172,7 @@ Route::controller(Profile::class)->middleware('auth', 'verified', 'user', 'activ
 });
 
 // Updater routes are here
-Route::controller(Updater::class)->middleware('auth', 'verified', 'activity')->group(function () {
+Route::controller(Updater::class)->middleware('auth', 'verified', 'activity', 'admin', 'prevent-back-history')->group(function () {
     Route::post('admin/addon/create', 'update')->name('admin.addon.create');
     Route::post('admin/addon/update', 'update')->name('admin.addon.update');
     Route::post('admin/product/update', 'update')->name('admin.product.update');
