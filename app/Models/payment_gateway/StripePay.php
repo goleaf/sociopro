@@ -3,6 +3,7 @@
 namespace App\Models\payment_gateway;
 
 use DB;
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Stripe\Checkout\Session as CheckoutSession;

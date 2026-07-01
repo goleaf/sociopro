@@ -21,6 +21,7 @@ use Exception;
 use Illuminate\Database\Query\JoinClause;
 // For used ZOOM
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;

@@ -1,10 +1,15 @@
+includes:
+	- vendor/larastan/larastan/extension.neon
+	- phpstan-baseline.neon
+
 parameters:
 	level: 0
 	paths:
-		- app/Actions/Install
-		- app/Helpers
-		- app/Providers/RouteServiceProvider.php
-		- app/Providers/ViewServiceProvider.php
+		- app
+		- config
+		- database
+		- routes
+		- tests
 		- phpstan-bootstrap.php
 		- rector.php
 	bootstrapFiles:

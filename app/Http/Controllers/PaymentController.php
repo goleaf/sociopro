@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Anand\LaravelPaytmWallet\Facades\PaytmWallet;
 use App\Models\Payment_gateway;
+use App\Models\payment_gateway\Paytm;
 use App\Models\Setting;
 use App\Models\Users;
 use Illuminate\Contracts\View\View;
@@ -143,6 +144,7 @@ class PaymentController extends Controller
         $transaction->getResponseMessage(); // Get Response Message If Available
 
         // $transaction->getOrderId(); // Get order id
+        return null;
     }
 
     private function paymentGateway(string $identifier): Payment_gateway

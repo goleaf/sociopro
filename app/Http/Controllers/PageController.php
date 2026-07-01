@@ -18,6 +18,17 @@ use Session;
 
 class PageController extends Controller
 {
+    private $user;
+
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $this->user = Auth()->user();
+
+            return $next($request);
+        });
+    }
+
     public function pages()
     {
         $pageLiked = [];

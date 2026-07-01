@@ -1,0 +1,175 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Called ''count'' on Laravel collection, but could have been retrieved as a query\.$#'
+			identifier: larastan.noUnnecessaryCollectionCall
+			count: 1
+			path: app/Helpers/CommonHelper.php
+
+		-
+			message: '#^Call to static method all\(\) on an unknown class App\\Models\\JobCategory\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/AdminCrudController.php
+
+		-
+			message: '#^Call to static method find\(\) on an unknown class App\\Models\\Job\.$#'
+			identifier: class.notFound
+			count: 3
+			path: app/Http/Controllers/AdminCrudController.php
+
+		-
+			message: '#^Call to static method find\(\) on an unknown class App\\Models\\JobApply\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Http/Controllers/AdminCrudController.php
+
+		-
+			message: '#^Call to static method find\(\) on an unknown class App\\Models\\JobCategory\.$#'
+			identifier: class.notFound
+			count: 3
+			path: app/Http/Controllers/AdminCrudController.php
+
+		-
+			message: '#^Call to static method where\(\) on an unknown class App\\Models\\Job\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Http/Controllers/AdminCrudController.php
+
+		-
+			message: '#^Call to static method where\(\) on an unknown class App\\Models\\JobApply\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Http/Controllers/AdminCrudController.php
+
+		-
+			message: '#^Call to static method where\(\) on an unknown class App\\Models\\JobWishlist\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/AdminCrudController.php
+
+		-
+			message: '#^Instantiated class App\\Models\\JobCategory not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/AdminCrudController.php
+
+		-
+			message: '#^Call to static method find\(\) on an unknown class App\\Models\\Job\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: '#^Call to static method insert\(\) on an unknown class App\\Models\\JobWishlist\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: '#^Call to static method orderBy\(\) on an unknown class App\\Models\\Job\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: '#^Call to static method orderBy\(\) on an unknown class App\\Models\\PaidContentPackages\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: '#^Call to static method where\(\) on an unknown class App\\Models\\Fundraiser_category\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: '#^Call to static method where\(\) on an unknown class App\\Models\\Job\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: '#^Call to static method where\(\) on an unknown class App\\Models\\JobApply\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: '#^Call to static method where\(\) on an unknown class App\\Models\\JobCategory\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: '#^Call to static method where\(\) on an unknown class App\\Models\\JobWishlist\.$#'
+			identifier: class.notFound
+			count: 4
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: '#^Instantiated class App\\Models\\Job not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: '#^Instantiated class App\\Models\\JobApply not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: '#^Method Jorenvh\\Share\\ShareFacade\:\:currentPage\(\) invoked with 0 parameters, 1\-5 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: app/Http/Controllers/BlogController.php
+
+		-
+			message: '#^Static call to instance method Jorenvh\\Share\\ShareFacade\:\:currentPage\(\)\.$#'
+			identifier: method.staticCall
+			count: 1
+			path: app/Http/Controllers/BlogController.php
+
+		-
+			message: '#^Called ''count'' on Laravel collection, but could have been retrieved as a query\.$#'
+			identifier: larastan.noUnnecessaryCollectionCall
+			count: 3
+			path: app/Http/Controllers/MainController.php
+
+		-
+			message: '#^Called ''first'' on Laravel collection, but could have been retrieved as a query\.$#'
+			identifier: larastan.noUnnecessaryCollectionCall
+			count: 4
+			path: app/Http/Controllers/MainController.php
+
+		-
+			message: '#^Called ''count'' on Laravel collection, but could have been retrieved as a query\.$#'
+			identifier: larastan.noUnnecessaryCollectionCall
+			count: 1
+			path: app/Http/Controllers/Profile.php
+
+		-
+			message: '#^Called ''count'' on Laravel collection, but could have been retrieved as a query\.$#'
+			identifier: larastan.noUnnecessaryCollectionCall
+			count: 1
+			path: app/Http/Controllers/Updater.php
+
+		-
+			message: '#^Call to static method query\(\) on an unknown class App\\Models\\Fundraiser_payout\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/ViewModels/BladeViewData.php
+
+		-
+			message: '#^Call to static method query\(\) on an unknown class App\\Models\\Job\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/ViewModels/BladeViewData.php
+
+		-
+			message: '#^Call to static method query\(\) on an unknown class App\\Models\\PaidContentPayout\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/ViewModels/BladeViewData.php
