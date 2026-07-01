@@ -27,11 +27,7 @@
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                                     <li>
-                                        @if ($viewData->isProductSaved($saved_product->product_id, auth()->user()))
                                         <a href="javascript:void(0)" onclick="ajaxAction('{{ route('unsave.product.later',$saved_product->product_id) }}')" class="dropdown-item btn btn-primary btn-sm"> {{get_phrase('Unsave')}}</a>
-                                        @else
-                                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('save.product.later',$saved_product->product_id) }}')" class="dropdown-item btn btn-primary btn-sm">  {{get_phrase('Save')}}</a>
-                                        @endif
                                     </li>
                                 </ul>
                             </div>

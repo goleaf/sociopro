@@ -20,7 +20,7 @@ class MarketplaceController extends Controller
 {
     public function allproducts()
     {
-        $page_data['products'] = Marketplace::orderBy('id', 'DESC')->limit('10')->get();
+        $page_data['products'] = Marketplace::with('getCurrency')->orderBy('id', 'DESC')->limit('10')->get();
         $page_data['view_path'] = 'frontend.marketplace.products';
 
         return view('frontend.index', $page_data);
@@ -28,7 +28,7 @@ class MarketplaceController extends Controller
 
     public function userproduct()
     {
-        $products = Marketplace::where('user_id', auth()->user()->id)->orderBy('id', 'DESC')->get();
+        $products = Marketplace::with('getCurrency')->where('user_id', auth()->user()->id)->orderBy('id', 'DESC')->get();
         $page_data['products'] = $products;
         $page_data['view_path'] = 'frontend.marketplace.user_products';
 
@@ -171,7 +171,7 @@ class MarketplaceController extends Controller
 
     public function load_product_by_scrolling(Request $request)
     {
-        $products = Marketplace::orderBy('id', 'DESC')->skip($request->offset)->take(6)->get();
+        $products = Marketplace::with('getCurrency')->orderBy('id', 'DESC')->skip($request->offset)->take(6)->get();
 
         $page_data['products'] = $products;
 
@@ -180,7 +180,7 @@ class MarketplaceController extends Controller
 
     public function single_product($id)
     {
-        $product = Marketplace::find($id);
+        $product = Marketplace::with(['getCurrency', 'getUser', 'getCategory', 'getBrand'])->find($id);
 
         if ($product) {
             $page_data['related_product'] = Marketplace::Where('brand', $product->brand)->orWhere('category', $product->category)->get();
@@ -274,7 +274,7 @@ class MarketplaceController extends Controller
         //     $query->where('brand', $brand);
         // }
 
-        $page_data['products'] = $query->get();
+        $page_data['products'] = $query->with('getCurrency')->get();
         $page_data['view_path'] = 'frontend.marketplace.products';
 
         return view('frontend.index', $page_data);
@@ -316,7 +316,7 @@ class MarketplaceController extends Controller
 
     public function single_product_ifrane($id)
     {
-        $product = Marketplace::find($id);
+        $product = Marketplace::with(['getCurrency', 'getUser', 'getCategory', 'getBrand'])->find($id);
         $page_data['product'] = $product;
         $page_data['product_image'] = Media_files::where('product_id', $id)->ofType(MediaFileType::Image)->get();
 

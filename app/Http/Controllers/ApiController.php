@@ -59,6 +59,7 @@ use Carbon\Carbon;
 use DB;
 use Exception;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -4432,72 +4433,15 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $marketplace = Marketplace::orderBy('id', 'Desc')->get();
+            $marketplace = Marketplace::with(['getUser', 'getCategory', 'getBrand', 'getCurrency'])
+                ->orderBy('id', 'Desc')
+                ->get();
 
             if ($marketplace->isEmpty()) {
                 $response['success'] = false;
                 $response['message'] = 'No marketplace found';
             } else {
-                $pageArray = [];
-
-                foreach ($marketplace as $page) {
-                    $user = User::where('id', $page->user_id)->first();
-                    $category = Category::where('id', $page->category)->first();
-                    $brand = Brand::where('id', $page->brand)->first();
-                    $currency = Currency::where('id', $page->currency_id)->first();
-                    $is_Saved = SavedProduct::where('product_id', $page->id)
-                        ->where('user_id', $user_id)
-                        ->first();
-
-                    $is_chat = 'not_chat'; // Initialize profile ID as 0
-                    $msgthread_id = 0; // Initialize profile ID as 0
-
-                    // Get chat messages involving the current user
-                    $chats = Message_thrade::where('reciver_id', $user_id)
-                        ->orWhere('sender_id', $user_id)
-                        ->get();
-
-                    // Loop through chat messages to find matching profile ID
-                    foreach ($chats as $chat) {
-                        if ($chat->reciver_id == $user_id || $chat->sender_id == $user_id) {
-                            // Set the profile ID to the matching user ID
-                            $is_chat = 'chat';
-                            $msgthread_id = $chat->id;
-                            // Break the loop once a match is found
-                            break;
-                        }
-                    }
-
-                    $pageArray[] = [
-                        'id' => $page->id,
-                        'user_id' => $page->user_id,
-                        'thrade' => $msgthread_id,
-                        'user' => $user->name,
-                        'photo' => get_user_images($user->id),
-                        'title' => $page->title,
-                        'price' => $page->price,
-                        'category_id' => $page->category,
-                        'status_id' => $page->status,
-                        'brand_id' => $page->brand,
-                        'currency_id' => $page->currency_id,
-                        'condition' => $page->condition,
-                        'status' => $page->status,
-                        'category' => $category->name,
-                        'brand' => $brand->name,
-                        'currency' => $currency->name,
-                        'is_Saved' => $is_Saved ? 'saved' : 'not_saved',
-                        'my_product' => $page->user_id == $user_id ? 'my_product' : 'not_my_product',
-                        'description' => $page->description,
-                        'location' => $page->location != null ? $page->location : '',
-                        'coverphoto' => get_group_event_photos($page->image, 'coverphoto', 'marketplace'),
-                        // 'coverPhoto' => get_group_event_photos($page->coverphoto, "coverphoto", "pages"),
-
-                        // 'created_at' => date('d F Y', strtotime($page->created_at)),
-                        'created_at' => date('d-m-Y', strtotime($page->created_at)),
-                        // 'updated_at' => $group->updated_at,
-                    ];
-                }
-                $response = $pageArray;
+                $response = $this->marketplaceResponseRows($marketplace, $user_id);
             }
         } else {
             $response['success'] = false;
@@ -4831,7 +4775,9 @@ class ApiController extends Controller
             $brand = $filters['brand'];
             $location = $filters['location'];
 
-            $query = Marketplace::where('status', 1)->orderBy($filters['sort'], $filters['direction']);
+            $query = Marketplace::with(['getUser', 'getCategory', 'getBrand', 'getCurrency'])
+                ->where('status', 1)
+                ->orderBy($filters['sort'], $filters['direction']);
 
             if (! empty($search) || ! empty($location)) {
                 $query->where(function ($query) use ($search, $location) {
@@ -4881,70 +4827,93 @@ class ApiController extends Controller
 
             $marketplace = $query->get();
             // return $marketplace;
-            $pageArray = [];
-
-            foreach ($marketplace as $page) {
-                $user = User::where('id', $page->user_id)->first();
-                $category = Category::where('id', $page->category)->first();
-                $brand = Brand::where('id', $page->brand)->first();
-                $currency = Currency::where('id', $page->currency_id)->first();
-                $is_Saved = SavedProduct::where('product_id', $page->id)
-                    ->where('user_id', $user_id)
-                    ->first();
-                $is_chat = 'not_chat'; // Initialize profile ID as 0
-                $msgthread_id = 0; // Initialize profile ID as 0
-
-                // Get chat messages involving the current user
-                $chats = Message_thrade::where('reciver_id', $user_id)
-                    ->orWhere('sender_id', $user_id)
-                    ->get();
-
-                // Loop through chat messages to find matching profile ID
-                foreach ($chats as $chat) {
-                    if ($chat->reciver_id == $user_id || $chat->sender_id == $user_id) {
-                        // Set the profile ID to the matching user ID
-                        $is_chat = 'chat';
-                        $msgthread_id = $chat->id;
-                        // Break the loop once a match is found
-                        break;
-                    }
-                }
-                $pageArray[] = [
-                    'id' => $page->id,
-                    'thrade' => $msgthread_id,
-                    'user_id' => $page->user_id,
-                    'user' => $user->name,
-                    'photo' => get_user_images($user->id),
-                    'title' => $page->title,
-                    'price' => $page->price,
-                    'category_id' => $page->category,
-                    'status_id' => $page->status,
-                    'brand_id' => $page->brand,
-                    'currency_id' => $page->currency_id,
-                    'condition' => $page->condition,
-                    'status' => $page->status,
-                    'category' => $category->name,
-                    'brand' => $brand->name,
-                    'currency' => $currency->name,
-                    'is_Saved' => $is_Saved ? 'saved' : 'not_saved',
-                    'my_product' => $page->user_id == $user_id ? 'my_product' : 'not_my_product',
-                    'description' => $page->description,
-                    'location' => $page->location != null ? $page->location : '',
-                    'coverphoto' => get_group_event_photos($page->image, 'coverphoto', 'marketplace'),
-                    // 'coverPhoto' => get_group_event_photos($page->coverphoto, "coverphoto", "pages"),
-
-                    // 'created_at' => date('d F Y', strtotime($page->created_at)),
-                    'created_at' => date('d-m-Y', strtotime($page->created_at)),
-                    // 'updated_at' => $group->updated_at,
-                ];
-            }
-            $response = $pageArray;
+            $response = $this->marketplaceResponseRows($marketplace, $user_id);
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
 
         return $response;
+    }
+
+    /**
+     * @param  Collection<int, Marketplace>  $marketplace
+     * @return list<array<string, mixed>>
+     */
+    private function marketplaceResponseRows($marketplace, int $userId): array
+    {
+        if ($marketplace->isEmpty()) {
+            return [];
+        }
+
+        $savedProductIds = SavedProduct::query()
+            ->where('user_id', $userId)
+            ->whereIn('product_id', $marketplace->pluck('id'))
+            ->pluck('product_id')
+            ->mapWithKeys(fn (int|string $productId): array => [(int) $productId => true]);
+        $messageThreadId = $this->marketplaceMessageThreadId($userId);
+        $pageArray = [];
+
+        foreach ($marketplace as $page) {
+            $user = $page->getUser;
+            $category = $page->getCategory;
+            $brand = $page->getBrand;
+            $currency = $page->getCurrency;
+
+            $pageArray[] = [
+                'id' => $page->id,
+                'thrade' => $messageThreadId,
+                'user_id' => $page->user_id,
+                'user' => $user->name,
+                'photo' => $this->loadedUserImageUrl($user->photo),
+                'title' => $page->title,
+                'price' => $page->price,
+                'category_id' => $page->category,
+                'status_id' => $page->status,
+                'brand_id' => $page->brand,
+                'currency_id' => $page->currency_id,
+                'condition' => $page->condition,
+                'status' => $page->status,
+                'category' => $category->name,
+                'brand' => $brand->name,
+                'currency' => $currency->name,
+                'is_Saved' => $savedProductIds->has((int) $page->id) ? 'saved' : 'not_saved',
+                'my_product' => $page->user_id == $userId ? 'my_product' : 'not_my_product',
+                'description' => $page->description,
+                'location' => $page->location != null ? $page->location : '',
+                'coverphoto' => get_group_event_photos($page->image, 'coverphoto', 'marketplace'),
+                'created_at' => date('d-m-Y', strtotime($page->created_at)),
+            ];
+        }
+
+        return $pageArray;
+    }
+
+    private function marketplaceMessageThreadId(int $userId): int
+    {
+        return (int) (Message_thrade::query()
+            ->where('reciver_id', $userId)
+            ->orWhere('sender_id', $userId)
+            ->value('id') ?? 0);
+    }
+
+    private function loadedUserImageUrl(?string $fileName, string $optimized = ''): string
+    {
+        $optimized = trim($optimized, '/');
+        $optimizedPath = $optimized === '' ? '' : $optimized.'/';
+        $fileName = $fileName ?: 'default.png';
+
+        if (str_contains($fileName, 'https://')) {
+            return $fileName;
+        }
+
+        $path = 'public/storage/userimage/'.$optimizedPath.$fileName;
+
+        if (File::exists($path) && is_file($path)) {
+            return url($path);
+        }
+
+        return url('public/storage/userimage/default.png');
     }
 
     // save for later in marketplace product
