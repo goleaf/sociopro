@@ -33,7 +33,7 @@ class InstallController extends Controller
     public function index()
     {
         if (DB::connection()->getDatabaseName() != 'db_name') {
-            return redirect('/login');
+            return redirect()->route('login');
         } else {
             return redirect()->route('install.step0');
         }

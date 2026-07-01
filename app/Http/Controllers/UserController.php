@@ -49,7 +49,7 @@ class UserController extends Controller
 
         flash()->addSuccess('New ad created successfully');
 
-        return redirect(route('user.ads'));
+        return redirect()->route('user.ads');
     }
 
     public function ad_edit($id)
@@ -83,7 +83,7 @@ class UserController extends Controller
 
         flash()->addSuccess('Ad updated successfully');
 
-        return redirect(route('user.ads'));
+        return redirect()->route('user.ads');
     }
 
     // function ad_status($id){

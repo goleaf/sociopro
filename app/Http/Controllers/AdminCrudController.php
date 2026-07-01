@@ -467,7 +467,7 @@ class AdminCrudController extends Controller
             }
         }
 
-        return redirect(route('admin.group'));
+        return redirect()->route('admin.group');
     }
 
     public function group_edit($id)
@@ -506,7 +506,7 @@ class AdminCrudController extends Controller
             flash()->addSuccess('Group updated successfully');
         }
 
-        return redirect(route('admin.group'));
+        return redirect()->route('admin.group');
     }
 
     public function pages()
@@ -589,7 +589,7 @@ class AdminCrudController extends Controller
             }
         }
 
-        return redirect(route('admin.page'));
+        return redirect()->route('admin.page');
     }
 
     public function page_updated($id, Request $request)
@@ -636,7 +636,7 @@ class AdminCrudController extends Controller
             flash()->addSuccess('Page updated successfully');
         }
 
-        return redirect(route('admin.page'));
+        return redirect()->route('admin.page');
     }
 
     public function blogs()

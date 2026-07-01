@@ -137,7 +137,7 @@ class ApiController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+            return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
         }
         // return $response;
         $user = User::create([
@@ -1378,7 +1378,7 @@ class ApiController extends Controller
                         unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                     }
 
-                    return json_encode(['validationError' => $validation_errors]);
+                    return response()->json(['validationError' => $validation_errors]);
                 }
             }
 
@@ -1472,7 +1472,7 @@ class ApiController extends Controller
                         unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                     }
 
-                    return json_encode(['validationError' => $validation_errors]);
+                    return response()->json(['validationError' => $validation_errors]);
                 }
 
                 foreach ($request->multiple_files as $key => $media_file) {
@@ -1556,7 +1556,7 @@ class ApiController extends Controller
                         unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                     }
 
-                    return json_encode(['validationError' => $validation_errors]);
+                    return response()->json(['validationError' => $validation_errors]);
                 }
             }
 
@@ -1599,7 +1599,7 @@ class ApiController extends Controller
                         unset($validation_errors['multiple_files.'.$fileIndex[1]]);
                     }
 
-                    return json_encode(['validationError' => $validation_errors]);
+                    return response()->json(['validationError' => $validation_errors]);
                 }
 
                 foreach ($request->multiple_files as $key => $media_file) {
@@ -2221,7 +2221,7 @@ class ApiController extends Controller
             ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             if ($request->profile_photo && ! empty($request->profile_photo)) {
@@ -2284,7 +2284,7 @@ class ApiController extends Controller
             $rules = ['cover_photo' => 'required'];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             $file_name = FileUploader::upload($request->cover_photo, 'public/storage/cover_photo', 1120);
@@ -3097,7 +3097,7 @@ class ApiController extends Controller
             ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             if ($request->image && ! empty($request->image)) {
@@ -3151,7 +3151,7 @@ class ApiController extends Controller
             ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             $group = Group::find($group_id);
@@ -3753,7 +3753,7 @@ class ApiController extends Controller
             ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             $page = Page::find($id);
@@ -3917,7 +3917,7 @@ class ApiController extends Controller
             ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             if ($request->image && ! empty($request->image)) {
@@ -4324,7 +4324,7 @@ class ApiController extends Controller
                 $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
                 $validator = Validator::make($request->images, $rules);
                 if ($validator->fails()) {
-                    return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                    return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
                 }
                 foreach ($request->images as $key => $media_file) {
                     $file_name = FileUploader::upload($media_file, 'public/storage/album/images', 1000, null, 300);
@@ -4489,7 +4489,7 @@ class ApiController extends Controller
             ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             $marketplace = new Marketplace();
@@ -4512,7 +4512,7 @@ class ApiController extends Controller
                     $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
                     $validator = Validator::make($request->multiple_files, $rules);
                     if ($validator->fails()) {
-                        return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                        return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
                     }
 
                     foreach ($request->multiple_files as $key => $media_file) {
@@ -4566,7 +4566,7 @@ class ApiController extends Controller
             ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
 
             $marketplace = Marketplace::find($id);
@@ -4588,7 +4588,7 @@ class ApiController extends Controller
                     $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
                     $validator = Validator::make($request->multiple_files, $rules);
                     if ($validator->fails()) {
-                        return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                        return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
                     }
 
                     if (isset($request->multiple_files)) {
@@ -5382,7 +5382,7 @@ class ApiController extends Controller
             ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
             if ($request->coverphoto && ! empty($request->coverphoto)) {
                 //Upload image
@@ -5466,7 +5466,7 @@ class ApiController extends Controller
             ];
             $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
             }
             if ($request->coverphoto && ! empty($request->coverphoto)) {
                 //Upload image
@@ -7382,7 +7382,7 @@ class ApiController extends Controller
                         $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
                         $validator = Validator::make($request->multiple_files, $rules);
                         if ($validator->fails()) {
-                            return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                            return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
                         }
 
                         foreach ($request->multiple_files as $key => $media_file) {
@@ -7431,7 +7431,7 @@ class ApiController extends Controller
                     $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
                     $validator = Validator::make($request->multiple_files, $rules);
                     if ($validator->fails()) {
-                        return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
+                        return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
                     }
 
                     foreach ($request->multiple_files as $key => $media_file) {

@@ -128,15 +128,15 @@ class PaymentController extends Controller
         if ($transaction->isSuccessful()) {
             Paytm::where('order_id', $order_id)->update(['status' => 1, 'transaction_id' => $transaction->getTransactionId()]);
 
-            return redirect(route('initiate.payment'))->with('message', 'Your payment is successfull.');
+            return redirect()->route('initiate.payment')->with('message', 'Your payment is successfull.');
         } elseif ($transaction->isFailed()) {
             Paytm::where('order_id', $order_id)->update(['status' => 0, 'transaction_id' => $transaction->getTransactionId()]);
 
-            return redirect(route('initiate.payment'))->with('message', 'Your payment is failed.');
+            return redirect()->route('initiate.payment')->with('message', 'Your payment is failed.');
         } elseif ($transaction->isOpen()) {
             Paytm::where('order_id', $order_id)->update(['status' => 2, 'transaction_id' => $transaction->getTransactionId()]);
 
-            return redirect(route('initiate.payment'))->with('message', 'Your payment is processing.');
+            return redirect()->route('initiate.payment')->with('message', 'Your payment is processing.');
         }
         $transaction->getResponseMessage(); //Get Response Message If Available
 

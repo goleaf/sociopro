@@ -102,7 +102,7 @@ class StoryController extends Controller
                     ['color' => $all_data['color'], 'bg-color' => $all_data['bg-color'], 'text' => $all_data['description']]
                 );
             } else {
-                return redirect('/');
+                return redirect()->route('timeline');
             }
         }
 
@@ -117,7 +117,7 @@ class StoryController extends Controller
             if ($request->story_files == '') {
                 Session::flash('error_message', get_phrase('Please Select atlist one image!'));
 
-                return redirect('/');
+                return redirect()->route('timeline');
             }
 
             //add media files
@@ -140,6 +140,6 @@ class StoryController extends Controller
             }
         }
 
-        return redirect('/');
+        return redirect()->route('timeline');
     }
 }

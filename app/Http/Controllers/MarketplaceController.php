@@ -340,7 +340,7 @@ class MarketplaceController extends Controller
             if (isset($_GET['shared'])) {
                 return view('frontend.marketplace.single_product_iframe', $page_data);
             } else {
-                return redirect(route('single.product', $id));
+                return redirect()->route('single.product', $id);
             }
         } else {
             if (isset($_GET['shared'])) {
