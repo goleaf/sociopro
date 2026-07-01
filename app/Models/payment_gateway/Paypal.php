@@ -1,75 +1,72 @@
 <?php
 
 namespace App\Models\payment_gateway;
+
+use App\Models\Payment_gateway;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use DB;
-
-
-//for paypal
-use App\Http\Requests;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Throwable;
 
 class Paypal extends Model
 {
     use HasFactory;
 
-    public static function payment_status($identifier, $transaction_keys = []){
-        $payment_gateway = DB::table('payment_gateways')->where('identifier', $identifier)->first();
-        $keys = json_decode($payment_gateway->keys, true);
+    public static function payment_status($identifier, $transaction_keys = []): bool
+    {
+        $paymentGateway = Payment_gateway::where('identifier', $identifier)->first();
 
-        if($payment_gateway->test_mode == 1){
-            $secret_key = $keys['sandbox_secret_key'];
-            $client_id = $keys['sandbox_client_id'];
-            $mode = 'sandbox';
-            $paypalURL       = 'https://api.sandbox.paypal.com/v1/';
-        }else{
-            $secret_key = $keys['production_secret_key'];
-            $client_id = $keys['production_client_id'];
-            $mode = 'production';
-            $paypalURL       = 'https://api.paypal.com/v1/';
-        }
-
-        
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $paypalURL.'oauth2/token');
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_USERPWD, $client_id.":".$secret_key);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials");
-        $response = curl_exec($ch);
-        curl_close($ch);
-        
-        if(empty($response)){
+        if (! $paymentGateway || empty($transaction_keys['payment_id'])) {
             return false;
-        }else{
-            $jsonData = json_decode($response);
-            $curl = curl_init($paypalURL.'payments/payment/'.$transaction_keys['payment_id']);
-            curl_setopt($curl, CURLOPT_POST, false);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($curl, CURLOPT_HEADER, false);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-              'Authorization: Bearer ' . $jsonData->access_token,
-              'Accept: application/json',
-              'Content-Type: application/xml'
-            ));
-            $response = curl_exec($curl);
-            curl_close($curl);
-            
-            // Transaction data
-            $result = json_decode($response);
-            
-            // CHECK IF THE PAYMENT STATE IS APPROVED OR NOT
-            if($result && $result->state == 'approved'){
-              return true;
-            }else{
-              return false;
-            }
         }
+
+        $keys = json_decode($paymentGateway->keys, true) ?: [];
+        [$clientId, $secretKey, $paypalUrl] = self::gatewayCredentials($paymentGateway, $keys);
+
+        if (! $clientId || ! $secretKey) {
+            return false;
+        }
+
+        try {
+            $tokenResponse = Http::asForm()
+                ->acceptJson()
+                ->withBasicAuth($clientId, $secretKey)
+                ->timeout(10)
+                ->post($paypalUrl . 'oauth2/token', [
+                    'grant_type' => 'client_credentials',
+                ]);
+
+            $accessToken = $tokenResponse->json('access_token');
+
+            if (! $accessToken) {
+                return false;
+            }
+
+            $paymentResponse = Http::acceptJson()
+                ->withToken($accessToken)
+                ->timeout(10)
+                ->get($paypalUrl . 'payments/payment/' . $transaction_keys['payment_id']);
+        } catch (Throwable) {
+            return false;
+        }
+
+        return $paymentResponse->json('state') === 'approved';
     }
 
+    private static function gatewayCredentials(Payment_gateway $paymentGateway, array $keys): array
+    {
+        if ((int) $paymentGateway->test_mode === 1) {
+            return [
+                $keys['sandbox_client_id'] ?? null,
+                $keys['sandbox_secret_key'] ?? null,
+                'https://api.sandbox.paypal.com/v1/',
+            ];
+        }
 
+        return [
+            $keys['production_client_id'] ?? null,
+            $keys['production_secret_key'] ?? null,
+            'https://api.paypal.com/v1/',
+        ];
+    }
 }
