@@ -153,7 +153,7 @@ class BlogController extends Controller
             removeFile('blog', $imagename);
         }
 
-        return json_encode($response);
+        return response()->json($response);
     }
 
     public function delete()

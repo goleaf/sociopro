@@ -95,7 +95,9 @@
     //Server response distribute
     function distributeServerResponse(response) {
         if (response) {
-            response = JSON.parse(response);
+            if (typeof response === "string") {
+                response = JSON.parse(response);
+            }
             //For redirect to another url in a new tab
             if (typeof response.open_new_tab != "undefined" && response.open_new_tab != 0) {
                 window.open(response.open_new_tab, '_blank');
