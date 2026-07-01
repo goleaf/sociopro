@@ -31,7 +31,7 @@ class Media_files extends Model
     /**
      * @return BelongsTo<Posts, Media_files>
      */
-    public function post()
+    public function post(): BelongsTo
     {
         return $this->belongsTo(Posts::class, 'post_id', 'post_id');
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Page extends Model
 {
@@ -11,12 +12,12 @@ class Page extends Model
 
     protected $guarded = ['*'];
 
-    public function getCategory()
+    public function getCategory(): BelongsTo
     {
         return $this->belongsTo(Pagecategory::class, 'category_id');
     }
 
-    public function getUser()
+    public function getUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }

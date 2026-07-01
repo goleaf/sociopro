@@ -22,7 +22,7 @@ class Friendships extends Model
     /**
      * @return BelongsTo<User, Friendships>
      */
-    public function getFriend()
+    public function getFriend(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requester');
     }
@@ -30,7 +30,7 @@ class Friendships extends Model
     /**
      * @return BelongsTo<User, Friendships>
      */
-    public function getFriendAccepter()
+    public function getFriendAccepter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'accepter');
     }

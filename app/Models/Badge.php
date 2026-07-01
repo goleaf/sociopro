@@ -5,6 +5,7 @@ namespace App\Models;
 use DB;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Session;
 
 class Badge extends Model
@@ -26,7 +27,7 @@ class Badge extends Model
         ];
     }
 
-    public function getUser()
+    public function getUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }

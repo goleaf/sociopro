@@ -44,7 +44,7 @@ class Posts extends Model
     /**
      * @return BelongsTo<User, Posts>
      */
-    public function getUser()
+    public function getUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
@@ -52,7 +52,7 @@ class Posts extends Model
     /**
      * @return HasMany<Media_files, Posts>
      */
-    public function media_files()
+    public function media_files(): HasMany
     {
         return $this->hasMany(Media_files::class, 'post_id', 'post_id');
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Notification extends Model
 {
@@ -11,22 +12,22 @@ class Notification extends Model
 
     protected $guarded = ['*'];
 
-    public function getUserData()
+    public function getUserData(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_user_id');
     }
 
-    public function getEventData()
+    public function getEventData(): BelongsTo
     {
         return $this->belongsTo(Event::class, 'event_id');
     }
 
-    public function getGroupData()
+    public function getGroupData(): BelongsTo
     {
         return $this->belongsTo(Group::class, 'group_id');
     }
 
-    public function getFundraiserData()
+    public function getFundraiserData(): BelongsTo
     {
         return $this->belongsTo(Fundraiser::class, 'fundraiser_id');
     }
