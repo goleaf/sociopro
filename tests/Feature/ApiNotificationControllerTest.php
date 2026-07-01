@@ -5,12 +5,13 @@ namespace Tests\Feature;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class ApiNotificationControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    private string $apiToken;
 
     public function test_notification_api_methods_are_split_out_of_god_api_controller(): void
     {
@@ -56,9 +57,9 @@ class ApiNotificationControllerTest extends TestCase
             'updated_at' => now()->subDay(),
         ]);
 
-        Sanctum::actingAs($receiver);
+        $this->authenticateApiUser($receiver);
 
-        $this->withToken('test-token')
+        $this->withToken($this->apiToken)
             ->getJson(route('api.notifications.index'))
             ->assertOk()
             ->assertJsonPath('new_notifications.0.id', $currentNotification->id)
@@ -86,9 +87,9 @@ class ApiNotificationControllerTest extends TestCase
             'view' => 0,
         ]);
 
-        Sanctum::actingAs($receiver);
+        $this->authenticateApiUser($receiver);
 
-        $this->withToken('test-token')
+        $this->withToken($this->apiToken)
             ->postJson(route('api.notifications.read', $notification))
             ->assertOk()
             ->assertJson([
@@ -112,5 +113,10 @@ class ApiNotificationControllerTest extends TestCase
         $notification->save();
 
         return $notification;
+    }
+
+    private function authenticateApiUser(User $user): void
+    {
+        $this->apiToken = $user->createToken('api-test')->plainTextToken;
     }
 }

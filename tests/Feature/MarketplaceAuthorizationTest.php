@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ApiTokenAbility;
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\MarketplaceController;
@@ -16,7 +17,6 @@ use App\Models\SavedProduct;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
-use Laravel\Sanctum\Sanctum;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -424,10 +424,8 @@ class MarketplaceAuthorizationTest extends TestCase
             'title' => 'Original API product',
         ]);
 
-        Sanctum::actingAs($otherUser);
-
         $response = $this
-            ->withToken('test-token')
+            ->withToken($this->apiTokenFor($otherUser, [ApiTokenAbility::MarketplaceUpdate]))
             ->postJson(route('api.marketplace.update', ['id' => $product->id]), $this->marketplacePayload([
                 'title' => 'Unauthorized API title change',
             ]));
@@ -446,10 +444,8 @@ class MarketplaceAuthorizationTest extends TestCase
         $admin = $this->activeUser(UserRole::Admin);
         $product = $this->marketplace($owner);
 
-        Sanctum::actingAs($admin);
-
         $response = $this
-            ->withToken('test-token')
+            ->withToken($this->apiTokenFor($admin, [ApiTokenAbility::MarketplaceUpdate]))
             ->postJson(route('api.marketplace.update', ['id' => $product->id]), $this->marketplacePayload([
                 'title' => 'Admin API updated product',
             ]));
@@ -473,10 +469,8 @@ class MarketplaceAuthorizationTest extends TestCase
         $otherUser = $this->activeUser();
         $product = $this->marketplace($owner);
 
-        Sanctum::actingAs($otherUser);
-
         $response = $this
-            ->withToken('test-token')
+            ->withToken($this->apiTokenFor($otherUser, [ApiTokenAbility::MarketplaceDelete]))
             ->postJson(route('api.marketplace.destroy', ['product_id' => $product->id]));
 
         $response->assertForbidden();
@@ -495,10 +489,8 @@ class MarketplaceAuthorizationTest extends TestCase
 
         $this->savedProduct($otherUser, $product);
 
-        Sanctum::actingAs($currentUser);
-
         $response = $this
-            ->withToken('test-token')
+            ->withToken($this->apiTokenFor($currentUser))
             ->getJson(route('api.marketplace.index'));
 
         $response->assertOk();
@@ -508,7 +500,7 @@ class MarketplaceAuthorizationTest extends TestCase
         $this->savedProduct($currentUser, $product);
 
         $response = $this
-            ->withToken('test-token')
+            ->withToken($this->apiTokenFor($currentUser))
             ->getJson(route('api.marketplace.index'));
 
         $response->assertOk();
@@ -526,10 +518,8 @@ class MarketplaceAuthorizationTest extends TestCase
 
         $this->savedProduct($otherUser, $product);
 
-        Sanctum::actingAs($currentUser);
-
         $response = $this
-            ->withToken('test-token')
+            ->withToken($this->apiTokenFor($currentUser))
             ->getJson(route('api.marketplace.filter', [
                 'search' => 'Filter saved state product',
             ]));
@@ -547,10 +537,8 @@ class MarketplaceAuthorizationTest extends TestCase
 
         $this->savedProduct($otherUser, $product);
 
-        Sanctum::actingAs($currentUser);
-
         $response = $this
-            ->withToken('test-token')
+            ->withToken($this->apiTokenFor($currentUser))
             ->postJson(route('api.marketplace.saves.store', ['id' => $product->id]));
 
         $response
@@ -579,10 +567,8 @@ class MarketplaceAuthorizationTest extends TestCase
         $this->savedProduct($currentUser, $product);
         $this->savedProduct($otherUser, $product);
 
-        Sanctum::actingAs($currentUser);
-
         $response = $this
-            ->withToken('test-token')
+            ->withToken($this->apiTokenFor($currentUser))
             ->postJson(route('api.marketplace.saves.store', ['id' => $product->id]));
 
         $response
@@ -607,10 +593,8 @@ class MarketplaceAuthorizationTest extends TestCase
         $owner = $this->activeUser();
         $product = $this->marketplace($owner);
 
-        Sanctum::actingAs($owner);
-
         $response = $this
-            ->withToken('test-token')
+            ->withToken($this->apiTokenFor($owner, [ApiTokenAbility::MarketplaceDelete]))
             ->postJson(route('api.marketplace.destroy', ['product_id' => $product->id]));
 
         $response->assertOk();
@@ -637,6 +621,19 @@ class MarketplaceAuthorizationTest extends TestCase
 
         $this->assertSame($requestClass, $parameterType?->getName());
         $this->assertTrue(method_exists($requestClass, 'authorize'));
+    }
+
+    /**
+     * @param  list<ApiTokenAbility|string>  $abilities
+     */
+    private function apiTokenFor(User $user, array $abilities = ['*']): string
+    {
+        return $user->createToken('api-test', array_map(
+            static fn (ApiTokenAbility|string $ability): string => $ability instanceof ApiTokenAbility
+                ? $ability->value
+                : $ability,
+            $abilities,
+        ))->plainTextToken;
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\EnsureValidApiBearerToken;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
@@ -90,6 +91,7 @@ class Kernel extends HttpKernel
         'verified' => EnsureEmailIsVerified::class,
         'activity' => UserActivity::class,
         'admin' => AdminMiddleware::class,
+        'api.token' => EnsureValidApiBearerToken::class,
         'user' => UserMiddleware::class,
         'prevent-back-history' => PreventBackHistory::class,
     ];

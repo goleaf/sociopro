@@ -11,12 +11,13 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class DateTimeValidationTest extends TestCase
 {
     use RefreshDatabase;
+
+    private string $apiToken;
 
     public function test_web_registration_rejects_invalid_timezone_and_defaults_missing_timezone(): void
     {
@@ -172,7 +173,7 @@ class DateTimeValidationTest extends TestCase
     {
         $this->authenticateApiUser();
 
-        $response = $this->withToken('test-token')->getJson(route('api.marketplace.filter').'?'.http_build_query([
+        $response = $this->withToken($this->apiToken)->getJson(route('api.marketplace.filter').'?'.http_build_query([
             'date_from' => '2026-07-01T10:00:00Z',
             'date_to' => '2026-07-02T10:00:00Z',
         ]));
@@ -314,7 +315,7 @@ class DateTimeValidationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        Sanctum::actingAs($user);
+        $this->apiToken = $user->createToken('api-test')->plainTextToken;
 
         return $user;
     }

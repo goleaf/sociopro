@@ -11,18 +11,19 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class ApiMarketplaceValidationTest extends TestCase
 {
     use RefreshDatabase;
 
+    private string $apiToken;
+
     public function test_marketplace_filter_rejects_invalid_flat_query_filters_with_legacy_error_shape(): void
     {
         $this->authenticateApiUser();
 
-        $response = $this->withToken('test-token')->getJson($this->apiMarketplaceFilterUrl([
+        $response = $this->withToken($this->apiToken)->getJson($this->apiMarketplaceFilterUrl([
             'search' => str_repeat('a', 256),
             'category' => 'not-a-category-id',
             'condition' => 'refurbished',
@@ -61,7 +62,7 @@ class ApiMarketplaceValidationTest extends TestCase
     {
         $this->authenticateApiUser();
 
-        $response = $this->withToken('test-token')->getJson($this->apiMarketplaceFilterUrl([
+        $response = $this->withToken($this->apiToken)->getJson($this->apiMarketplaceFilterUrl([
             'filters' => [
                 'category' => 'not-a-category-id',
                 'condition' => 'broken',
@@ -109,7 +110,7 @@ class ApiMarketplaceValidationTest extends TestCase
             ]);
         }
 
-        $response = $this->withToken('test-token')->getJson(route('api.marketplace.filter'));
+        $response = $this->withToken($this->apiToken)->getJson(route('api.marketplace.filter'));
 
         $response->assertOk();
 
@@ -123,7 +124,7 @@ class ApiMarketplaceValidationTest extends TestCase
     {
         $this->authenticateApiUser();
 
-        $response = $this->withToken('test-token')->postJson(route('api.marketplace.store'), [
+        $response = $this->withToken($this->apiToken)->postJson(route('api.marketplace.store'), [
             'title' => 'Bad API Marketplace Payload',
             'price' => 'free',
             'location' => 'Vilnius',
@@ -160,7 +161,7 @@ class ApiMarketplaceValidationTest extends TestCase
     {
         $this->authenticateApiUser();
 
-        $response = $this->withToken('test-token')->postJson(route('api.marketplace.store'), [
+        $response = $this->withToken($this->apiToken)->postJson(route('api.marketplace.store'), [
             'title' => '',
             'price' => 'free',
             'condition' => 'ancient',
@@ -186,7 +187,7 @@ class ApiMarketplaceValidationTest extends TestCase
         $this->authenticateApiUser();
         [$category, $brand, $currency] = $this->createMarketplaceLookups();
 
-        $response = $this->withToken('test-token')->post(route('api.marketplace.store'), [
+        $response = $this->withToken($this->apiToken)->post(route('api.marketplace.store'), [
             'title' => 'Bad API Marketplace Upload',
             'price' => '25.50',
             'location' => 'Vilnius',
@@ -220,7 +221,7 @@ class ApiMarketplaceValidationTest extends TestCase
         $user = $this->authenticateApiUser();
         [$category, $brand, $currency] = $this->createMarketplaceLookups();
 
-        $response = $this->withToken('test-token')->post(route('api.marketplace.store'), [
+        $response = $this->withToken($this->apiToken)->post(route('api.marketplace.store'), [
             'title' => 'Valid API Marketplace Upload',
             'price' => '25.50',
             'location' => 'Vilnius',
@@ -266,7 +267,7 @@ class ApiMarketplaceValidationTest extends TestCase
         $this->authenticateApiUser();
         [$category, $brand, $currency] = $this->createMarketplaceLookups();
 
-        $response = $this->withToken('test-token')->postJson(route('api.marketplace.update', [
+        $response = $this->withToken($this->apiToken)->postJson(route('api.marketplace.update', [
             'id' => 'not-a-product-id',
         ]), [
             'title' => 'Valid Title',
@@ -304,7 +305,7 @@ class ApiMarketplaceValidationTest extends TestCase
             'currency_id' => $currency->id,
         ]);
 
-        $response = $this->withToken('test-token')->postJson(route('api.marketplace.update', [
+        $response = $this->withToken($this->apiToken)->postJson(route('api.marketplace.update', [
             'id' => $product->id,
         ]), [
             'title' => 'Mutated Product Title',
@@ -340,7 +341,7 @@ class ApiMarketplaceValidationTest extends TestCase
     {
         $this->authenticateApiUser();
 
-        $response = $this->withToken('test-token')->getJson($this->apiMarketplaceFilterUrl([
+        $response = $this->withToken($this->apiToken)->getJson($this->apiMarketplaceFilterUrl([
             'filters' => [
                 'condition' => 'broken',
                 'price' => [
@@ -367,7 +368,7 @@ class ApiMarketplaceValidationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        Sanctum::actingAs($user);
+        $this->apiToken = $user->createToken('api-test')->plainTextToken;
 
         return $user;
     }
