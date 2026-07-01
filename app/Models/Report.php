@@ -28,4 +28,12 @@ class Report extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    /**
+     * @return BelongsTo<Posts, Report>
+     */
+    public function post(): BelongsTo
+    {
+        return $this->belongsTo(Posts::class, 'post_id', 'post_id');
+    }
 }

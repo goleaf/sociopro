@@ -69,4 +69,29 @@ class Posts extends Model
     {
         return $this->hasMany(Media_files::class, 'post_id', 'post_id');
     }
+
+    /**
+     * @return HasMany<Comments, Posts>
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comments::class, 'id_of_type', 'post_id')
+            ->where('is_type', 'post');
+    }
+
+    /**
+     * @return HasMany<Report, Posts>
+     */
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class, 'post_id', 'post_id');
+    }
+
+    /**
+     * @return HasMany<Post_share, Posts>
+     */
+    public function shares(): HasMany
+    {
+        return $this->hasMany(Post_share::class, 'post_id', 'post_id');
+    }
 }

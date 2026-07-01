@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Post_share extends Model
 {
@@ -20,5 +21,13 @@ class Post_share extends Model
             'user_id' => 'integer',
             'post_id' => 'integer',
         ];
+    }
+
+    /**
+     * @return BelongsTo<Posts, Post_share>
+     */
+    public function post(): BelongsTo
+    {
+        return $this->belongsTo(Posts::class, 'post_id', 'post_id');
     }
 }

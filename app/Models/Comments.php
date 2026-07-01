@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Comments extends Model
 {
@@ -40,5 +41,29 @@ class Comments extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * @return BelongsTo<Posts, Comments>
+     */
+    public function post(): BelongsTo
+    {
+        return $this->belongsTo(Posts::class, 'id_of_type', 'post_id');
+    }
+
+    /**
+     * @return BelongsTo<Comments, Comments>
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id', 'comment_id');
+    }
+
+    /**
+     * @return HasMany<Comments, Comments>
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id', 'comment_id');
     }
 }
