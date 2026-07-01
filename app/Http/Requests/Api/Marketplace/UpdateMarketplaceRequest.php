@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Marketplace;
 
+use App\Enums\ApiTokenAbility;
 use App\Http\Requests\Api\ApiFormRequest;
 use App\Http\Requests\Api\Marketplace\Concerns\ValidatesMarketplacePayload;
 use App\Models\Marketplace;
@@ -13,13 +14,18 @@ class UpdateMarketplaceRequest extends ApiFormRequest
 
     public function authorize(): bool
     {
-        if ($this->skipValidationForLegacyGuestFlow() || ! $this->user()) {
+        $user = $this->bearerTokenUser();
+
+        if ($this->skipValidationForLegacyGuestFlow() || ! $user) {
             return true;
         }
 
         $marketplace = Marketplace::find($this->route('id'));
 
-        return $marketplace === null || Gate::allows('update', $marketplace);
+        return $marketplace === null || (
+            $this->bearerTokenCan(ApiTokenAbility::MarketplaceUpdate)
+            && Gate::forUser($user)->allows('update', $marketplace)
+        );
     }
 
     /**

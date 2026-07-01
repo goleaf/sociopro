@@ -6,6 +6,7 @@ use App\Enums\MediaFileType;
 use App\Enums\MembershipRole;
 use App\Enums\UserRole;
 use App\Enums\Visibility;
+use App\Http\Requests\Api\Marketplace\DestroyMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\FilterMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\StoreMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\UpdateMarketplaceRequest;
@@ -4654,7 +4655,7 @@ class ApiController extends Controller
         return response()->json($response);
     }
 
-    public function delete_marketplace(Request $request, $product_id)
+    public function delete_marketplace(DestroyMarketplaceRequest $request, $product_id)
     {
         $token = $request->bearerToken();
         $response = [];

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\Marketplace;
 
+use App\Enums\ApiTokenAbility;
 use App\Http\Requests\Api\ApiFormRequest;
 use App\Http\Requests\Api\Marketplace\Concerns\ValidatesMarketplacePayload;
 use App\Models\Marketplace;
@@ -13,11 +14,14 @@ class StoreMarketplaceRequest extends ApiFormRequest
 
     public function authorize(): bool
     {
-        if ($this->skipValidationForLegacyGuestFlow() || ! $this->user()) {
+        $user = $this->bearerTokenUser();
+
+        if ($this->skipValidationForLegacyGuestFlow() || ! $user) {
             return true;
         }
 
-        return Gate::allows('create', Marketplace::class);
+        return $this->bearerTokenCan(ApiTokenAbility::MarketplaceCreate)
+            && Gate::forUser($user)->allows('create', Marketplace::class);
     }
 
     /**
