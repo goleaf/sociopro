@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\NotificationController as ApiNotificationController;
 use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -148,16 +149,16 @@ Route::post('/create_fundraiser', [ApiController::class, 'create_fundraiser']);
 Route::post('/update_fundraiser/{id}', [ApiController::class, 'update_fundraiser']);
 Route::post('/invited_fundraiser/{invited_friend_id}/{fundraiser_id}', [ApiController::class, 'invited_fundraiser']);
 
-Route::get('/notifications', [ApiController::class, 'notifications']);
-Route::post('/accept_friend_notification/{id}', [ApiController::class, 'accept_friend_notification']);
-Route::post('/decline_friend_notification/{id}', [ApiController::class, 'decline_friend_notification']);
-Route::post('/accept_group_notification/{id}/{group_id}', [ApiController::class, 'accept_group_notification']);
-Route::post('/decline_group_notification/{id}/{group_id}', [ApiController::class, 'decline_group_notification']);
-Route::post('/accept_event_notification/{id}/{event_id}', [ApiController::class, 'accept_event_notification']);
-Route::post('/decline_event_notification/{id}/{event_id}', [ApiController::class, 'decline_event_notification']);
-Route::post('/mark_as_read/{id}', [ApiController::class, 'mark_as_read']);
-Route::post('/accept_fundraiser_notification/{id}/{fundraiser_id}', [ApiController::class, 'accept_fundraiser_notification']);
-Route::post('/decline_fundraiser_notification/{id}/{fundraiser_id}', [ApiController::class, 'decline_fundraiser_notification']);
+Route::get('/notifications', [ApiNotificationController::class, 'notifications']);
+Route::post('/accept_friend_notification/{id}', [ApiNotificationController::class, 'accept_friend_notification']);
+Route::post('/decline_friend_notification/{id}', [ApiNotificationController::class, 'decline_friend_notification']);
+Route::post('/accept_group_notification/{id}/{group_id}', [ApiNotificationController::class, 'accept_group_notification']);
+Route::post('/decline_group_notification/{id}/{group_id}', [ApiNotificationController::class, 'decline_group_notification']);
+Route::post('/accept_event_notification/{id}/{event_id}', [ApiNotificationController::class, 'accept_event_notification']);
+Route::post('/decline_event_notification/{id}/{event_id}', [ApiNotificationController::class, 'decline_event_notification']);
+Route::post('/mark_as_read/{id}', [ApiNotificationController::class, 'mark_as_read']);
+Route::post('/accept_fundraiser_notification/{id}/{fundraiser_id}', [ApiNotificationController::class, 'accept_fundraiser_notification']);
+Route::post('/decline_fundraiser_notification/{id}/{fundraiser_id}', [ApiNotificationController::class, 'decline_fundraiser_notification']);
 
 Route::get('/chat', [ApiController::class, 'chat']);
 Route::get('/chat_msg/{msg_thrade}', [ApiController::class, 'chat_msg']);
