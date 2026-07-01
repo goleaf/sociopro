@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\Install\ImportInstallSqlDump;
+use App\Jobs\ImportInstallSqlDumpJob;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -78,6 +79,101 @@ SQL);
 
         $this->assertSame('First widget', DB::table('widgets')->where('slug', 'first')->value('name'));
         $this->assertSame(2, DB::table('widgets')->where('slug', 'second')->value('id'));
+    }
+
+    public function test_it_batches_rows_and_reports_duplicates_without_reimporting_existing_data(): void
+    {
+        File::ensureDirectoryExists(dirname($this->dumpPath));
+        File::put($this->dumpPath, <<<'SQL'
+CREATE TABLE `widgets` (
+  `id` int(11) NOT NULL,
+  `slug` varchar(255) DEFAULT NULL,
+  `name` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `widgets` (`id`, `slug`, `name`) VALUES
+(1, 'first', 'First widget'),
+(1, 'first-duplicate', 'Duplicate first widget'),
+(2, 'second', 'Second widget');
+
+ALTER TABLE `widgets`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `widgets_slug_unique` (`slug`);
+
+ALTER TABLE `widgets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+SQL);
+
+        $firstImport = app(ImportInstallSqlDump::class)->handle($this->dumpPath, batchSize: 2);
+
+        $this->assertSame(2, DB::table('widgets')->count());
+        $this->assertSame(2, $firstImport->insertedRows());
+        $this->assertSame(1, $firstImport->duplicateRows());
+        $this->assertSame(0, $firstImport->failedRows());
+        $this->assertSame('First widget', DB::table('widgets')->where('id', 1)->value('name'));
+
+        $secondImport = app(ImportInstallSqlDump::class)->handle($this->dumpPath, batchSize: 2);
+
+        $this->assertSame(2, DB::table('widgets')->count());
+        $this->assertSame(0, $secondImport->insertedRows());
+        $this->assertSame(3, $secondImport->duplicateRows());
+        $this->assertSame(0, $secondImport->failedRows());
+    }
+
+    public function test_import_job_can_process_install_dump_as_queued_work(): void
+    {
+        File::ensureDirectoryExists(dirname($this->dumpPath));
+        File::put($this->dumpPath, <<<'SQL'
+CREATE TABLE `queued_widgets` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `queued_widgets` (`id`, `name`) VALUES
+(1, 'Queued widget');
+
+ALTER TABLE `queued_widgets`
+  ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `queued_widgets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+SQL);
+
+        (new ImportInstallSqlDumpJob($this->dumpPath, batchSize: 1))
+            ->handle(app(ImportInstallSqlDump::class));
+
+        $this->assertSame('Queued widget', DB::table('queued_widgets')->where('id', 1)->value('name'));
+    }
+
+    public function test_it_reports_row_level_errors_without_discarding_valid_rows(): void
+    {
+        File::ensureDirectoryExists(dirname($this->dumpPath));
+        File::put($this->dumpPath, <<<'SQL'
+CREATE TABLE `validated_widgets` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `validated_widgets` (`id`, `name`) VALUES
+(1, 'Valid widget'),
+(2, NULL),
+(3, 'Another valid widget');
+
+ALTER TABLE `validated_widgets`
+  ADD PRIMARY KEY (`id`);
+
+ALTER TABLE `validated_widgets`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+SQL);
+
+        $result = app(ImportInstallSqlDump::class)->handle($this->dumpPath, batchSize: 3);
+
+        $this->assertSame(2, DB::table('validated_widgets')->count());
+        $this->assertSame(2, $result->insertedRows());
+        $this->assertSame(1, $result->failedRows());
+        $this->assertTrue($result->hasFailures());
+        $this->assertSame('validated_widgets', $result->errors()[0]['table']);
+        $this->assertSame(2, $result->errors()[0]['row']);
     }
 
     public function test_database_seeder_imports_install_sql_dump(): void
