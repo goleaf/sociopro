@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Enums\MediaFileType;
 use App\Enums\Visibility;
+use App\Http\Requests\Api\Marketplace\FilterMarketplaceRequest;
+use App\Http\Requests\Api\Marketplace\StoreMarketplaceRequest;
+use App\Http\Requests\Api\Marketplace\UpdateMarketplaceRequest;
 use App\Models\Album_image;
 use App\Models\Albums;
 use App\Models\Blog;
@@ -4493,26 +4496,13 @@ class ApiController extends Controller
         return response()->json($response);
     }
 
-    public function create_marketplace(Request $request)
+    public function create_marketplace(StoreMarketplaceRequest $request)
     {
         $token = $request->bearerToken();
         $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $rules = [
-                'title' => 'required|max:255',
-                'price' => 'required',
-                'location' => 'required',
-                'category' => 'required',
-                'condition' => 'required',
-                'status' => 'required',
-                'brand' => 'required',
-            ];
-            $validator = Validator::make($request->only(array_keys($rules)), $rules);
-            if ($validator->fails()) {
-                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
-            }
 
             $marketplace = new Marketplace;
             $marketplace->user_id = $user_id;
@@ -4529,15 +4519,9 @@ class ApiController extends Controller
             $marketplace->save();
             $product_id = $marketplace->id;
             if ($product_id) {
-                if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                    // Data validation
-                    $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
-                    $validator = Validator::make($request->multiple_files, $rules);
-                    if ($validator->fails()) {
-                        return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
-                    }
-
-                    foreach ($request->multiple_files as $key => $media_file) {
+                $uploadedFiles = $request->file('multiple_files', []);
+                if (is_array($uploadedFiles) && isset($uploadedFiles[0])) {
+                    foreach ($uploadedFiles as $key => $media_file) {
                         $file_name = FileUploader::upload($media_file, 'public/storage/marketplace/thumbnail', 315);
                         FileUploader::upload($media_file, 'public/storage/marketplace/coverphoto/'.$file_name, 315);
 
@@ -4571,27 +4555,13 @@ class ApiController extends Controller
         return response()->json($response);
     }
 
-    public function update_marketplace(Request $request, $id)
+    public function update_marketplace(UpdateMarketplaceRequest $request, $id)
     {
         $token = $request->bearerToken();
         $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $rules = [
-                // 'title' => 'required|max:255',
-                // 'price' => 'required',
-                // 'location' => 'required',
-                // 'category' => 'required',
-                // 'condition' => 'required',
-                // 'status' => 'required',
-                // 'brand' => 'required',
-            ];
-            $validator = Validator::make([], $rules);
-            if ($validator->fails()) {
-                return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
-            }
-
             $marketplace = Marketplace::find($id);
             $marketplace->user_id = $user_id;
             $marketplace->title = $request->title;
@@ -4606,15 +4576,9 @@ class ApiController extends Controller
             $marketplace->save();
             $product_id = $id;
             if ($product_id) {
-                if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                    // Data validation
-                    $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif'];
-                    $validator = Validator::make($request->multiple_files, $rules);
-                    if ($validator->fails()) {
-                        return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
-                    }
-
-                    if (isset($request->multiple_files)) {
+                $uploadedFiles = $request->file('multiple_files', []);
+                if (is_array($uploadedFiles) && isset($uploadedFiles[0])) {
+                    if ($request->hasFile('multiple_files')) {
                         // this for deleting previous data file
                         $previousfile = Media_files::where('product_id', $id)->get();
                         foreach ($previousfile as $previousfile) {
@@ -4630,7 +4594,7 @@ class ApiController extends Controller
                         // end code sec
                     }
 
-                    foreach ($request->multiple_files as $key => $media_file) {
+                    foreach ($uploadedFiles as $key => $media_file) {
                         $file_name = FileUploader::upload($media_file, 'public/storage/marketplace/thumbnail', 315);
                         FileUploader::upload($media_file, 'public/storage/marketplace/coverphoto/'.$file_name, 315);
                         $file_type = 'image';
@@ -4810,7 +4774,7 @@ class ApiController extends Controller
         return response()->json($response);
     }
 
-    public function filter(Request $request)
+    public function filter(FilterMarketplaceRequest $request)
     {
         $token = $request->bearerToken();
         $response = [];
@@ -4818,15 +4782,16 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $search = $_GET['search'];
-            $category = $_GET['category'];
-            $condition = $_GET['condition'];
-            $min = $_GET['min'];
-            $max = $_GET['max'];
-            $brand = $_GET['brand'];
-            $location = $_GET['location'];
+            $filters = $request->filters();
+            $search = $filters['search'];
+            $category = $filters['category'];
+            $condition = $filters['condition'];
+            $min = $filters['min'];
+            $max = $filters['max'];
+            $brand = $filters['brand'];
+            $location = $filters['location'];
 
-            $query = Marketplace::where('status', 1)->orderBy('id', 'desc');
+            $query = Marketplace::where('status', 1)->orderBy($filters['sort'], $filters['direction']);
 
             if (! empty($search) || ! empty($location)) {
                 $query->where(function ($query) use ($search, $location) {
@@ -4862,6 +4827,18 @@ class ApiController extends Controller
 
             if (isset($brand) && ! empty($brand)) {
                 $query->where('brand', $brand);
+            }
+
+            if (! empty($filters['date_from'])) {
+                $query->whereDate('created_at', '>=', $filters['date_from']);
+            }
+
+            if (! empty($filters['date_to'])) {
+                $query->whereDate('created_at', '<=', $filters['date_to']);
+            }
+
+            if ($filters['page'] !== null && $filters['per_page'] !== null) {
+                $query->forPage($filters['page'], $filters['per_page']);
             }
 
             $marketplace = $query->get();
