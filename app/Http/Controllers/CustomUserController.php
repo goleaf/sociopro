@@ -49,7 +49,12 @@ class CustomUserController extends Controller
 
     public function view_profile_data($id)
     {
-        $posts = Posts::where('user_id', $id)->where('publisher', 'post')->where('privacy', 'public')->orderBy('post_id', 'DESC')->limit('10')->get();
+        $posts = Posts::forUser($id)
+            ->where('publisher', 'post')
+            ->publiclyVisible()
+            ->orderBy('post_id', 'DESC')
+            ->limit('10')
+            ->get();
 
         $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())->get();
 
@@ -64,7 +69,13 @@ class CustomUserController extends Controller
     {
         $friendships = FriendshipsQuery::importantForUser(auth()->user())->get();
 
-        $posts = Posts::where('user_id', $request->id)->where('publisher', 'post')->where('privacy', 'public')->skip($request->offset)->take(3)->orderBy('post_id', 'DESC')->get();
+        $posts = Posts::forUser($request->id)
+            ->where('publisher', 'post')
+            ->publiclyVisible()
+            ->skip($request->offset)
+            ->take(3)
+            ->orderBy('post_id', 'DESC')
+            ->get();
 
         $page_data['friendships'] = $friendships;
         $page_data['posts'] = $posts;

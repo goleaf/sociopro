@@ -622,9 +622,8 @@ final class BladeViewData
     public function videoPost(Model $video): ?Posts
     {
         return $this->remember("video-post:{$video->id}", fn (): ?Posts => Posts::query()
-            ->where('privacy', '!=', Visibility::Private->value)
-            ->where('publisher', 'video_and_shorts')
-            ->where('publisher_id', $video->id)
+            ->notPrivate()
+            ->forPublisher('video_and_shorts', $video->id)
             ->first());
     }
 

@@ -42,8 +42,7 @@ class GroupController extends Controller
     {
         $page_data['group'] = Group::find($id);
         $posts = Posts::notPrivate()
-            ->where('posts.publisher', 'group')
-            ->where('posts.publisher_id', $id)
+            ->forPublisher('group', $id)
             ->active()
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')

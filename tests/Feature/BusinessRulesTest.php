@@ -116,6 +116,63 @@ class BusinessRulesTest extends TestCase
         $this->assertSame([$visiblePostId], $postIds);
     }
 
+    public function test_post_for_publisher_scope_filters_publisher_type_and_identifier(): void
+    {
+        $matchingPostId = $this->insertPost([
+            'publisher' => 'video_and_shorts',
+            'publisher_id' => 42,
+        ]);
+        $this->insertPost([
+            'publisher' => 'video_and_shorts',
+            'publisher_id' => 43,
+        ]);
+        $this->insertPost([
+            'publisher' => 'event',
+            'publisher_id' => 42,
+        ]);
+
+        $postIds = Posts::query()
+            ->forPublisher('video_and_shorts', 42)
+            ->pluck('post_id')
+            ->all();
+
+        $this->assertSame([$matchingPostId], $postIds);
+    }
+
+    public function test_post_publicly_visible_scope_filters_public_privacy(): void
+    {
+        $publicPostId = $this->insertPost([
+            'privacy' => Visibility::Public->value,
+        ]);
+        $this->insertPost([
+            'privacy' => Visibility::Private->value,
+        ]);
+
+        $postIds = Posts::query()
+            ->publiclyVisible()
+            ->pluck('post_id')
+            ->all();
+
+        $this->assertSame([$publicPostId], $postIds);
+    }
+
+    public function test_post_for_user_scope_filters_owner(): void
+    {
+        $matchingPostId = $this->insertPost([
+            'user_id' => 20,
+        ]);
+        $this->insertPost([
+            'user_id' => 21,
+        ]);
+
+        $postIds = Posts::query()
+            ->forUser(20)
+            ->pluck('post_id')
+            ->all();
+
+        $this->assertSame([$matchingPostId], $postIds);
+    }
+
     public function test_payment_gateway_model_centralizes_enabled_mode_and_key_decoding(): void
     {
         $gateway = new Payment_gateway;
@@ -139,7 +196,7 @@ class BusinessRulesTest extends TestCase
     }
 
     /**
-     * @param  array{privacy: string, status: string, report_status: int}  $overrides
+     * @param  array<string, mixed>  $overrides
      */
     private function insertPost(array $overrides): int
     {

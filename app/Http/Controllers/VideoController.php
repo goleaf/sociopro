@@ -69,8 +69,7 @@ class VideoController extends Controller
     public function videoinfo($id)
     {
         $page_data['post'] = Posts::notPrivate()
-            ->where('posts.publisher', 'video_and_shorts')
-            ->where('posts.publisher_id', $id)
+            ->forPublisher('video_and_shorts', $id)
             ->active()
             ->first();
 

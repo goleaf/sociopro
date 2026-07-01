@@ -54,6 +54,23 @@ class Posts extends Model
         return $query->where('posts.report_status', '0');
     }
 
+    public function scopeForPublisher(Builder $query, string $publisher, int|string $publisherId): Builder
+    {
+        return $query
+            ->where('posts.publisher', $publisher)
+            ->where('posts.publisher_id', $publisherId);
+    }
+
+    public function scopePubliclyVisible(Builder $query): Builder
+    {
+        return $query->where('posts.privacy', Visibility::Public->value);
+    }
+
+    public function scopeForUser(Builder $query, int|string $userId): Builder
+    {
+        return $query->where('posts.user_id', $userId);
+    }
+
     /**
      * @return BelongsTo<User, Posts>
      */

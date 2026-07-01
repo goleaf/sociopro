@@ -188,8 +188,7 @@ class PageController extends Controller
         $page_data['all_photos'] = $all_photos;
 
         $posts = Posts::notPrivate()
-            ->where('posts.publisher', 'page')
-            ->where('posts.publisher_id', $id)
+            ->forPublisher('page', $id)
             ->active()
             ->join('pages', 'posts.publisher_id', '=', 'pages.id')
             ->select('posts.*', 'pages.id', 'pages.title', 'pages.logo', 'posts.created_at as created_at')

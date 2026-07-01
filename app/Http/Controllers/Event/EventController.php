@@ -223,7 +223,7 @@ class EventController extends Controller
             $query->notPrivate()
                 ->orWhere('posts.user_id', auth()->user()->id);
         })
-            ->where('publisher_id', $id)->where('publisher', 'event')
+            ->forPublisher('event', $id)
             ->active()
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
