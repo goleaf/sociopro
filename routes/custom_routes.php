@@ -73,15 +73,15 @@ Route::controller(MarketplaceController::class)->middleware('auth', 'user', 'ver
 
 //  blog
 Route::controller(BlogController::class)->middleware('auth', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {
-    Route::get('/blogs', 'blogs')->name('blogs');
+    Route::get('/blogs', 'index')->name('blogs');
     Route::get('/create/blog', 'create')->name('create.blog');
     Route::get('my/blog', 'myblog')->name('myblog');
     Route::POST('/blog/store', 'store')->name('blog.store');
     Route::get('/edit/blog/{id}', 'edit')->name('blog.edit');
     Route::post('/update/blog/{id}', 'update')->name('blog.update');
-    Route::get('blog/delete', 'delete')->name('blog.delete');
+    Route::get('blog/delete', 'destroy')->name('blog.delete');
     Route::get('/load_blog_by_scrolling', 'load_blog_by_scrolling')->name('load_blog_by_scrolling');
-    Route::get('blog/view/{id}', 'single_blog')->name('single.blog');
+    Route::get('blog/view/{id}', 'show')->name('single.blog');
     Route::get('/blog/category/{category}', 'category_blog')->name('category.blog');
     Route::get('/blog/search/', 'search')->name('search.blog');
 });

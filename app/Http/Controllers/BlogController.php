@@ -15,13 +15,18 @@ use Session;
 
 class BlogController extends Controller
 {
-    public function blogs()
+    public function index()
     {
         $page_data['categories'] = Blogcategory::all();
         $page_data['blogs'] = Blog::orderBy('id', 'DESC')->limit('10')->get();
         $page_data['view_path'] = 'frontend.blogs.blogs';
 
         return view('frontend.index', $page_data);
+    }
+
+    public function blogs()
+    {
+        return $this->index();
     }
 
     public function myblog()
@@ -133,21 +138,27 @@ class BlogController extends Controller
         }
     }
 
-    public function delete()
+    public function destroy(Request $request)
     {
         $response = [];
-        $blog = Blog::find($_GET['blog_id']);
+        $blogId = $request->query('blog_id');
+        $blog = Blog::find($blogId);
         // store image name for delete file operation
         $imagename = $blog->thumbnail;
 
         $done = $blog->delete();
         if ($done) {
-            $response = ['alertMessage' => get_phrase('Blog Deleted Successfully'), 'fadeOutElem' => '#blog-'.$_GET['blog_id']];
+            $response = ['alertMessage' => get_phrase('Blog Deleted Successfully'), 'fadeOutElem' => '#blog-'.$blogId];
             // just put the file name and folder name nothing more :)
             removeFile('blog', $imagename);
         }
 
         return json_encode($response);
+    }
+
+    public function delete()
+    {
+        return $this->destroy(request());
     }
 
     public function load_blog_by_scrolling(Request $request)
@@ -158,7 +169,7 @@ class BlogController extends Controller
         return view('frontend.blogs.blog-single', $page_data);
     }
 
-    public function single_blog($id)
+    public function show($id)
     {
         $page_data['comments'] = Comments::where('is_type', 'blog')->where('id_of_type', $id)->get();
         $page_data['socailshare'] = app(ShareService::class)->currentPage()
@@ -184,6 +195,11 @@ class BlogController extends Controller
         $page_data['view_path'] = 'frontend.blogs.single_blog';
 
         return view('frontend.index', $page_data);
+    }
+
+    public function single_blog($id)
+    {
+        return $this->show($id);
     }
 
     // category wise page view
