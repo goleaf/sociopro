@@ -16,7 +16,7 @@ class Group extends Model
 
     public function getMember(): HasMany
     {
-        return $this->hasMany(Group_member::class, 'group_id');
+        return $this->hasMany(GroupMember::class, 'group_id');
     }
 
     public function getUser(): BelongsTo

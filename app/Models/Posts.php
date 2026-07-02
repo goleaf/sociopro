@@ -82,11 +82,11 @@ class Posts extends Model
     }
 
     /**
-     * @return HasMany<Media_files, Posts>
+     * @return HasMany<MediaFile, Posts>
      */
     public function media_files(): HasMany
     {
-        return $this->hasMany(Media_files::class, 'post_id', 'post_id');
+        return $this->hasMany(MediaFile::class, 'post_id', 'post_id');
     }
 
     /**
@@ -107,11 +107,11 @@ class Posts extends Model
     }
 
     /**
-     * @return HasMany<Post_share, Posts>
+     * @return HasMany<PostShare, Posts>
      */
     public function shares(): HasMany
     {
-        return $this->hasMany(Post_share::class, 'post_id', 'post_id');
+        return $this->hasMany(PostShare::class, 'post_id', 'post_id');
     }
 
     public function savedByUsers(): BelongsToMany

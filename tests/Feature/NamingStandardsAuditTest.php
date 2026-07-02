@@ -47,17 +47,29 @@ class NamingStandardsAuditTest extends TestCase
         );
     }
 
-    public function test_legacy_message_thread_class_names_are_absent_from_runtime_code(): void
+    public function test_legacy_underscored_model_class_names_are_absent_from_runtime_code(): void
     {
         $offenders = [];
         $legacyTokens = [
+            'Account'.'_active_request',
+            'Album'.'_image',
+            'Feeling'.'_and_activities',
+            'Fundraiser'.'_category',
+            'Fundraiser'.'_donation',
+            'Fundraiser'.'_payout',
+            'Group'.'_member',
+            'Live'.'_streamings',
+            'Media'.'_files',
             'Message'.'_thrade',
             'Message'.'_thradeFactory',
             'Message'.'Thrade',
             'Message'.'ThradeFactory',
+            'Page'.'_like',
+            'Payment'.'_gateway',
+            'Post'.'_share',
         ];
 
-        foreach ($this->phpFiles(['app', 'database/factories', 'database/seeders', 'routes', 'config', 'resources/views', 'tests']) as $path) {
+        foreach ($this->phpFiles(['app', 'database/factories', 'database/migrations', 'database/seeders', 'routes', 'config', 'resources/views', 'tests']) as $path) {
             $contents = File::get($path);
 
             foreach ($legacyTokens as $legacyToken) {
@@ -70,7 +82,7 @@ class NamingStandardsAuditTest extends TestCase
         $this->assertSame(
             [],
             $offenders,
-            'Use MessageThread for PHP class references. Keep legacy database names documented separately.'
+            'Use StudlyCase PHP model class references. Keep legacy database names documented separately.'
         );
     }
 
