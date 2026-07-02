@@ -4,7 +4,7 @@ Date: 2026-07-02
 
 ## Current Migration State
 
-The live checkout has ten project migrations. Local `php artisan migrate:status` reports the first nine as ran and `2026_07_02_200000_add_safe_legacy_json_column_constraints.php` as pending in this developer database. Production status must be checked separately before deploy.
+The live checkout has eleven project migrations. Local `php artisan migrate:status` must be checked before each deploy because this developer database may not mirror production. Production status must be checked separately before deploy.
 
 | Migration | Local status | Production-safety review | Deploy risk |
 | --- | --- | --- | --- |
@@ -17,7 +17,8 @@ The live checkout has ten project migrations. Local `php artisan migrate:status`
 | `2026_07_02_170000_add_safe_legacy_nullable_column_constraints.php` | Ran | Skips dirty null/blank data. Column changes may rebuild tables depending on database engine/version. | Medium |
 | `2026_07_02_180000_add_safe_legacy_money_precision_constraints.php` | Ran | Skips unsafe money values and changes only clean columns. Type conversion may rewrite tables. | Medium |
 | `2026_07_02_190000_add_safe_legacy_datetime_column_constraints.php` | Ran | Skips unsafe datetime values, adds guarded indexes. Datetime type changes may rewrite tables. | Medium |
-| `2026_07_02_200000_add_safe_legacy_json_column_constraints.php` | Pending locally | Skips invalid JSON values and changes only already-cast hidden payment payloads. Native JSON conversion may rewrite tables and differs by engine. | Medium |
+| `2026_07_02_200000_add_safe_legacy_json_column_constraints.php` | Check locally | Skips invalid JSON values and changes only already-cast hidden payment payloads. Native JSON conversion may rewrite tables and differs by engine. | Medium |
+| `2026_07_02_210000_add_page_feed_query_indexes.php` | Check locally | Adds guarded non-unique indexes for page media sidebars and public publisher timeline reads. No data or constraints are changed. | Low |
 
 ## Deployment Rule
 
@@ -168,7 +169,7 @@ During deploy:
 
 ### Additive Index Migrations
 
-`2026_07_01_150000`, `2026_07_02_120000`, `2026_07_02_130000`, and `2026_07_02_140000` should run before constraints and type changes. The first lookup-index migration is the most fragile because it lacks `Schema::hasIndex()` guards. On production, compare existing indexes first and skip or replace with a new guarded migration if equivalent indexes already exist.
+`2026_07_01_150000`, `2026_07_02_120000`, `2026_07_02_130000`, `2026_07_02_140000`, and `2026_07_02_210000` should run before constraints and type changes. The first lookup-index migration is the most fragile because it lacks `Schema::hasIndex()` guards. On production, compare existing indexes first and skip or replace with a new guarded migration if equivalent indexes already exist.
 
 ### Foreign Keys
 

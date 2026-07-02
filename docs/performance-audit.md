@@ -18,6 +18,7 @@ This is the current performance handoff for the senior-upgrade slice. It records
 - Job application PDF uploads now write to private local storage and stream through an action before falling back to the legacy public path.
 - Media download paths are resolved and constrained before reading/deleting files, reducing filesystem traversal risk without adding database load.
 - Page list cards now preload page-like counts and current-user like existence with `withCount` / `withExists`, and the `pages` index has a query-budget regression test to prevent per-card `page_likes` lookups from returning.
+- Page feed indexes now cover mixed page media sidebars (`media_files.page_id, id`) and public publisher timelines (`posts.publisher, publisher_id, privacy, created_at, post_id`) through a guarded additive migration.
 
 ## High-Impact Bottlenecks To Tackle Next
 
@@ -41,5 +42,5 @@ This is the current performance handoff for the senior-upgrade slice. It records
 - No broad `ApiController` split.
 - No Vite migration.
 - No queue worker/process manager configuration.
-- No schema/index changes.
+- No destructive schema changes.
 - No cache layer added, because invalidation rules need domain-specific tests first.

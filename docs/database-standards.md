@@ -10,6 +10,7 @@ Use this document together with:
 - `docs/coding-standards.md`
 - `docs/project-standards-bible.md`
 - `docs/migration-audit.md`
+- `docs/database-indexes.md`
 - `docs/risk-register.md`
 
 ## Core Rules
@@ -114,6 +115,8 @@ Use this document together with:
 - Every new index must have a descriptive name when Laravel's generated name would be unclear or too long.
 - Index migrations should guard table, column, and index existence when they target legacy schema.
 - Document expected query benefit for broad index migrations, especially on write-heavy tables.
+- For feed/timeline indexes, include a stable ordering tie-breaker such as `id` or `post_id` when the query can later move to cursor-style pagination.
+- Record every new broad index in `docs/database-indexes.md` with the read path, reason, migration, and rollback risk.
 
 ## Unique Constraints
 

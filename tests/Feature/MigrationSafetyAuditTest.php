@@ -101,6 +101,20 @@ class MigrationSafetyAuditTest extends TestCase
         $this->assertIndexesExist($this->expectedQueryPatternIndexes());
     }
 
+    public function test_page_feed_query_indexes_are_present_and_reversible(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_210000_add_page_feed_query_indexes.php');
+
+        $migration->up();
+        $this->assertIndexesExist($this->expectedPageFeedQueryIndexes());
+
+        $migration->down();
+        $this->assertIndexesDoNotExist($this->expectedPageFeedQueryIndexes());
+
+        $migration->up();
+        $this->assertIndexesExist($this->expectedPageFeedQueryIndexes());
+    }
+
     public function test_safe_legacy_foreign_key_constraints_are_present_and_reversible(): void
     {
         $migration = require database_path('migrations/2026_07_02_150000_add_safe_legacy_foreign_key_constraints.php');
@@ -720,6 +734,21 @@ class MigrationSafetyAuditTest extends TestCase
             ],
             'stories' => [
                 'stories_status_created_story_idx' => ['status', 'created_at', 'story_id'],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function expectedPageFeedQueryIndexes(): array
+    {
+        return [
+            'media_files' => [
+                'media_files_page_id_id_idx' => ['page_id', 'id'],
+            ],
+            'posts' => [
+                'posts_publisher_privacy_created_post_idx' => ['publisher', 'publisher_id', 'privacy', 'created_at', 'post_id'],
             ],
         ];
     }
