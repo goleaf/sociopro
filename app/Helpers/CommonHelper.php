@@ -725,33 +725,16 @@ if (! function_exists('set_config')) {
 if (! function_exists('get_meta_details')) {
     function get_url_contents($pageUrl)
     {
-        $safeUrl = ServerSideUrl::forHttpFetch((string) $pageUrl);
+        $safeUrl = ServerSideUrl::forConfiguredHttpFetch((string) $pageUrl);
 
         if ($safeUrl === null) {
             return false;
         }
 
-        $context = stream_context_create([
-            'http' => [
-                'follow_location' => 0,
-                'ignore_errors' => true,
-                'max_redirects' => 0,
-                'timeout' => 5,
-                'user_agent' => 'SocioproLinkPreview/1.0',
-                'header' => "Accept: text/html,application/xhtml+xml\r\n",
-            ],
-            'https' => [
-                'follow_location' => 0,
-                'ignore_errors' => true,
-                'max_redirects' => 0,
-                'timeout' => 5,
-                'user_agent' => 'SocioproLinkPreview/1.0',
-                'header' => "Accept: text/html,application/xhtml+xml\r\n",
-            ],
-        ]);
+        $context = stream_context_create(ServerSideUrl::configuredStreamContextOptions());
 
         try {
-            $html = file_get_contents($safeUrl, false, $context, 0, 1024 * 1024);
+            $html = file_get_contents($safeUrl, false, $context, 0, ServerSideUrl::configuredResponseByteLimit());
         } catch (Throwable) {
             return false;
         }

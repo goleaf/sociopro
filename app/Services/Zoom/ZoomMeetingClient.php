@@ -74,10 +74,12 @@ class ZoomMeetingClient
 
     private function request(): PendingRequest
     {
-        return $this->http->withHeaders([
-            'authorization' => 'Bearer '.$this->generateToken(),
-            'content-type' => 'application/json',
-        ]);
+        return $this->http
+            ->timeout(10)
+            ->withHeaders([
+                'authorization' => 'Bearer '.$this->generateToken(),
+                'content-type' => 'application/json',
+            ]);
     }
 
     private function generateToken(): string
