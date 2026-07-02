@@ -63,6 +63,7 @@
         "test": "@php artisan test",
         "test:unit": "@php artisan test --testsuite=Unit",
         "test:feature": "@php artisan test --testsuite=Feature",
+        "test:migrations": "@php artisan test tests/Feature/MigrationSafetyAuditTest.php",
         "pint": "vendor/bin/pint",
         "pint:test": "vendor/bin/pint --test",
         "format": "@pint",
@@ -70,7 +71,7 @@
         "analyse": "@php -r \"if (file_exists('vendor/bin/phpstan')) { passthru('vendor/bin/phpstan analyse --memory-limit=1G', $code); exit($code); } fwrite(STDERR, 'PHPStan is not installed; skipping analyse.'.PHP_EOL);\"",
         "rector:dry": "@php -r \"if (file_exists('vendor/bin/rector')) { passthru('vendor/bin/rector --dry-run', $code); exit($code); } fwrite(STDERR, 'Rector is not installed; skipping rector:dry.'.PHP_EOL);\"",
         "rector": "@php -r \"if (file_exists('vendor/bin/rector')) { passthru('vendor/bin/rector', $code); exit($code); } fwrite(STDERR, 'Rector is not installed; skipping rector.'.PHP_EOL);\"",
-        "quality:cache": [
+        "quality:artisan": [
             "@php artisan config:cache",
             "@php artisan config:clear",
             "@php artisan route:cache",
@@ -79,21 +80,33 @@
             "@php artisan view:clear",
             "@php artisan optimize:clear"
         ],
+        "quality:cache": "@quality:artisan",
         "quality:php": [
             "@format:test",
-            "@analyse",
-            "@test"
+            "@analyse"
         ],
-        "quality:frontend": "@php -r \"if (! file_exists('package.json')) { exit(0); } passthru('npm run quality', $code); exit($code);\"",
+        "quality:tests": [
+            "@test:unit",
+            "@test:feature",
+            "@test:migrations"
+        ],
+        "quality:frontend": [
+            "npm run lint",
+            "npm run stylelint",
+            "npm run format:check",
+            "npm run audit:prod",
+            "npm run build"
+        ],
         "quality": [
             "@quality:php",
-            "@quality:frontend"
+            "@quality:tests",
+            "@quality:frontend",
+            "@quality:artisan"
         ],
         "ci": [
             "@composer validate --strict --no-interaction",
             "@composer audit --no-interaction",
-            "@quality",
-            "@quality:cache"
+            "@quality"
         ]
     },
     "extra": {

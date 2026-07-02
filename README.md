@@ -116,27 +116,36 @@ npm run quality
 
 ## Tests And Quality
 
-PHP checks:
+Run the full local quality gate before committing application, test, database, or frontend changes:
 
 ```bash
-composer validate --strict --no-interaction
-composer audit --no-interaction
-composer pint:test
-composer analyse
-php artisan test
 composer quality
-composer quality:cache
+```
+
+`composer quality` runs the required checks in this order:
+
+1. `composer pint:test` for PHP formatting.
+2. `composer analyse` for Larastan/PHPStan static analysis.
+3. `composer test:unit` for PHPUnit unit tests.
+4. `composer test:feature` for PHPUnit feature tests.
+5. `composer test:migrations` for migration safety regression tests.
+6. `npm run lint`, `npm run stylelint`, `npm run format:check`, `npm run audit:prod`, and `npm run build` for frontend quality and production assets.
+7. `composer quality:artisan` for Laravel config, route, and view cache smoke checks, followed by cache cleanup.
+
+For CI-style local verification, include Composer validation and dependency audit:
+
+```bash
 composer ci
 ```
 
-`composer quality` runs Pint in check mode, PHPStan/Larastan, and the full Laravel test suite. `composer ci` adds Composer validation, dependency audit, and Laravel cache smoke checks.
+`composer ci` runs `composer validate --strict --no-interaction`, `composer audit --no-interaction`, then `composer quality`.
 
 Use focused tests while developing, then the full suite before commit:
 
 ```bash
 php artisan test tests/Feature/ContactFormTest.php
 php artisan test tests/Feature/ChatUploadSecurityTest.php
-php artisan test
+composer quality
 ```
 
 ## Common Troubleshooting

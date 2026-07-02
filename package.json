@@ -15,7 +15,7 @@
         "format:check": "prettier --check \"resources/**/*.{js,css}\"",
         "stylelint": "stylelint \"resources/css/**/*.css\"",
         "audit:prod": "npm audit --omit=dev --audit-level=moderate",
-        "quality": "npm run lint && npm run stylelint && npm run format:check && npm run audit:prod && npm run production"
+        "quality": "npm run lint && npm run stylelint && npm run format:check && npm run audit:prod && npm run build"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.4.0",
