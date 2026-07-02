@@ -2,25 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\Addons\ImportAddonPackage;
 use App\Http\Requests\Admin\ImportAddonPackageRequest;
+use App\Jobs\ImportAddonPackageJob;
 use App\Models\Addon;
 use Illuminate\Http\RedirectResponse;
-use RuntimeException;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Updater extends Controller
 {
-    public function update(
-        ImportAddonPackageRequest $request,
-        ImportAddonPackage $importAddonPackage
-    ): RedirectResponse {
-        try {
-            $result = $importAddonPackage->handle($request->file('file'));
-        } catch (RuntimeException $exception) {
-            return redirect()->back()->with('error', get_phrase($exception->getMessage()));
+    public function update(ImportAddonPackageRequest $request): RedirectResponse
+    {
+        $package = $request->file('file');
+        $storedPath = $package?->storeAs(
+            'addon-imports',
+            Str::uuid()->toString().'.zip',
+            'local'
+        );
+
+        if (! is_string($storedPath)) {
+            return redirect()->back()->with('error', get_phrase('Addon package could not be stored.'));
         }
 
-        return redirect()->back()->with('success', get_phrase($result->message));
+        ImportAddonPackageJob::dispatch(Storage::disk('local')->path($storedPath))->afterCommit();
+
+        return redirect()->back()->with('success', get_phrase('Addon import queued successfully.'));
     }
 
     // addon manager table

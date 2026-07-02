@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Actions\Addons\ImportAddonPackage;
+use App\Actions\Install\ImportInstallSqlDump;
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Jobs\ImportAddonPackageJob;
@@ -10,8 +11,10 @@ use App\Models\Addon;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Tests\TestCase;
 use ZipArchive;
@@ -72,20 +75,25 @@ class AddonPackageImportTest extends TestCase
     {
         $this->createAddonPackage($this->packagePath, 'queued-addon');
 
-        (new ImportAddonPackageJob($this->packagePath, batchSize: 1))
-            ->handle(app(ImportAddonPackage::class));
+        $job = new ImportAddonPackageJob($this->packagePath, batchSize: 1);
+        $job->handle(app(ImportAddonPackage::class));
 
         $this->assertSame(1, Addon::query()->where('unique_identifier', 'queued-addon')->count());
         $this->assertSame('Queued widget', DB::table('addon_import_widgets')->where('id', 1)->value('name'));
+
+        $job->handle(app(ImportAddonPackage::class));
+
+        $this->assertSame(1, Addon::query()->where('unique_identifier', 'queued-addon')->count());
+        $this->assertSame('Queued widget', DB::table('addon_import_widgets')->where('id', 1)->value('name'));
+        $this->assertSame(2, DB::table('addon_import_widgets')->count());
     }
 
-    public function test_admin_addon_install_route_validates_and_imports_zip_package(): void
+    public function test_admin_addon_install_route_dispatches_import_job_after_commit_with_stored_payload(): void
     {
+        Bus::fake();
+        Storage::fake('local');
         $this->createAddonPackage($this->packagePath, 'route-addon');
-        $admin = User::factory()->create([
-            'user_role' => UserRole::Admin->value,
-            'status' => UserAccountStatus::Active->value,
-        ]);
+        $admin = $this->adminUser();
 
         $upload = new UploadedFile($this->packagePath, 'route-addon.zip', 'application/zip', null, true);
 
@@ -93,8 +101,43 @@ class AddonPackageImportTest extends TestCase
             ->post(route('addon.install'), ['file' => $upload])
             ->assertRedirect();
 
-        $this->assertSame(1, Addon::query()->where('unique_identifier', 'route-addon')->count());
-        $this->assertSame(2, DB::table('addon_import_widgets')->count());
+        Bus::assertDispatched(ImportAddonPackageJob::class, function (ImportAddonPackageJob $job): bool {
+            $this->assertSame(ImportInstallSqlDump::DEFAULT_BATCH_SIZE, $job->batchSize);
+            $this->assertTrue($job->afterCommit);
+            $this->assertStringContainsString('addon-imports/', str_replace('\\', '/', $job->packagePath));
+            $this->assertFileExists($job->packagePath);
+
+            return true;
+        });
+        $this->assertSame(0, Addon::query()->where('unique_identifier', 'route-addon')->count());
+    }
+
+    public function test_admin_addon_install_route_does_not_dispatch_when_validation_fails(): void
+    {
+        Bus::fake();
+
+        $this->actingAs($this->adminUser())
+            ->post(route('addon.install'), [])
+            ->assertSessionHasErrors(['file']);
+
+        Bus::assertNotDispatched(ImportAddonPackageJob::class);
+    }
+
+    public function test_admin_addon_install_route_does_not_dispatch_when_authorization_fails(): void
+    {
+        Bus::fake();
+        $this->createAddonPackage($this->packagePath, 'blocked-addon');
+        $user = User::factory()->create([
+            'user_role' => UserRole::General->value,
+            'status' => UserAccountStatus::Active->value,
+        ]);
+        $upload = new UploadedFile($this->packagePath, 'blocked-addon.zip', 'application/zip', null, true);
+
+        $this->actingAs($user)
+            ->post(route('addon.install'), ['file' => $upload])
+            ->assertRedirect(route('timeline'));
+
+        Bus::assertNotDispatched(ImportAddonPackageJob::class);
     }
 
     public function test_it_rejects_zip_entries_that_escape_the_package_directory(): void
@@ -166,5 +209,13 @@ SQL);
     private function markerPhp(): string
     {
         return "<?php file_put_contents('{$this->stepMarkerPath}', 'executed');";
+    }
+
+    private function adminUser(): User
+    {
+        return User::factory()->create([
+            'user_role' => UserRole::Admin->value,
+            'status' => UserAccountStatus::Active->value,
+        ]);
     }
 }
