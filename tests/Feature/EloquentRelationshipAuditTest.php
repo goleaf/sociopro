@@ -15,16 +15,16 @@ use App\Models\Follower;
 use App\Models\Friendships;
 use App\Models\Fundraiser;
 use App\Models\Group;
-use App\Models\Group_member;
+use App\Models\GroupMember;
 use App\Models\Invite;
 use App\Models\Marketplace;
-use App\Models\Media_files;
+use App\Models\MediaFile;
 use App\Models\Notification;
 use App\Models\Page;
-use App\Models\Page_like;
 use App\Models\Pagecategory;
-use App\Models\Post_share;
+use App\Models\PageLike;
 use App\Models\Posts;
+use App\Models\PostShare;
 use App\Models\Report;
 use App\Models\SavedProduct;
 use App\Models\Saveforlater;
@@ -161,7 +161,7 @@ class EloquentRelationshipAuditTest extends TestCase
             'status' => 0,
         ])->save();
 
-        $share = new Post_share;
+        $share = new PostShare;
         $share->forceFill([
             'user_id' => 5,
             'post_id' => $post->post_id,
@@ -211,30 +211,30 @@ class EloquentRelationshipAuditTest extends TestCase
             ['model' => Event::class, 'method' => 'inviteEvent', 'relation' => HasMany::class, 'related' => Invite::class, 'foreign' => 'invites.event_id', 'parent' => 'events.id'],
             ['model' => Friendships::class, 'method' => 'getFriend', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'friendships.requester', 'owner' => 'users.id'],
             ['model' => Friendships::class, 'method' => 'getFriendAccepter', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'friendships.accepter', 'owner' => 'users.id'],
-            ['model' => Group::class, 'method' => 'getMember', 'relation' => HasMany::class, 'related' => Group_member::class, 'foreign' => 'group_members.group_id', 'parent' => 'groups.id'],
+            ['model' => Group::class, 'method' => 'getMember', 'relation' => HasMany::class, 'related' => GroupMember::class, 'foreign' => 'group_members.group_id', 'parent' => 'groups.id'],
             ['model' => Group::class, 'method' => 'getUser', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'groups.user_id', 'owner' => 'users.id'],
-            ['model' => Group_member::class, 'method' => 'getGroup', 'relation' => BelongsTo::class, 'related' => Group::class, 'foreign' => 'group_members.group_id', 'owner' => 'groups.id'],
-            ['model' => Group_member::class, 'method' => 'getUser', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'group_members.user_id', 'owner' => 'users.id'],
+            ['model' => GroupMember::class, 'method' => 'getGroup', 'relation' => BelongsTo::class, 'related' => Group::class, 'foreign' => 'group_members.group_id', 'owner' => 'groups.id'],
+            ['model' => GroupMember::class, 'method' => 'getUser', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'group_members.user_id', 'owner' => 'users.id'],
             ['model' => Marketplace::class, 'method' => 'getUser', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'marketplaces.user_id', 'owner' => 'users.id'],
             ['model' => Marketplace::class, 'method' => 'getCategory', 'relation' => BelongsTo::class, 'related' => Category::class, 'foreign' => 'marketplaces.category', 'owner' => 'categories.id'],
             ['model' => Marketplace::class, 'method' => 'getBrand', 'relation' => BelongsTo::class, 'related' => Brand::class, 'foreign' => 'marketplaces.brand', 'owner' => 'brands.id'],
             ['model' => Marketplace::class, 'method' => 'getCurrency', 'relation' => BelongsTo::class, 'related' => Currency::class, 'foreign' => 'marketplaces.currency_id', 'owner' => 'currencies.id'],
-            ['model' => Media_files::class, 'method' => 'post', 'relation' => BelongsTo::class, 'related' => Posts::class, 'foreign' => 'media_files.post_id', 'owner' => 'posts.post_id'],
+            ['model' => MediaFile::class, 'method' => 'post', 'relation' => BelongsTo::class, 'related' => Posts::class, 'foreign' => 'media_files.post_id', 'owner' => 'posts.post_id'],
             ['model' => Notification::class, 'method' => 'getUserData', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'notifications.sender_user_id', 'owner' => 'users.id'],
             ['model' => Notification::class, 'method' => 'getEventData', 'relation' => BelongsTo::class, 'related' => Event::class, 'foreign' => 'notifications.event_id', 'owner' => 'events.id'],
             ['model' => Notification::class, 'method' => 'getGroupData', 'relation' => BelongsTo::class, 'related' => Group::class, 'foreign' => 'notifications.group_id', 'owner' => 'groups.id'],
             ['model' => Notification::class, 'method' => 'getFundraiserData', 'relation' => BelongsTo::class, 'related' => Fundraiser::class, 'foreign' => 'notifications.fundraiser_id', 'owner' => 'fundraisers.id'],
             ['model' => Page::class, 'method' => 'getCategory', 'relation' => BelongsTo::class, 'related' => Pagecategory::class, 'foreign' => 'pages.category_id', 'owner' => 'pagecategories.id'],
             ['model' => Page::class, 'method' => 'getUser', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'pages.user_id', 'owner' => 'users.id'],
-            ['model' => Page_like::class, 'method' => 'pageData', 'relation' => BelongsTo::class, 'related' => Page::class, 'foreign' => 'page_likes.page_id', 'owner' => 'pages.id'],
+            ['model' => PageLike::class, 'method' => 'pageData', 'relation' => BelongsTo::class, 'related' => Page::class, 'foreign' => 'page_likes.page_id', 'owner' => 'pages.id'],
             ['model' => Posts::class, 'method' => 'getUser', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'posts.user_id', 'owner' => 'users.id'],
-            ['model' => Posts::class, 'method' => 'media_files', 'relation' => HasMany::class, 'related' => Media_files::class, 'foreign' => 'media_files.post_id', 'parent' => 'posts.post_id'],
+            ['model' => Posts::class, 'method' => 'media_files', 'relation' => HasMany::class, 'related' => MediaFile::class, 'foreign' => 'media_files.post_id', 'parent' => 'posts.post_id'],
             ['model' => Posts::class, 'method' => 'comments', 'relation' => HasMany::class, 'related' => Comments::class, 'foreign' => 'comments.id_of_type', 'parent' => 'posts.post_id'],
             ['model' => Posts::class, 'method' => 'reports', 'relation' => HasMany::class, 'related' => Report::class, 'foreign' => 'reports.post_id', 'parent' => 'posts.post_id'],
-            ['model' => Posts::class, 'method' => 'shares', 'relation' => HasMany::class, 'related' => Post_share::class, 'foreign' => 'post_shares.post_id', 'parent' => 'posts.post_id'],
+            ['model' => Posts::class, 'method' => 'shares', 'relation' => HasMany::class, 'related' => PostShare::class, 'foreign' => 'post_shares.post_id', 'parent' => 'posts.post_id'],
             ['model' => Report::class, 'method' => 'userData', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'reports.user_id', 'owner' => 'users.id'],
             ['model' => Report::class, 'method' => 'post', 'relation' => BelongsTo::class, 'related' => Posts::class, 'foreign' => 'reports.post_id', 'owner' => 'posts.post_id'],
-            ['model' => Post_share::class, 'method' => 'post', 'relation' => BelongsTo::class, 'related' => Posts::class, 'foreign' => 'post_shares.post_id', 'owner' => 'posts.post_id'],
+            ['model' => PostShare::class, 'method' => 'post', 'relation' => BelongsTo::class, 'related' => Posts::class, 'foreign' => 'post_shares.post_id', 'owner' => 'posts.post_id'],
             ['model' => SavedProduct::class, 'method' => 'productData', 'relation' => BelongsTo::class, 'related' => Marketplace::class, 'foreign' => 'saved_products.product_id', 'owner' => 'marketplaces.id'],
             ['model' => Saveforlater::class, 'method' => 'getVideo', 'relation' => BelongsTo::class, 'related' => Video::class, 'foreign' => 'saveforlaters.video_id', 'owner' => 'videos.id'],
             ['model' => Video::class, 'method' => 'getUser', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'videos.user_id', 'owner' => 'users.id'],
@@ -302,11 +302,11 @@ class EloquentRelationshipAuditTest extends TestCase
             ['model' => Follower::class, 'method' => 'followedUser', 'related' => User::class, 'foreign' => 'followers.follow_id', 'owner' => 'users.id'],
             ['model' => Follower::class, 'method' => 'page', 'related' => Page::class, 'foreign' => 'followers.page_id', 'owner' => 'pages.id'],
             ['model' => Follower::class, 'method' => 'group', 'related' => Group::class, 'foreign' => 'followers.group_id', 'owner' => 'groups.id'],
-            ['model' => Group_member::class, 'method' => 'group', 'related' => Group::class, 'foreign' => 'group_members.group_id', 'owner' => 'groups.id'],
-            ['model' => Group_member::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'group_members.user_id', 'owner' => 'users.id'],
-            ['model' => Page_like::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'page_likes.user_id', 'owner' => 'users.id'],
-            ['model' => Page_like::class, 'method' => 'page', 'related' => Page::class, 'foreign' => 'page_likes.page_id', 'owner' => 'pages.id'],
-            ['model' => Post_share::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'post_shares.user_id', 'owner' => 'users.id'],
+            ['model' => GroupMember::class, 'method' => 'group', 'related' => Group::class, 'foreign' => 'group_members.group_id', 'owner' => 'groups.id'],
+            ['model' => GroupMember::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'group_members.user_id', 'owner' => 'users.id'],
+            ['model' => PageLike::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'page_likes.user_id', 'owner' => 'users.id'],
+            ['model' => PageLike::class, 'method' => 'page', 'related' => Page::class, 'foreign' => 'page_likes.page_id', 'owner' => 'pages.id'],
+            ['model' => PostShare::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'post_shares.user_id', 'owner' => 'users.id'],
             ['model' => SavedProduct::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'saved_products.user_id', 'owner' => 'users.id'],
             ['model' => SavedProduct::class, 'method' => 'product', 'related' => Marketplace::class, 'foreign' => 'saved_products.product_id', 'owner' => 'marketplaces.id'],
             ['model' => Saveforlater::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'saveforlaters.user_id', 'owner' => 'users.id'],

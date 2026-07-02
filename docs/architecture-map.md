@@ -114,9 +114,9 @@ Current model-to-table mappings detected through Laravel:
 
 | Model | Table |
 | --- | --- |
-| `Account_active_request` | `account_active_requests` |
+| `AccountActiveRequest` | `account_active_requests` |
 | `Addon` | `addons` |
-| `Album_image` | `album_images` |
+| `AlbumImage` | `album_images` |
 | `Albums` | `albums` |
 | `Badge` | `batchs` |
 | `BlockUser` | `block_users` |
@@ -128,23 +128,23 @@ Current model-to-table mappings detected through Laravel:
 | `Comments` | `comments` |
 | `Currency` | `currencies` |
 | `Event` | `events` |
-| `Feeling_and_activities` | `feeling_and_activities` |
+| `FeelingAndActivity` | `feeling_and_activities` |
 | `Follower` | `followers` |
 | `Friendships` | `friendships` |
 | `Group` | `groups` |
-| `Group_member` | `group_members` |
+| `GroupMember` | `group_members` |
 | `Invite` | `invites` |
 | `Language` | `languages` |
-| `Live_streamings` | `live_streamings` |
+| `LiveStreaming` | `live_streamings` |
 | `Marketplace` | `marketplaces` |
-| `Media_files` | `media_files` |
-| `Message_thrade` | `message_thrades` |
+| `MediaFile` | `media_files` |
+| `MessageThread` | `message_thrades` |
 | `Notification` | `notifications` |
 | `Page` | `pages` |
-| `Page_like` | `page_likes` |
+| `PageLike` | `page_likes` |
 | `Pagecategory` | `pagecategories` |
-| `Payment_gateway` | `payment_gateways` |
-| `Post_share` | `post_shares` |
+| `PaymentGateway` | `payment_gateways` |
+| `PostShare` | `post_shares` |
 | `Posts` | `posts` |
 | `Report` | `reports` |
 | `SavedProduct` | `saved_products` |
@@ -170,7 +170,7 @@ Models currently mapped to tables not present in the local SQLite schema:
 - `CommonModel` -> `common_models`
 - `FileUploader` -> `file_uploaders`
 - `Fundraiser` -> `fundraisers`
-- `Fundraiser_donation` -> `fundraiser_donations`
+- `FundraiserDonation` -> `fundraiser_donations`
 - `PaidContentCreator` -> `paid_content_creators`
 
 Tables without first-class local model files:
@@ -375,7 +375,7 @@ Admin/data tooling:
 - View composers centralize convenience data but also perform database reads for every matching layout render.
 - Schema is still dump-backed; only one current Laravel migration is present.
 - Some model/table mappings do not match the current local database schema.
-- Model naming is inconsistent with Laravel conventions, for example plural model class names and typo-bearing names such as `Message_thrade`.
+- Model naming now follows StudlyCase for PHP class/file names; legacy table names such as `message_thrades` remain compatibility constraints.
 - `$fillable` and `$casts` coverage is partial across the model layer.
 - Payment gateway secret ownership is split across config, DB settings, admin views, and gateway model classes.
 - Vite is not installed even though modern standards docs reference Vite as a target state.

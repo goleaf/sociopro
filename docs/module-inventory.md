@@ -59,7 +59,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/api.php`; 134 endpoints under `api/*`; includes auth, feed, stories, profile, friends, groups, pages, marketplace, videos, events, blogs, paid content, jobs, fundraisers, notifications, chat, and settings.
 - Controllers: `App\Http\Controllers\ApiController`.
 - Requests: none; inline `$request->validate()` and manual validation are used.
-- Models: `User`, `Users`, `Posts`, `Comments`, `Stories`, `Group`, `Group_member`, `Page`, `Page_like`, `Marketplace`, `Video`, `Event`, `Blog`, `Notification`, `Chat`, `Message_thrade`, `Fundraiser`, `PaidContentCreator`, and several addon model references.
+- Models: `User`, `Users`, `Posts`, `Comments`, `Stories`, `Group`, `GroupMember`, `Page`, `PageLike`, `Marketplace`, `Video`, `Event`, `Blog`, `Notification`, `Chat`, `MessageThread`, `Fundraiser`, `PaidContentCreator`, and several addon model references.
 - Database tables: broad cross-module access; see each module below.
 - Migrations: legacy lookup index migration covers several API-heavy tables; no API-specific migrations.
 - Views: none directly; JSON response surface.
@@ -77,7 +77,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/auth.php`; `routes/web.php` for `account-disable`, `account-enble-req/{user}`, `auth-checker`; `routes/api.php` for `api/login`, `api/signup`, `api/forgot_password`, `api/update_password`, `api/user`.
 - Controllers: Breeze auth controllers under `app/Http/Controllers/Auth`, including invokable one-command email verification notification routing; `ApiController`, `CustomUserController`, `Profile`, `AdminCrudController`, and invokable web utility controllers.
 - Requests: `App\Http\Requests\Auth\LoginRequest`; API auth uses inline validation.
-- Models: `User`, `Users`, `Account_active_request`.
+- Models: `User`, `Users`, `AccountActiveRequest`.
 - Database tables: `users`, `account_active_requests`, `personal_access_tokens`, `password_resets`.
 - Migrations: lookup indexes for `account_active_requests`; no user-table migration in source.
 - Views: `resources/views/auth/*`, `resources/views/frontend/disable_view.blade.php`, `resources/views/backend/admin/users/*`.
@@ -95,7 +95,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/web.php` profile group (`profile`, `profile/photos`, `profile/album/{action_type?}`, `profile/friends`, `profile/profile-lock`, etc.); `routes/custom_routes.php` user/friend/follow/block/profile media routes; `routes/api.php` profile/friend/follow endpoints.
 - Controllers: `Profile`, `CustomUserController`, `FollowController`, `MainController`, `ApiController`.
 - Requests: none module-specific.
-- Models: `User`, `Users`, `Friendships`, `Follower`, `BlockUser`, `Posts`, `Media_files`, `Albums`, `Album_image`, `Saveforlater`.
+- Models: `User`, `Users`, `Friendships`, `Follower`, `BlockUser`, `Posts`, `MediaFile`, `Albums`, `AlbumImage`, `Saveforlater`.
 - Database tables: `users`, `friendships`, `followers`, `block_users`, `posts`, `media_files`, `albums`, `album_images`, `saveforlaters`.
 - Migrations: lookup indexes for `friendships`, `followers`, `block_users`, `albums`, `album_images`, `media_files`, `posts`, `saveforlaters`.
 - Views: `resources/views/frontend/profile/*`, `resources/views/frontend/user/single_user/*`, related header/sidebar partials.
@@ -113,7 +113,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/web.php` timeline root, create/edit/delete post, comments, reactions, shares, reports, memories; `routes/api.php` timeline/post/comment/reaction/report endpoints.
 - Controllers: `MainController`, `ApiController`, `ModalController`, `MemoriesController`, `SettingController` for reported posts.
 - Requests: none module-specific.
-- Models: `Posts`, `Comments`, `Media_files`, `Post_share`, `Share`, `Report`, `Feeling_and_activities`, `User`, `Group`, `Page`, `Event`.
+- Models: `Posts`, `Comments`, `MediaFile`, `PostShare`, `Share`, `Report`, `FeelingAndActivity`, `User`, `Group`, `Page`, `Event`.
 - Database tables: `posts`, `comments`, `media_files`, `post_shares`, `shares`, `reports`, `activities`, `feeling_and_activities`, `users`.
 - Migrations: lookup indexes for `posts`, `comments`, `media_files`, `post_shares`, `reports`, `shares`.
 - Views: `resources/views/frontend/main_content/*`, `resources/views/frontend/index.blade.php`, `resources/views/frontend/modal.blade.php`.
@@ -131,7 +131,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/web.php` `create_story`, `stories/{offset?}/{limit?}`, `story_details/{story_id}/{offset?}/{limit?}`, `single_story_details/{story_id}`; `routes/api.php` `api/stories`, `api/create_story`.
 - Controllers: `StoryController`, `ApiController`.
 - Requests: none.
-- Models: `Stories`, `Media_files`, `User`, `Friendships`.
+- Models: `Stories`, `MediaFile`, `User`, `Friendships`.
 - Database tables: `stories`, `media_files`, `users`, `friendships`.
 - Migrations: lookup indexes for `stories`, `media_files`, `friendships`.
 - Views: `resources/views/frontend/story/*`; note `resources/views/frontend/story/scripts.php` is a PHP view-side script file.
@@ -149,7 +149,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: album routes in `routes/web.php` and `routes/custom_routes.php`; media delete/download routes; live routes `live/{post_id}`, `live-ended/{post_id}`, `streaming/live/{id}`; settings routes for live/Jitsi; API media/profile/album endpoints.
 - Controllers: `MainController`, `Profile`, `GroupController`, `PageController`, `VideoController`, `SettingController`, `CustomUserController`, `ApiController`.
 - Requests: none module-specific.
-- Models: `Media_files`, `Albums`, `Album_image`, `Live_streamings`, `FileUploader`, `Posts`, `Setting`, `User`.
+- Models: `MediaFile`, `Albums`, `AlbumImage`, `LiveStreaming`, `FileUploader`, `Posts`, `Setting`, `User`.
 - Database tables: `media_files`, `albums`, `album_images`, `live_streamings`, `posts`, `settings`.
 - Migrations: lookup indexes for `media_files`, `albums`, `album_images`, `posts`, `settings`.
 - Views: `resources/views/frontend/live_streaming/*`, `resources/views/frontend/main_content/jitsi_streaming.blade.php`, profile/page/group media views.
@@ -167,7 +167,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/custom_routes.php` `groups`, `group/*`, group invites, group photos/albums; admin group routes; `routes/api.php` group endpoints; notification accept/decline group routes.
 - Controllers: `GroupController`, `AdminCrudController`, `ApiController`, `NotificationController`.
 - Requests: none.
-- Models: `Group`, `Group_member`, `Posts`, `Media_files`, `Albums`, `Album_image`, `Invite`, `Notification`, `User`.
+- Models: `Group`, `GroupMember`, `Posts`, `MediaFile`, `Albums`, `AlbumImage`, `Invite`, `Notification`, `User`.
 - Database tables: `groups`, `group_members`, `posts`, `media_files`, `albums`, `album_images`, `invites`, `notifications`, `users`.
 - Migrations: lookup indexes for `groups`, `group_members`, `media_files`, `albums`, `album_images`, `invites`, `notifications`.
 - Views: `resources/views/frontend/groups/*`, `resources/views/backend/admin/group/*`.
@@ -185,7 +185,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/custom_routes.php` `pages`, `page/*`, page like/dislike, page videos/photos; admin page and page-category routes; `routes/api.php` page endpoints.
 - Controllers: `PageController`, `AdminCrudController`, `ApiController`, `SettingController`.
 - Requests: none.
-- Models: `Page`, `Page_like`, `Pagecategory`, `Posts`, `Media_files`, `Albums`, `User`.
+- Models: `Page`, `PageLike`, `Pagecategory`, `Posts`, `MediaFile`, `Albums`, `User`.
 - Database tables: `pages`, `page_likes`, `pagecategories`, `posts`, `media_files`, `albums`, `users`.
 - Migrations: lookup indexes for `pages`, `page_likes`, `media_files`, `albums`, `posts`.
 - Views: `resources/views/frontend/pages/*`, `resources/views/backend/admin/page/*`, `resources/views/backend/admin/page_category/*`.
@@ -221,7 +221,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/custom_routes.php` `products`, `product/*`, save/unsave product, user products; admin product category/brand routes; `routes/api.php` marketplace/category/brand/currency/filter endpoints.
 - Controllers: `MarketplaceController`, `AdminCrudController`, `ApiController`, `SearchController`.
 - Requests: none.
-- Models: `Marketplace`, `Category`, `Brand`, `Currency`, `SavedProduct`, `Saveforlater`, `Media_files`, `User`.
+- Models: `Marketplace`, `Category`, `Brand`, `Currency`, `SavedProduct`, `Saveforlater`, `MediaFile`, `User`.
 - Database tables: `marketplaces`, `categories`, `brands`, `currencies`, `saved_products`, `saveforlaters`, `media_files`, `users`.
 - Migrations: lookup indexes for `marketplaces`, `saved_products`, `saveforlaters`, `media_files`.
 - Views: `resources/views/frontend/marketplace/*`, `resources/views/backend/admin/product_category/*`, `resources/views/backend/admin/brand/*`.
@@ -257,7 +257,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/custom_routes.php` `videos`, `videos/sorts/store`, `shorts`, video detail/delete/save/unsave/load routes; profile/page/user video routes; `routes/api.php` video endpoints.
 - Controllers: `VideoController`, `ApiController`, `Profile`, `PageController`, `CustomUserController`, `SettingController` for live-video settings.
 - Requests: none.
-- Models: `Video`, `Saveforlater`, `Media_files`, `User`, `Setting`.
+- Models: `Video`, `Saveforlater`, `MediaFile`, `User`, `Setting`.
 - Database tables: `videos`, `saveforlaters`, `media_files`, `users`, `settings`.
 - Migrations: lookup indexes for `videos`, `saveforlaters`, `media_files`, `settings`.
 - Views: `resources/views/frontend/video-shorts/*`, profile/page/user video partials, backend live-video settings.
@@ -275,7 +275,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/custom_routes.php` `chat/inbox/*`, `chat/save`, `my_message_react`, search chat; `routes/api.php` `api/chat`, `api/chat_msg`, `api/chat_save`, `api/thread_save`, `api/remove_chat`, `api/chat_read_option`, `api/react_chat`.
 - Controllers: `ChatController`, `ApiController`.
 - Requests: none.
-- Models: `Chat`, `Message_thrade`, `User`, `Marketplace`.
+- Models: `Chat`, `MessageThread`, `User`, `Marketplace`.
 - Database tables: `chats`, `message_thrades`, `users`, `marketplaces`.
 - Migrations: lookup indexes for `chats`, `message_thrades`.
 - Views: `resources/views/frontend/chat/*`.
@@ -293,7 +293,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/custom_routes.php` `all/notification`, accept/decline friend/group/event/fundraiser request routes, mark-as-read; `routes/api.php` notification accept/decline/mark/count endpoints.
 - Controllers: `NotificationController`, `ApiController`, `ViewServiceProvider`.
 - Requests: none.
-- Models: `Notification`, `Invite`, `Friendships`, `Group_member`, `Event`, `Group`, `Fundraiser`, `User`.
+- Models: `Notification`, `Invite`, `Friendships`, `GroupMember`, `Event`, `Group`, `Fundraiser`, `User`.
 - Database tables: `notifications`, `invites`, `friendships`, `group_members`, `events`, `groups`, optional fundraiser tables, `users`.
 - Migrations: lookup indexes for `notifications`, `invites`, `friendships`, `group_members`, `events`, `groups`.
 - Views: `resources/views/frontend/notification/notification.blade.php`, header notification widgets.
@@ -329,7 +329,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/custom_routes.php` `admin/*`; settings routes in `SettingController`; language routes; admin dashboard/users/pages/groups/blogs/categories/products/payment/report/sponsor/badge routes; `routes/web.php` updater/admin addon routes.
 - Controllers: `AdminCrudController`, `SettingController`, `LanguageController`, `SponsorController`, `Updater`, `PaymentHistory`.
 - Requests: none module-specific.
-- Models: broad access to `User`, `Setting`, `Language`, `Addon`, `Page`, `Blog`, `Group`, `Category`, `Brand`, `Payment_gateway`, `Report`, `Sponsor`, `Badge`, and domain models.
+- Models: broad access to `User`, `Setting`, `Language`, `Addon`, `Page`, `Blog`, `Group`, `Category`, `Brand`, `PaymentGateway`, `Report`, `Sponsor`, `Badge`, and domain models.
 - Database tables: `settings`, `languages`, `addons`, `users`, `pages`, `blogs`, `groups`, `categories`, `brands`, `payment_gateways`, `reports`, `sponsors`, `batchs`, and more.
 - Migrations: lookup indexes for several admin-managed tables; no admin-specific schema migrations.
 - Views: `resources/views/backend/admin/*`, `resources/views/backend/*`, `resources/views/frontend/settings/*`, `resources/views/emails/contact.blade.php`.
@@ -347,7 +347,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/payment.php` `payment`, gateway ajax, success/create/status/order routes; `routes/custom_routes.php` admin payment gateway settings and histories; `routes/user.php` user payment history; badge/ad payment configuration routes.
 - Controllers: `PaymentController`, `PaymentHistory`, `AdminCrudController`, `UserController`, `BadgeController`.
 - Requests: none.
-- Models: `Payment_gateway`, payment gateway model classes under `app/Models/payment_gateway/*`, `Badge`, `Sponsor`, `Setting`, `User`.
+- Models: `PaymentGateway`, payment gateway model classes under `app/Models/payment_gateway/*`, `Badge`, `Sponsor`, `Setting`, `User`.
 - Database tables: `payment_gateways`, `payment_histories`, `settings`, `batchs`, `sponsors`, `users`.
 - Migrations: lookup indexes for `payment_gateways`, `payment_histories`, `settings`, `sponsors`.
 - Views: `resources/views/payment/*`, `resources/views/backend/admin/payment/*`, `resources/views/backend/admin/payment_history/*`, `resources/views/backend/user/payment_history/*`.
@@ -365,7 +365,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/web.php` badge routes; `routes/custom_routes.php` admin badge/sponsor routes; `routes/user.php` user ads and ad payment routes; admin payment history/gateway routes overlap.
 - Controllers: `BadgeController`, `SponsorController`, `UserController`, `AdminCrudController`, `PaymentHistory`.
 - Requests: none.
-- Models: `Badge`, `Sponsor`, `Payment_gateway`, `User`, `Payment_history` table without local model file.
+- Models: `Badge`, `Sponsor`, `PaymentGateway`, `User`, `Payment_history` table without local model file.
 - Database tables: `batchs`, `sponsors`, `payment_gateways`, `payment_histories`, `users`.
 - Migrations: lookup indexes for `sponsors`, `payment_gateways`, `payment_histories`.
 - Views: `resources/views/frontend/badge/*`, `resources/views/backend/admin/badge/*`, `resources/views/backend/admin/sponsor/*`, `resources/views/backend/user/ad_*`, `resources/views/backend/user/ads.blade.php`.
@@ -402,7 +402,7 @@ This document inventories the business modules and feature surfaces found in the
 - Routes: `routes/api.php` exposes jobs, fundraisers, and paid-content endpoints. `routes/custom_routes.php` has conditional web/admin route blocks for missing `JobController` and missing `PaidContent` controller. `RouteServiceProvider` references conditional `routes/fundraiser.php`, but the route file is missing.
 - Controllers: `ApiController`; missing or dormant web controllers: `JobController`, `PaidContent`.
 - Requests: none.
-- Models: present `Fundraiser`, `Fundraiser_donation`, `PaidContentCreator`; missing references include `Fundraiser_category`, `Fundraiser_payout`, `PaidContentPackages`, `PaidContentPayout`, `Job`, `JobApply`, `JobCategory`, `JobWishlist`.
+- Models: present `Fundraiser`, `FundraiserDonation`, `PaidContentCreator`; missing references include `FundraiserCategory`, `FundraiserPayout`, `PaidContentPackages`, `PaidContentPayout`, `Job`, `JobApply`, `JobCategory`, `JobWishlist`.
 - Database tables: optional/missing local tables include `fundraisers`, `fundraiser_donations`, `paid_content_creators` and related payout/package/job tables; local SQLite does not contain these addon tables.
 - Migrations: none for addon schemas.
 - Views: `resources/views/frontend/addons/*`, paid-content/fundraiser references in sidebars and feed partials; no full first-class addon view tree for all referenced route names.

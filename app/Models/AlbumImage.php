@@ -5,17 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Live_streamings extends Model
+class AlbumImage extends Model
 {
     use HasFactory;
 
-    public $timestamps = false;
-
-    /**
-     * @var list<string>
-     */
     protected $fillable = [
-        'streaming_id', 'publisher', 'publisher_id', 'user_id', 'details', 'created_at', 'updated_at',
+        'user_id',
     ];
 
     /**
@@ -24,8 +19,10 @@ class Live_streamings extends Model
     protected function casts(): array
     {
         return [
-            'publisher_id' => 'integer',
+            'album_id' => 'integer',
             'user_id' => 'integer',
+            'page_id' => 'integer',
+            'group_id' => 'integer',
         ];
     }
 }

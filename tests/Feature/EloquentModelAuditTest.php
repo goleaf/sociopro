@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Comments;
-use App\Models\Feeling_and_activities;
-use App\Models\Payment_gateway;
+use App\Models\FeelingAndActivity;
+use App\Models\PaymentGateway;
 use App\Models\PaymentHistoryEntry;
 use App\Models\Posts;
 use App\Models\Stories;
@@ -125,7 +125,7 @@ class EloquentModelAuditTest extends TestCase
     {
         $expectedPrimaryKeys = [
             Comments::class => 'comment_id',
-            Feeling_and_activities::class => 'feeling_and_activity_id',
+            FeelingAndActivity::class => 'feeling_and_activity_id',
             Posts::class => 'post_id',
             Stories::class => 'story_id',
         ];
@@ -152,7 +152,7 @@ class EloquentModelAuditTest extends TestCase
 
     public function test_payment_models_block_sensitive_mass_assignment_fields(): void
     {
-        $gateway = new Payment_gateway([
+        $gateway = new PaymentGateway([
             'keys' => json_encode(['secret_key' => 'sk_test_secret']),
             'model_name' => 'TamperedGateway',
             'test_model' => 'TamperedTestGateway',
@@ -163,7 +163,7 @@ class EloquentModelAuditTest extends TestCase
         foreach (['keys', 'model_name', 'test_model', 'status', 'is_addon'] as $attribute) {
             $this->assertFalse(
                 $gateway->offsetExists($attribute),
-                Payment_gateway::class." allows sensitive [{$attribute}] mass assignment."
+                PaymentGateway::class." allows sensitive [{$attribute}] mass assignment."
             );
         }
 
@@ -184,7 +184,7 @@ class EloquentModelAuditTest extends TestCase
 
     public function test_sensitive_payment_models_hide_credential_material_when_serialized(): void
     {
-        $gateway = new Payment_gateway([
+        $gateway = new PaymentGateway([
             'identifier' => 'stripe',
         ]);
         $gateway->forceFill([

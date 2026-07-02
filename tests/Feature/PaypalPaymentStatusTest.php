@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\PaymentGatewayIdentifier;
 use App\Exceptions\Payments\PaymentGatewayException;
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use App\Services\Payments\Gateways\Paypal;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
@@ -82,7 +82,7 @@ class PaypalPaymentStatusTest extends TestCase
 
     public function test_it_reports_missing_paypal_credentials_without_calling_paypal(): void
     {
-        Payment_gateway::where('identifier', PaymentGatewayIdentifier::Paypal->value)->update([
+        PaymentGateway::where('identifier', PaymentGatewayIdentifier::Paypal->value)->update([
             'keys' => json_encode([]),
             'test_mode' => 1,
         ]);
@@ -98,7 +98,7 @@ class PaypalPaymentStatusTest extends TestCase
 
     private function configurePaypalGateway(): void
     {
-        Payment_gateway::where('identifier', PaymentGatewayIdentifier::Paypal->value)->update([
+        PaymentGateway::where('identifier', PaymentGatewayIdentifier::Paypal->value)->update([
             'keys' => json_encode([
                 'sandbox_client_id' => 'sandbox-client',
                 'sandbox_secret_key' => 'sandbox-secret',

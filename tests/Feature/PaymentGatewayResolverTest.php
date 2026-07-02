@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\PaymentGatewayIdentifier;
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use App\Services\Payments\Gateways\Paypal;
 use App\Services\Payments\Gateways\Paystack;
 use App\Services\Payments\PaymentGatewayResolver;
@@ -13,7 +13,7 @@ class PaymentGatewayResolverTest extends TestCase
 {
     public function test_known_gateway_identifier_maps_to_enum_service_class(): void
     {
-        $gateway = new Payment_gateway([
+        $gateway = new PaymentGateway([
             'identifier' => PaymentGatewayIdentifier::Paypal->value,
         ]);
         $gateway->forceFill([
@@ -27,7 +27,7 @@ class PaymentGatewayResolverTest extends TestCase
 
     public function test_unknown_gateway_identifier_preserves_legacy_model_name_resolution(): void
     {
-        $gateway = new Payment_gateway([
+        $gateway = new PaymentGateway([
             'identifier' => 'custom_gateway',
         ]);
         $gateway->forceFill([
@@ -49,7 +49,7 @@ class PaymentGatewayResolverTest extends TestCase
         $fakeGateway = new FakeContainerResolvedPaymentGateway;
         $this->app->instance(Paystack::class, $fakeGateway);
 
-        $gateway = new Payment_gateway([
+        $gateway = new PaymentGateway([
             'identifier' => PaymentGatewayIdentifier::Paystack->value,
         ]);
         $gateway->forceFill([

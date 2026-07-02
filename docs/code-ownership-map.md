@@ -133,7 +133,7 @@ High-risk database files:
 - `app/Actions/Install/ImportInstallSqlDump.php`: SQL dump normalization/import behavior.
 - `app/Actions/Install/ConfigureDatabase.php` and `PrepareDatabaseConnection.php`: runtime DB configuration flow.
 - `app/Models/User.php` and `app/Models/Users.php`: duplicate model surface for `users`.
-- Models whose mapped tables are missing locally: `CommonModel`, `FileUploader`, `Fundraiser`, `Fundraiser_donation`, `PaidContentCreator`.
+- Models whose mapped tables are missing locally: `CommonModel`, `FileUploader`, `Fundraiser`, `FundraiserDonation`, `PaidContentCreator`.
 
 Database files that should not be modified casually:
 

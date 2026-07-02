@@ -12,7 +12,7 @@ use App\Http\Requests\Api\Marketplace\FilterMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\StoreMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\UpdateMarketplaceRequest;
 use App\Http\Resources\Api\MarketplaceCollection;
-use App\Models\Album_image;
+use App\Models\AlbumImage;
 use App\Models\Albums;
 use App\Models\Blog;
 use App\Models\Blogcategory;
@@ -25,23 +25,23 @@ use App\Models\Event;
 use App\Models\Follower;
 use App\Models\Friendships;
 use App\Models\Fundraiser;
-use App\Models\Fundraiser_category;
-use App\Models\Fundraiser_donation;
+use App\Models\FundraiserCategory;
+use App\Models\FundraiserDonation;
 use App\Models\Group;
-use App\Models\Group_member;
+use App\Models\GroupMember;
 use App\Models\Invite;
 use App\Models\Job;
 use App\Models\JobApply;
 use App\Models\JobCategory;
 use App\Models\JobWishlist;
-use App\Models\Live_streamings;
+use App\Models\LiveStreaming;
 use App\Models\Marketplace;
-use App\Models\Media_files;
-use App\Models\Message_thrade;
+use App\Models\MediaFile;
+use App\Models\MessageThread;
 use App\Models\Notification;
 use App\Models\Page;
-use App\Models\Page_like;
 use App\Models\Pagecategory;
+use App\Models\PageLike;
 use App\Models\PaidContentCreator;
 use App\Models\PaidContentPackages;
 use App\Models\Posts;
@@ -356,7 +356,7 @@ class ApiController extends Controller
                         $posts = Posts::where('user_id', $userDetails->id)->get();
                         foreach ($posts as $post) {
                             $postUser = User::find($post->user_id);
-                            $media = Media_files::where('post_id', $post->post_id)->first();
+                            $media = MediaFile::where('post_id', $post->post_id)->first();
 
                             $friendData['posts'][] = [
                                 'post_id' => $post->post_id,
@@ -437,7 +437,7 @@ class ApiController extends Controller
         //             $response[$key1][$key2]['post_user_name'] = $post_user->name;
         //             $response[$key1][$key2]['user_id'] = $post_user->id;
 
-        //             $media = Media_files::where('post_id', $posts->post_id)->first();
+        //             $media = MediaFile::where('post_id', $posts->post_id)->first();
 
         //             // $response[$key1][$key2]['post_image'] ? $media->file_name : '';
         //             if ((!empty($media->file_name))) {
@@ -524,7 +524,7 @@ class ApiController extends Controller
                 $user = User::find($story->user_id);
 
                 // Fetch media files associated with the post
-                $mediaFiles = Media_files::where('story_id', $story->story_id)->get();
+                $mediaFiles = MediaFile::where('story_id', $story->story_id)->get();
 
                 // Initialize an array to store post images
                 $storyImages = '';
@@ -630,7 +630,7 @@ class ApiController extends Controller
                 $user = User::find($post->user_id);
 
                 // Fetch media files associated with the post
-                $mediaFiles = Media_files::where('post_id', $post->post_id)->get();
+                $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
 
                 // Initialize an array to store post images
                 $postImages = [];
@@ -751,7 +751,7 @@ class ApiController extends Controller
     //             $user = User::find($story->user_id);
 
     //             // Fetch media files associated with the post
-    //             $mediaFiles = Media_files::where('story_id', $story->story_id)->get();
+    //             $mediaFiles = MediaFile::where('story_id', $story->story_id)->get();
 
     //             // Initialize an array to store post images
     //             $storyImages = '';
@@ -853,7 +853,7 @@ class ApiController extends Controller
     //             $user = User::find($post->user_id);
 
     //             // Fetch media files associated with the post
-    //             $mediaFiles = Media_files::where('post_id', $post->post_id)->get();
+    //             $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
 
     //             // Initialize an array to store post images
     //             $postImages = [];
@@ -935,11 +935,11 @@ class ApiController extends Controller
                 $user = User::find($story->user_id);
 
                 // Fetch media files associated with the post
-                // $media = Media_files::where('story_id', $story->story_id)->first();
+                // $media = MediaFile::where('story_id', $story->story_id)->first();
 
                 // // $storyImages = $media->file_type == "image" ? get_story_images($media->file_name) : get_story_videos($media->file_name);
                 // $storyImages = get_story_images($media->file_name) ;
-                $mediaFiles = Media_files::where('story_id', $story->story_id)->get();
+                $mediaFiles = MediaFile::where('story_id', $story->story_id)->get();
 
                 // Initialize an array to store post images
                 $storyImages = '';
@@ -1041,7 +1041,7 @@ class ApiController extends Controller
                     $media_file_data = ['user_id' => $user_id, 'story_id' => $story_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy];
                     $media_file_data['created_at'] = time();
                     $media_file_data['updated_at'] = $media_file_data['created_at'];
-                    $media = Media_files::create($media_file_data);
+                    $media = MediaFile::create($media_file_data);
                     if ($media) {
                         $response['success'] = true;
                         $response['message'] = 'media is uploaded';
@@ -1125,7 +1125,7 @@ class ApiController extends Controller
                 $user = User::find($post->user_id);
 
                 // Fetch media files associated with the post
-                $mediaFiles = Media_files::where('post_id', $post->post_id)->get();
+                $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
 
                 // Initialize an array to store post images
                 $postImages = [];
@@ -1560,7 +1560,7 @@ class ApiController extends Controller
                     }
                     $media_file_data['created_at'] = time();
                     $media_file_data['updated_at'] = $media_file_data['created_at'];
-                    Media_files::create($media_file_data);
+                    MediaFile::create($media_file_data);
                 }
             }
 
@@ -1574,7 +1574,7 @@ class ApiController extends Controller
                 $live['created_at'] = date('Y-m-d H:i:s', time());
                 $live['updated_at'] = $live['created_at'];
 
-                Live_streamings::insert($live);
+                LiveStreaming::insert($live);
                 $response = ['open_new_tab' => $liveStreamingUrl, 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline')];
             } else {
                 // Ajax flush message
@@ -1687,7 +1687,7 @@ class ApiController extends Controller
                     }
                     $media_file_data['created_at'] = time();
                     $media_file_data['updated_at'] = $media_file_data['created_at'];
-                    Media_files::create($media_file_data);
+                    MediaFile::create($media_file_data);
                 }
             }
             $response['status'] = 200;
@@ -1747,7 +1747,7 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $mediaFiles = Media_files::where('post_id', $id)->get();
+            $mediaFiles = MediaFile::where('post_id', $id)->get();
 
             // Loop through the media files and add them to the postImages array
             foreach ($mediaFiles as $media) {
@@ -1778,10 +1778,10 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $media_file = Media_files::where('id', $id)->where('user_id', $user_id);
+            $media_file = MediaFile::where('id', $id)->where('user_id', $user_id);
             if ($media_file->count() > 0) {
                 remove_file('public/storage/post/images/'.$media_file->first()->file_name);
-                Media_files::find($id)->delete();
+                MediaFile::find($id)->delete();
                 $response = ['alertMessage' => get_phrase('Image deleted successfully'), 'fadeOutElem' => '#previous-uploaded-img-'.$id];
             } else {
                 $response = ['alertMessage' => get_phrase('Image not found')];
@@ -1905,10 +1905,10 @@ class ApiController extends Controller
                 $response['posts'][$key1]['comments_count'] = $commentsCount;
 
                 // Media section of posts
-                // $media = Media_files::where('post_id', $post->post_id)->first();
+                // $media = MediaFile::where('post_id', $post->post_id)->first();
                 // $response['posts'][$key1]['post_image'] = (!empty($media->file_name)) ? get_post_images($media->file_name) : '';
 
-                $mediaFiles = Media_files::where('post_id', $post->post_id)->get();
+                $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
 
                 // Initialize an array to store post images
 
@@ -2001,7 +2001,7 @@ class ApiController extends Controller
             $msgthread_id = 0; // Initialize profile ID as 0
 
             // Get chat messages involving the current user
-            $chats = Message_thrade::whereIn('reciver_id', [$my_id, $user_id])
+            $chats = MessageThread::whereIn('reciver_id', [$my_id, $user_id])
                 ->WhereIn('sender_id', [$my_id, $user_id])
                 ->get();
 
@@ -2139,10 +2139,10 @@ class ApiController extends Controller
                 $response['posts'][$key1]['comments_count'] = $commentsCount;
 
                 // Media section of posts
-                // $media = Media_files::where('post_id', $post->post_id)->first();
+                // $media = MediaFile::where('post_id', $post->post_id)->first();
                 // $response['posts'][$key1]['post_image'] = (!empty($media->file_name)) ? get_post_images($media->file_name) : '';
 
-                $mediaFiles = Media_files::where('post_id', $post->post_id)->get();
+                $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
 
                 // Initialize an array to store post images
 
@@ -2339,7 +2339,7 @@ class ApiController extends Controller
         $media_file_data = ['user_id' => auth('sanctum')->user()->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => 'image', 'privacy' => 'public'];
         $media_file_data['created_at'] = time();
         $media_file_data['updated_at'] = $media_file_data['created_at'];
-        Media_files::create($media_file_data);
+        MediaFile::create($media_file_data);
     }
 
     public function update_cover_pic(Request $request)
@@ -2380,7 +2380,7 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $all_photos = Media_files::where('user_id', $user_id)
+            $all_photos = MediaFile::where('user_id', $user_id)
                 ->ofType(MediaFileType::Image)
                 ->whereNull('page_id')
                 ->whereNull('story_id')
@@ -2414,7 +2414,7 @@ class ApiController extends Controller
             }
             $page_data['all_albums'] = $albumArray;
 
-            $all_videos = Media_files::where('user_id', $user_id)
+            $all_videos = MediaFile::where('user_id', $user_id)
                 ->ofType(MediaFileType::Video)
                 ->whereNull('story_id')
                 ->whereNull('page_id')
@@ -2445,7 +2445,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             // $user_id = auth('sanctum')->user()->id;
             $user_id = $id;
-            $all_photos = Media_files::where('user_id', $user_id)
+            $all_photos = MediaFile::where('user_id', $user_id)
                 ->ofType(MediaFileType::Image)
                 ->whereNull('page_id')
                 ->whereNull('story_id')
@@ -2479,7 +2479,7 @@ class ApiController extends Controller
             }
             $page_data['all_albums'] = $albumArray;
 
-            $all_videos = Media_files::where('user_id', $user_id)
+            $all_videos = MediaFile::where('user_id', $user_id)
                 ->ofType(MediaFileType::Video)
                 ->whereNull('story_id')
                 ->whereNull('page_id')
@@ -2515,7 +2515,7 @@ class ApiController extends Controller
             $user = User::where('id', $post->user_id)->first();
 
             // Fetch media files associated with the post
-            $mediaFiles = Media_files::where('post_id', $post->post_id)->get();
+            $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
 
             // Initialize an array to store post images
             $postImages = [];
@@ -3007,8 +3007,8 @@ class ApiController extends Controller
                 $groupArray = [];
 
                 foreach ($groups as $group) {
-                    $group_members_count = Group_member::where('group_id', $group->id)->count();
-                    $group_members = Group_member::where('group_id', $group->id)->get();
+                    $group_members_count = GroupMember::where('group_id', $group->id)->count();
+                    $group_members = GroupMember::where('group_id', $group->id)->get();
                     $matchingFriendsCount = 0; // Initialize outside the loop
                     $is_Joined = 0; // Initialize outside the loop
                     $response1 = [];
@@ -3088,8 +3088,8 @@ class ApiController extends Controller
                 $groupArray = [];
 
                 // foreach ($groups as $group) {
-                $group_members_count = Group_member::where('group_id', $group->id)->count();
-                $group_members = Group_member::where('group_id', $group->id)->get();
+                $group_members_count = GroupMember::where('group_id', $group->id)->count();
+                $group_members = GroupMember::where('group_id', $group->id)->get();
                 $matchingFriendsCount = 0; // Initialize outside the loop
                 $is_Joined = 0; // Initialize outside the loop
                 $response1 = [];
@@ -3186,7 +3186,7 @@ class ApiController extends Controller
             }
             $done = $group->save();
             if ($done) {
-                $group_member = new Group_member;
+                $group_member = new GroupMember;
                 $group_member->group_id = $group->id;
                 $group_member->user_id = $user_id;
                 $group_member->role = MembershipRole::Admin->value;
@@ -3321,15 +3321,15 @@ class ApiController extends Controller
                 $user_id = auth('sanctum')->user()->id;
 
                 // Create a new group member
-                $group_member = new Group_member;
+                $group_member = new GroupMember;
                 $group_member->group_id = $id;
                 $group_member->user_id = $user_id;
                 $group_member->role = MembershipRole::General->value;
                 $group_member->is_accepted = '1';
 
-                $member = Group_member::where('user_id', $user_id)->where('group_id', $id)->first();
+                $member = GroupMember::where('user_id', $user_id)->where('group_id', $id)->first();
                 if ($member) {
-                    Group_member::where('user_id', $user_id)->where('group_id', $id)->delete();
+                    GroupMember::where('user_id', $user_id)->where('group_id', $id)->delete();
                     $response['success'] = false;
                     $response['message'] = 'Job delete from wishlist successfully';
                 } else {
@@ -3365,7 +3365,7 @@ class ApiController extends Controller
             // $response = array(); // Initialize the response array
 
             if ($group) {
-                // $group_members = Group_member::orderBy('created_at', 'desc')->where('group_id', $group->id)->get();
+                // $group_members = GroupMember::orderBy('created_at', 'desc')->where('group_id', $group->id)->get();
 
                 // foreach ($group_members as $member) {
                 //     $user = User::where('id', $member->user_id)->first();
@@ -3380,7 +3380,7 @@ class ApiController extends Controller
                     $user1 = User::where('id', $post->user_id)->first();
 
                     // Media section of posts
-                    $mediaFiles = Media_files::where('post_id', $post->post_id)->get();
+                    $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
 
                     // Initialize an array to store post images
                     $postImages = [];
@@ -3517,8 +3517,8 @@ class ApiController extends Controller
 
             $groupArray = [];
 
-            $group_members_count = Group_member::where('group_id', $group->id)->count();
-            $group_members = Group_member::where('group_id', $group->id)->get();
+            $group_members_count = GroupMember::where('group_id', $group->id)->count();
+            $group_members = GroupMember::where('group_id', $group->id)->get();
             $matchingFriendsCount = 0; // Initialize outside the loop
             $is_Joined = 0; // Initialize outside the loop
             $countfriends = 0;
@@ -3675,7 +3675,7 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $all_photos = Media_files::where('group_id', $group_id)->ofType(MediaFileType::Image)->orderBy('id', 'DESC')->get();
+            $all_photos = MediaFile::where('group_id', $group_id)->ofType(MediaFileType::Image)->orderBy('id', 'DESC')->get();
             $photoArray = [];
             foreach ($all_photos as $photo) {
                 $photoArray[] = [
@@ -3686,7 +3686,7 @@ class ApiController extends Controller
             $page_data['all_photos'] = $photoArray;
             // $page_data['all_photos'] = $all_photos;
 
-            $all_videos = Media_files::where('group_id', $group_id)->ofType(MediaFileType::Video)->orderBy('id', 'DESC')->get();
+            $all_videos = MediaFile::where('group_id', $group_id)->ofType(MediaFileType::Video)->orderBy('id', 'DESC')->get();
             $videoArray = [];
             foreach ($all_videos as $video) {
                 $videoArray[] = [
@@ -3732,8 +3732,8 @@ class ApiController extends Controller
 
                 foreach ($pages as $page) {
                     $category = Pagecategory::where('id', $page->category_id)->first();
-                    $like_count = Page_like::where('page_id', $page->id)->count();
-                    $is_Liked = Page_like::where('page_id', $page->id)->where('user_id', $user_id)->first();
+                    $like_count = PageLike::where('page_id', $page->id)->count();
+                    $is_Liked = PageLike::where('page_id', $page->id)->where('user_id', $user_id)->first();
 
                     $pageArray[] = [
                         'id' => $page->id,
@@ -3781,8 +3781,8 @@ class ApiController extends Controller
 
                 // foreach ($pages as $page) {
                 $category = Pagecategory::where('id', $page->category_id)->first();
-                $like_count = Page_like::where('page_id', $page->id)->count();
-                $is_Liked = Page_like::where('page_id', $page->id)->where('user_id', $user_id)->first();
+                $like_count = PageLike::where('page_id', $page->id)->count();
+                $is_Liked = PageLike::where('page_id', $page->id)->where('user_id', $user_id)->first();
 
                 $pageArray = [
                     'id' => $page->id,
@@ -3888,7 +3888,7 @@ class ApiController extends Controller
             }
 
             // Attempt to delete the page likes associated with the page
-            $pagelike_remove = Page_like::where('page_id', $id)->delete();
+            $pagelike_remove = PageLike::where('page_id', $id)->delete();
 
             // Determine if there were associated likes and delete the page accordingly
             if ($pagelike_remove !== false) {
@@ -3933,14 +3933,14 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $pagelike = new Page_like;
+            $pagelike = new PageLike;
             $pagelike->page_id = $id;
             $pagelike->user_id = $user_id;
             $pagelike->role = MembershipRole::General->value;
 
-            $member = Page_like::where('user_id', $user_id)->where('page_id', $id)->first();
+            $member = PageLike::where('user_id', $user_id)->where('page_id', $id)->first();
             if ($member) {
-                Page_like::where('user_id', $user_id)->where('page_id', $id)->delete();
+                PageLike::where('user_id', $user_id)->where('page_id', $id)->delete();
 
                 $response['success'] = false;
                 $response['message'] = 'Page dislike successfully';
@@ -3963,7 +3963,7 @@ class ApiController extends Controller
     //     $response = array();
 
     //     if (isset($token) && $token != '') {
-    //         $pagelike_remove = Page_like::where('page_id', $id)->delete();
+    //         $pagelike_remove = PageLike::where('page_id', $id)->delete();
     //         if ($pagelike_remove) {
     //             $response['success'] = true;
     //             $response['message'] = 'Page disliked successfully';
@@ -4113,7 +4113,7 @@ class ApiController extends Controller
                     $user1 = User::where('id', $post->user_id)->first();
 
                     // Media section of posts
-                    $mediaFiles = Media_files::where('post_id', $post->post_id)->get();
+                    $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
 
                     // Initialize an array to store post images
                     $postImages = [];
@@ -4247,7 +4247,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $all_photos = Media_files::where('page_id', $id)
+            $all_photos = MediaFile::where('page_id', $id)
                 ->ofType(MediaFileType::Image)
                 ->orderBy('id', 'DESC')->get();
             $photoArray = [];
@@ -4273,7 +4273,7 @@ class ApiController extends Controller
             }
             $page_data['all_albums'] = $albumArray;
 
-            $all_videos = Media_files::where('page_id', $id)
+            $all_videos = MediaFile::where('page_id', $id)
                 ->ofType(MediaFileType::Video)
                 ->orderBy('id', 'DESC')->get();
             $videoArray = [];
@@ -4347,7 +4347,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $done = Album_image::where('album_id', $id)
+            $done = AlbumImage::where('album_id', $id)
                 ->delete();
             $done = DB::table('albums')->where('id', $id)->delete();
             $done = DB::table('media_files')->where('album_id', $id)->delete();
@@ -4371,7 +4371,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $all_photos = Album_image::where('album_id', $id)
+            $all_photos = AlbumImage::where('album_id', $id)
 
                 ->orderBy('id', 'DESC')->get();
             $photoArray = [];
@@ -4407,7 +4407,7 @@ class ApiController extends Controller
                     $file_name = FileUploader::upload($media_file, 'public/storage/album/images', 1000, null, 300);
                     $file_type = 'image';
 
-                    $albumimage = new Album_image;
+                    $albumimage = new AlbumImage;
                     $albumimage->user_id = $user_id;
                     $albumimage->album_id = $request->album;
                     $albumimage->image = $file_name;
@@ -4447,7 +4447,7 @@ class ApiController extends Controller
                             $media_file_data = ['user_id' => $user_id, 'post_id' => $post_id, 'album_id' => $request->album, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy];
                             $media_file_data['created_at'] = time();
                             $media_file_data['updated_at'] = $media_file_data['created_at'];
-                            $done = Media_files::create($media_file_data);
+                            $done = MediaFile::create($media_file_data);
                         }
                     }
                 }
@@ -4551,7 +4551,7 @@ class ApiController extends Controller
                         $media_file_data = ['user_id' => $user_id, 'product_id' => $product_id, 'file_name' => $file_name, 'file_type' => $file_type];
                         $media_file_data['created_at'] = time();
                         $media_file_data['updated_at'] = $media_file_data['created_at'];
-                        Media_files::create($media_file_data);
+                        MediaFile::create($media_file_data);
                         if ($key == '0') {
                             $productupdate = Marketplace::find($product_id);
                             $productupdate->image = $file_name;
@@ -4610,9 +4610,9 @@ class ApiController extends Controller
                 if (is_array($uploadedFiles) && isset($uploadedFiles[0])) {
                     if ($request->hasFile('multiple_files')) {
                         // this for deleting previous data file
-                        $previousfile = Media_files::where('product_id', $id)->get();
+                        $previousfile = MediaFile::where('product_id', $id)->get();
                         foreach ($previousfile as $previousfile) {
-                            $market = Media_files::find($previousfile->id);
+                            $market = MediaFile::find($previousfile->id);
                             // store image name for delete file operation
                             $imagename = $market->banner;
                             $done = $market->delete();
@@ -4633,7 +4633,7 @@ class ApiController extends Controller
                         $media_file_data = ['user_id' => $user_id, 'product_id' => $product_id, 'file_name' => $file_name, 'file_type' => $file_type];
                         $media_file_data['created_at'] = time();
                         $media_file_data['updated_at'] = $media_file_data['created_at'];
-                        Media_files::create($media_file_data);
+                        MediaFile::create($media_file_data);
                         if ($key == '0') {
                             $productupdate = Marketplace::find($product_id);
                             $productupdate->image = $file_name;
@@ -4687,7 +4687,7 @@ class ApiController extends Controller
                     removeFile('marketplace', $imagename);
 
                     // Delete all associated media files with the product_id
-                    $previousFiles = Media_files::where('product_id', $product_id)->get();
+                    $previousFiles = MediaFile::where('product_id', $product_id)->get();
                     foreach ($previousFiles as $file) {
                         // Delete the entry from the media_files table
                         $file->delete();
@@ -4875,7 +4875,7 @@ class ApiController extends Controller
 
     private function marketplaceMessageThreadId(int $userId): int
     {
-        return (int) (Message_thrade::query()
+        return (int) (MessageThread::query()
             ->where('reciver_id', $userId)
             ->orWhere('sender_id', $userId)
             ->value('id') ?? 0);
@@ -5084,7 +5084,7 @@ class ApiController extends Controller
                 }
 
                 // // Media section of posts
-                // $media = Media_files::where('post_id', $post->post_id)->first();
+                // $media = MediaFile::where('post_id', $post->post_id)->first();
                 // $response['posts'][$key1]['post_image'] = (!empty($media->file_name)) ? get_post_images($media->file_name) : '';
             }
         }
@@ -5754,7 +5754,7 @@ class ApiController extends Controller
     //                 $user1 = User::where('id', $post->user_id)->first();
 
     //                 // Media section of posts
-    //                 $media = Media_files::where('post_id', $post->post_id)->first();
+    //                 $media = MediaFile::where('post_id', $post->post_id)->first();
 
     //                 // comment count
     //                 $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
@@ -5852,9 +5852,9 @@ class ApiController extends Controller
                     $user = User::find($post->user_id);
 
                     // Fetch media files associated with the post
-                    $mediaFiles = Media_files::where('post_id', $post->post_id)->get();
+                    $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
 
-                    // $media = Media_files::where('post_id', $post->post_id)->first();
+                    // $media = MediaFile::where('post_id', $post->post_id)->first();
 
                     // Initialize an array to store post images
                     $postImages = [];
@@ -6253,7 +6253,7 @@ class ApiController extends Controller
                     $user1 = User::where('id', $post->user_id)->first();
 
                     // Media section of posts
-                    $media = Media_files::where('post_id', $post->post_id)->first();
+                    $media = MediaFile::where('post_id', $post->post_id)->first();
 
                     // comment count
                     $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
@@ -6660,12 +6660,12 @@ class ApiController extends Controller
 
                 foreach ($fundraisers as $fundraiser) {
                     $user = User::where('id', $fundraiser->user_id)->first();
-                    $category = Fundraiser_category::where('id', $fundraiser->categories_id)->first();
+                    $category = FundraiserCategory::where('id', $fundraiser->categories_id)->first();
 
                     // Calculate percentage raised and round it to the nearest integer
                     $percentageRaised = round(($fundraiser->raised_amount / $fundraiser->goal_amount) * 100);
 
-                    $donate = Fundraiser_donation::join('fundraisers', 'fundraiser_donations.fundraiser_id', '=', 'fundraisers.id')
+                    $donate = FundraiserDonation::join('fundraisers', 'fundraiser_donations.fundraiser_id', '=', 'fundraisers.id')
                         ->select('fundraiser_donations.*', 'fundraiser.*')
                         ->where('fundraiser_donations.fundraiser_id', $fundraiser->id)
                         ->count();
@@ -6866,7 +6866,7 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $previousChatList = Message_thrade::where('reciver_id', auth('sanctum')->user()->id)->orWhere('sender_id', auth('sanctum')->user()->id)->orderBy('id', 'DESC')->get();
+            $previousChatList = MessageThread::where('reciver_id', auth('sanctum')->user()->id)->orWhere('sender_id', auth('sanctum')->user()->id)->orderBy('id', 'DESC')->get();
 
             $chatList = [];
             foreach ($previousChatList as $chat) {
@@ -6963,7 +6963,7 @@ class ApiController extends Controller
                 $multipleFiles = [$multipleFiles];
             }
 
-            $firstmessageThrade = Message_thrade::where(function ($query) use ($reciver, $user_id) {
+            $firstMessageThread = MessageThread::where(function ($query) use ($reciver, $user_id) {
                 $query->where('sender_id', $reciver)
                     ->where('reciver_id', $user_id);
             })->orWhere(function ($query) use ($reciver, $user_id) {
@@ -6972,7 +6972,7 @@ class ApiController extends Controller
             })
                 ->first();
 
-            $messageThradeCount = Message_thrade::where(function ($query) use ($reciver, $user_id) {
+            $messageThreadCount = MessageThread::where(function ($query) use ($reciver, $user_id) {
                 $query->where('sender_id', $reciver)
                     ->where('reciver_id', $user_id);
             })->orWhere(function ($query) use ($reciver, $user_id) {
@@ -6981,19 +6981,19 @@ class ApiController extends Controller
             })
                 ->count();
 
-            if ($messageThradeCount <= 0) {
-                $messageThrade = new Message_thrade;
-                $messageThrade->sender_id = auth('sanctum')->user()->id;
-                $messageThrade->reciver_id = $request->reciver_id;
-                $messageThrade->chatcenter = $request->messagecenter;
-                $done = $messageThrade->save();
+            if ($messageThreadCount <= 0) {
+                $messageThread = new MessageThread;
+                $messageThread->sender_id = auth('sanctum')->user()->id;
+                $messageThread->reciver_id = $request->reciver_id;
+                $messageThread->chatcenter = $request->messagecenter;
+                $done = $messageThread->save();
                 if ($done) {
                     $chat = new Chat;
                     $chat->reciver_id = $request->reciver_id;
                     $chat->sender_id = auth('sanctum')->user()->id;
                     $chat->chatcenter = $request->messagecenter;
                     $chat->message = $request->message;
-                    $chat->message_thrade = $messageThrade->id;
+                    $chat->message_thrade = $messageThread->id;
                     $chat->thumbsup = $request->thumbsup;
                     $chat->file = '1';
                     $chat->save();
@@ -7022,10 +7022,10 @@ class ApiController extends Controller
                             $media_file_data = ['user_id' => auth('sanctum')->user()->id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public'];
                             $media_file_data['created_at'] = time();
                             $media_file_data['updated_at'] = $media_file_data['created_at'];
-                            Media_files::create($media_file_data);
+                            MediaFile::create($media_file_data);
                         }
                     }
-                    $page_data['message'] = Chat::where('message_thrade', $messageThrade->id)->orderBy('id', 'DESC')->limit('1')->get();
+                    $page_data['message'] = Chat::where('message_thrade', $messageThread->id)->orderBy('id', 'DESC')->limit('1')->get();
                     $message = view('frontend.chat.single-message', $page_data)->render();
                     $url = route('chat', $request->reciver_id);
                     if (isset($request->product_id) && ! empty($request->product_id)) {
@@ -7042,7 +7042,7 @@ class ApiController extends Controller
                 $chat->sender_id = auth('sanctum')->user()->id;
                 $chat->chatcenter = $request->messagecenter;
                 $chat->message = $request->message;
-                $chat->message_thrade = $firstmessageThrade->id;
+                $chat->message_thrade = $firstMessageThread->id;
                 $chat->thumbsup = $request->thumbsup;
                 $chat->file = '1';
                 $chat->save();
@@ -7073,7 +7073,7 @@ class ApiController extends Controller
                         $media_file_data['chat_id'] = $chat->id;
                         $media_file_data['created_at'] = time();
                         $media_file_data['updated_at'] = $media_file_data['created_at'];
-                        Media_files::create($media_file_data);
+                        MediaFile::create($media_file_data);
                     }
                 }
             }
@@ -7090,11 +7090,11 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $messageThrade = new Message_thrade;
-            $messageThrade->sender_id = auth('sanctum')->user()->id;
-            $messageThrade->reciver_id = $request->reciver_id;
-            $messageThrade->chatcenter = $request->messagecenter;
-            $done = $messageThrade->save();
+            $messageThread = new MessageThread;
+            $messageThread->sender_id = auth('sanctum')->user()->id;
+            $messageThread->reciver_id = $request->reciver_id;
+            $messageThread->chatcenter = $request->messagecenter;
+            $done = $messageThread->save();
         }
 
         return $response;
@@ -7132,9 +7132,9 @@ class ApiController extends Controller
 
     //     if (isset($token) && $token != '') {
     //         // $user_id = auth('sanctum')->user()->id;
-    //         $messageThrade = Message_thrade::whereIn('sender_id', [auth('sanctum')->user()->id, $user_id])->whereIn('reciver_id', [auth('sanctum')->user()->id, $user_id])->first();
-    //         if (!empty($messageThrade)) {
-    //             $done = Chat::where('message_thrade', $messageThrade->id)->where('read_status', '0')->where('reciver_id', auth('sanctum')->user()->id)->update(['read_status' => '1']);
+    //         $messageThread = MessageThread::whereIn('sender_id', [auth('sanctum')->user()->id, $user_id])->whereIn('reciver_id', [auth('sanctum')->user()->id, $user_id])->first();
+    //         if (!empty($messageThread)) {
+    //             $done = Chat::where('message_thrade', $messageThread->id)->where('read_status', '0')->where('reciver_id', auth('sanctum')->user()->id)->update(['read_status' => '1']);
     //             if ($done) {
     //                 $response['success'] = true;
     //                 $response['message'] = 'read successfully';
@@ -7158,13 +7158,13 @@ class ApiController extends Controller
     //         $authUserId = auth('sanctum')->user()->id;
 
     //         // Retrieve message thread
-    //         $messageThrade = Message_thrade::whereIn('sender_id', [$authUserId, $user_id])
+    //         $messageThread = MessageThread::whereIn('sender_id', [$authUserId, $user_id])
     //             ->whereIn('reciver_id', [$authUserId, $user_id])
     //             ->first();
 
-    //         if (!empty($messageThrade)) {
+    //         if (!empty($messageThread)) {
     //             // Mark messages as read
-    //             $done = Chat::where('message_thrade', $messageThrade->id)
+    //             $done = Chat::where('message_thrade', $messageThread->id)
     //                 ->where('read_status', '0')
     //                 ->where('reciver_id', $authUserId)
     //                 ->update(['read_status' => '1']);
@@ -7197,13 +7197,13 @@ class ApiController extends Controller
             $authUserId = auth('sanctum')->user()->id;
 
             // Retrieve message thread
-            $messageThrade = Message_thrade::whereIn('sender_id', [$authUserId, $user_id])
+            $messageThread = MessageThread::whereIn('sender_id', [$authUserId, $user_id])
                 ->whereIn('reciver_id', [$authUserId, $user_id])
                 ->first();
 
-            if (! empty($messageThrade)) {
+            if (! empty($messageThread)) {
                 // Mark messages as read
-                $done = Chat::where('message_thrade', $messageThrade->id)
+                $done = Chat::where('message_thrade', $messageThread->id)
                     ->where('read_status', '0')
                     ->where('reciver_id', $authUserId)
                     ->update(['read_status' => '1']);
@@ -7267,7 +7267,7 @@ class ApiController extends Controller
                 $msgthread_id = 0; // Initialize profile ID as 0
 
                 // Get chat messages involving the current user
-                $chats = Message_thrade::where('reciver_id', $user_id)
+                $chats = MessageThread::where('reciver_id', $user_id)
                     ->orWhere('sender_id', $user_id)
                     ->get();
 

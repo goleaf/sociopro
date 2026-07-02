@@ -8,10 +8,10 @@ use App\Enums\Visibility;
 use App\Models\BlockUser;
 // used models
 use App\Models\Comments;
-use App\Models\Live_streamings;
-use App\Models\Media_files;
-use App\Models\Post_share;
+use App\Models\LiveStreaming;
+use App\Models\MediaFile;
 use App\Models\Posts;
+use App\Models\PostShare;
 use App\Models\Report;
 use App\Models\Stories;
 use App\Models\User;
@@ -336,7 +336,7 @@ class MainController extends Controller
                 }
                 $media_file_data['created_at'] = time();
                 $media_file_data['updated_at'] = $media_file_data['created_at'];
-                Media_files::create($media_file_data);
+                MediaFile::create($media_file_data);
             }
         }
 
@@ -350,7 +350,7 @@ class MainController extends Controller
             $live['created_at'] = date('Y-m-d H:i:s', time());
             $live['updated_at'] = $live['created_at'];
 
-            Live_streamings::insert($live);
+            LiveStreaming::insert($live);
             $response = ['open_new_tab' => $liveStreamingUrl, 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline')];
         } else {
             // Ajax flush message
@@ -369,7 +369,7 @@ class MainController extends Controller
         $make_pass = explode(' ', $make_pass);
         $join_pass = implode('', $make_pass);
 
-        Live_streamings::where('publisher_id', $user_id)->update(['details->join_pass' => $join_pass]);
+        LiveStreaming::where('publisher_id', $user_id)->update(['details->join_pass' => $join_pass]);
 
         // $room = get_settings('system_name') . $user->name . $user->email;
         $room = get_settings('system_name');
@@ -504,7 +504,7 @@ class MainController extends Controller
                 }
                 $media_file_data['created_at'] = time();
                 $media_file_data['updated_at'] = $media_file_data['created_at'];
-                Media_files::create($media_file_data);
+                MediaFile::create($media_file_data);
             }
         }
 
@@ -522,7 +522,7 @@ class MainController extends Controller
             ->where('posts.post_id', $publisher_id)
             ->join('users', 'posts.user_id', '=', 'users.id')->first();
 
-        $live_streaming = Live_streamings::where('publisher', $publisher)
+        $live_streaming = LiveStreaming::where('publisher', $publisher)
             ->where('user_id', $this->user->id)->where('publisher_id', $publisher_id);
 
         if ($live_streaming->count() > 0) {
@@ -555,7 +555,7 @@ class MainController extends Controller
             $data['publisher_id'] = $publisher_id;
             $data['details'] = json_encode($meeting_details);
             $data['updated_at'] = time();
-            Live_streamings::where('streaming_id', $live_streaming->value('streaming_id'))->update($data);
+            LiveStreaming::where('streaming_id', $live_streaming->value('streaming_id'))->update($data);
         } else {
             if (! empty($post_details->description)) {
                 $live_topic = ellipsis($post_details->description, 200);
@@ -586,7 +586,7 @@ class MainController extends Controller
             $data['details'] = $var['data'];
             $data['created_at'] = time();
             $data['updated_at'] = $data['created_at'];
-            Live_streamings::create($data);
+            LiveStreaming::create($data);
         }
     }
 
@@ -604,7 +604,7 @@ class MainController extends Controller
         $post_details = $post_details->first();
 
         if ($post_details) {
-            $live_streaming = Live_streamings::where('publisher', 'post')
+            $live_streaming = LiveStreaming::where('publisher', 'post')
                 ->where('publisher_id', $post_id)
                 ->where('user_id', $post_details->user_id)
                 ->first();
@@ -902,7 +902,7 @@ class MainController extends Controller
 
     public function share_group(Request $request)
     {
-        $postshare = new Post_share;
+        $postshare = new PostShare;
         $postshare->user_id = auth()->user()->id;
         $postshare->post_id = $request->shared_post_id;
         $postshare->shared_on = 'group';
@@ -936,7 +936,7 @@ class MainController extends Controller
 
     public function share_my_timeline(Request $request)
     {
-        $postshare = new Post_share;
+        $postshare = new PostShare;
         $postshare->user_id = auth()->user()->id;
         $postshare->post_id = $request->shared_post_id;
         $postshare->shared_on = 'group';
@@ -1007,10 +1007,10 @@ class MainController extends Controller
 
     public function delete_media_file($id)
     {
-        $media_file = Media_files::where('id', $id)->where('user_id', auth()->user()->id);
+        $media_file = MediaFile::where('id', $id)->where('user_id', auth()->user()->id);
         if ($media_file->count() > 0) {
             remove_file('public/storage/post/images/'.$media_file->first()->file_name);
-            Media_files::find($id)->delete();
+            MediaFile::find($id)->delete();
             $response = ['alertMessage' => get_phrase('Image deleted successfully'), 'fadeOutElem' => '#previous-uploaded-img-'.$id];
         } else {
             $response = ['alertMessage' => get_phrase('Image not found')];

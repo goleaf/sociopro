@@ -134,8 +134,8 @@ For each: **severity · risk · files · why · safest first fix · tests-first?
 - Fix: relocate to focused services / view helpers / Enums; keep thin globals only for pure formatting. Tests first: **partial**. Now vs document: **document**.
 
 ### 2.9 Unclear naming — medium · maintainability
-- Snake_case model classes: `Album_image`, `Media_files`, `Group_member`, `Page_like`, `Post_share`, `Payment_gateway`, `Fundraiser_*`, `Live_streamings`, `Feeling_and_activities`, `Account_active_request`. **`Message_thrade`** is a typo for "thread".
-- Fix: alias/rename incrementally with `class_alias` bridges + tests; low priority vs security. Tests first: **yes**. Now vs document: **document**.
+- Former snake_case model classes have been renamed to StudlyCase names such as `AlbumImage`, `MediaFile`, `GroupMember`, `PageLike`, `PostShare`, `PaymentGateway`, `FundraiserDonation`, `LiveStreaming`, `FeelingAndActivity`, `AccountActiveRequest`, and `MessageThread`.
+- Legacy database names such as `message_thrades` still require compatibility mappings. Tests first: **yes**. Now vs document: **done for PHP class/file names; database names remain documented compatibility debt**.
 
 ### 2.10 Dead code — low · maintainability
 - `require 'vendor/autoload.php';` inside `ApiController.php` (redundant; already autoloaded) and a stray `use Session;` after class-level code. `docs/dead-code-audit.md` already tracks candidates.
@@ -303,7 +303,7 @@ For each: **severity · risk · files · why · safest first fix · tests-first?
 - Fix: eager-load, paginate, `withCount`/`withExists`; add query-count tests. Tests first: **yes**. Document.
 
 ### 5.6 Naming inconsistencies — low · maintainability
-- Snake_case tables/models and `Message_thrade` typo (5.6 mirrors 2.9). Document; rename with bridges later.
+- PHP model class/file names now use StudlyCase. Legacy snake_case database names remain for compatibility and should only be renamed through a separate migration plan.
 
 ---
 

@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\PaymentController;
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\View\View;
@@ -49,7 +49,7 @@ class PaymentPageViewDataTest extends TestCase
     {
         $user = User::factory()->create();
 
-        Payment_gateway::query()
+        PaymentGateway::query()
             ->where('identifier', 'paystack')
             ->update([
                 'keys' => json_encode([

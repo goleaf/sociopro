@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -19,7 +19,7 @@ class RequestPayloadProtectionTest extends TestCase
             'status' => UserAccountStatus::Active->value,
             'user_role' => UserRole::Admin->value,
         ]);
-        $gateway = Payment_gateway::create([
+        $gateway = PaymentGateway::create([
             'identifier' => 'custom_gateway',
             'currency' => 'USD',
             'title' => 'Custom Gateway',
@@ -63,7 +63,7 @@ class RequestPayloadProtectionTest extends TestCase
             'status' => UserAccountStatus::Active->value,
             'user_role' => UserRole::Admin->value,
         ]);
-        $gateway = Payment_gateway::create([
+        $gateway = PaymentGateway::create([
             'identifier' => 'custom_gateway',
             'currency' => 'USD',
             'title' => 'Custom Gateway',

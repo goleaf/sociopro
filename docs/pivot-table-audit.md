@@ -53,7 +53,7 @@ Explicit many-to-many relationships now name their pivot tables and expose requi
 - `User::savedEvents()` / `Event::savedByUsers()`
 - `User::savedBlogs()` / `Blog::savedByUsers()`
 
-The pivot-like model classes also expose parent `belongsTo` relationships for their foreign-key columns while preserving legacy method names such as `Group_member::getGroup()`, `Group_member::getUser()`, `Page_like::pageData()`, `SavedProduct::productData()`, and `Saveforlater::getVideo()`.
+The pivot-like model classes also expose parent `belongsTo` relationships for their foreign-key columns while preserving legacy method names such as `GroupMember::getGroup()`, `GroupMember::getUser()`, `PageLike::pageData()`, `SavedProduct::productData()`, and `Saveforlater::getVideo()`.
 
 ## Safe Follow-Up Work
 

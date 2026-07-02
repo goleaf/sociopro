@@ -4,7 +4,7 @@ namespace App\Services\Payments\Gateways;
 
 use App\Enums\PaymentGatewayIdentifier;
 use App\Exceptions\Payments\PaymentGatewayException;
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -14,7 +14,7 @@ class Paypal
 
     public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
-        $paymentGateway = Payment_gateway::where('identifier', $identifier)->first();
+        $paymentGateway = PaymentGateway::where('identifier', $identifier)->first();
 
         if (! $paymentGateway || empty($transaction_keys['payment_id'])) {
             return false;
@@ -57,7 +57,7 @@ class Paypal
         return $paymentResponse->json('state') === self::APPROVED_STATE;
     }
 
-    private static function gatewayCredentials(Payment_gateway $paymentGateway, array $keys): array
+    private static function gatewayCredentials(PaymentGateway $paymentGateway, array $keys): array
     {
         if ($paymentGateway->isInTestMode()) {
             return [

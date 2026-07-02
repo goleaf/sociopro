@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
-use App\Models\Media_files;
-use App\Models\Message_thrade;
+use App\Models\MediaFile;
+use App\Models\MessageThread;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -135,25 +135,25 @@ class ChatUploadSecurityTest extends TestCase
         ]);
     }
 
-    private function createMessageThread(User $sender, User $receiver): Message_thrade
+    private function createMessageThread(User $sender, User $receiver): MessageThread
     {
-        return Message_thrade::factory()
+        return MessageThread::factory()
             ->between($sender, $receiver)
             ->create();
     }
 
-    private function latestChatVideoFor(User $user): Media_files
+    private function latestChatVideoFor(User $user): MediaFile
     {
-        $media = Media_files::query()
+        $media = MediaFile::query()
             ->where('user_id', $user->id)
             ->where('file_type', 'video')
             ->latest('id')
             ->first();
 
         $this->assertInstanceOf(
-            Media_files::class,
+            MediaFile::class,
             $media,
-            Media_files::query()->get(['id', 'user_id', 'chat_id', 'file_name', 'file_type'])->toJson()
+            MediaFile::query()->get(['id', 'user_id', 'chat_id', 'file_name', 'file_type'])->toJson()
         );
 
         return $media;

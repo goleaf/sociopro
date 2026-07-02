@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Enums\Visibility;
-use App\Models\Media_files;
+use App\Models\MediaFile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -32,7 +32,7 @@ class MediaDownloadSecurityTest extends TestCase
         File::ensureDirectoryExists(public_path('storage/post/images/security-test'));
         File::put(public_path('storage/post/images/'.$fileName), 'private image');
 
-        $media = Media_files::query()->create([
+        $media = MediaFile::query()->create([
             'user_id' => $owner->id,
             'file_name' => $fileName,
             'file_type' => 'image',
@@ -59,7 +59,7 @@ class MediaDownloadSecurityTest extends TestCase
         File::ensureDirectoryExists(public_path('storage/post'));
         File::put(public_path('storage/post/security-traversal.jpg'), 'outside image');
 
-        $media = Media_files::query()->create([
+        $media = MediaFile::query()->create([
             'user_id' => $owner->id,
             'file_name' => '../security-traversal.jpg',
             'file_type' => 'image',
@@ -84,7 +84,7 @@ class MediaDownloadSecurityTest extends TestCase
         File::ensureDirectoryExists(public_path('storage/post/images/security-test'));
         File::put($filePath, 'public image');
 
-        $media = Media_files::query()->create([
+        $media = MediaFile::query()->create([
             'user_id' => $owner->id,
             'file_name' => $fileName,
             'file_type' => 'image',

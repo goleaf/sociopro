@@ -1,13 +1,13 @@
 @php
     $album_data = \App\Models\Albums::where('id', $album_id)->first();
-    $images = \App\Models\Album_image::where('album_id', $album_id)->get();
+    $images = \App\Models\AlbumImage::where('album_id', $album_id)->get();
 @endphp
 
 <!-- Profile Nav End -->
 <div class="friends-tab ct-tab bg-white radius-8 p-3">
     <div class="row">
         <div class="al_head d-flex justify-content-between">
-            <div class="search_left"> 
+            <div class="search_left">
                 <h3>{{ $album_data->title }}</h3>
                 <p>{{ count($images) }} {{ get_phrase('Items') }}</p>
             </div>
@@ -17,7 +17,7 @@
         </div>
         @foreach($images as $image)
             @php
-                $image_name = \App\Models\Media_files::where('album_image_id', $image->id)->first();
+                $image_name = \App\Models\MediaFile::where('album_image_id', $image->id)->first();
                 $image_post =  \App\Models\Posts::where('post_id', $image_name->post_id)->first();
             @endphp
             <div class="col-lg-3 col-md-4 col-6 mb-2">

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
-use App\Models\Account_active_request;
+use App\Models\AccountActiveRequest;
 use App\Models\User;
 use App\ViewModels\BladeViewData;
 use Illuminate\Contracts\View\View;
@@ -23,7 +23,7 @@ class AccountStatusController extends Controller
     {
         abort_unless($request->user()->is($user), 403);
 
-        Account_active_request::updateOrCreate(
+        AccountActiveRequest::updateOrCreate(
             ['user_id' => $user->id],
             ['status' => 'pending']
         );

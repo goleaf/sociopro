@@ -3,7 +3,7 @@
 namespace App\Services\Payments;
 
 use App\Enums\PaymentGatewayIdentifier;
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use BadMethodCallException;
 use Illuminate\Contracts\Container\Container;
 
@@ -11,7 +11,7 @@ class PaymentGatewayResolver
 {
     public function __construct(private readonly Container $container) {}
 
-    public function serviceClass(Payment_gateway $paymentGateway): string
+    public function serviceClass(PaymentGateway $paymentGateway): string
     {
         $identifier = (string) $paymentGateway->getAttribute('identifier');
 
@@ -19,12 +19,12 @@ class PaymentGatewayResolver
             ?? $this->legacyServiceClass($paymentGateway);
     }
 
-    public function service(Payment_gateway $paymentGateway): object
+    public function service(PaymentGateway $paymentGateway): object
     {
         return $this->container->make($this->serviceClass($paymentGateway));
     }
 
-    public function paymentStatus(Payment_gateway $paymentGateway, string $identifier, array $transactionKeys): bool
+    public function paymentStatus(PaymentGateway $paymentGateway, string $identifier, array $transactionKeys): bool
     {
         return (bool) $this->callGatewayMethod(
             $paymentGateway,
@@ -33,7 +33,7 @@ class PaymentGatewayResolver
         );
     }
 
-    public function createPayment(Payment_gateway $paymentGateway, string $identifier): mixed
+    public function createPayment(PaymentGateway $paymentGateway, string $identifier): mixed
     {
         return $this->callGatewayMethod(
             $paymentGateway,
@@ -42,7 +42,7 @@ class PaymentGatewayResolver
         );
     }
 
-    private function legacyServiceClass(Payment_gateway $paymentGateway): string
+    private function legacyServiceClass(PaymentGateway $paymentGateway): string
     {
         return 'App\Services\Payments\Gateways\\'.str_replace(
             ' ',
@@ -51,7 +51,7 @@ class PaymentGatewayResolver
         );
     }
 
-    private function callGatewayMethod(Payment_gateway $paymentGateway, string $method, array $parameters): mixed
+    private function callGatewayMethod(PaymentGateway $paymentGateway, string $method, array $parameters): mixed
     {
         $service = $this->service($paymentGateway);
         $callback = [$service, $method];

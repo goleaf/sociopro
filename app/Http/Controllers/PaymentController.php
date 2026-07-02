@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Anand\LaravelPaytmWallet\Facades\PaytmWallet;
 use App\Enums\PaymentGatewayIdentifier;
 use App\Enums\PaytmTransactionStatus;
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use App\Models\PaymentHistoryEntry;
 use App\Models\Setting;
 use App\Models\Users;
@@ -47,7 +47,7 @@ class PaymentController extends Controller
         }
 
         $page_data['payment_details'] = $payment_details;
-        $page_data['payment_gateways'] = Payment_gateway::query()
+        $page_data['payment_gateways'] = PaymentGateway::query()
             ->select(self::PAYMENT_GATEWAY_COLUMNS)
             ->get();
         $page_data += $this->paymentPageSettings();
@@ -150,9 +150,9 @@ class PaymentController extends Controller
         return null;
     }
 
-    private function paymentGateway(string $identifier): Payment_gateway
+    private function paymentGateway(string $identifier): PaymentGateway
     {
-        return Payment_gateway::query()
+        return PaymentGateway::query()
             ->select(self::PAYMENT_GATEWAY_COLUMNS)
             ->forIdentifier($identifier)
             ->firstOrFail();
@@ -170,7 +170,7 @@ class PaymentController extends Controller
         ];
     }
 
-    private function paymentGatewayViewData(string $identifier, Payment_gateway $paymentGateway, array $paymentDetails): array
+    private function paymentGatewayViewData(string $identifier, PaymentGateway $paymentGateway, array $paymentDetails): array
     {
         return match (PaymentGatewayIdentifier::tryFrom($identifier)) {
             PaymentGatewayIdentifier::Stripe => $this->stripeViewData($paymentGateway, $paymentDetails),
@@ -182,7 +182,7 @@ class PaymentController extends Controller
         };
     }
 
-    private function stripeViewData(Payment_gateway $paymentGateway, array $paymentDetails): array
+    private function stripeViewData(PaymentGateway $paymentGateway, array $paymentDetails): array
     {
         $model = $paymentDetails['success_method']['model_name'];
         $key = '';
@@ -211,7 +211,7 @@ class PaymentController extends Controller
         ];
     }
 
-    private function razorpayViewData(Payment_gateway $paymentGateway, array $paymentDetails): array
+    private function razorpayViewData(PaymentGateway $paymentGateway, array $paymentDetails): array
     {
         $model = $paymentDetails['success_method']['model_name'];
         $publicKey = '';
@@ -240,7 +240,7 @@ class PaymentController extends Controller
         ];
     }
 
-    private function flutterwaveViewData(Payment_gateway $paymentGateway, array $paymentDetails): array
+    private function flutterwaveViewData(PaymentGateway $paymentGateway, array $paymentDetails): array
     {
         $model = $paymentDetails['success_method']['model_name'];
         $key = '';
@@ -299,7 +299,7 @@ class PaymentController extends Controller
         ];
     }
 
-    private function paypalViewData(Payment_gateway $paymentGateway): array
+    private function paypalViewData(PaymentGateway $paymentGateway): array
     {
         $paymentKeys = $paymentGateway->decodedKeys();
 
@@ -316,7 +316,7 @@ class PaymentController extends Controller
         ];
     }
 
-    private function paystackViewData(Payment_gateway $paymentGateway, array $paymentDetails): array
+    private function paystackViewData(PaymentGateway $paymentGateway, array $paymentDetails): array
     {
         $keys = $paymentGateway->decodedKeys();
 

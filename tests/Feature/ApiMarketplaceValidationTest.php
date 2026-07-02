@@ -6,7 +6,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Currency;
 use App\Models\Marketplace;
-use App\Models\Media_files;
+use App\Models\MediaFile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -554,7 +554,7 @@ class ApiMarketplaceValidationTest extends TestCase
         Storage::disk('public')->assertExists('marketplace/thumbnail/'.$product->image);
         Storage::disk('public')->assertExists('marketplace/coverphoto/'.$product->image);
 
-        $this->assertTrue(Media_files::query()
+        $this->assertTrue(MediaFile::query()
             ->where('product_id', $product->id)
             ->where('file_name', $product->image)
             ->where('file_type', 'image')

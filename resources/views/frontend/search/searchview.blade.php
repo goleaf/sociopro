@@ -21,7 +21,7 @@
                            <div class="pl_con">
                                 <h4><a href="{{ route('single.page',$mypage->id) }}">{{ ellipsis($mypage->title,20) }}</a></h4>
                                 @php
-                                        $likecount = \App\Models\Page_like::where('page_id',$mypage->id)->where('user_id',auth()->user()->id)->count();
+                                        $likecount = \App\Models\PageLike::where('page_id',$mypage->id)->where('user_id',auth()->user()->id)->count();
                                 @endphp
                                 <span class="small text-muted">{{ $likecount }} {{ get_phrase('likes') }}</span>
                                 @if ($likecount>0)
@@ -199,9 +199,9 @@
                         <div class="mb-2 thumbnail-133" style="background-image: url('{{ get_group_logo($group->logo,'logo') }}');"></div>
                        <div class="pl_con">
                             <a href="{{ route('single.group',$group->id) }}"><h4>{{ ellipsis($group->title,20) }}</h4></a>
-                            @php $joined = \App\Models\Group_member::where('group_id',$group->id)->where('is_accepted','1')->count(); @endphp
+                            @php $joined = \App\Models\GroupMember::where('group_id',$group->id)->where('is_accepted','1')->count(); @endphp
                             <span class="small text-muted">{{ $joined }} {{ get_phrase('Member') }} @if($joined>1) s @endif</span>
-                            @php $join = \App\Models\Group_member::where('group_id',$group->id)->where('user_id',auth()->user()->id)->count(); @endphp
+                            @php $join = \App\Models\GroupMember::where('group_id',$group->id)->where('user_id',auth()->user()->id)->count(); @endphp
                             @if ($join>0)
                             <a href="javascript:void(0)" onclick="ajaxAction('{{ route('group.rjoin',$group->id) }}')" class="btn common_btn">{{ get_phrase('Joined') }}</a>
                             @else

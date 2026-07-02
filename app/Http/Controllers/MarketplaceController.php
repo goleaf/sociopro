@@ -7,7 +7,7 @@ use App\Http\Requests\Marketplace\DestroyMarketplaceRequest;
 use App\Http\Requests\Marketplace\StoreMarketplaceRequest;
 use App\Http\Requests\Marketplace\UpdateMarketplaceRequest;
 use App\Models\Marketplace;
-use App\Models\Media_files;
+use App\Models\MediaFile;
 use App\Models\SavedProduct;
 use App\Support\Files\FileUploader;
 use Illuminate\Http\Request;
@@ -70,7 +70,7 @@ class MarketplaceController extends Controller
                     $media_file_data = ['user_id' => auth()->user()->id, 'product_id' => $product_id, 'file_name' => $file_name, 'file_type' => $file_type];
                     $media_file_data['created_at'] = time();
                     $media_file_data['updated_at'] = $media_file_data['created_at'];
-                    Media_files::create($media_file_data);
+                    MediaFile::create($media_file_data);
                     if ($key == '0') {
                         $productupdate = Marketplace::find($product_id);
                         $productupdate->image = $file_name;
@@ -112,9 +112,9 @@ class MarketplaceController extends Controller
 
                 if (isset($request->multiple_files)) {
                     // this for deleting previous data file
-                    $previousfile = Media_files::where('product_id', $id)->get();
+                    $previousfile = MediaFile::where('product_id', $id)->get();
                     foreach ($previousfile as $previousfile) {
-                        $market = Media_files::find($previousfile->id);
+                        $market = MediaFile::find($previousfile->id);
                         // store image name for delete file operation
                         $imagename = $market->banner;
                         $done = $market->delete();
@@ -135,7 +135,7 @@ class MarketplaceController extends Controller
                     $media_file_data = ['user_id' => auth()->user()->id, 'product_id' => $product_id, 'file_name' => $file_name, 'file_type' => $file_type];
                     $media_file_data['created_at'] = time();
                     $media_file_data['updated_at'] = $media_file_data['created_at'];
-                    Media_files::create($media_file_data);
+                    MediaFile::create($media_file_data);
                     if ($key == '0') {
                         $productupdate = Marketplace::find($product_id);
                         $productupdate->image = $file_name;
@@ -185,7 +185,7 @@ class MarketplaceController extends Controller
         if ($product) {
             $page_data['related_product'] = Marketplace::Where('brand', $product->brand)->orWhere('category', $product->category)->get();
             $page_data['product'] = $product;
-            $page_data['product_image'] = Media_files::where('product_id', $id)->ofType(MediaFileType::Image)->get();
+            $page_data['product_image'] = MediaFile::where('product_id', $id)->ofType(MediaFileType::Image)->get();
             $page_data['view_path'] = 'frontend.marketplace.single_product';
 
             return view('frontend.index', $page_data);
@@ -322,7 +322,7 @@ class MarketplaceController extends Controller
     {
         $product = Marketplace::with(['getCurrency', 'getUser', 'getCategory', 'getBrand'])->find($id);
         $page_data['product'] = $product;
-        $page_data['product_image'] = Media_files::where('product_id', $id)->ofType(MediaFileType::Image)->get();
+        $page_data['product_image'] = MediaFile::where('product_id', $id)->ofType(MediaFileType::Image)->get();
 
         if ($product) {
             if (isset($_GET['shared'])) {

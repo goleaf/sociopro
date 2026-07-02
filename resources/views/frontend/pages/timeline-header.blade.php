@@ -22,7 +22,7 @@
                 <div class="n_tab_right d-flex">
                     <div class="inline-btn">
                         @php
-                            $likecount = \App\Models\Page_like::where('page_id',$page->id)->where('user_id',auth()->user()->id)->count();
+                            $likecount = \App\Models\PageLike::where('page_id',$page->id)->where('user_id',auth()->user()->id)->count();
                         @endphp
                         
                         @if ($likecount>0)

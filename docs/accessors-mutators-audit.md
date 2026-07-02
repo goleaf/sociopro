@@ -15,7 +15,7 @@ The current model layer does not define legacy `getFooAttribute` accessors, lega
 
 ## Safe Helper Methods Found
 
-- `App\Models\Payment_gateway::isEnabled()`, `isInTestMode()`, and `decodedKeys()` read direct attributes only and do not issue queries.
+- `App\Models\PaymentGateway::isEnabled()`, `isInTestMode()`, and `decodedKeys()` read direct attributes only and do not issue queries.
 - `App\Models\Friendships::otherUserId()` reads direct attributes only and does not issue queries.
 
 These methods should remain regular explicit helpers. Do not convert them into appended accessors unless a consumer requires serialized output and tests cover the serialization contract.

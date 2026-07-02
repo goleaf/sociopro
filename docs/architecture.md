@@ -18,7 +18,7 @@ This document describes the current checkout, not the desired end state.
 
 - Authentication and account status: `routes/auth.php`, `app/Http/Controllers/Auth`, `app/Http/Controllers/Account`.
 - Timeline/posts/stories/profile: `MainController`, `StoryController`, `Profile`, Blade views under `resources/views/frontend`.
-- Chat/messages: `ChatController`, API chat methods in `ApiController`, `Message`/`Message_thrade`, and chat Blade partials.
+- Chat/messages: `ChatController`, API chat methods in `ApiController`, `Message`/`MessageThread`, and chat Blade partials.
 - Marketplace: marketplace methods in web/API controllers, `Marketplace` model, marketplace query classes, factories, and validation tests.
 - Jobs/applications: job controllers, `app/Actions/Jobs`, `JobApplication`, private attachment streaming, and export tests.
 - Payments: `PaymentController`, `app/Services/Payments`, gateway resolver and gateway-specific tests.

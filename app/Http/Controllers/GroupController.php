@@ -7,13 +7,13 @@ use App\Enums\MediaFileType;
 use App\Enums\MembershipRole;
 use App\Enums\PostType;
 use App\Enums\Visibility;
-use App\Models\Album_image;
+use App\Models\AlbumImage;
 use App\Models\Albums;
 use App\Models\Event;
 use App\Models\Group;
-use App\Models\Group_member;
+use App\Models\GroupMember;
 use App\Models\Invite;
-use App\Models\Media_files;
+use App\Models\MediaFile;
 use App\Models\Notification;
 use App\Models\Page;
 use App\Models\Posts;
@@ -32,7 +32,7 @@ class GroupController extends Controller
     {
         $page_data['groups'] = Group::orderBy('id', 'DESC')->where('privacy', Visibility::Public->value)->where('status', '1')->limit('18')->get();
         $page_data['managegroups'] = Group::orderBy('id', 'DESC')->where('user_id', auth()->user()->id)->limit('6')->get();
-        $page_data['joinedgroups'] = Group_member::accepted()->where('user_id', auth()->user()->id)->limit('6')->get();
+        $page_data['joinedgroups'] = GroupMember::accepted()->where('user_id', auth()->user()->id)->limit('6')->get();
         $page_data['view_path'] = 'frontend.groups.groups';
 
         return view('frontend.index', $page_data);
@@ -47,7 +47,7 @@ class GroupController extends Controller
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')
             ->orderBy('posts.post_id', 'DESC')->get();
-        $totalmember = Group_member::accepted()->where('group_id', $id)->count();
+        $totalmember = GroupMember::accepted()->where('group_id', $id)->count();
 
         $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
             ->take(15)->get();
@@ -87,7 +87,7 @@ class GroupController extends Controller
         }
         $done = $group->save();
         if ($done) {
-            $group_member = new Group_member;
+            $group_member = new GroupMember;
             $group_member->group_id = $group->id;
             $group_member->user_id = auth()->user()->id;
             $group_member->role = MembershipRole::Admin->value;
@@ -181,8 +181,8 @@ class GroupController extends Controller
         $response = [];
         $userId = auth()->user()->id;
 
-        if (! Group_member::where('group_id', $id)->where('user_id', $userId)->exists()) {
-            $group_member = new Group_member;
+        if (! GroupMember::where('group_id', $id)->where('user_id', $userId)->exists()) {
+            $group_member = new GroupMember;
             $group_member->group_id = $id;
             $group_member->user_id = $userId;
             $group_member->role = MembershipRole::General->value;
@@ -199,7 +199,7 @@ class GroupController extends Controller
     public function rjoin($id)
     {
         $response = [];
-        $group_member = Group_member::where('group_id', $id)->delete();
+        $group_member = GroupMember::where('group_id', $id)->delete();
         Session::flash('success_message', get_phrase('Group Joining Canceled'));
         $response = ['reload' => 1];
 
@@ -212,8 +212,8 @@ class GroupController extends Controller
         $page_data['friends_count'] = FriendshipsQuery::acceptedForUser(auth()->user())->count();
         $page_data['users'] = User::whereJsonDoesntContain('friends', auth()->user()->id)->get();
         $page_data['group'] = Group::find($id);
-        $page_data['total_member'] = Group_member::accepted()->where('group_id', $id)->count();
-        $page_data['recent_team_member'] = Group_member::accepted()->where('group_id', $id)->orderBY('id', 'DESC')->limit('5')->get();
+        $page_data['total_member'] = GroupMember::accepted()->where('group_id', $id)->count();
+        $page_data['recent_team_member'] = GroupMember::accepted()->where('group_id', $id)->orderBY('id', 'DESC')->limit('5')->get();
         $page_data['view_path'] = 'frontend.groups.people';
 
         return view('frontend.index', $page_data);
@@ -222,8 +222,8 @@ class GroupController extends Controller
     public function group_photos($id)
     {
         $page_data['group'] = Group::find($id);
-        $page_data['all_photos'] = Media_files::where('group_id', $id)->ofType(MediaFileType::Image)->orderBy('id', 'DESC')->get();
-        $page_data['all_videos'] = Media_files::where('group_id', $id)->ofType(MediaFileType::Video)->orderBy('id', 'DESC')->get();
+        $page_data['all_photos'] = MediaFile::where('group_id', $id)->ofType(MediaFileType::Image)->orderBy('id', 'DESC')->get();
+        $page_data['all_videos'] = MediaFile::where('group_id', $id)->ofType(MediaFileType::Video)->orderBy('id', 'DESC')->get();
         $page_data['all_albums'] = Albums::where('group_id', $id)->orderBy('id', 'DESC')->get();
 
         $page_data['page_identifire'] = 'albums';
@@ -236,8 +236,8 @@ class GroupController extends Controller
     public function all_people_group($id)
     {
         $page_data['group'] = Group::find($id);
-        $page_data['all_members'] = Group_member::accepted()->where('group_id', $id)->orderBY('id', 'DESC')->get();
-        $page_data['total_member'] = Group_member::accepted()->where('group_id', $id)->count();
+        $page_data['all_members'] = GroupMember::accepted()->where('group_id', $id)->orderBY('id', 'DESC')->get();
+        $page_data['total_member'] = GroupMember::accepted()->where('group_id', $id)->count();
         $page_data['view_path'] = 'frontend.groups.all_people';
 
         return view('frontend.index', $page_data);
@@ -270,7 +270,7 @@ class GroupController extends Controller
                 $file_name = FileUploader::upload($media_file, 'public/storage/album/images', 1000, null, 300);
                 $file_type = 'image';
 
-                $albumimage = new Album_image;
+                $albumimage = new AlbumImage;
                 $albumimage->user_id = auth()->user()->id;
                 $albumimage->album_id = $request->album;
                 $albumimage->image = $file_name;
@@ -312,7 +312,7 @@ class GroupController extends Controller
                         $media_file_data = ['user_id' => auth()->user()->id, 'post_id' => $post_id, 'album_id' => $request->album, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy, 'album_image_id' => $album_image_id];
                         $media_file_data['created_at'] = time();
                         $media_file_data['updated_at'] = $media_file_data['created_at'];
-                        $done = Media_files::create($media_file_data);
+                        $done = MediaFile::create($media_file_data);
                     }
                 }
 
@@ -330,7 +330,7 @@ class GroupController extends Controller
         $search = $_GET['search'];
         $page_data['searchgroup'] = Group::where('title', 'like', '%'.$search.'%')->get();
         $page_data['managegroups'] = Group::orderBy('id', 'DESC')->where('user_id', auth()->user()->id)->limit('6')->get();
-        $page_data['joinedgroups'] = Group_member::accepted()->where('user_id', auth()->user()->id)->limit('6')->get();
+        $page_data['joinedgroups'] = GroupMember::accepted()->where('user_id', auth()->user()->id)->limit('6')->get();
         $page_data['view_path'] = 'frontend.groups.search-group';
 
         return view('frontend.index', $page_data);
@@ -339,7 +339,7 @@ class GroupController extends Controller
     public function group_all_view()
     {
         $page_data['managegroups'] = Group::orderBy('id', 'DESC')->where('user_id', auth()->user()->id)->limit('6')->get();
-        $page_data['joinedgroups'] = Group_member::accepted()->where('user_id', auth()->user()->id)->limit('6')->get();
+        $page_data['joinedgroups'] = GroupMember::accepted()->where('user_id', auth()->user()->id)->limit('6')->get();
         $page_data['groups'] = Group::orderBy('id', 'DESC')->limit('8')->get();
         $page_data['view_path'] = 'frontend.groups.allgroup';
 
@@ -358,7 +358,7 @@ class GroupController extends Controller
     public function group_user_create()
     {
         $page_data['managegroups'] = Group::orderBy('id', 'DESC')->where('user_id', auth()->user()->id)->limit('6')->get();
-        $page_data['joinedgroups'] = Group_member::accepted()->where('user_id', auth()->user()->id)->limit('6')->get();
+        $page_data['joinedgroups'] = GroupMember::accepted()->where('user_id', auth()->user()->id)->limit('6')->get();
         $page_data['groups'] = Group::where('user_id', auth()->user()->id)->get();
         $page_data['view_path'] = 'frontend.groups.user-group';
 
@@ -368,8 +368,8 @@ class GroupController extends Controller
     public function group_user_joined()
     {
         $page_data['managegroups'] = Group::orderBy('id', 'DESC')->where('user_id', auth()->user()->id)->limit('6')->get();
-        $page_data['joinedgroups'] = Group_member::accepted()->where('user_id', auth()->user()->id)->limit('6')->get();
-        $page_data['groups'] = Group_member::accepted()->where('user_id', auth()->user()->id)->get();
+        $page_data['joinedgroups'] = GroupMember::accepted()->where('user_id', auth()->user()->id)->limit('6')->get();
+        $page_data['groups'] = GroupMember::accepted()->where('user_id', auth()->user()->id)->get();
         $page_data['view_path'] = 'frontend.groups.user-joined';
 
         return view('frontend.index', $page_data);

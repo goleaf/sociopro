@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\PaymentGatewayIdentifier;
 use App\Exceptions\Payments\PaymentGatewayException;
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use App\Services\Payments\Gateways\Paystack;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
@@ -89,7 +89,7 @@ class PaystackPaymentStatusTest extends TestCase
 
     public function test_it_reports_missing_paystack_credentials_without_calling_paystack(): void
     {
-        Payment_gateway::where('identifier', PaymentGatewayIdentifier::Paystack->value)->update([
+        PaymentGateway::where('identifier', PaymentGatewayIdentifier::Paystack->value)->update([
             'keys' => json_encode([]),
             'test_mode' => 1,
         ]);
@@ -105,7 +105,7 @@ class PaystackPaymentStatusTest extends TestCase
 
     private function configurePaystackGateway(): void
     {
-        Payment_gateway::where('identifier', PaymentGatewayIdentifier::Paystack->value)->update([
+        PaymentGateway::where('identifier', PaymentGatewayIdentifier::Paystack->value)->update([
             'keys' => json_encode([
                 'secret_test_key' => 'test-secret-key',
                 'public_test_key' => 'test-public-key',

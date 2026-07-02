@@ -4,7 +4,7 @@ namespace App\Services\Payments\Gateways;
 
 use App\Enums\PaymentGatewayIdentifier;
 use App\Exceptions\Payments\PaymentGatewayException;
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use App\Support\Money\Money;
 use Stripe\Checkout\Session as CheckoutSession;
 use Stripe\Exception\ApiErrorException;
@@ -18,7 +18,7 @@ class StripePay
 
     public static function payment_status(mixed $identifier, mixed $transaction_keys = []): bool
     {
-        $payment_gateway = Payment_gateway::query()->where('identifier', $identifier)->first();
+        $payment_gateway = PaymentGateway::query()->where('identifier', $identifier)->first();
         $keys = $payment_gateway->decodedKeys();
 
         if ($payment_gateway->isInTestMode()) {
@@ -57,7 +57,7 @@ class StripePay
 
     public static function payment_create(mixed $identifier)
     {
-        $payment_gateway = Payment_gateway::query()->where('identifier', $identifier)->first();
+        $payment_gateway = PaymentGateway::query()->where('identifier', $identifier)->first();
         $payment_details = session('payment_details');
         $keys = $payment_gateway->decodedKeys();
 

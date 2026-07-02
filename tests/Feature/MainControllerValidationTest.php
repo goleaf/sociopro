@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Enums\Visibility;
-use App\Models\Media_files;
+use App\Models\MediaFile;
 use App\Models\Posts;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -79,7 +79,7 @@ class MainControllerValidationTest extends TestCase
 
             $this->assertNotNull($post);
 
-            $mediaFile = Media_files::query()
+            $mediaFile = MediaFile::query()
                 ->where('post_id', $post->post_id)
                 ->first();
 
@@ -87,7 +87,7 @@ class MainControllerValidationTest extends TestCase
             $this->assertSame('image', $mediaFile->file_type);
             Storage::disk('public')->assertExists('post/images/'.$mediaFile->file_name);
         } finally {
-            if ($mediaFile instanceof Media_files) {
+            if ($mediaFile instanceof MediaFile) {
                 Storage::disk('public')->delete([
                     'post/images/'.$mediaFile->file_name,
                     'post/images/optimized/'.$mediaFile->file_name,
@@ -134,7 +134,7 @@ class MainControllerValidationTest extends TestCase
 
             $this->assertSame(['reload' => 1], $payload);
 
-            $mediaFile = Media_files::query()
+            $mediaFile = MediaFile::query()
                 ->where('post_id', $post->post_id)
                 ->where('file_type', 'video')
                 ->latest('id')
@@ -149,7 +149,7 @@ class MainControllerValidationTest extends TestCase
                 File::delete($realFilePath);
             }
 
-            if ($mediaFile instanceof Media_files) {
+            if ($mediaFile instanceof MediaFile) {
                 Storage::disk('public')->delete('post/videos/'.$mediaFile->file_name);
             }
         }

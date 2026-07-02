@@ -14,7 +14,7 @@
                             <div class="pl_con">
                                 <h4><a href="{{ route('single.page',$mypage->id) }}">{{ ellipsis($mypage->title,10) }}</a></h4>
                                 @php
-                                        $likecount = \App\Models\Page_like::where('page_id',$mypage->id)->where('user_id',auth()->user()->id)->count();
+                                        $likecount = \App\Models\PageLike::where('page_id',$mypage->id)->where('user_id',auth()->user()->id)->count();
                                 @endphp
                                 <span class="small text-muted">{{ $likecount }} {{ get_phrase('likes') }}</span>
                                 @if ($likecount>0)

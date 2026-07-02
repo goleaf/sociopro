@@ -5,31 +5,31 @@ namespace App\ViewModels;
 use App\Enums\AccountActivationStatus;
 use App\Enums\UserRole;
 use App\Enums\Visibility;
-use App\Models\Account_active_request;
-use App\Models\Album_image;
+use App\Models\AccountActiveRequest;
+use App\Models\AlbumImage;
 use App\Models\Albums;
 use App\Models\BlockUser;
 use App\Models\Blog;
 use App\Models\Chat;
 use App\Models\Comments;
 use App\Models\Event;
-use App\Models\Feeling_and_activities;
+use App\Models\FeelingAndActivity;
 use App\Models\Follower;
 use App\Models\Friendships;
 use App\Models\Fundraiser;
-use App\Models\Fundraiser_donation;
-use App\Models\Fundraiser_payout;
+use App\Models\FundraiserDonation;
+use App\Models\FundraiserPayout;
 use App\Models\Group;
-use App\Models\Group_member;
+use App\Models\GroupMember;
 use App\Models\Invite;
 use App\Models\Job;
 use App\Models\Marketplace;
-use App\Models\Media_files;
+use App\Models\MediaFile;
 use App\Models\Page;
 use App\Models\PaidContentCreator;
 use App\Models\PaidContentPayout;
-use App\Models\Post_share;
 use App\Models\Posts;
+use App\Models\PostShare;
 use App\Models\SavedProduct;
 use App\Models\Saveforlater;
 use App\Models\Setting;
@@ -153,24 +153,24 @@ final class BladeViewData
             ->find($userId));
     }
 
-    public function feelingActivity(int|string|null $activityId): ?Feeling_and_activities
+    public function feelingActivity(int|string|null $activityId): ?FeelingAndActivity
     {
         if (! $activityId) {
             return null;
         }
 
-        return $this->remember("feeling-activity:{$activityId}", fn (): ?Feeling_and_activities => Feeling_and_activities::query()
+        return $this->remember("feeling-activity:{$activityId}", fn (): ?FeelingAndActivity => FeelingAndActivity::query()
             ->select(['feeling_and_activity_id', 'type', 'title', 'icon'])
             ->where('feeling_and_activity_id', $activityId)
             ->first());
     }
 
     /**
-     * @return Collection<int, Media_files>
+     * @return Collection<int, MediaFile>
      */
     public function postMediaFiles(Model $post): Collection
     {
-        return $this->remember("post-media:{$post->post_id}", fn (): Collection => Media_files::query()
+        return $this->remember("post-media:{$post->post_id}", fn (): Collection => MediaFile::query()
             ->select(['id', 'post_id', 'file_name', 'file_type', 'album_image_id'])
             ->where('post_id', $post->post_id)
             ->get());
@@ -198,7 +198,7 @@ final class BladeViewData
     }
 
     /**
-     * @return Collection<int, Media_files>
+     * @return Collection<int, MediaFile>
      */
     public function profileMediaFiles(?int $userId): Collection
     {
@@ -206,7 +206,7 @@ final class BladeViewData
             return collect();
         }
 
-        return $this->remember("profile-media:{$userId}", fn (): Collection => Media_files::query()
+        return $this->remember("profile-media:{$userId}", fn (): Collection => MediaFile::query()
             ->select(['id', 'user_id', 'post_id', 'file_name', 'file_type'])
             ->where('user_id', $userId)
             ->whereNull('story_id')
@@ -405,7 +405,7 @@ final class BladeViewData
     }
 
     /**
-     * @return Collection<int, Group_member>
+     * @return Collection<int, GroupMember>
      */
     public function shareGroupRows(?User $viewer): Collection
     {
@@ -413,7 +413,7 @@ final class BladeViewData
             return collect();
         }
 
-        return $this->remember("share-groups:{$viewer->id}", fn (): Collection => Group_member::query()
+        return $this->remember("share-groups:{$viewer->id}", fn (): Collection => GroupMember::query()
             ->with('getGroup:id,title,logo')
             ->where('user_id', $viewer->id)
             ->accepted()
@@ -613,7 +613,7 @@ final class BladeViewData
             return 0;
         }
 
-        return $this->remember("fundraiser-share-count:{$sharecount->post_id}", fn (): int => Post_share::query()
+        return $this->remember("fundraiser-share-count:{$sharecount->post_id}", fn (): int => PostShare::query()
             ->where('post_id', $sharecount->post_id)
             ->count());
     }
@@ -712,7 +712,7 @@ final class BladeViewData
 
     public function postShareCount(Model $post): int
     {
-        return $this->remember("post-share-count:{$post->post_id}", fn (): int => Post_share::query()
+        return $this->remember("post-share-count:{$post->post_id}", fn (): int => PostShare::query()
             ->where('post_id', $post->post_id)
             ->count());
     }
@@ -767,13 +767,13 @@ final class BladeViewData
         return is_array($tags) ? $tags : [];
     }
 
-    public function accountActivationRequest(?User $viewer): ?Account_active_request
+    public function accountActivationRequest(?User $viewer): ?AccountActiveRequest
     {
         if (! $viewer) {
             return null;
         }
 
-        return $this->remember("account-activation-request:{$viewer->id}", fn (): ?Account_active_request => Account_active_request::query()
+        return $this->remember("account-activation-request:{$viewer->id}", fn (): ?AccountActiveRequest => AccountActiveRequest::query()
             ->where('user_id', $viewer->id)
             ->first());
     }
@@ -830,7 +830,7 @@ final class BladeViewData
             'fundraiser' => Schema::hasTable('fundraisers') && Fundraiser::query()
                 ->where('user_id', $viewer->id)
                 ->exists(),
-            'donate' => Schema::hasTable('fundraiser_donations') && Fundraiser_donation::query()
+            'donate' => Schema::hasTable('fundraiser_donations') && FundraiserDonation::query()
                 ->where('doner_id', $viewer->id)
                 ->exists(),
         ]);
@@ -847,7 +847,7 @@ final class BladeViewData
 
     public function pendingAccountActivationCount(): int
     {
-        return $this->remember('pending-account-activation-count', fn (): int => Account_active_request::query()
+        return $this->remember('pending-account-activation-count', fn (): int => AccountActiveRequest::query()
             ->where('status', AccountActivationStatus::Pending->value)
             ->count());
     }
@@ -861,7 +861,7 @@ final class BladeViewData
 
     public function pendingFundraiserPayoutCount(): int
     {
-        return $this->remember('pending-fundraiser-payout-count', fn (): int => Fundraiser_payout::query()
+        return $this->remember('pending-fundraiser-payout-count', fn (): int => FundraiserPayout::query()
             ->where('status', false)
             ->count());
     }
@@ -875,7 +875,7 @@ final class BladeViewData
 
     public function groupAcceptedMemberCount(Model $group): int
     {
-        return $this->remember("group-accepted-members:{$group->id}", fn (): int => Group_member::query()
+        return $this->remember("group-accepted-members:{$group->id}", fn (): int => GroupMember::query()
             ->where('group_id', $group->id)
             ->accepted()
             ->count());
@@ -887,18 +887,18 @@ final class BladeViewData
             return false;
         }
 
-        return $this->remember("group-joined:{$group->id}:{$user->id}", fn (): bool => Group_member::query()
+        return $this->remember("group-joined:{$group->id}:{$user->id}", fn (): bool => GroupMember::query()
             ->where('group_id', $group->id)
             ->where('user_id', $user->id)
             ->exists());
     }
 
     /**
-     * @return Collection<int, Media_files>
+     * @return Collection<int, MediaFile>
      */
     public function groupMediaFiles(Model $group, int $limit = 10): Collection
     {
-        return $this->remember("group-media:{$group->id}:{$limit}", fn (): Collection => Media_files::query()
+        return $this->remember("group-media:{$group->id}:{$limit}", fn (): Collection => MediaFile::query()
             ->select(['id', 'group_id', 'file_name', 'file_type'])
             ->where('group_id', $group->id)
             ->whereNull('album_id')
@@ -910,11 +910,11 @@ final class BladeViewData
     }
 
     /**
-     * @return Collection<int, Group_member>
+     * @return Collection<int, GroupMember>
      */
     public function recentGroupMembers(Model $group, int $limit = 8): Collection
     {
-        return $this->remember("recent-group-members:{$group->id}:{$limit}", fn (): Collection => Group_member::query()
+        return $this->remember("recent-group-members:{$group->id}:{$limit}", fn (): Collection => GroupMember::query()
             ->with('getUser:id,name,photo')
             ->where('group_id', $group->id)
             ->accepted()
@@ -967,7 +967,7 @@ final class BladeViewData
     }
 
     /**
-     * @return Collection<int, Album_image>
+     * @return Collection<int, AlbumImage>
      */
     public function albumImages(int|string|null $albumId): Collection
     {
@@ -975,7 +975,7 @@ final class BladeViewData
             return collect();
         }
 
-        return $this->remember("album-images:{$albumId}", fn (): Collection => Album_image::query()
+        return $this->remember("album-images:{$albumId}", fn (): Collection => AlbumImage::query()
             ->where('album_id', $albumId)
             ->get());
     }
@@ -1068,11 +1068,11 @@ final class BladeViewData
     }
 
     /**
-     * @return Collection<int, Media_files>
+     * @return Collection<int, MediaFile>
      */
     public function chatFiles(Model $message): Collection
     {
-        return $this->remember("chat-files:{$message->id}", fn (): Collection => Media_files::query()
+        return $this->remember("chat-files:{$message->id}", fn (): Collection => MediaFile::query()
             ->where('chat_id', $message->id)
             ->get());
     }
@@ -1090,11 +1090,11 @@ final class BladeViewData
     }
 
     /**
-     * @return Collection<int, Media_files>
+     * @return Collection<int, MediaFile>
      */
     public function storyMediaFiles(Model $story): Collection
     {
-        return $this->remember("story-media:{$story->story_id}", fn (): Collection => Media_files::query()
+        return $this->remember("story-media:{$story->story_id}", fn (): Collection => MediaFile::query()
             ->where('story_id', $story->story_id)
             ->get());
     }

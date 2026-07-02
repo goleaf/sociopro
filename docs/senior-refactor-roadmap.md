@@ -32,7 +32,7 @@ Per-phase verification gate (minimum): `vendor/bin/pint --test` · `vendor/bin/p
 
 - Confirm clean working tree before each slice; investigate the injected-route source (audit Section 0) and keep `RouteAuditTest` as the guard.
 - Refresh stale docs: mark `docs/refactor-audit.md` (says "Laravel 9") as historical; make `docs/senior-refactor-audit.md` the current reference.
-- **Add factories** for high-traffic models (Posts, Comments, Group, Group_member, Event, Page, Job, Fundraiser, Stories, Chat/Message_thrade) — this unblocks all behavior testing.
+- **Add factories** for high-traffic models (Posts, Comments, Group, GroupMember, Event, Page, Job, Fundraiser, Stories, Chat/MessageThread) — this unblocks all behavior testing.
 - Add **characterization/contract tests** capturing current JSON shapes for the highest-traffic `ApiController` endpoints (timeline, marketplace, groups, notifications) before any refactor touches them.
 - Quarantine plan (test-only, no delete yet): assert `AuthenticatedSessionController::dataReplace()` is unreachable via routes.
 

@@ -7,10 +7,10 @@ use App\Enums\ContentStatus;
 use App\Enums\MediaFileType;
 use App\Enums\PostType;
 use App\Enums\Visibility;
-use App\Models\Album_image;
+use App\Models\AlbumImage;
 use App\Models\Albums;
 use App\Models\Friendships;
-use App\Models\Media_files;
+use App\Models\MediaFile;
 use App\Models\Posts;
 use App\Models\User;
 use App\Models\Users;
@@ -113,7 +113,7 @@ class Profile extends Controller
 
     public function photos()
     {
-        $all_photos = Media_files::where('user_id', $this->user->id)
+        $all_photos = MediaFile::where('user_id', $this->user->id)
             ->ofType(MediaFileType::Image)
             ->whereNull('story_id')
             ->whereNull('product_id')
@@ -140,7 +140,7 @@ class Profile extends Controller
 
     public function load_photos(Request $request)
     {
-        $all_photos = Media_files::where('user_id', $this->user->id)
+        $all_photos = MediaFile::where('user_id', $this->user->id)
             ->ofType(MediaFileType::Image)
             ->whereNull('story_id')
             ->whereNull('product_id')
@@ -227,7 +227,7 @@ class Profile extends Controller
 
     public function videos()
     {
-        $all_videos = Media_files::where('user_id', $this->user->id)
+        $all_videos = MediaFile::where('user_id', $this->user->id)
             ->ofType(MediaFileType::Video)
             ->take(24)->orderBy('id', 'DESC')->get();
 
@@ -240,7 +240,7 @@ class Profile extends Controller
 
     public function load_videos(Request $request)
     {
-        $all_videos = Media_files::where('user_id', $this->user->id)
+        $all_videos = MediaFile::where('user_id', $this->user->id)
             ->ofType(MediaFileType::Video)
             ->skip($request->offset)->take(12)->orderBy('id', 'DESC')->get();
 
@@ -424,7 +424,7 @@ class Profile extends Controller
         $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => MediaFileType::Image->value, 'privacy' => Visibility::Public->value];
         $media_file_data['created_at'] = time();
         $media_file_data['updated_at'] = $media_file_data['created_at'];
-        Media_files::create($media_file_data);
+        MediaFile::create($media_file_data);
     }
 
     public function create_cover_photo_post($image, $file_name)
@@ -450,13 +450,13 @@ class Profile extends Controller
         $media_file_data = ['user_id' => $this->user->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => MediaFileType::Image->value, 'privacy' => Visibility::Public->value];
         $media_file_data['created_at'] = time();
         $media_file_data['updated_at'] = $media_file_data['created_at'];
-        Media_files::create($media_file_data);
+        MediaFile::create($media_file_data);
     }
 
     // Album
     public function single_post2($id)
     {
-        $album_image = Album_image::where('id', $id)->first();
+        $album_image = AlbumImage::where('id', $id)->first();
         $page_data['album_image'] = $album_image;
 
         $page_data['view_path'] = 'frontend.profile.test';
@@ -549,11 +549,11 @@ class Profile extends Controller
     }
 
     /**
-     * @return Collection<int, Media_files>
+     * @return Collection<int, MediaFile>
      */
     private function profileSidebarMediaFiles(): Collection
     {
-        return Media_files::query()
+        return MediaFile::query()
             ->select(['id', 'user_id', 'post_id', 'file_name', 'file_type'])
             ->where('user_id', $this->user->id)
             ->whereNull('story_id')

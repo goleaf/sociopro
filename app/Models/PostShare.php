@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Post_share extends Model
+class PostShare extends Model
 {
     use HasFactory;
 
@@ -24,7 +24,7 @@ class Post_share extends Model
     }
 
     /**
-     * @return BelongsTo<User, Post_share>
+     * @return BelongsTo<User, PostShare>
      */
     public function user(): BelongsTo
     {
@@ -32,7 +32,7 @@ class Post_share extends Model
     }
 
     /**
-     * @return BelongsTo<Posts, Post_share>
+     * @return BelongsTo<Posts, PostShare>
      */
     public function post(): BelongsTo
     {

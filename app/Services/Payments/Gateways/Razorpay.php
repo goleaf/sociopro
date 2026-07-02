@@ -2,7 +2,7 @@
 
 namespace App\Services\Payments\Gateways;
 
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use App\Models\Users;
 use App\Support\Money\Money;
 use Illuminate\Support\Str;
@@ -45,7 +45,7 @@ class Razorpay
                 $description = 'Campaign payment.';
             }
         } elseif ($model == 'Subscription' || $model == 'Sponsor' || $model == 'Donation' || $model == 'Job' || 'Badge') {
-            $payment_gateway = Payment_gateway::query()
+            $payment_gateway = PaymentGateway::query()
                 ->where('identifier', $identifier)
                 ->first();
             $keys = $payment_gateway->decodedKeys();

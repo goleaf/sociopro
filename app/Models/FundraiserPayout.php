@@ -5,13 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Fundraiser_category extends Model
+class FundraiserPayout extends Model
 {
     use HasFactory;
 
-    protected $table = 'fundraiser_categories';
+    protected $table = 'fundraiser_payouts';
 
     protected $fillable = [
-        'name',
+        'user_id',
+        'amount',
+        'status',
     ];
 }

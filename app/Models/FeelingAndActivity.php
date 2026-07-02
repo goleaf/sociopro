@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Feeling_and_activities extends Model
+class FeelingAndActivity extends Model
 {
     use HasFactory;
 

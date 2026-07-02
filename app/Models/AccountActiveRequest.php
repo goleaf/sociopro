@@ -4,13 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Album_image extends Model
+class AccountActiveRequest extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
+        'status',
     ];
 
     /**
@@ -19,10 +21,12 @@ class Album_image extends Model
     protected function casts(): array
     {
         return [
-            'album_id' => 'integer',
             'user_id' => 'integer',
-            'page_id' => 'integer',
-            'group_id' => 'integer',
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

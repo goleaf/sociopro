@@ -13,7 +13,7 @@ use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Enums\VideoCategory;
 use App\Enums\Visibility;
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use App\Models\PaymentHistoryEntry;
 use App\Services\Payments\Gateways\Flutterwave;
 use App\Services\Payments\Gateways\Paypal;
@@ -88,7 +88,7 @@ class DomainEnumsTest extends TestCase
 
     public function test_payment_gateway_scope_accepts_identifier_enum(): void
     {
-        $gateway = Payment_gateway::query()
+        $gateway = PaymentGateway::query()
             ->forIdentifier(PaymentGatewayIdentifier::Stripe)
             ->firstOrFail();
 

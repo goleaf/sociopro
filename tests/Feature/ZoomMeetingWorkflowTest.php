@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Enums\ContentStatus;
 use App\Enums\Visibility;
 use App\Http\Controllers\MainController;
-use App\Models\Live_streamings;
+use App\Models\LiveStreaming;
 use App\Models\Posts;
 use App\Models\Setting;
 use App\Models\User;
@@ -40,7 +40,7 @@ class ZoomMeetingWorkflowTest extends TestCase
 
         $controller->create_live_streaming('post', $post->post_id);
 
-        $stream = Live_streamings::query()
+        $stream = LiveStreaming::query()
             ->where('publisher', 'post')
             ->where('publisher_id', $post->post_id)
             ->where('user_id', $user->id)
@@ -59,7 +59,7 @@ class ZoomMeetingWorkflowTest extends TestCase
     {
         $user = User::factory()->create(['name' => 'Live Host']);
         $post = $this->postFor($user, ['description' => 'Updated live topic']);
-        $stream = Live_streamings::create([
+        $stream = LiveStreaming::create([
             'publisher' => 'post',
             'publisher_id' => $post->post_id,
             'user_id' => $user->id,
@@ -82,7 +82,7 @@ class ZoomMeetingWorkflowTest extends TestCase
 
         $controller->create_live_streaming('post', $post->post_id);
 
-        $stream = Live_streamings::query()
+        $stream = LiveStreaming::query()
             ->where('publisher', 'post')
             ->where('publisher_id', $post->post_id)
             ->where('user_id', $user->id)

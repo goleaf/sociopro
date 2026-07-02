@@ -3,9 +3,9 @@
 namespace Tests\Feature;
 
 use App\Enums\PaytmTransactionStatus;
-use App\Models\Account_active_request;
+use App\Models\AccountActiveRequest;
 use App\Models\Addon;
-use App\Models\Album_image;
+use App\Models\AlbumImage;
 use App\Models\Albums;
 use App\Models\Badge;
 use App\Models\BlockUser;
@@ -17,17 +17,17 @@ use App\Models\Event;
 use App\Models\Follower;
 use App\Models\Friendships;
 use App\Models\Invite;
-use App\Models\Live_streamings;
+use App\Models\LiveStreaming;
 use App\Models\Marketplace;
-use App\Models\Media_files;
-use App\Models\Message_thrade;
+use App\Models\MediaFile;
+use App\Models\MessageThread;
 use App\Models\Notification;
 use App\Models\Page;
-use App\Models\Page_like;
-use App\Models\Payment_gateway;
+use App\Models\PageLike;
+use App\Models\PaymentGateway;
 use App\Models\PaymentHistoryEntry;
-use App\Models\Post_share;
 use App\Models\Posts;
+use App\Models\PostShare;
 use App\Models\Report;
 use App\Models\SavedProduct;
 use App\Models\Saveforlater;
@@ -47,7 +47,7 @@ class EloquentCastAuditTest extends TestCase
 
     public function test_payment_gateway_casts_flags_and_key_payloads_without_serializing_secrets(): void
     {
-        $gateway = Payment_gateway::create([
+        $gateway = PaymentGateway::create([
             'identifier' => 'custom_gateway',
             'currency' => 'USD',
             'title' => 'Custom Gateway',
@@ -262,9 +262,9 @@ class EloquentCastAuditTest extends TestCase
     private function legacyIntegerCastContracts(): array
     {
         return [
-            Account_active_request::class => ['user_id'],
+            AccountActiveRequest::class => ['user_id'],
             Addon::class => ['parent_id', 'status'],
-            Album_image::class => ['album_id', 'user_id', 'page_id', 'group_id'],
+            AlbumImage::class => ['album_id', 'user_id', 'page_id', 'group_id'],
             Albums::class => ['user_id', 'page_id', 'group_id'],
             Badge::class => ['user_id', 'status'],
             BlockUser::class => ['user_id', 'block_user'],
@@ -275,14 +275,14 @@ class EloquentCastAuditTest extends TestCase
             Follower::class => ['user_id', 'follow_id', 'page_id', 'group_id'],
             Friendships::class => ['requester', 'accepter', 'importance', 'is_accepted'],
             Invite::class => ['invite_sender_id', 'invite_reciver_id', 'is_accepted', 'event_id', 'page_id', 'group_id', 'post_id'],
-            Live_streamings::class => ['publisher_id', 'user_id'],
+            LiveStreaming::class => ['publisher_id', 'user_id'],
             Marketplace::class => ['user_id', 'currency_id'],
-            Media_files::class => ['user_id', 'post_id', 'story_id', 'album_id', 'product_id', 'page_id', 'group_id', 'chat_id', 'album_image_id'],
-            Message_thrade::class => ['reciver_id', 'sender_id'],
+            MediaFile::class => ['user_id', 'post_id', 'story_id', 'album_id', 'product_id', 'page_id', 'group_id', 'chat_id', 'album_image_id'],
+            MessageThread::class => ['reciver_id', 'sender_id'],
             Notification::class => ['sender_user_id', 'reciver_user_id', 'event_id', 'page_id', 'group_id', 'status', 'view'],
             Page::class => ['user_id', 'category_id'],
-            Page_like::class => ['user_id', 'page_id'],
-            Post_share::class => ['user_id', 'post_id'],
+            PageLike::class => ['user_id', 'page_id'],
+            PostShare::class => ['user_id', 'post_id'],
             Posts::class => ['user_id', 'publisher_id', 'activity_id', 'report_status'],
             Report::class => ['user_id', 'post_id', 'status'],
             SavedProduct::class => ['user_id', 'product_id'],

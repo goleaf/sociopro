@@ -8,7 +8,7 @@ use App\Enums\Visibility;
 use App\Models\Albums;
 use App\Models\Follower;
 use App\Models\Friendships;
-use App\Models\Media_files;
+use App\Models\MediaFile;
 use App\Models\Notification;
 use App\Models\Posts;
 use App\Models\User;
@@ -185,7 +185,7 @@ class CustomUserController extends Controller
 
     public function photos($id)
     {
-        $all_photos = Media_files::where('user_id', $id)
+        $all_photos = MediaFile::where('user_id', $id)
             ->ofType(MediaFileType::Image)
             ->whereNull('page_id')
             ->whereNull('story_id')
@@ -212,7 +212,7 @@ class CustomUserController extends Controller
 
     public function videos($id)
     {
-        $all_videos = Media_files::where('user_id', $id)
+        $all_videos = MediaFile::where('user_id', $id)
             ->ofType(MediaFileType::Video)
             ->whereNull('story_id')
             ->whereNull('page_id')
@@ -231,8 +231,8 @@ class CustomUserController extends Controller
     public function delete_mediafile($id)
     {
         $response = [];
-        $media_file = Media_files::find($id);
-        if (! $media_file instanceof Media_files) {
+        $media_file = MediaFile::find($id);
+        if (! $media_file instanceof MediaFile) {
             abort(404);
         }
 
@@ -260,14 +260,14 @@ class CustomUserController extends Controller
 
     public function download_mediafile($id)
     {
-        $media_file = Media_files::find($id);
+        $media_file = MediaFile::find($id);
 
         return $this->downloadMediaFile($media_file, MediaFileType::Video);
     }
 
     public function download_mediafile_image($id)
     {
-        $media_file = Media_files::find($id);
+        $media_file = MediaFile::find($id);
 
         return $this->downloadMediaFile($media_file, MediaFileType::Image);
     }
@@ -285,9 +285,9 @@ class CustomUserController extends Controller
         return json_encode(['url' => route('login')]);
     }
 
-    private function downloadMediaFile(?Media_files $mediaFile, MediaFileType $expectedType)
+    private function downloadMediaFile(?MediaFile $mediaFile, MediaFileType $expectedType)
     {
-        if (! $mediaFile instanceof Media_files) {
+        if (! $mediaFile instanceof MediaFile) {
             abort(404);
         }
 
@@ -301,7 +301,7 @@ class CustomUserController extends Controller
         return Response::download($filePath, basename($filePath));
     }
 
-    private function canDownloadMediaFile(Media_files $mediaFile): bool
+    private function canDownloadMediaFile(MediaFile $mediaFile): bool
     {
         if ($this->canManageMediaFile($mediaFile)) {
             return true;
@@ -313,7 +313,7 @@ class CustomUserController extends Controller
             || ($post instanceof Posts && $post->privacy === Visibility::Public->value);
     }
 
-    private function canManageMediaFile(Media_files $mediaFile): bool
+    private function canManageMediaFile(MediaFile $mediaFile): bool
     {
         $user = Auth::user();
         if (! $user instanceof User) {
@@ -329,7 +329,7 @@ class CustomUserController extends Controller
         return $post instanceof Posts && (int) $post->user_id === (int) $user->id;
     }
 
-    private function mediaDownloadPath(Media_files $mediaFile, MediaFileType $expectedType): ?string
+    private function mediaDownloadPath(MediaFile $mediaFile, MediaFileType $expectedType): ?string
     {
         if ($mediaFile->file_type !== $expectedType->value) {
             return null;

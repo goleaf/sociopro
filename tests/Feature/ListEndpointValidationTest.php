@@ -7,7 +7,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\AdminCrudController;
 use App\Http\Controllers\PaymentHistory;
 use App\Http\Controllers\Updater;
-use App\Models\Account_active_request;
+use App\Models\AccountActiveRequest;
 use App\Models\Addon;
 use App\Models\Friendships;
 use App\Models\Notification;
@@ -219,7 +219,7 @@ class ListEndpointValidationTest extends TestCase
             'email' => 'newer-account-request@example.test',
         ]);
 
-        $olderRequest = new Account_active_request;
+        $olderRequest = new AccountActiveRequest;
         $olderRequest->forceFill([
             'user_id' => $olderUser->id,
             'status' => 0,
@@ -227,7 +227,7 @@ class ListEndpointValidationTest extends TestCase
             'updated_at' => $timestamp,
         ])->save();
 
-        $newerRequest = new Account_active_request;
+        $newerRequest = new AccountActiveRequest;
         $newerRequest->forceFill([
             'user_id' => $newerUser->id,
             'status' => 0,

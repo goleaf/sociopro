@@ -7,9 +7,9 @@ use App\Enums\MediaFileType;
 use App\Enums\PostType;
 use App\Enums\Visibility;
 use App\Models\Friendships;
-use App\Models\Group_member;
-use App\Models\Media_files;
-use App\Models\Payment_gateway;
+use App\Models\GroupMember;
+use App\Models\MediaFile;
+use App\Models\PaymentGateway;
 use App\Models\Posts;
 use App\Models\User;
 use App\Queries\FriendshipsQuery;
@@ -54,34 +54,34 @@ class BusinessRulesTest extends TestCase
 
     public function test_group_member_accepted_scope_preserves_legacy_accepted_flag(): void
     {
-        $accepted = new Group_member;
+        $accepted = new GroupMember;
         $accepted->group_id = 10;
         $accepted->user_id = 1;
         $accepted->is_accepted = '1';
         $accepted->save();
 
-        $pending = new Group_member;
+        $pending = new GroupMember;
         $pending->group_id = 10;
         $pending->user_id = 2;
         $pending->is_accepted = '0';
         $pending->save();
 
-        $this->assertSame([$accepted->id], Group_member::accepted()->pluck('id')->all());
+        $this->assertSame([$accepted->id], GroupMember::accepted()->pluck('id')->all());
     }
 
     public function test_media_file_type_scope_filters_legacy_file_type_values(): void
     {
-        $image = Media_files::create([
+        $image = MediaFile::create([
             'file_name' => 'photo.jpg',
             'file_type' => MediaFileType::Image->value,
         ]);
-        $video = Media_files::create([
+        $video = MediaFile::create([
             'file_name' => 'clip.mp4',
             'file_type' => MediaFileType::Video->value,
         ]);
 
-        $this->assertSame([$image->id], Media_files::ofType(MediaFileType::Image)->pluck('id')->all());
-        $this->assertSame([$video->id], Media_files::ofType(MediaFileType::Video)->pluck('id')->all());
+        $this->assertSame([$image->id], MediaFile::ofType(MediaFileType::Image)->pluck('id')->all());
+        $this->assertSame([$video->id], MediaFile::ofType(MediaFileType::Video)->pluck('id')->all());
     }
 
     public function test_post_scopes_preserve_active_visible_not_reported_rules(): void
@@ -175,7 +175,7 @@ class BusinessRulesTest extends TestCase
 
     public function test_payment_gateway_model_centralizes_enabled_mode_and_key_decoding(): void
     {
-        $gateway = new Payment_gateway;
+        $gateway = new PaymentGateway;
         $gateway->forceFill([
             'keys' => json_encode(['public_key' => 'public-test-key']),
             'status' => '1',

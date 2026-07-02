@@ -18,7 +18,7 @@ This pass searched for dead PHP classes, unused methods, obsolete traits, abando
 | `app/Models/CommonModel.php` | Model | Low | Only referenced by its own class declaration. | Deleted. |
 | `app/View/Components/AppLayout.php` | Blade component class | Low | No `<x-app-layout>` or class references; only returned `layouts.app`. | Deleted. |
 | `config/laravel-ffmpeg.php` | Config | Low | No Composer package or app references for Laravel FFmpeg/FFMpeg remained. | Deleted. |
-| `config/paypal.php` | Config | Low | No `config('paypal...')` references or PayPal SDK package remained; active PayPal flow uses `Payment_gateway` rows. | Deleted. |
+| `config/paypal.php` | Config | Low | No `config('paypal...')` references or PayPal SDK package remained; active PayPal flow uses `PaymentGateway` rows. | Deleted. |
 | Commented route/method/DataTables fallback blocks | Legacy comments | Low | Comment-only duplicate blocks sat beside active route/controller/view implementations. | Removed. |
 
 ## Uncertain Items Left In Place

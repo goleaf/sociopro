@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ContentStatus;
 use App\Enums\Visibility;
-use App\Models\Media_files;
+use App\Models\MediaFile;
 use App\Models\Stories;
 use App\Queries\StoriesQuery;
 use App\Support\Files\FileUploader;
@@ -122,7 +122,7 @@ class StoryController extends Controller
                     $media_file_data = ['user_id' => $this->user->id, 'story_id' => $story_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy];
                     $media_file_data['created_at'] = time();
                     $media_file_data['updated_at'] = $media_file_data['created_at'];
-                    Media_files::create($media_file_data);
+                    MediaFile::create($media_file_data);
                 }
             }
         }

@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Chat;
 use App\Models\Marketplace;
-use App\Models\Media_files;
-use App\Models\Message_thrade;
+use App\Models\MediaFile;
+use App\Models\MessageThread;
 use App\Models\User;
 use App\Support\Files\FileUploader;
 use Illuminate\Http\Request;
@@ -21,7 +21,7 @@ class ChatController extends Controller
         }
 
         $user_id = auth()->user()->id;
-        $messageThrade = Message_thrade::where(function ($query) use ($reciver, $user_id) {
+        $messageThread = MessageThread::where(function ($query) use ($reciver, $user_id) {
             $query->where('sender_id', $reciver)
                 ->where('reciver_id', $user_id);
         })->orWhere(function ($query) use ($reciver, $user_id) {
@@ -30,9 +30,9 @@ class ChatController extends Controller
         })->first();
 
         $reciver_data = User::find($reciver);
-        if (! empty($messageThrade)) {
-            Chat::where('message_thrade', $messageThrade->id)->where('reciver_id', $reciver)->where('read_status', '0')->update(['read_status' => '1']);
-            $message = Chat::where('message_thrade', $messageThrade->id)->orderBy('id', 'DESC')->limit('20')->get();
+        if (! empty($messageThread)) {
+            Chat::where('message_thrade', $messageThread->id)->where('reciver_id', $reciver)->where('read_status', '0')->update(['read_status' => '1']);
+            $message = Chat::where('message_thrade', $messageThread->id)->orderBy('id', 'DESC')->limit('20')->get();
         } else {
             $message = [];
         }
@@ -41,7 +41,7 @@ class ChatController extends Controller
         } else {
             $product_url = null;
         }
-        $previousChatList = Message_thrade::where('reciver_id', auth()->user()->id)->orWhere('sender_id', auth()->user()->id)->orderBy('id', 'DESC')->get();
+        $previousChatList = MessageThread::where('reciver_id', auth()->user()->id)->orWhere('sender_id', auth()->user()->id)->orderBy('id', 'DESC')->get();
 
         return view('frontend.chat.index', compact('reciver_data', 'message', 'previousChatList', 'product_url', 'product'));
     }
@@ -55,7 +55,7 @@ class ChatController extends Controller
             $this->authorizeMarketplaceProductChat((int) $reciver, $request->integer('product_id'));
         }
 
-        $firstmessageThrade = Message_thrade::where(function ($query) use ($reciver, $user_id) {
+        $firstMessageThread = MessageThread::where(function ($query) use ($reciver, $user_id) {
             $query->where('sender_id', $reciver)
                 ->where('reciver_id', $user_id);
         })->orWhere(function ($query) use ($reciver, $user_id) {
@@ -64,7 +64,7 @@ class ChatController extends Controller
         })
             ->first();
 
-        $messageThradeCount = Message_thrade::where(function ($query) use ($reciver, $user_id) {
+        $messageThreadCount = MessageThread::where(function ($query) use ($reciver, $user_id) {
             $query->where('sender_id', $reciver)
                 ->where('reciver_id', $user_id);
         })->orWhere(function ($query) use ($reciver, $user_id) {
@@ -73,19 +73,19 @@ class ChatController extends Controller
         })
             ->count();
 
-        if ($messageThradeCount <= 0) {
-            $messageThrade = new Message_thrade;
-            $messageThrade->sender_id = auth()->user()->id;
-            $messageThrade->reciver_id = $request->reciver_id;
-            $messageThrade->chatcenter = $request->messagecenter;
-            $done = $messageThrade->save();
+        if ($messageThreadCount <= 0) {
+            $messageThread = new MessageThread;
+            $messageThread->sender_id = auth()->user()->id;
+            $messageThread->reciver_id = $request->reciver_id;
+            $messageThread->chatcenter = $request->messagecenter;
+            $done = $messageThread->save();
             if ($done) {
                 $chat = new Chat;
                 $chat->reciver_id = $request->reciver_id;
                 $chat->sender_id = auth()->user()->id;
                 $chat->chatcenter = $request->messagecenter;
                 $chat->message = $request->message;
-                $chat->message_thrade = $messageThrade->id;
+                $chat->message_thrade = $messageThread->id;
                 $chat->thumbsup = $request->thumbsup;
                 $chat->file = '1';
                 $chat->save();
@@ -114,10 +114,10 @@ class ChatController extends Controller
                         $media_file_data = ['user_id' => auth()->user()->id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public'];
                         $media_file_data['created_at'] = time();
                         $media_file_data['updated_at'] = $media_file_data['created_at'];
-                        Media_files::create($media_file_data);
+                        MediaFile::create($media_file_data);
                     }
                 }
-                $page_data['message'] = Chat::where('message_thrade', $messageThrade->id)->orderBy('id', 'DESC')->limit('1')->get();
+                $page_data['message'] = Chat::where('message_thrade', $messageThread->id)->orderBy('id', 'DESC')->limit('1')->get();
                 $message = view('frontend.chat.single-message', $page_data)->render();
                 $url = route('chat', $request->reciver_id);
                 if (isset($request->product_id) && ! empty($request->product_id)) {
@@ -134,7 +134,7 @@ class ChatController extends Controller
             $chat->sender_id = auth()->user()->id;
             $chat->chatcenter = $request->messagecenter;
             $chat->message = $request->message;
-            $chat->message_thrade = $firstmessageThrade->id;
+            $chat->message_thrade = $firstMessageThread->id;
             $chat->thumbsup = $request->thumbsup;
             $chat->file = '1';
             $chat->save();
@@ -165,10 +165,10 @@ class ChatController extends Controller
                     $media_file_data['chat_id'] = $chat->id;
                     $media_file_data['created_at'] = time();
                     $media_file_data['updated_at'] = $media_file_data['created_at'];
-                    Media_files::create($media_file_data);
+                    MediaFile::create($media_file_data);
                 }
             }
-            $page_data['message'] = Chat::where('message_thrade', $firstmessageThrade->id)->orderBy('id', 'DESC')->limit('1')->get();
+            $page_data['message'] = Chat::where('message_thrade', $firstMessageThread->id)->orderBy('id', 'DESC')->limit('1')->get();
             $message = view('frontend.chat.single-message', $page_data)->render();
             $url = route('chat', $request->reciver_id);
             if (isset($request->product_id) && ! empty($request->product_id)) {
@@ -211,21 +211,21 @@ class ChatController extends Controller
 
     public function search_chat()
     {
-        $messageThradesUserId = [];
+        $messageThreadsUserId = [];
         $search = $_GET['search'];
         $view_btn_text = 'View Profile';
         $output = '';
 
-        $myMessageThrades = Message_thrade::where('sender_id', auth()->user()->id)->orWhere('reciver_id', auth()->user()->id)->get();
-        foreach ($myMessageThrades as $myMessageThrade) {
-            if ($myMessageThrade->sender_id == auth()->user()->id) {
-                array_push($messageThradesUserId, $myMessageThrade->reciver_id);
-            } elseif ($myMessageThrade->reciver_id == auth()->user()->id) {
-                array_push($messageThradesUserId, $myMessageThrade->sender_id);
+        $myMessageThreads = MessageThread::where('sender_id', auth()->user()->id)->orWhere('reciver_id', auth()->user()->id)->get();
+        foreach ($myMessageThreads as $myMessageThread) {
+            if ($myMessageThread->sender_id == auth()->user()->id) {
+                array_push($messageThreadsUserId, $myMessageThread->reciver_id);
+            } elseif ($myMessageThread->reciver_id == auth()->user()->id) {
+                array_push($messageThreadsUserId, $myMessageThread->sender_id);
             }
         }
 
-        $users = User::whereIn('id', $messageThradesUserId)->where('name', 'like', '%'.$search.'%')->get();
+        $users = User::whereIn('id', $messageThreadsUserId)->where('name', 'like', '%'.$search.'%')->get();
 
         foreach ($users as $key => $user) {
             $lastMsg = Chat::where(function ($query) use ($user) {
@@ -268,8 +268,8 @@ class ChatController extends Controller
     public function chat_load()
     {
         $id = $_GET['id'];
-        $messageThrade = Message_thrade::whereIn('sender_id', [auth()->user()->id, $id])->whereIn('reciver_id', [auth()->user()->id, $id])->first();
-        $page_data['message'] = Chat::where('message_thrade', $messageThrade->id)->where('reciver_id', auth()->user()->id)->where('read_status', '0')->get();
+        $messageThread = MessageThread::whereIn('sender_id', [auth()->user()->id, $id])->whereIn('reciver_id', [auth()->user()->id, $id])->first();
+        $page_data['message'] = Chat::where('message_thrade', $messageThread->id)->where('reciver_id', auth()->user()->id)->where('read_status', '0')->get();
         $message = view('frontend.chat.single-message', $page_data)->render();
         $this->chat_read_option($id);
         $response = ['appendElement' => '#message_body', 'content' => $message];
@@ -279,9 +279,9 @@ class ChatController extends Controller
 
     public function chat_read_option($id)
     {
-        $messageThrade = Message_thrade::whereIn('sender_id', [auth()->user()->id, $id])->whereIn('reciver_id', [auth()->user()->id, $id])->first();
-        if (! empty($messageThrade)) {
-            $done = Chat::where('message_thrade', $messageThrade->id)->where('read_status', '0')->where('reciver_id', auth()->user()->id)->update(['read_status' => '1']);
+        $messageThread = MessageThread::whereIn('sender_id', [auth()->user()->id, $id])->whereIn('reciver_id', [auth()->user()->id, $id])->first();
+        if (! empty($messageThread)) {
+            $done = Chat::where('message_thrade', $messageThread->id)->where('read_status', '0')->where('reciver_id', auth()->user()->id)->update(['read_status' => '1']);
         }
     }
 
@@ -289,9 +289,9 @@ class ChatController extends Controller
     public function chat_read_optionN()
     {
         $id = $_GET['id'];
-        $messageThrade = Message_thrade::whereIn('sender_id', [auth()->user()->id, $id])->whereIn('reciver_id', [auth()->user()->id, $id])->first();
-        if (! empty($messageThrade)) {
-            return $done = Chat::where('message_thrade', $messageThrade->id)->where('read_status', '0')->where('reciver_id', auth()->user()->id)->update(['read_status' => '1']);
+        $messageThread = MessageThread::whereIn('sender_id', [auth()->user()->id, $id])->whereIn('reciver_id', [auth()->user()->id, $id])->first();
+        if (! empty($messageThread)) {
+            return $done = Chat::where('message_thrade', $messageThread->id)->where('read_status', '0')->where('reciver_id', auth()->user()->id)->update(['read_status' => '1']);
 
             return $done;
         }

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Jobs\StreamJobApplicationAttachmentAction;
 use App\Enums\MembershipRole;
 use App\Enums\UserRole;
-use App\Models\Account_active_request;
+use App\Models\AccountActiveRequest;
 use App\Models\Badge;
 use App\Models\Blog;
 use App\Models\Blogcategory;
@@ -13,16 +13,16 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Currency;
 use App\Models\Group;
-use App\Models\Group_member;
+use App\Models\GroupMember;
 use App\Models\Job;
 use App\Models\JobApply;
 use App\Models\JobCategory;
 use App\Models\JobWishlist;
 use App\Models\Marketplace;
 use App\Models\Page;
-use App\Models\Page_like;
 use App\Models\Pagecategory;
-use App\Models\Payment_gateway;
+use App\Models\PageLike;
+use App\Models\PaymentGateway;
 use App\Models\Posts;
 use App\Models\Setting;
 use App\Models\Sponsor;
@@ -496,7 +496,7 @@ class AdminCrudController extends Controller
             return redirect()->back();
         }
         $group->delete();
-        Group_member::where('group_id', $id)->delete();
+        GroupMember::where('group_id', $id)->delete();
         flash()->addSuccess('Group deleted successfully');
 
         return redirect()->back();
@@ -535,7 +535,7 @@ class AdminCrudController extends Controller
         }
         $done = $group->save();
         if ($done) {
-            $group_member = new Group_member;
+            $group_member = new GroupMember;
             $group_member->group_id = $group->id;
             $group_member->user_id = auth()->user()->id;
             $group_member->role = MembershipRole::Admin->value;
@@ -658,7 +658,7 @@ class AdminCrudController extends Controller
         }
         $done = $page->save();
         if ($done) {
-            // $pagelike = new Page_like();
+            // $pagelike = new PageLike();
             // $pagelike->page_id = $page->id;
             // $pagelike->user_id = auth()->user()->id;
             // $pagelike->role = 'admin';
@@ -1389,7 +1389,7 @@ class AdminCrudController extends Controller
 
     public function payment_settings()
     {
-        $page_data['payment_gateways'] = Payment_gateway::get();
+        $page_data['payment_gateways'] = PaymentGateway::get();
         $page_data['view_path'] = 'payment.payment_gateways';
 
         return view('backend.index', $page_data);
@@ -1398,7 +1398,7 @@ class AdminCrudController extends Controller
     public function payment_gateway_edit($id)
     {
         $page_data['currencies'] = Currency::query()->select(['code'])->orderBy('code')->get();
-        $page_data['payment_gateway'] = Payment_gateway::where('id', $id)->first();
+        $page_data['payment_gateway'] = PaymentGateway::where('id', $id)->first();
         $page_data['paymentGatewayKeys'] = $page_data['payment_gateway']->decodedKeys();
         $page_data['view_path'] = 'payment.payment_gateway_edit';
 
@@ -1407,7 +1407,7 @@ class AdminCrudController extends Controller
 
     public function payment_gateway_update($id, Request $request)
     {
-        $paymentGateway = Payment_gateway::findOrFail($id);
+        $paymentGateway = PaymentGateway::findOrFail($id);
         $allowedKeyNames = $this->paymentGatewayKeyNames($paymentGateway);
         $validated = $request->validate($this->paymentGatewayUpdateRules($allowedKeyNames));
         $paymentGateway->forceFill([
@@ -1422,7 +1422,7 @@ class AdminCrudController extends Controller
     /**
      * @return list<string>
      */
-    private function paymentGatewayKeyNames(Payment_gateway $paymentGateway): array
+    private function paymentGatewayKeyNames(PaymentGateway $paymentGateway): array
     {
         return array_values(array_filter(
             array_keys($paymentGateway->decodedKeys()),
@@ -1449,7 +1449,7 @@ class AdminCrudController extends Controller
 
     public function payment_gateway_status($id)
     {
-        $query = Payment_gateway::where('id', $id);
+        $query = PaymentGateway::where('id', $id);
         if ($query->value('status') == 1) {
             $query->update(['status' => 0]);
         } else {
@@ -1462,7 +1462,7 @@ class AdminCrudController extends Controller
 
     public function payment_gateway_environment($id)
     {
-        $query = Payment_gateway::where('id', $id);
+        $query = PaymentGateway::where('id', $id);
         if ($query->value('test_mode') == 1) {
             $query->update(['test_mode' => 0]);
         } else {
@@ -1475,7 +1475,7 @@ class AdminCrudController extends Controller
 
     public function accountActiveReq()
     {
-        $request_users = Account_active_request::with('user')
+        $request_users = AccountActiveRequest::with('user')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(10);
@@ -1489,7 +1489,7 @@ class AdminCrudController extends Controller
     public function acActiveReqApp($id, $user_id)
     {
         // Retrieve both the account request and user in one go
-        $accountRequest = Account_active_request::find($id);
+        $accountRequest = AccountActiveRequest::find($id);
         $user = User::find($user_id);
 
         if ($accountRequest && $user) {
@@ -1506,7 +1506,7 @@ class AdminCrudController extends Controller
 
     public function acActiveReDlt($id)
     {
-        $accountRequest = Account_active_request::find($id);
+        $accountRequest = AccountActiveRequest::find($id);
         $accountRequest->delete();
         flash()->addSuccess('Account enable request delete successfully');
 

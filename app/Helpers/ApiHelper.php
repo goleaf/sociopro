@@ -2,7 +2,7 @@
 
 // import facade
 
-use App\Models\Group_member;
+use App\Models\GroupMember;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
@@ -284,7 +284,7 @@ if (! function_exists('members_by_group_id')) {
     {
         // Assuming you have the appropriate model for the group members table
         // Replace 'GroupMember' with your actual model name
-        $group_members = Group_member::where('group_id', $group_id)->get();
+        $group_members = GroupMember::where('group_id', $group_id)->get();
 
         $response = [];
 

@@ -41,7 +41,7 @@ composer ci
 
 ## Level 1 Cleanup Completed
 
-- Added explicit legacy Eloquent models for referenced add-on tables: `Job`, `JobApply`, `JobCategory`, `JobWishlist`, `PaidContentPackages`, `PaidContentPayout`, `Fundraiser_category`, and `Fundraiser_payout`.
+- Added explicit legacy Eloquent models for referenced add-on tables: `Job`, `JobApply`, `JobCategory`, `JobWishlist`, `PaidContentPackages`, `PaidContentPayout`, `FundraiserCategory`, and `FundraiserPayout`.
 - Replaced legacy collection `get()->count()` and `get()->first()` patterns that Larastan identified with query-level `exists()`, `count()`, and `first()` calls.
 - Replaced the `jorenvanhocht/laravel-share` facade alias in `BlogController` with the bound share service so PHPStan uses the package's real method signature.
 - Initialized nullable upload filenames before optional upload branches and only assigned image/file fields when an upload produced a filename.
@@ -57,7 +57,7 @@ Do not reintroduce `phpstan-baseline.neon` casually. If a baseline is ever neede
 ## Strictness Roadmap
 
 1. Keep `level: 1` passing without a baseline.
-2. Add useful model PHPDoc for high-traffic models first: `User`, `Posts`, `Page`, `Group`, `Notification`, `Comments`, `Media_files`, and payment/add-on models.
+2. Add useful model PHPDoc for high-traffic models first: `User`, `Posts`, `Page`, `Group`, `Notification`, `Comments`, `MediaFile`, and payment/add-on models.
 3. Replace `find()` calls that may return `null` with `findOrFail()`, explicit null handling, or guarded responses.
 4. Convert mixed `auth()->user()` / `auth('sanctum')->user()` usage to typed user retrieval helpers where practical.
 5. Re-run `vendor/bin/phpstan analyse --level=2 --memory-limit=1G` after each focused batch.

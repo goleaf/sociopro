@@ -4,7 +4,7 @@ namespace App\Services\Payments\Gateways;
 
 use App\Enums\PaymentGatewayIdentifier;
 use App\Exceptions\Payments\PaymentGatewayException;
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -20,7 +20,7 @@ class Paystack
             return false;
         }
 
-        $paymentGateway = Payment_gateway::where('identifier', $identifier)->first();
+        $paymentGateway = PaymentGateway::where('identifier', $identifier)->first();
 
         if (! $paymentGateway) {
             return false;
@@ -50,7 +50,7 @@ class Paystack
             && $response->json('data.status') === self::SUCCESS_STATUS;
     }
 
-    private function secretKey(Payment_gateway $paymentGateway, array $keys): ?string
+    private function secretKey(PaymentGateway $paymentGateway, array $keys): ?string
     {
         if ($paymentGateway->isInTestMode()) {
             return $keys['secret_test_key'] ?? null;

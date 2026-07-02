@@ -1,7 +1,7 @@
     {{-- <div class="widget page-widget">
         <div class="inline-btn">
             @php
-                $likecount = \App\Models\Page_like::where('page_id',$page->id)->where('user_id',auth()->user()->id)->count();
+                $likecount = \App\Models\PageLike::where('page_id',$page->id)->where('user_id',auth()->user()->id)->count();
             @endphp
             
             @if ($likecount>0)
@@ -28,7 +28,7 @@
             <h4 class="widget-title mb-4">{{ get_phrase('Info') }}</h4>
             <ul>
                 @php
-                    $likecount = \App\Models\Page_like::where('page_id',$page->id)->count();
+                    $likecount = \App\Models\PageLike::where('page_id',$page->id)->count();
                 @endphp
                 <li><i class="fa fa-thumbs-up"></i><span>{{ $likecount }} People @if($likecount>1) s @endif  {{ get_phrase('like this') }}</span></li>
                 @php
@@ -53,7 +53,7 @@
             
             @foreach ($suggestedpages as $suggestedpage)
                 @php
-                    $likecount = \App\Models\Page_like::where('page_id',$suggestedpage->page_id)->where('user_id',auth()->user()->id)->count();
+                    $likecount = \App\Models\PageLike::where('page_id',$suggestedpage->page_id)->where('user_id',auth()->user()->id)->count();
                     
                 @endphp
                 @if ($likecount==0)
@@ -64,7 +64,7 @@
                         <div class="ava-info">
                             <h3 class="h6 mb-0"><a href="{{ route('single.page',$suggestedpage->id) }}">{{ $suggestedpage->title }}</a> </h3>
                             @php
-                                $likecount = \App\Models\Page_like::where('page_id',$suggestedpage->id)->count();
+                                $likecount = \App\Models\PageLike::where('page_id',$suggestedpage->id)->count();
                             @endphp
                             <span class="mute small">{{ $likecount }} {{ get_phrase('likes') }}</span>
                         </div>

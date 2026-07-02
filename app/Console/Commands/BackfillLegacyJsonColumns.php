@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Payment_gateway;
+use App\Models\PaymentGateway;
 use App\Models\PaymentHistoryEntry;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
@@ -67,7 +67,7 @@ class BackfillLegacyJsonColumns extends Command
         return [
             [
                 'label' => 'payment_gateways.keys',
-                'model' => Payment_gateway::class,
+                'model' => PaymentGateway::class,
                 'column' => 'keys',
             ],
             [

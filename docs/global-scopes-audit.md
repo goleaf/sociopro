@@ -28,8 +28,8 @@ Current examples of intentional local scopes:
 - `Posts::publiclyVisible()` for public-only post queries.
 - `Posts::forUser()` for ownership filtering.
 - `Posts::forPublisher()` for publisher type and identifier filtering.
-- `Group_member::accepted()` for accepted membership rows.
-- `Media_files::ofType()` for legacy media type filtering.
+- `GroupMember::accepted()` for accepted membership rows.
+- `MediaFile::ofType()` for legacy media type filtering.
 - `Sponsor::forUser()` for ownership filtering.
 
 ## Bypass Rules

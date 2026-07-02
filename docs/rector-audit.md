@@ -60,7 +60,7 @@ The full application was also tested with PHPStan during this pass. After adding
 
 Known full-project PHPStan blockers:
 
-- Missing legacy model classes referenced by controllers and view models: `Job`, `JobApply`, `JobCategory`, `JobWishlist`, `PaidContentPackages`, `PaidContentPayout`, and `Fundraiser_payout`.
+- Missing legacy model classes referenced by controllers and view models: `Job`, `JobApply`, `JobCategory`, `JobWishlist`, `PaidContentPackages`, `PaidContentPayout`, and `FundraiserPayout`.
 - Pre-existing controller issues: `PaymentController` references `Paytm` in the controller namespace and has a missing return path in `paytm_paymentCallback()`.
 - The obsolete controller helper has been removed.
 - `PageController` accesses an undefined `$user` property.

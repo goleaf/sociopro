@@ -2,16 +2,16 @@
 
 namespace Database\Factories;
 
-use App\Models\Message_thrade;
+use App\Models\MessageThread;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Message_thrade>
+ * @extends Factory<MessageThread>
  */
-class Message_thradeFactory extends Factory
+class MessageThreadFactory extends Factory
 {
-    protected $model = Message_thrade::class;
+    protected $model = MessageThread::class;
 
     /**
      * @return array<string, mixed>
