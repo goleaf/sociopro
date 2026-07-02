@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ApiTokenAbility;
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\PersonalAccessToken;
 use Tests\TestCase;
@@ -83,6 +86,22 @@ class AuthenticationGuardAuditTest extends TestCase
             ->assertJson($this->legacyUnauthorizedPayload());
     }
 
+    public function test_api_cookie_session_and_csrf_headers_do_not_authenticate_bearer_api(): void
+    {
+        $user = $this->activeUser();
+
+        $this
+            ->actingAs($user)
+            ->withSession(['_token' => 'csrf-token'])
+            ->withHeaders([
+                'X-CSRF-TOKEN' => 'csrf-token',
+                'X-XSRF-TOKEN' => 'csrf-token',
+            ])
+            ->getJson(route('api.marketplace.index'))
+            ->assertOk()
+            ->assertJson($this->legacyUnauthorizedPayload());
+    }
+
     public function test_web_session_cannot_impersonate_api_bearer_authentication(): void
     {
         $user = $this->activeUser();
@@ -114,6 +133,91 @@ class AuthenticationGuardAuditTest extends TestCase
             ->assertJson($this->legacyUnauthorizedPayload());
     }
 
+    public function test_api_login_issues_expiring_token_with_explicit_abilities(): void
+    {
+        $user = $this->activeUser([
+            'email' => 'api-login-token@example.com',
+            'password' => Hash::make('password'),
+        ]);
+
+        $response = $this->postJson(route('api.auth.login'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('message', 'Login successful')
+            ->assertJsonStructure([
+                'token',
+                'token_expires_at',
+            ]);
+
+        $token = PersonalAccessToken::query()
+            ->where('tokenable_type', $user->getMorphClass())
+            ->where('tokenable_id', $user->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($token);
+        $this->assertSame('auth-token', $token->name);
+        $this->assertSame($this->apiTokenAbilityValues(), $token->abilities);
+        $this->assertNotContains('*', $token->abilities);
+        $this->assertNotNull($token->expires_at);
+        $this->assertTrue($token->expires_at->isFuture());
+        $this->assertSame($token->expires_at->toJSON(), $response->json('token_expires_at'));
+    }
+
+    public function test_api_logout_revokes_only_current_personal_access_token(): void
+    {
+        $user = $this->activeUser();
+        $currentToken = $user->createToken('logout-current-token', ['*'], now()->addHour());
+        $otherToken = $user->createToken('logout-other-token', ['*'], now()->addHour());
+
+        $this->withToken($currentToken->plainTextToken)
+            ->postJson(route('api.auth.logout'))
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'message' => 'Logged out successfully',
+            ]);
+
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'id' => $currentToken->accessToken->getKey(),
+        ]);
+        $this->assertDatabaseHas('personal_access_tokens', [
+            'id' => $otherToken->accessToken->getKey(),
+        ]);
+
+        $this->app->make(AuthManager::class)->forgetGuards();
+
+        $this->withToken($currentToken->plainTextToken)
+            ->getJson(route('api.marketplace.index'))
+            ->assertOk()
+            ->assertJson($this->legacyUnauthorizedPayload());
+
+        $this->withToken($otherToken->plainTextToken)
+            ->getJson(route('api.marketplace.index'))
+            ->assertOk()
+            ->assertJson([
+                'success' => false,
+                'message' => 'No marketplace found',
+            ]);
+    }
+
+    public function test_api_authentication_audit_document_covers_guard_token_cookie_and_logout_contracts(): void
+    {
+        $audit = file_get_contents(base_path('docs/api-authentication-audit.md'));
+
+        $this->assertIsString($audit);
+        $this->assertStringContainsString('Sanctum personal access tokens', $audit);
+        $this->assertStringContainsString('Passport is not installed', $audit);
+        $this->assertStringContainsString('Bearer-only API', $audit);
+        $this->assertStringContainsString('CSRF', $audit);
+        $this->assertStringContainsString('token revocation', $audit);
+        $this->assertStringContainsString('logout', $audit);
+    }
+
     public function test_valid_personal_access_token_can_reach_protected_api_route(): void
     {
         $user = $this->activeUser();
@@ -139,12 +243,27 @@ class AuthenticationGuardAuditTest extends TestCase
         ];
     }
 
-    private function activeUser(): User
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function activeUser(array $attributes = []): User
     {
         return User::factory()->create([
             'user_role' => UserRole::General->value,
             'status' => UserAccountStatus::Active->value,
             'timezone' => 'UTC',
+            ...$attributes,
         ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function apiTokenAbilityValues(): array
+    {
+        return array_map(
+            static fn (ApiTokenAbility $ability): string => $ability->value,
+            ApiTokenAbility::cases()
+        );
     }
 }

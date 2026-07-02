@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ApiTokenAbility;
 use App\Enums\MediaFileType;
 use App\Enums\MembershipRole;
 use App\Enums\UserRole;
@@ -75,6 +76,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Image;
+use Laravel\Sanctum\PersonalAccessToken;
 
 require 'vendor/autoload.php'; // Include Composer's autoloader
 
@@ -82,6 +84,8 @@ use Session; // Import Carbon for date comparisons
 
 class ApiController extends Controller
 {
+    private const DEFAULT_API_TOKEN_EXPIRATION_MINUTES = 60 * 24 * 30;
+
     public function login(Request $request)
     {
         $fields = $request->validate([
@@ -106,7 +110,9 @@ class ApiController extends Controller
         } elseif ($user->user_role == UserRole::General->value) {
             // $user->tokens()->delete();
 
-            $token = $user->createToken('auth-token')->plainTextToken;
+            $tokenExpiresAt = $this->apiTokenExpiresAt();
+            $newAccessToken = $user->createToken('auth-token', $this->apiTokenAbilities(), $tokenExpiresAt);
+            $token = $newAccessToken->plainTextToken;
 
             // $user->photo = get_photo('user_image', $user->photo);
 
@@ -117,6 +123,7 @@ class ApiController extends Controller
                 'user_image' => get_user_images($user->id),
                 'cover_photo' => get_cover_photos($user->id),
                 'token' => $token,
+                'token_expires_at' => $tokenExpiresAt->toJSON(),
             ];
 
             return response($response, 201);
@@ -126,6 +133,21 @@ class ApiController extends Controller
                 'message' => 'User not found!',
             ], 400);
         }
+    }
+
+    public function logout(Request $request)
+    {
+        $user = $request->user('sanctum');
+        $token = $user instanceof User ? $user->currentAccessToken() : null;
+
+        if ($token instanceof PersonalAccessToken) {
+            $token->delete();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Logged out successfully',
+        ]);
     }
 
     public function signup(Request $request)
@@ -198,6 +220,27 @@ class ApiController extends Controller
         // Auth::login($user);
 
         // return redirect(RouteServiceProvider::HOME);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function apiTokenAbilities(): array
+    {
+        return array_map(
+            static fn (ApiTokenAbility $ability): string => $ability->value,
+            ApiTokenAbility::cases()
+        );
+    }
+
+    private function apiTokenExpiresAt(): Carbon
+    {
+        $configuredExpiration = config('sanctum.expiration');
+        $expirationMinutes = is_numeric($configuredExpiration) && (int) $configuredExpiration > 0
+            ? (int) $configuredExpiration
+            : self::DEFAULT_API_TOKEN_EXPIRATION_MINUTES;
+
+        return Carbon::now()->addMinutes($expirationMinutes)->startOfSecond();
     }
 
     public function forgot_password(Request $request)

@@ -28,6 +28,7 @@ Route::name('api.')->group(function () {
 
     Route::middleware(['api.token', 'throttle:api-authenticated'])->group(function () {
         Route::controller(ApiController::class)->group(function () {
+            Route::post('/logout', 'logout')->name('auth.logout');
             Route::post('/update_password', 'update_password')->name('password.update');
 
             Route::get('/user', 'user')->middleware('throttle:api-expensive')->name('me.feed');
