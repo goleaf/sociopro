@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use ReflectionMethod;
 use SplFileInfo;
 use Tests\TestCase;
 
@@ -245,6 +246,56 @@ class MigrationSafetyAuditTest extends TestCase
         $this->assertColumnsHaveTypeNames([
             'personal_access_tokens' => [
                 'expires_at' => ['datetime', 'timestamp'],
+            ],
+        ]);
+    }
+
+    public function test_safe_legacy_json_column_constraints_are_present_and_reversible(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_200000_add_safe_legacy_json_column_constraints.php');
+
+        $migration->down();
+        $this->assertColumnsHaveTypeNames($this->expectedLegacyJsonColumnTypes());
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames($this->expectedSafeJsonColumnTypes());
+
+        $migration->down();
+        $this->assertColumnsHaveTypeNames($this->expectedLegacyJsonColumnTypes());
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames($this->expectedSafeJsonColumnTypes());
+    }
+
+    public function test_safe_legacy_json_column_constraints_skip_dirty_json_values(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_200000_add_safe_legacy_json_column_constraints.php');
+
+        $migration->down();
+
+        DB::table('payment_gateways')
+            ->where('identifier', 'paypal')
+            ->update(['keys' => '{not-json']);
+
+        $this->assertTrue($this->migrationHasUnsafeJsonValues($migration, 'payment_gateways', 'keys'));
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames([
+            'payment_gateways' => [
+                'keys' => ['text', 'varchar'],
+            ],
+        ]);
+
+        DB::table('payment_gateways')
+            ->where('identifier', 'paypal')
+            ->update(['keys' => json_encode(['client_id' => '', 'secret_key' => ''])]);
+
+        $this->assertFalse($this->migrationHasUnsafeJsonValues($migration, 'payment_gateways', 'keys'));
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames([
+            'payment_gateways' => [
+                'keys' => $this->expectedJsonTypeNames(),
             ],
         ]);
     }
@@ -768,6 +819,46 @@ class MigrationSafetyAuditTest extends TestCase
     }
 
     /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function expectedLegacyJsonColumnTypes(): array
+    {
+        return [
+            'payment_gateways' => [
+                'keys' => ['text', 'varchar'],
+            ],
+            'payment_histories' => [
+                'transaction_keys' => ['text', 'varchar'],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function expectedSafeJsonColumnTypes(): array
+    {
+        $jsonTypeNames = $this->expectedJsonTypeNames();
+
+        return [
+            'payment_gateways' => [
+                'keys' => $jsonTypeNames,
+            ],
+            'payment_histories' => [
+                'transaction_keys' => $jsonTypeNames,
+            ],
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function expectedJsonTypeNames(): array
+    {
+        return DB::connection()->getDriverName() === 'sqlite' ? ['json', 'text'] : ['json'];
+    }
+
+    /**
      * @return array<string, list<string>>
      */
     private function indexesFor(string $table): array
@@ -818,6 +909,14 @@ class MigrationSafetyAuditTest extends TestCase
     private function columnTypeName(string $table, string $column): string
     {
         return strtolower((string) ($this->columnFor($table, $column)['type_name'] ?? ''));
+    }
+
+    private function migrationHasUnsafeJsonValues(object $migration, string $table, string $column): bool
+    {
+        $method = new ReflectionMethod($migration, 'hasUnsafeJsonValues');
+        $method->setAccessible(true);
+
+        return (bool) $method->invoke($migration, $table, $column);
     }
 
     /**

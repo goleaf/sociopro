@@ -1412,14 +1412,43 @@ class AdminCrudController extends Controller
     public function payment_gateway_update($id, Request $request)
     {
         $paymentGateway = Payment_gateway::findOrFail($id);
-        $allowedKeyNames = array_keys($paymentGateway->decodedKeys());
+        $allowedKeyNames = $this->paymentGatewayKeyNames($paymentGateway);
+        $validated = $request->validate($this->paymentGatewayUpdateRules($allowedKeyNames));
         $paymentGateway->forceFill([
-            'currency' => $request->input('currency'),
-            'keys' => $request->only($allowedKeyNames),
+            'currency' => $validated['currency'],
+            'keys' => array_intersect_key($validated, array_flip($allowedKeyNames)),
         ])->save();
         flash()->addSuccess('Payment gateway has been updated');
 
         return redirect()->route('admin.settings.payment');
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function paymentGatewayKeyNames(Payment_gateway $paymentGateway): array
+    {
+        return array_values(array_filter(
+            array_keys($paymentGateway->decodedKeys()),
+            static fn (mixed $keyName): bool => is_string($keyName) && $keyName !== ''
+        ));
+    }
+
+    /**
+     * @param  list<string>  $allowedKeyNames
+     * @return array<string, list<string>>
+     */
+    private function paymentGatewayUpdateRules(array $allowedKeyNames): array
+    {
+        $rules = [
+            'currency' => ['required', 'string', 'max:100'],
+        ];
+
+        foreach ($allowedKeyNames as $keyName) {
+            $rules[$keyName] = ['nullable', 'string', 'max:4096'];
+        }
+
+        return $rules;
     }
 
     public function payment_gateway_status($id)
