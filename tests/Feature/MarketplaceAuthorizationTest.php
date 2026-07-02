@@ -627,6 +627,36 @@ class MarketplaceAuthorizationTest extends TestCase
         ]);
     }
 
+    public function test_api_unsave_for_later_deletes_only_authenticated_users_saved_product(): void
+    {
+        $currentUser = $this->activeUser();
+        $otherUser = $this->activeUser();
+        $product = $this->marketplace($otherUser);
+
+        $this->savedProduct($currentUser, $product);
+        $this->savedProduct($otherUser, $product);
+
+        $response = $this
+            ->withToken($this->apiTokenFor($currentUser))
+            ->postJson(route('api.marketplace.saves.destroy', ['id' => $product->id]));
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'message' => 'unsave successfully',
+            ]);
+
+        $this->assertDatabaseMissing('saved_products', [
+            'user_id' => $currentUser->id,
+            'product_id' => $product->id,
+        ]);
+        $this->assertDatabaseHas('saved_products', [
+            'user_id' => $otherUser->id,
+            'product_id' => $product->id,
+        ]);
+    }
+
     public function test_api_owner_can_delete_own_marketplace_product(): void
     {
         $owner = $this->activeUser();

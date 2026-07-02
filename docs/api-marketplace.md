@@ -102,7 +102,7 @@ Clients should also inspect the `Retry-After` response header when present.
 | `POST` | `/api/update_marketplace/{id}` | `api.marketplace.update` | Update a marketplace product | None |
 | `POST` | `/api/delete_marketplace/{product_id}` | `api.marketplace.destroy` | Delete a marketplace product | None |
 | `POST` | `/api/save_for_later/{id}` | `api.marketplace.saves.store` | Toggle saved product state | None |
-| `POST` | `/api/unsave_for_later/{id}` | `api.marketplace.saves.destroy` | Registered legacy route; currently missing active controller method | None |
+| `POST` | `/api/unsave_for_later/{id}` | `api.marketplace.saves.destroy` | Remove saved product state | None |
 
 ## Marketplace Object
 
@@ -679,9 +679,43 @@ If the product was already saved, this same endpoint deletes the saved record:
 
 ## `POST /api/unsave_for_later/{id}`
 
-This route is registered as `api.marketplace.saves.destroy`, but the current `ApiController` does not contain an active `unsave_for_later` method.
+Removes the authenticated user's saved-product row for the target product.
 
-Do not build new clients against this endpoint until the controller method is restored or the route is removed behind compatibility tests. Current clients should use `POST /api/save_for_later/{id}` as the legacy toggle endpoint.
+### Path Parameters
+
+| Parameter | Type | Validation |
+| --- | --- | --- |
+| `id` | integer | No Form Request rule; used as `saved_products.product_id`. |
+
+### Example Request
+
+```http
+POST /api/unsave_for_later/123 HTTP/1.1
+Accept: application/json
+Authorization: Bearer <sanctum-personal-access-token>
+```
+
+### Success Response
+
+HTTP 200:
+
+```json
+{
+  "success": true,
+  "message": "unsave successfully"
+}
+```
+
+### Missing Save Legacy Response
+
+HTTP 200:
+
+```json
+{
+  "success": false,
+  "message": "Failed to unsave"
+}
+```
 
 ## Error Responses
 
@@ -803,6 +837,5 @@ Invalid idempotency keys return HTTP 422:
 | --- | --- | --- |
 | Legacy verb-style URLs such as `/api/create_marketplace` | Cannot be renamed without breaking clients. | Add future REST-style/versioned routes in parallel only after tests. |
 | Validation/authentication can return HTTP 200 | Clients may depend on legacy status behavior. | Preserve top-level legacy keys and add machine-readable `error` fields only additively. |
-| `POST /api/unsave_for_later/{id}` is registered without an active controller method | Calling it may fail at runtime. | Add a regression test, then either restore the method or remove the route through a deprecation plan. |
 | Brand and currency lookup endpoints return `category_id` and `category` keys | Renaming keys would break clients. | Add corrected keys only as additive fields in a versioned or tested compatibility change. |
 | Update validates `buy_link` but does not persist it | Clients may think `buy_link` changed when it did not. | Add tests that define intended behavior before fixing. |

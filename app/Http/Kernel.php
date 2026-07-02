@@ -10,6 +10,7 @@ use App\Http\Middleware\EnsureValidApiBearerToken;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\UserActivity;
@@ -47,6 +48,7 @@ class Kernel extends HttpKernel
         ValidatePostSize::class,
         TrimStrings::class,
         ConvertEmptyStringsToNull::class,
+        SecurityHeaders::class,
     ];
 
     /**

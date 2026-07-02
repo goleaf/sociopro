@@ -4930,29 +4930,39 @@ class ApiController extends Controller
         return response()->json($response);
     }
 
-    // //delete or remove from save for later in marketplace product
-    // public function unsave_for_later(Request $request, $id)
-    // {
-    //     $token = $request->bearerToken();
-    //     $response = array();
+    public function unsave_for_later(Request $request, $id)
+    {
+        $token = $request->bearerToken();
+        $response = [];
 
-    //     if (isset($token) && $token != '') {
-    //         $user_id = auth('sanctum')->user()->id;
-    //         $done = SavedProduct::where('product_id', $id)->where('user_id', $user_id)->delete();
-    //         if ($done) {
+        if (isset($token) && $token != '') {
+            $user = auth('sanctum')->user();
+            if (! $user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access',
+                ]);
+            }
 
-    //             $response['success'] = true;
-    //             $response['message'] = 'unsave successfully';
-    //         } else {
-    //             $response['success'] = false;
-    //             $response['message'] = 'Failed to unsave';
-    //         }
-    //     } else {
-    //         $response['success'] = false;
-    //         $response['message'] = 'Unauthorized access';
-    //     }
-    //     return response()->json($response);
-    // }
+            $deleted = SavedProduct::where('product_id', $id)
+                ->where('user_id', $user->id)
+                ->delete();
+
+            if ($deleted) {
+                $response['success'] = true;
+                $response['message'] = 'unsave successfully';
+            } else {
+                $response['success'] = false;
+                $response['message'] = 'Failed to unsave';
+            }
+        } else {
+            $response['success'] = false;
+            $response['message'] = 'Unauthorized access';
+        }
+
+        return response()->json($response);
+    }
+
     public function videos(Request $request)
     {
         $token = $request->bearerToken();

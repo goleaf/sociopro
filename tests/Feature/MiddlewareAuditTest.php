@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\PreventBackHistory;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\UserActivity;
 use App\Http\Middleware\UserMiddleware;
 use App\Models\User;
@@ -122,6 +123,21 @@ class MiddlewareAuditTest extends TestCase
         $this->assertSame('0', $response->headers->getCacheControlDirective('max-age'));
         $this->assertSame('no-cache', $response->headers->get('Pragma'));
         $this->assertSame('Sun, 02 Jan 1990 00:00:00 GMT', $response->headers->get('Expires'));
+    }
+
+    public function test_security_headers_are_added_to_responses(): void
+    {
+        $response = app(SecurityHeaders::class)->handle(
+            Request::create('https://example.test/profile'),
+            fn (): Response => new Response('ok')
+        );
+
+        $this->assertSame('nosniff', $response->headers->get('X-Content-Type-Options'));
+        $this->assertSame('SAMEORIGIN', $response->headers->get('X-Frame-Options'));
+        $this->assertSame('0', $response->headers->get('X-XSS-Protection'));
+        $this->assertSame('strict-origin-when-cross-origin', $response->headers->get('Referrer-Policy'));
+        $this->assertSame('camera=(), microphone=(), geolocation=()', $response->headers->get('Permissions-Policy'));
+        $this->assertSame('max-age=31536000; includeSubDomains', $response->headers->get('Strict-Transport-Security'));
     }
 
     /**

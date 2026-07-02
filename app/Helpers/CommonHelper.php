@@ -2,6 +2,7 @@
 
 // import facade
 
+use App\Support\Security\ServerSideUrl;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
@@ -694,11 +695,38 @@ if (! function_exists('set_config')) {
 if (! function_exists('get_meta_details')) {
     function get_url_contents($pageUrl)
     {
-        try {
-            $html = file_get_contents($pageUrl);
-        } catch (Exception $exception) {
-            report($exception);
+        $safeUrl = ServerSideUrl::forHttpFetch((string) $pageUrl);
 
+        if ($safeUrl === null) {
+            return false;
+        }
+
+        $context = stream_context_create([
+            'http' => [
+                'follow_location' => 0,
+                'ignore_errors' => true,
+                'max_redirects' => 0,
+                'timeout' => 5,
+                'user_agent' => 'SocioproLinkPreview/1.0',
+                'header' => "Accept: text/html,application/xhtml+xml\r\n",
+            ],
+            'https' => [
+                'follow_location' => 0,
+                'ignore_errors' => true,
+                'max_redirects' => 0,
+                'timeout' => 5,
+                'user_agent' => 'SocioproLinkPreview/1.0',
+                'header' => "Accept: text/html,application/xhtml+xml\r\n",
+            ],
+        ]);
+
+        try {
+            $html = file_get_contents($safeUrl, false, $context, 0, 1024 * 1024);
+        } catch (Throwable) {
+            return false;
+        }
+
+        if (! is_string($html) || $html === '') {
             return false;
         }
 
