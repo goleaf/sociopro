@@ -18,7 +18,7 @@ error transports where clients already depend on them.
 | Area | Current state | Risk | Decision |
 | --- | --- | --- | --- |
 | HTTP verbs | Read/list endpoints use `GET`. Creates, updates, deletes, accepts, declines, likes, saves, views, and toggles use `POST`. | Medium | Preserve existing routes. Add RESTful verbs only in a future versioned API and keep legacy aliases during migration. |
-| Idempotency | Some `POST` routes are naturally non-idempotent (`create_post`, `chat_save`). Some represent idempotent state changes (`unsave_for_later`, `mark_as_read`) but do not declare idempotency guarantees. | Medium | Do not retry mutation requests blindly. Add idempotency keys later for payments, uploads, chat, imports, and background side effects. |
+| Idempotency | Some `POST` routes are naturally non-idempotent (`create_post`, `chat_save`). Some represent idempotent state changes (`unsave_for_later`, `mark_as_read`) but do not declare idempotency guarantees. | Medium | `POST /api/create_marketplace` now supports `Idempotency-Key`; continue adding idempotency keys for payments, uploads, chat, imports, and background side effects. |
 | Status codes | Several legacy errors return HTTP 200 with `success: false`; Laravel validation exceptions still return 422 JSON. | Medium | Preserve compatibility. Treat `error.http_status` as canonical where present. Normalize only in a versioned API. |
 | Redirects | API routes can hit Laravel validation behavior that redirects when the request does not negotiate JSON. | High | The API middleware now forces JSON negotiation before controllers run. API clients should never receive validation redirects. |
 | JSON-only behavior | Most controllers already return arrays or `response()->json()`, but some routes rely on Laravel defaults. | Medium | The API group now sets `Accept: application/json` internally and returns `Vary: Accept`. |
@@ -44,7 +44,7 @@ error transports where clients already depend on them.
 | HTTP 200 for authentication, authorization, not-found, and validation errors | Canonical 401, 403, 404, and 422 transport statuses | Keep legacy v1 behavior; switch only for v2 or explicitly opted-in clients. |
 | Mixed validation response shapes | Standard `ApiErrorResponse` envelope with `validationError` compatibility key | Convert endpoint by endpoint with regression tests. |
 | Unpaginated list endpoints | Paginated or cursor-paginated resources | Add response contract tests before changing payload shapes. |
-| Mutation routes without idempotency keys | `Idempotency-Key` support for side-effecting writes | Start with payments, uploads, chat, and notification actions. |
+| Mutation routes without idempotency keys | `Idempotency-Key` support for side-effecting writes | Marketplace create is the first protected API write; continue with payments, uploads, chat, and notification actions. |
 
 ## Suggested Implementation Order
 

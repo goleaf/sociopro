@@ -56,6 +56,7 @@ use App\Models\Video;
 use App\Providers\RouteServiceProvider;
 use App\Queries\FriendshipsQuery;
 use App\Queries\Marketplace\MarketplaceProductsQuery;
+use App\Support\Api\IdempotentApiRequest;
 use App\Support\Files\FileUploader;
 use App\Support\Validation\DateTimeRules;
 use Carbon\Carbon;
@@ -64,6 +65,7 @@ use Exception;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
@@ -4493,7 +4495,16 @@ class ApiController extends Controller
         return response()->json($response);
     }
 
-    public function create_marketplace(StoreMarketplaceRequest $request)
+    public function create_marketplace(StoreMarketplaceRequest $request, IdempotentApiRequest $idempotency): JsonResponse
+    {
+        return $idempotency->handle(
+            request: $request,
+            operation: 'api.marketplace.store',
+            callback: fn (): JsonResponse => $this->storeMarketplace($request)
+        );
+    }
+
+    private function storeMarketplace(StoreMarketplaceRequest $request): JsonResponse
     {
         $token = $request->bearerToken();
         $response = [];
