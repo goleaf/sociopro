@@ -92,7 +92,7 @@ Updated `tests/Feature/MigrationSafetyAuditTest.php` to verify the new FK migrat
 
 ### Scope
 
-Audited current query patterns across controllers, query objects, view models, providers, Blade helpers, routes, Eloquent relationships, local scopes, filters, searches, ordered lists, grouped selectors, and pagination paths. The live SQLite schema and `public/assets/install.sql` were cross-checked before adding indexes because the project remains dump-backed and some legacy MySQL columns are too wide for safe automatic indexing.
+Audited current query patterns across controllers, query objects, view models, providers, Blade helpers, routes, Eloquent relationships, local scopes, filters, searches, ordered lists, grouped selectors, and pagination paths. The live SQLite schema and `database/schema/install.sql` were cross-checked before adding indexes because the project remains dump-backed and some legacy MySQL columns are too wide for safe automatic indexing.
 
 No existing migration or SQL dump was edited.
 
@@ -142,7 +142,7 @@ Audited all Laravel migration files currently present in `database/migrations`:
 - `2026_07_02_120000_add_marketplace_search_filter_indexes.php`
 - `2026_07_02_130000_add_safe_legacy_relationship_indexes.php`
 
-Also cross-checked the legacy schema source `public/assets/install.sql` and the local SQLite schema because this project is still dump-backed. No existing production migration was edited.
+Also cross-checked the legacy schema source `database/schema/install.sql` and the local SQLite schema because this project is still dump-backed. No existing production migration was edited.
 
 ### Safe Fix Applied
 
@@ -193,7 +193,7 @@ These are not safe one-step fixes:
 ### Required Safe Order From Here
 
 1. Apply and verify additive indexes only.
-2. Export production schema metadata and compare tables, columns, indexes, and MySQL version/settings against local SQLite and `public/assets/install.sql`.
+2. Export production schema metadata and compare tables, columns, indexes, and MySQL version/settings against local SQLite and `database/schema/install.sql`.
 3. Run read-only orphan reports for posts, comments, media, friendships, notifications, payments, pages, groups, and marketplace rows.
 4. Clean duplicate/orphan data in reversible batches.
 5. Add foreign keys one domain at a time after delete behavior is explicitly chosen.
@@ -217,7 +217,7 @@ Date: 2026-07-01
 Audited the schema sources that exist in this checkout:
 
 - `database/migrations`: directory was missing before this audit.
-- `public/assets/install.sql`: the legacy install dump that creates the application schema.
+- `database/schema/install.sql`: the legacy install dump that creates the application schema.
 - `database/database.sqlite`: local imported development database.
 - `php artisan migrate:status`: reports only `2019_12_14_000001_create_personal_access_tokens_table` as run.
 
@@ -225,7 +225,7 @@ Laravel's `db:show` / `db:table` inspection commands could not be used because t
 
 ## Executive Summary
 
-The application does not currently have a reversible Laravel migration chain for the legacy schema. The schema is created from `public/assets/install.sql`, while `database/migrations` had no migration files. That is the largest rollback and deployability risk: the app can import the dump, but it cannot safely migrate a blank database forward or roll the legacy schema backward through Laravel.
+The application does not currently have a reversible Laravel migration chain for the legacy schema. The schema is created from `database/schema/install.sql`, while `database/migrations` had no migration files. That is the largest rollback and deployability risk: the app can import the dump, but it cannot safely migrate a blank database forward or roll the legacy schema backward through Laravel.
 
 The dump defines primary keys for application tables plus only these non-primary indexes:
 
@@ -259,7 +259,7 @@ The migration includes a `down()` method that drops the added indexes in reverse
 
 Severity: Critical
 
-There is no Laravel migration chain for the app schema. New environments depend on `public/assets/install.sql`, and rollback is only possible for migrations added after this point.
+There is no Laravel migration chain for the app schema. New environments depend on `database/schema/install.sql`, and rollback is only possible for migrations added after this point.
 
 Recommended follow-up:
 
@@ -399,7 +399,7 @@ These changes should not be automatic safe fixes:
 - Making nullable owner columns non-null.
 - Converting text foreign-key columns to integers.
 - Adding unique constraints to pivot-like tables such as `page_likes`, `followers`, `saved_products`, or `saveforlaters` before duplicate checks.
-- Replacing `public/assets/install.sql` with generated migrations without updating and testing the installer.
+- Replacing `database/schema/install.sql` with generated migrations without updating and testing the installer.
 
 ## Verification Notes
 

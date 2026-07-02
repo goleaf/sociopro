@@ -4,7 +4,7 @@ Date: 2026-07-02
 
 ## Scope
 
-Audited Eloquent relationships, legacy schema definitions in `public/assets/install.sql`, the local SQLite schema, existing lookup indexes, route/controller query usage, and relationship tests. The goal was to add only constraints that are safe for the current legacy schema and document cleanup work for relationships that would be risky in production.
+Audited Eloquent relationships, legacy schema definitions in `database/schema/install.sql`, the local SQLite schema, existing lookup indexes, route/controller query usage, and relationship tests. The goal was to add only constraints that are safe for the current legacy schema and document cleanup work for relationships that would be risky in production.
 
 The local SQLite database currently has no application foreign keys. It also has very little relationship data, so the new migration performs runtime orphan checks before adding each constraint. If production contains dirty rows, that relationship is skipped instead of breaking deployment.
 
@@ -71,7 +71,7 @@ The migration adds child indexes when a leading index is missing, checks for exi
 
 Use these steps before adding any deferred foreign key:
 
-1. Export production schema metadata and compare column types, signedness, indexes, and table engines with `public/assets/install.sql`.
+1. Export production schema metadata and compare column types, signedness, indexes, and table engines with `database/schema/install.sql`.
 2. Run read-only orphan reports for each target relationship.
 3. For `cascade` relationships, delete orphan child rows only after confirming they are meaningless without the parent.
 4. For `nullOnDelete` relationships, null orphan child columns when the row can remain valid without the parent.

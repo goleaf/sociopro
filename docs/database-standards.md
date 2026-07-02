@@ -2,7 +2,7 @@
 
 Generated: 2026-07-02
 
-These standards apply to all new database design, schema changes, migrations, seeders, factories, models, and refactor slices in this Laravel project. Existing legacy tables may violate these rules because the application is still partly bootstrapped from `public/assets/install.sql`; do not normalize legacy schema in-place without a tested migration plan.
+These standards apply to all new database design, schema changes, migrations, seeders, factories, models, and refactor slices in this Laravel project. Existing legacy tables may violate these rules because the application is still partly bootstrapped from `database/schema/install.sql`; do not normalize legacy schema in-place without a tested migration plan.
 
 Use this document together with:
 
@@ -185,7 +185,7 @@ Use this document together with:
 
 ## Legacy Schema Policy
 
-- `public/assets/install.sql` remains a legacy bootstrap source until a verified migration baseline replaces it.
+- `database/schema/install.sql` remains a legacy bootstrap source until a verified migration baseline replaces it.
 - Do not edit the dump casually. Changes can alter fresh installs and installer behavior.
 - For legacy tables, prefer additive indexes and read-only audits before structural cleanup.
 - Before adding constraints to legacy tables, run reports for:

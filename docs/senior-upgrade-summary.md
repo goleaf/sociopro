@@ -11,7 +11,7 @@ This file summarizes the reviewable senior-quality slice landed for the broad mo
 - Composer: 2.9.5.
 - Node / npm: Node 22.22.3 / npm 10.9.8.
 - Frontend: Laravel Mix / Webpack, not Vite.
-- Database: SQLite local/test default; production-oriented schema still comes from `public/assets/install.sql` plus additive migrations.
+- Database: SQLite local/test default; production-oriented schema still comes from `database/schema/install.sql` plus additive migrations.
 - Tests/tools: PHPUnit 12, Laravel Pint, Larastan/PHPStan, Rector, ESLint, Stylelint, Prettier.
 - CI: GitHub Actions workflow at `.github/workflows/ci.yml`.
 - Filament: not installed in this checkout.
@@ -114,7 +114,7 @@ See `docs/known-technical-debt.md` for the priority register.
 4. Add payment callback signature, replay, and idempotency tests for one provider at a time.
 5. Extract upload Form Requests for chat, profile, page, group, fundraiser, and admin job thumbnails.
 6. Design a private media access layer for non-public attachments before moving any public file contract.
-7. Produce a schema comparison between `public/assets/install.sql`, migrations, and production database structure.
+7. Produce a schema comparison between `database/schema/install.sql`, migrations, and production database structure.
 8. Migrate one legacy admin module from inline controller validation to Form Request + action + policy.
 9. Plan a Mix-to-Vite migration with asset manifest, Blade directive, CI, and rollback coverage.
 10. Add a restore-test automation plan for database plus public/private media artifacts.

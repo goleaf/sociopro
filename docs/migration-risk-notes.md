@@ -2,7 +2,7 @@
 
 Generated: 2026-07-02
 
-This file records production-risk decisions for database migrations added after the legacy `public/assets/install.sql` baseline. It is a deployment handoff, not a substitute for production metadata checks.
+This file records production-risk decisions for database migrations added after the legacy `database/schema/install.sql` baseline. It is a deployment handoff, not a substitute for production metadata checks.
 
 ## Current Slice: Page Feed Query Indexes
 
@@ -37,7 +37,7 @@ If the application release fails but indexes are not the cause, roll back code a
 
 ## Existing Broader Risks
 
-- The legacy schema is still bootstrapped from `public/assets/install.sql`; there is no full create-table Laravel baseline for every legacy table.
+- The legacy schema is still bootstrapped from `database/schema/install.sql`; there is no full create-table Laravel baseline for every legacy table.
 - Several legacy columns still have type mismatches with referenced IDs. User-owned foreign keys remain deferred until column type cleanup is planned.
 - Some API endpoints and Blade views still perform N+1 or unbounded reads. Indexes reduce query cost but do not replace query refactors.
 - SQLite test execution validates migration reversibility, not MySQL lock time or optimizer choice.

@@ -4,7 +4,7 @@ Date: 2026-07-02
 
 ## Scope
 
-Audited legacy many-to-many and pivot-like tables from `public/assets/install.sql`, Eloquent relationship definitions, schema hardening migrations, and relationship tests.
+Audited legacy many-to-many and pivot-like tables from `database/schema/install.sql`, Eloquent relationship definitions, schema hardening migrations, and relationship tests.
 
 This project uses several join tables as full legacy models with `id` columns and direct controller/model writes. They remain Eloquent models instead of being converted to `Pivot` subclasses so existing `new Model; ...->save()` flows keep their behavior.
 

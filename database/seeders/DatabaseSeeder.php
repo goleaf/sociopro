@@ -19,6 +19,6 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
-        $importInstallSqlDump->handle(base_path('public/assets/install.sql'));
+        $importInstallSqlDump->handle((string) config('install.schema_dump_path'));
     }
 }

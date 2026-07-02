@@ -9,7 +9,7 @@ The current checkout is being hardened incrementally. Preserve public routes and
 - PHP `^8.3` with `mbstring`, `dom`, `fileinfo`, `gd`, `bcmath`, `sqlite3`, and PDO extensions.
 - Composer 2.
 - Node 22 and npm 10 for the current frontend toolchain.
-- A database supported by the deployed environment. Local and CI use SQLite; the legacy production-oriented baseline still comes from `public/assets/install.sql` plus additive Laravel migrations.
+- A database supported by the deployed environment. Local and CI use SQLite; the legacy production-oriented baseline still comes from `database/schema/install.sql` plus additive Laravel migrations.
 - A queue worker for non-sync production queues.
 - A cron entry for Laravel's scheduler if scheduled tasks are added.
 

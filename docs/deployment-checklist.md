@@ -11,7 +11,7 @@ Use this checklist for production or production-like releases of the current Lar
 - Composer: 2.9.5.
 - Node / npm: Node 22.22.3 / npm 10.9.8.
 - Frontend build: Laravel Mix / Webpack, not Vite.
-- Database: SQLite for local/CI; production-like baseline still comes from `public/assets/install.sql` plus additive migrations.
+- Database: SQLite for local/CI; production-like baseline still comes from `database/schema/install.sql` plus additive migrations. The dump must remain outside the public web root.
 - CI: `.github/workflows/ci.yml` runs Composer validation/audit, Pint, PHPStan/Larastan, tests, cache smoke checks, migration smoke checks, npm lint/style/format, and production asset build.
 
 ## Pre-Deploy
@@ -25,12 +25,15 @@ Use this checklist for production or production-like releases of the current Lar
   - `APP_ENV=production`
   - `APP_DEBUG=false`
   - `APP_URL=https://...`
+  - `INSTALL_SCHEMA_DUMP_PATH` empty or set to a path outside `public`
   - `LOG_LEVEL` appropriate for production
   - `CACHE_DRIVER`, `SESSION_DRIVER`, and `QUEUE_CONNECTION` production-ready
   - `SESSION_SECURE_COOKIE=true`
   - `CORS_ALLOWED_ORIGINS` restricted to trusted origins
   - `MAIL_*`, payment providers, filesystem/S3, and API credentials present only in the host secret store
 - Confirm generated-image provider keys are not present; that browser-facing feature has been removed.
+- Confirm Ignition, Telescope, Horizon, Pulse, Debugbar, `phpinfo`, debug routes, and test endpoints are not installed or exposed.
+- Confirm web-server deny rules block `.env*`, dumps, logs, backups, archives, non-front-controller PHP files, and executable uploads under public storage.
 
 ## Build And Install
 

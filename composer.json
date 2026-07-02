@@ -65,6 +65,8 @@
         "test:feature": "@php artisan test --testsuite=Feature",
         "pint": "vendor/bin/pint",
         "pint:test": "vendor/bin/pint --test",
+        "format": "@pint",
+        "format:test": "@pint:test",
         "analyse": "@php -r \"if (file_exists('vendor/bin/phpstan')) { passthru('vendor/bin/phpstan analyse --memory-limit=1G', $code); exit($code); } fwrite(STDERR, 'PHPStan is not installed; skipping analyse.'.PHP_EOL);\"",
         "rector:dry": "@php -r \"if (file_exists('vendor/bin/rector')) { passthru('vendor/bin/rector --dry-run', $code); exit($code); } fwrite(STDERR, 'Rector is not installed; skipping rector:dry.'.PHP_EOL);\"",
         "rector": "@php -r \"if (file_exists('vendor/bin/rector')) { passthru('vendor/bin/rector', $code); exit($code); } fwrite(STDERR, 'Rector is not installed; skipping rector.'.PHP_EOL);\"",
@@ -77,10 +79,15 @@
             "@php artisan view:clear",
             "@php artisan optimize:clear"
         ],
-        "quality": [
-            "@pint:test",
+        "quality:php": [
+            "@format:test",
             "@analyse",
             "@test"
+        ],
+        "quality:frontend": "@php -r \"if (! file_exists('package.json')) { exit(0); } passthru('npm run quality', $code); exit($code);\"",
+        "quality": [
+            "@quality:php",
+            "@quality:frontend"
         ],
         "ci": [
             "@composer validate --strict --no-interaction",

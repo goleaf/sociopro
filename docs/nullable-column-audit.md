@@ -4,7 +4,7 @@ Date: 2026-07-02
 
 ## Scope
 
-Audited live SQLite metadata imported from `public/assets/install.sql`, current additive migrations, required / nullable validation rules, factories, seeders, auth flows, payment flows, settings reads, and high-use reference tables.
+Audited live SQLite metadata imported from `database/schema/install.sql`, current additive migrations, required / nullable validation rules, factories, seeders, auth flows, payment flows, settings reads, and high-use reference tables.
 
 This project still has a legacy dump-backed schema where many business-required columns were declared `DEFAULT NULL`. This pass only adds reversible database constraints where current data and known write paths support the change.
 

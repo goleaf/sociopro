@@ -121,7 +121,7 @@ class SecretLeakAuditTest extends TestCase
             resource_path('views/frontend/main_content/create_post_modal.blade.php'),
             resource_path('views/frontend/right_sidebar.blade.php'),
             base_path('.env.example'),
-            base_path('public/assets/install.sql'),
+            base_path('database/schema/install.sql'),
         ];
     }
 

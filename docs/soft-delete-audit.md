@@ -12,7 +12,7 @@ The current dump-backed schema, Laravel migrations, and model layer do not defin
 
 | Area | Current state | Decision | Risk |
 | --- | --- | --- | --- |
-| `deleted_at` columns | No `deleted_at` columns were found in `public/assets/install.sql` or current project migrations. | Do not add broad soft-delete columns without a domain-specific restore requirement. | Low |
+| `deleted_at` columns | No `deleted_at` columns were found in `database/schema/install.sql` or current project migrations. | Do not add broad soft-delete columns without a domain-specific restore requirement. | Low |
 | Model traits | No model currently uses `Illuminate\Database\Eloquent\SoftDeletes`. | Do not add `SoftDeletes` independently of schema, policies, indexes, and query tests. | Low |
 | Indexes | No soft-delete indexes are required because no soft-delete columns exist. | Future soft-delete migrations must index `deleted_at`, plus common lookup combinations such as owner/status/deleted state when used by queries. | Medium |
 | Restore logic | No restore flows currently exist. Representative model deletes are hard deletes and `restore()` is unavailable. | Add restore authorization, UI/API behavior, and tests in the same slice that introduces soft deletes. | Medium |

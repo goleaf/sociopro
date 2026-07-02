@@ -23,7 +23,7 @@ Use this with:
 - Frontend source entrypoints: `resources/js/app.js`, `resources/js/bootstrap.js`, `resources/css/app.css`
 - Compiled frontend outputs currently present: `public/js/app.js`, `public/js/share.js`, `public/css/app.css`
 - Vite assets: none detected; there is no `vite.config.*`
-- Database source: local SQLite database plus legacy installer dump at `public/assets/install.sql`
+- Database source: local SQLite database plus legacy installer dump at `database/schema/install.sql`
 - Current Laravel migration status: `2026_07_01_150000_add_safe_legacy_lookup_indexes` is run
 
 ## High-Level Shape
@@ -201,7 +201,7 @@ Current local SQLite tables:
 Schema source notes:
 
 - `database/migrations` contains only `2026_07_01_150000_add_safe_legacy_lookup_indexes.php`.
-- `database/seeders/DatabaseSeeder.php` imports `public/assets/install.sql` through `App\Actions\Install\ImportInstallSqlDump` when the `settings` table is absent.
+- `database/seeders/DatabaseSeeder.php` imports `database/schema/install.sql` through `App\Actions\Install\ImportInstallSqlDump` when the `settings` table is absent.
 - `database/factories` contains only `UserFactory`.
 
 ## Services, Actions, Queries, and ViewModels

@@ -50,7 +50,7 @@ Route::get('/__fork-safety-test', function () {
 | **Frontend build** | **Laravel Mix 6 / Webpack 5** (`webpack.mix.js`). Not Vite. |
 | **CSS/JS stack** | Tailwind 3, Alpine 3, Axios, SweetAlert2, moment-timezone. `resources/css/app.css` (Tailwind only); no SCSS tree in `resources/`. Large legacy CSS/SCSS lives under `public/assets/`. |
 | **Database driver** | `sqlite` in `.env.example`; test DB `:memory:`. Production target is MySQL (code uses `SHOW TABLES`, `Tables_in_*`). |
-| **Schema source** | **`public/assets/install.sql` (127 KB dump)** bootstraps the schema, not migrations. Only 10 additive "safe legacy" migrations exist in `database/migrations/`. |
+| **Schema source** | **`database/schema/install.sql` (127 KB dump)** bootstraps the schema, not migrations. Only 10 additive "safe legacy" migrations exist in `database/migrations/`. |
 | **Test framework** | PHPUnit 12 (not Pest). Full-suite status must be verified per slice; this repo has broad legacy coverage plus focused security/upload regression tests. |
 | **Quality tooling** | Pint (laravel preset) ✔ passing; PHPStan + Larastan level 1 ✔ passing; Rector configured; `composer validate --strict` ✔. |
 | **CI/CD** | GitHub Actions workflow exists at `.github/workflows/ci.yml` for Composer validation, Pint, PHPStan/Larastan, tests, frontend lint/style/format checks, and Mix production build. |
@@ -282,7 +282,7 @@ For each: **severity · risk · files · why · safest first fix · tests-first?
 ## 5. Database & migration risks
 
 ### 5.1 Schema managed by SQL dump, not migrations — critical · deployment/maintainability
-- Schema originates from `public/assets/install.sql`; only 10 additive migrations exist. No reviewable, incremental, rollback-safe schema history.
+- Schema originates from `database/schema/install.sql`; only 10 additive migrations exist. No reviewable, incremental, rollback-safe schema history.
 - Why: cannot diff schema changes, cannot rebuild reproducibly, migrations and dump can drift.
 - Fix: generate a baseline migration from current prod schema, freeze the dump as install-only, require all future changes as migrations. **High-effort, document as a program of work.**
 
@@ -338,7 +338,7 @@ For each: **severity · risk · files · why · safest first fix · tests-first?
 - Fix: modularize; single AJAX helper. Document.
 
 ### 6.8 Committed built assets — low · deployment
-- `public/assets` is ~113 MB and tracked (includes `install.sql`, third-party JS, `.DS_Store`). Bloats the repo.
+- `public/assets` is large and tracked (includes third-party JS and compiled assets). The legacy install dump has been moved to `database/schema/install.sql`, but public asset bloat remains.
 - Fix: audit what must ship vs be built; add `.DS_Store` to ignore (already listed) and remove tracked `.DS_Store` files. Document.
 
 ---

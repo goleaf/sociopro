@@ -7,8 +7,8 @@ These instructions apply to the entire repository. Follow them for every code, t
 - This is a legacy Laravel social application with known refactor and security debt.
 - Current detected baseline: PHP `^8.3`, Laravel `13.18.0`, Laravel Sanctum `4.3.2`, PHPUnit `12.5.30`, Laravel Pint `1.29.3`, Node `v22.22.3`, npm `10.9.8`.
 - Frontend build is Laravel Mix / Webpack. Do not assume Vite is installed until `vite.config.*` and package files prove it.
-- Installed quality tools include PHPUnit and Pint. Do not assume Larastan/PHPStan, Rector, ESLint, Stylelint, or Prettier are available until dependency files prove it.
-- Canonical project docs: `docs/project-standards-bible.md`, `docs/coding-standards.md`, `docs/refactor-audit.md`, `docs/refactor-checklist.md`, `docs/enterprise-refactor-rulebook.md`, and `docs/refactor-roadmap-unreal.md`.
+- Installed quality tools include PHPUnit, Pint, Larastan/PHPStan, Rector, ESLint, Stylelint, and Prettier. Verify dependency files before changing versions or invoking optional tools.
+- Canonical project docs: `docs/project-standards-bible.md`, `docs/coding-standards.md`, `docs/code-quality-standards.md`, `docs/local-quality-commands.md`, `docs/refactor-audit.md`, `docs/refactor-checklist.md`, `docs/enterprise-refactor-rulebook.md`, and `docs/refactor-roadmap-unreal.md`.
 
 ## Project Detection Rules
 
@@ -105,6 +105,8 @@ php artisan test
 Run these when relevant:
 
 ```bash
+composer quality
+npm run quality
 composer validate --strict
 npm run production
 php artisan config:cache

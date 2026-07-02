@@ -17,7 +17,7 @@ This document inventories the business modules and feature surfaces found in the
 - Route files: `routes/web.php`, `routes/custom_routes.php`, `routes/api.php`, `routes/auth.php`, `routes/user.php`, `routes/payment.php`, `routes/channels.php`, `routes/console.php`.
 - Route surface: 483 non-vendor routes. The largest route surfaces are `api/*` with 134 routes and `admin/*` with 104 routes.
 - Requests: only `App\Http\Requests\Auth\LoginRequest` and installer requests under `App\Http\Requests\Install` are present.
-- Migrations: only `database/migrations/2026_07_01_150000_add_safe_legacy_lookup_indexes.php` is present. Schema creation still comes from `public/assets/install.sql` through `DatabaseSeeder`.
+- Migrations: only `database/migrations/2026_07_01_150000_add_safe_legacy_lookup_indexes.php` is present. Schema creation still comes from `database/schema/install.sql` through `DatabaseSeeder`.
 - Jobs: no `app/Jobs` directory detected.
 - Events/listeners: no custom `app/Events` or `app/Listeners` directories detected. `EventServiceProvider` only maps Laravel's `Registered` event to email verification notification.
 - Policies: no `app/Policies` directory detected and `AuthServiceProvider` has no policy mappings.
@@ -385,7 +385,7 @@ This document inventories the business modules and feature surfaces found in the
 - Requests: `FinalizeInstallationRequest`, `PrepareDatabaseConnectionRequest`, `ValidatePurchaseCodeRequest`.
 - Actions/services: `CheckInstallRequirements`, `ConfigureDatabase`, `FinalizeInstallation`, `ImportInstallSqlDump`, `PrepareDatabaseConnection`, `UpdateEnvironmentFile`.
 - Models: `Setting`, `Addon`, `User`.
-- Database tables: `settings`, `addons`, `users`, all legacy tables imported from `public/assets/install.sql`.
+- Database tables: `settings`, `addons`, `users`, all legacy tables imported from `database/schema/install.sql`.
 - Migrations: legacy lookup index migration; install schema bootstrap is SQL-dump backed.
 - Views: `resources/views/install/*`, `resources/views/frontend/addons/*`, `resources/views/backend/admin/addons/*`.
 - JS: shared frontend/backend scripts; addon layout JS under `public/assets/frontend/js/addon_layout.js`.

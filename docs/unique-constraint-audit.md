@@ -4,7 +4,7 @@ Date: 2026-07-02
 
 ## Scope
 
-Audited validation-only uniqueness rules, natural keys, legacy lookup tables, owner-scoped relationship tables, the dump-backed SQLite schema, and `public/assets/install.sql`.
+Audited validation-only uniqueness rules, natural keys, legacy lookup tables, owner-scoped relationship tables, the dump-backed SQLite schema, and `database/schema/install.sql`.
 
 No tenant table, tenant middleware, tenant key, or tenant route boundary is present in this checkout. Composite unique constraints in this pass therefore use the actual business boundary available in the schema: global reference keys or owner-target pairs.
 

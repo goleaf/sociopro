@@ -1,0 +1,16 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule (^|/)\. - [F,L]
+    RewriteRule \.(?:php|phtml|phar|env|log|sql|sqlite|db|bak|backup|old|orig|zip|tar|tgz|gz|7z|rar)$ - [F,L,NC]
+</IfModule>
+
+<FilesMatch "(?i)(^\.|.+\.(?:php|phtml|phar|env|log|sql|sqlite|db|bak|backup|old|orig|zip|tar|tgz|gz|7z|rar)$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Deny from all
+    </IfModule>
+</FilesMatch>

@@ -10,7 +10,7 @@ This roadmap turns the audit into an ordered, testable, reversible plan. It is d
 - Laravel `13.18.0`, PHP `^8.3` (runtime 8.5.7), Composer 2.9.5, Node 22.22.3, npm 10.9.8.
 - Frontend: Laravel Mix 6 / Webpack 5 (not Vite). Tailwind 3, Alpine 3, Axios.
 - Tests: PHPUnit 12. Pint, PHPStan/Larastan level 1, Composer validation, and Mix build are wired locally and in CI; record the exact fresh test count in each implementation summary.
-- Schema bootstrapped from `public/assets/install.sql`; 10 additive migrations.
+- Schema bootstrapped from `database/schema/install.sql`; 10 additive migrations.
 - GitHub Actions CI exists. Only `MarketplacePolicy` exists. 6 factories for 54 models.
 
 ## Ground rules (apply to every phase)

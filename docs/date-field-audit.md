@@ -6,7 +6,7 @@ Date: 2026-07-02
 
 Audited schema, models, validation, controllers, query objects, Blade view models, existing migrations, and tests for `created_at`, `updated_at`, `deleted_at`, `published_at`, `verified_at`, `paid_at`, `expires_at`, and custom date columns.
 
-The application is still bootstrapped from `public/assets/install.sql`, so this pass only applies changes that are safe, reversible, and covered by tests. Broad timestamp normalization remains deferred because multiple tables still use legacy string or epoch timestamps.
+The application is still bootstrapped from `database/schema/install.sql`, so this pass only applies changes that are safe, reversible, and covered by tests. Broad timestamp normalization remains deferred because multiple tables still use legacy string or epoch timestamps.
 
 ## Safe Changes Applied
 

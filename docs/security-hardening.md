@@ -31,3 +31,13 @@ Generated: 2026-07-02
 | Tests added | `test_page_edit_modal_escapes_description` uses a stored script payload and asserts the raw payload is not rendered. |
 | Remaining risk | Other rich-text surfaces still intentionally render raw HTML and remain listed in `docs/security-audit.md`. |
 | Deployment notes | Users editing legacy HTML page descriptions will see the markup as text inside the edit textarea. Public rendering outside this modal was not changed in this pass. |
+
+## Production Exposure Hardening
+
+| Item | Details |
+| --- | --- |
+| Risk before | The legacy install SQL dump and a Sass archive were committed under `public`, where static web servers can expose files before Laravel middleware runs. Apache also had no deny rules for public `.env`, backups, logs, dumps, phpinfo probes, debug endpoints, or non-front-controller PHP files. |
+| Fix applied | Moved the schema dump to `database/schema/install.sql`, added `config/install.php`, removed the tracked public archive, added public-root and public-storage `.htaccess` deny rules, ignored future public backup/dump/log artifacts, and documented production server requirements. |
+| Tests added | `tests/Feature/ProductionExposureAuditTest.php` covers debug defaults, absent debug tooling packages, forbidden diagnostic routes, public sensitive artifacts, dump location, and Apache deny rules. |
+| Remaining risk | Nginx/CDN deployments must mirror the deny list because `.htaccess` only applies to Apache. The long-term database fix is still a verified migration baseline that replaces the legacy dump entirely. |
+| Deployment notes | Set `APP_ENV=production`, `APP_DEBUG=false`, serve only `public`, keep the install dump outside the web root, and block sensitive extensions in the web server config. |

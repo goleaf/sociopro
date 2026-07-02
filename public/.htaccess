@@ -5,6 +5,14 @@
 
     RewriteEngine On
 
+    # Block production exposure probes and sensitive static artifacts before
+    # the front controller can be reached. Keep equivalent rules in Nginx/CDN
+    # configs for non-Apache deployments.
+    RewriteRule (^|/)\. - [F,L]
+    RewriteRule ^(?!index\.php$).+\.php$ - [F,L,NC]
+    RewriteRule (^|/)(?:phpinfo|info|debug|test)(?:\.php)?$ - [F,L,NC]
+    RewriteRule \.(?:env|log|sql|sqlite|db|bak|backup|old|orig|zip|tar|tgz|gz|7z|rar)$ - [F,L,NC]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
@@ -20,3 +28,11 @@
     RewriteRule ^ index.php [L]
 </IfModule>
 
+<FilesMatch "(?i)(^\.|\.env(?:\.|$)|^(?:composer|package|package-lock)\.json$|^phpunit\.xml$|^pint\.json$|^webpack\.mix\.js$|^vite\.config\.[^/]+$|^(?:phpinfo|info|debug|test)(?:\.php)?$|^(?!index\.php$).+\.php$|.+\.(?:env|log|sql|sqlite|db|bak|backup|old|orig|zip|tar|tgz|gz|7z|rar)$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Deny from all
+    </IfModule>
+</FilesMatch>

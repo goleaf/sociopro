@@ -155,7 +155,7 @@ class InstallController extends Controller
     {
         $this->configureDatabase();
 
-        $importInstallSqlDump->handle(base_path('public/assets/install.sql'));
+        $importInstallSqlDump->handle((string) config('install.schema_dump_path'));
     }
 
     private function configureDatabase(): void

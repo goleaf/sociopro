@@ -11,7 +11,7 @@ This document describes the current checkout, not the desired end state.
 - Laravel Sanctum API authentication.
 - Laravel Mix / Webpack frontend build.
 - PHPUnit, Pint, Larastan/PHPStan, Rector, ESLint, Stylelint, and Prettier are installed.
-- SQLite is used for local/CI tests. Production-like schema history still depends on `public/assets/install.sql` plus additive migrations.
+- SQLite is used for local/CI tests. Production-like schema history still depends on `database/schema/install.sql` plus additive migrations.
 - No Filament dependency or `app/Filament` panel is present in this checkout.
 
 ## Modules

@@ -121,13 +121,13 @@ Primary paths:
 - `database/migrations/**`
 - `database/seeders/**`
 - `database/factories/**`
-- `public/assets/install.sql`
+- `database/schema/install.sql`
 - `app/Models/**` for table mapping, relationships, casts, fillable fields, scopes, and constraints.
 - `docs/migration-audit.md`
 
 High-risk database files:
 
-- `public/assets/install.sql`: legacy schema/data bootstrap source. Changes can rewrite baseline installs.
+- `database/schema/install.sql`: legacy schema/data bootstrap source. Changes can rewrite baseline installs.
 - `database/seeders/DatabaseSeeder.php`: imports the install dump when `settings` is absent.
 - `database/migrations/2026_07_01_150000_add_safe_legacy_lookup_indexes.php`: additive lookup indexes across many legacy tables.
 - `app/Actions/Install/ImportInstallSqlDump.php`: SQL dump normalization/import behavior.
@@ -138,7 +138,7 @@ High-risk database files:
 Database files that should not be modified casually:
 
 - Existing production migrations.
-- `public/assets/install.sql`.
+- `database/schema/install.sql`.
 - `database/seeders/DatabaseSeeder.php`.
 - `database/database.sqlite` is local runtime state and is not a source file to commit.
 - Any model `$table`, `$fillable`, `$casts`, relationship, or accessor that changes persisted behavior.
@@ -381,7 +381,7 @@ Large files deserve extra review even if they have low recent churn.
 | `resources/views/frontend/common_scripts.blade.php` | 430 lines | Frontend | Shared client behavior. |
 | `public/assets/**` | 113 MB total | Frontend + DevOps | Vendor/theme/addon bundles committed in repository. |
 | `package-lock.json` | 10,704 lines | DevOps | Dependency lockfile; only edit through npm. |
-| `public/assets/install.sql` | legacy SQL dump | Database + Security | Baseline install schema/data source. |
+| `database/schema/install.sql` | legacy SQL dump | Database + Security | Baseline install schema/data source. |
 
 ## Files That Should Not Be Modified Casually
 
@@ -391,7 +391,7 @@ These files require a clear task, tests or verification, and owner-aware review:
 - Mega-controllers: `ApiController.php`, `AdminCrudController.php`, `MainController.php`, `InstallController.php`, `PaymentController.php`, `Profile.php`, `SettingController.php`, `Updater.php`.
 - Security/runtime files: `app/Http/Kernel.php`, `app/Http/Middleware/**`, `app/Providers/AuthServiceProvider.php`, `app/Providers/RouteServiceProvider.php`, `app/Providers/ViewServiceProvider.php`.
 - Payment/provider files: `app/Models/payment_gateway/**`, `config/paypal.php`, `resources/views/payment/**`, `routes/payment.php`.
-- Database bootstrap files: `public/assets/install.sql`, `database/seeders/DatabaseSeeder.php`, `database/migrations/**`, install actions under `app/Actions/Install/**`.
+- Database bootstrap files: `database/schema/install.sql`, `database/seeders/DatabaseSeeder.php`, `database/migrations/**`, install actions under `app/Actions/Install/**`.
 - Dependency/build files: `composer.json`, `composer.lock`, `package.json`, `package-lock.json`, `webpack.mix.js`, `phpunit.xml`, `pint.json`.
 - Runtime config: `.env.example`, `config/app.php`, `config/database.php`, `config/filesystems.php`, `config/mail.php`, `config/services.php`, `config/session.php`, `config/queue.php`, `config/sanctum.php`.
 - Public/vendor-like assets: Bootstrap, Summernote, CKEditor, DataTables, Plyr, Leaflet, paid-content/fundraiser bundles, compiled `public/css/app.css`, compiled `public/js/app.js`.
