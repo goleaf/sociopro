@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Logging\SanitizeLogContext;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -72,6 +73,54 @@ class ProductionDebugInstrumentationTest extends TestCase
             [],
             $offenders,
             'Log stable event names and allowlisted context instead of raw exception messages, which can expose sensitive input.'
+        );
+    }
+
+    public function test_log_channels_use_sensitive_context_sanitizer(): void
+    {
+        $channels = config('logging.channels');
+        $channels = is_array($channels) ? $channels : [];
+
+        foreach (['single', 'daily', 'slack', 'papertrail', 'stderr', 'syslog', 'errorlog', 'emergency'] as $channel) {
+            $this->assertContains(
+                SanitizeLogContext::class,
+                $channels[$channel]['tap'] ?? [],
+                "Log channel [{$channel}] must sanitize passwords, tokens, cookies, headers, PII, payment data, raw payloads, secrets, and file contents."
+            );
+        }
+    }
+
+    public function test_production_logs_do_not_pass_raw_request_or_file_payloads(): void
+    {
+        $offenders = [];
+        $patterns = [
+            'raw request all logging' => '/\bLog::(?:debug|info|notice|warning|error|critical|alert|emergency)\s*\([^;]*(?:request\(\)|\$request)->all\s*\(/s',
+            'raw request input logging' => '/\bLog::(?:debug|info|notice|warning|error|critical|alert|emergency)\s*\([^;]*(?:request\(\)|\$request)->input\s*\(\s*\)/s',
+            'raw request headers logging' => '/\bLog::(?:debug|info|notice|warning|error|critical|alert|emergency)\s*\([^;]*(?:request\(\)|\$request)->headers->all\s*\(/s',
+            'raw request body logging' => '/\bLog::(?:debug|info|notice|warning|error|critical|alert|emergency)\s*\([^;]*(?:request\(\)|\$request)->getContent\s*\(/s',
+            'raw file contents logging' => '/\bLog::(?:debug|info|notice|warning|error|critical|alert|emergency)\s*\([^;]*file_get_contents\s*\(/s',
+        ];
+
+        foreach ($this->productionFiles() as $file) {
+            $contents = file_get_contents($file->getPathname());
+
+            if (! is_string($contents)) {
+                continue;
+            }
+
+            $code = $this->withoutComments($contents);
+
+            foreach ($patterns as $label => $pattern) {
+                if (preg_match($pattern, $code) === 1) {
+                    $offenders[] = $this->relativePath($file).": {$label}";
+                }
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $offenders,
+            'Log sanitized summaries instead of raw request payloads, headers, bodies, or file contents.'
         );
     }
 

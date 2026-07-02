@@ -1,5 +1,6 @@
 <?php
 
+use App\Logging\SanitizeLogContext;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -58,6 +59,7 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+            'tap' => [SanitizeLogContext::class],
         ],
 
         'daily' => [
@@ -65,6 +67,7 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
+            'tap' => [SanitizeLogContext::class],
         ],
 
         'slack' => [
@@ -73,6 +76,7 @@ return [
             'username' => 'Laravel Log',
             'emoji' => ':boom:',
             'level' => env('LOG_LEVEL', 'critical'),
+            'tap' => [SanitizeLogContext::class],
         ],
 
         'papertrail' => [
@@ -83,6 +87,7 @@ return [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
             ],
+            'tap' => [SanitizeLogContext::class],
         ],
 
         'stderr' => [
@@ -93,16 +98,19 @@ return [
             'with' => [
                 'stream' => 'php://stderr',
             ],
+            'tap' => [SanitizeLogContext::class],
         ],
 
         'syslog' => [
             'driver' => 'syslog',
             'level' => env('LOG_LEVEL', 'debug'),
+            'tap' => [SanitizeLogContext::class],
         ],
 
         'errorlog' => [
             'driver' => 'errorlog',
             'level' => env('LOG_LEVEL', 'debug'),
+            'tap' => [SanitizeLogContext::class],
         ],
 
         'null' => [
@@ -112,6 +120,7 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+            'tap' => [SanitizeLogContext::class],
         ],
     ],
 
