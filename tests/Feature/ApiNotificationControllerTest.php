@@ -23,6 +23,16 @@ class ApiNotificationControllerTest extends TestCase
         $this->assertStringContainsString('ApiNotificationController::class', $apiRoutes);
     }
 
+    public function test_notifications_endpoint_uses_api_resources_for_output(): void
+    {
+        $controller = file_get_contents(app_path('Http/Controllers/Api/NotificationController.php')) ?: '';
+
+        $this->assertFileExists(app_path('Http/Resources/Api/NotificationResource.php'));
+        $this->assertFileExists(app_path('Http/Resources/Api/NotificationCollection.php'));
+        $this->assertStringContainsString('NotificationCollection', $controller);
+        $this->assertStringNotContainsString('notificationRows(', $controller);
+    }
+
     public function test_notifications_endpoint_rejects_missing_bearer_token(): void
     {
         $this->getJson(route('api.notifications.index'))
@@ -73,6 +83,59 @@ class ApiNotificationControllerTest extends TestCase
             ->assertJsonPath('older_notifications.0.type', 'group_invitation')
             ->assertJsonPath('older_notifications.0.status', 1)
             ->assertJsonPath('older_notifications.0.view', 1);
+    }
+
+    public function test_notifications_endpoint_preserves_contract_and_hides_sensitive_sender_fields(): void
+    {
+        $receiver = User::factory()->create();
+        $sender = User::factory()->create([
+            'name' => 'Sensitive Sender',
+            'email' => 'sensitive-sender@example.com',
+            'password' => 'hashed-password-value',
+            'remember_token' => 'remember-token-value',
+        ]);
+
+        $notification = $this->notification([
+            'sender_user_id' => $sender->id,
+            'reciver_user_id' => $receiver->id,
+            'type' => 'friend_request',
+            'status' => 0,
+            'view' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->authenticateApiUser($receiver);
+
+        $payload = $this->withToken($this->apiToken)
+            ->getJson(route('api.notifications.index'))
+            ->assertOk()
+            ->json();
+
+        $this->assertSame([
+            'id',
+            'sender_user_id',
+            'reciver_user_id',
+            'name',
+            'photo',
+            'type',
+            'event_id',
+            'event_name',
+            'page_id',
+            'pageName',
+            'group_id',
+            'groupName',
+            'status',
+            'view',
+            'created_at',
+        ], array_keys($payload['new_notifications'][0]));
+
+        $this->assertSame($notification->id, $payload['new_notifications'][0]['id']);
+        $this->assertSame('Sensitive Sender', $payload['new_notifications'][0]['name']);
+        $this->assertArrayNotHasKey('email', $payload['new_notifications'][0]);
+        $this->assertArrayNotHasKey('password', $payload['new_notifications'][0]);
+        $this->assertArrayNotHasKey('remember_token', $payload['new_notifications'][0]);
+        $this->assertArrayNotHasKey('user_name', $payload['new_notifications'][0]);
     }
 
     public function test_notifications_endpoint_bounds_current_and_older_lists(): void

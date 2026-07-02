@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Friends\AcceptFriendRequestAction;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\NotificationCollection;
 use App\Models\Event;
 use App\Models\Friendships;
 use App\Models\Invite;
 use App\Models\Notification;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -43,47 +43,13 @@ class NotificationController extends Controller
                 ->orderBy('id', 'DESC')
                 ->simplePaginate($perPage, ['*'], 'older_page');
 
-            $response['new_notifications'] = $this->notificationRows($new_notification->getCollection());
-            $response['older_notifications'] = $this->notificationRows($older_notification->getCollection());
+            return new NotificationCollection($new_notification->getCollection(), $older_notification->getCollection());
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
         }
 
         return $response;
-    }
-
-    /**
-     * @param  Collection<int, Notification>  $notifications
-     * @return list<array<string, mixed>>
-     */
-    private function notificationRows(Collection $notifications): array
-    {
-        $rows = [];
-
-        foreach ($notifications as $post) {
-            $user = $post->getUserData;
-
-            $rows[] = [
-                'id' => $post->id,
-                'sender_user_id' => $post->sender_user_id,
-                'reciver_user_id' => $post->reciver_user_id,
-                'name' => $user?->name ?? '',
-                'photo' => $user ? get_user_images($user->id) : get_user_images(),
-                'type' => $post->type,
-                'event_id' => $post->event_id,
-                'event_name' => $post->getEventData?->title ?? '',
-                'page_id' => $post->page_id,
-                'pageName' => $post->getPageData?->title ?? '',
-                'group_id' => $post->group_id,
-                'groupName' => $post->getGroupData?->title ?? '',
-                'status' => $post->status,
-                'view' => $post->view,
-                'created_at' => Carbon::parse($post->created_at)->diffForHumans(),
-            ];
-        }
-
-        return $rows;
     }
 
     private function perPage(Request $request): int
