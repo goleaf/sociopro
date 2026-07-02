@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Pages\BuildPageProfileViewDataAction;
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\PageController;
@@ -261,6 +262,47 @@ class PageSecurityPerformanceTest extends TestCase
             ->assertSee(e('alert("page-xss") Public page intro'), false)
             ->assertSee('3', false)
             ->assertSee(get_phrase('Posts'), false);
+    }
+
+    public function test_page_profile_view_data_action_preserves_timeline_contract(): void
+    {
+        $this->assertTrue(
+            class_exists(BuildPageProfileViewDataAction::class),
+            BuildPageProfileViewDataAction::class.' should assemble page profile data outside the controller.'
+        );
+
+        $viewer = $this->activeUser();
+        $owner = $this->activeUser();
+        $page = $this->page($owner, [
+            'description' => 'Long page profile introduction for the timeline.',
+        ]);
+        $post = Posts::factory()->forOwner($owner)->create([
+            'publisher' => 'page',
+            'publisher_id' => $page->id,
+        ]);
+
+        $viewData = app(BuildPageProfileViewDataAction::class)->timeline($viewer, $page->id);
+
+        $this->assertSame('frontend.pages.page-timeline', $viewData['view_path']);
+        $this->assertSame($page->id, $viewData['page']->id);
+        $this->assertSame('Long page profile introduction for the timeline.', $viewData['pageIntro']);
+        $this->assertSame([$post->post_id], $viewData['posts']->pluck('post_id')->all());
+        $this->assertTrue($viewData['all_videos']->isEmpty());
+        $this->assertTrue($viewData['all_photos']->isEmpty());
+        $this->assertTrue($viewData['comments']->isEmpty());
+        $this->assertTrue($viewData['suggestedpages']->isEmpty());
+        $this->assertTrue($viewData['friendships']->isEmpty());
+    }
+
+    public function test_page_profile_controller_delegates_query_workflow_to_action(): void
+    {
+        $controller = File::get(app_path('Http/Controllers/PageController.php'));
+
+        $this->assertStringContainsString(BuildPageProfileViewDataAction::class, $controller);
+        $this->assertStringNotContainsString("MediaFile::where('page_id'", $controller);
+        $this->assertStringNotContainsString('Posts::notPrivate()', $controller);
+        $this->assertStringNotContainsString('Comments::query()', $controller);
+        $this->assertStringNotContainsString('FriendshipsQuery::', $controller);
     }
 
     public function test_pages_index_batches_page_like_lookups_for_rendered_cards(): void
