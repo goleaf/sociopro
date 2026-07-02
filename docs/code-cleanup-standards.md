@@ -4,6 +4,56 @@ Generated: 2026-07-02
 
 These standards describe safe, small refactor slices for this Laravel codebase. Preserve behavior first. When a legacy public route, API payload, database column, queue payload, or serialized value uses an old name, document the compatibility risk before changing it.
 
+## Rules 41-100 Coverage
+
+The following micro-cleanup rules apply to all new and touched code. Existing legacy code should be moved toward these standards in small, tested slices.
+
+| Rules | Standard | Current repo action |
+| --- | --- | --- |
+| 41, 42, 45 | Eloquent model classes represent one entity, use singular StudlyCase, and avoid vague or abbreviated names. | Do not broad-rename legacy classes without a compatibility slice. Document offenders in the backlog below. |
+| 43, 44 | `BaseController`, traits, helpers, and common classes must not collect unrelated behavior. | Extract upload, email, pricing, authorization, formatting, and workflow logic into focused actions, policies, services, or model concerns when touching the area. |
+| 46, 47, 48 | Use one action method convention, inject services/actions through the container, and avoid `new` in controllers. | New focused action classes should use `execute()` unless a local feature already has a tested convention. |
+| 49, 50, 51, 52 | External integrations need named clients/services, config-backed URLs, timeouts, and explicit failure handling. | Keep facade usage in simple framework boundary code; wrap complex payment, mail, storage, and HTTP workflows behind testable classes. |
+| 53, 54, 55 | Empty catches and noisy/sensitive logs are not allowed. | Catch specific exceptions, log safe identifiers, and never log raw requests, full users, tokens, passwords, cookies, or secrets. |
+| 56, 57 | Business failures should return domain exceptions or typed results, not `abort(500)` or unexplained `false`. | Gateway-style legacy booleans require a gateway contract refactor and tests before changing behavior. |
+| 58, 59, 60, 61, 62, 63 | Columns must communicate business meaning: nullable only when real, timestamps use `_at`, booleans read as questions, counts use `_count`, and money fields describe amount/currency or minor units. | Do not rename persisted columns in place. Add additive migrations or document an expand-and-contract plan. |
+| 64, 65, 66 | Status fields require enum/constants, validation, defaults, transition rules, tests, and centralized transition actions. | Replace scattered direct status assignment only inside feature-specific refactors with regression coverage. |
+| 67, 68, 69, 70, 71 | Do not query in loops, prefer primary-key helpers, scope ownership in queries, cache `$request->user()`, and pass users into services/actions. | Blade and helper hotspots are documented for gradual controller/ViewModel cleanup. |
+| 72, 73, 74, 75, 76, 77, 78 | Tests, factories, and seeders must be deterministic, valid by default, use states, avoid hardcoded production IDs, and never contain real personal data. | New tests must use factories and fakes; legacy seeders should be made idempotent when touched. |
+| 79, 80, 81, 82, 83, 84, 85, 86 | Comments, formatting, huge methods, huge Blade files, huge SCSS files, huge JS files, and ad hoc assets must be cleaned in focused slices. | Pint is the PHP formatting authority. Frontend files follow the current Mix/Webpack pipeline until a tested asset migration exists. |
+| 87, 88, 89, 90, 91 | Uploaded files belong on Laravel disks, must not use user input as stored filenames, must store disk/path, require download authorization, and need deletion policy tests. | Public-upload compatibility cleanup needs storage regression tests before moving paths. |
+| 92, 93, 94, 95, 96, 97, 98, 99, 100 | Slow mail/external work belongs in jobs after commit; jobs use small payloads, retries/backoff/timeouts, idempotency, and failure plans; notifications need tests; events are facts that already happened. | Add queue, notification, and event coverage before changing existing synchronous workflows. |
+
+## Current Legacy Rename Backlog
+
+These names violate the preferred singular/contextual naming standard, but they are compatibility-sensitive and must not be renamed blindly.
+
+| Current name | Preferred direction | Why not changed in this cleanup | Safest first fix |
+| --- | --- | --- | --- |
+| `Posts` | `Post` | Referenced across models, controllers, views, factories, notifications, and serialized feed behavior. | Add post regression tests, introduce compatibility aliases if needed, then rename references in one dedicated compatibility slice. |
+| `Comments` | `Comment` | Comment rendering, notification, and relationship names can affect Blade and API output. | Lock down comment CRUD/rendering tests before renaming. |
+| `Albums` | `Album` | Album routes, helpers, and legacy public storage paths are tightly coupled. | Refactor album reads behind relationships/ViewModels before renaming. |
+| `Stories` | `Story` | Story feed behavior and route/model references need UI coverage. | Add feature tests for story listing, creation, and deletion first. |
+| `Users` | Prefer canonical `User` | This codebase already has Laravel's canonical `User` model, so changing `Users` can break auth-adjacent legacy flows. | Deprecate `Users` behind a tested migration plan and replace references feature by feature. |
+| `Friendships` | `Friendship` | Friendship actions and JSON friend-list compatibility are sensitive. | Add authorization and friend-request regression tests, then rename in an isolated pass. |
+| `PaidContentPackages` | `PaidContentPackage` | Payment, package, and creator flows can affect billing behavior. | Add package purchase/state tests before renaming. |
+| `Setting` | `SystemSetting` or feature-specific setting model | The generic name hides whether the record is system, user, payment, or feature configuration. | Inventory setting keys and introduce contextual accessors before renaming. |
+| `Share` | Contextual share model, for example `PostShare` when applicable | Generic sharing terminology can overlap with post, page, group, or external-share behavior. | Replace only after mapping current relationships and route consumers. |
+
+Do not rename database tables, persisted column names, morph types, route names, queue payload keys, or serialized API fields as part of a cosmetic cleanup. Those changes need tests, compatibility adapters, and migration notes.
+
+## Current Code-Smell Follow-Ups
+
+This repository still has legacy examples of several rules above. Treat these as refactor targets, not permission to do a broad unsafe rewrite.
+
+| Smell | Example area | Risk | Next safe step |
+| --- | --- | --- | --- |
+| Repeated `auth()->user()` in views | Chat, headers, badge, right sidebar, search views | Hidden auth assumptions and repeated ViewModel/helper calls. | Prepare current user in the controller or view data object and add render tests. |
+| Queries inside Blade | Badge, search, album detail, page/group checks | N+1 queries and authorization leaks. | Move lookups into controllers/actions/ViewModels with eager loading and authorization tests. |
+| `return false` in payment gateways/helpers | `app/Services/Payments/Gateways/*`, legacy helpers | Callers cannot tell configuration, provider, validation, and network failures apart. | Introduce a gateway result object or gateway exception per provider with current behavior tests. |
+| Legacy `where('id', ...)` primary-key lookups | Helpers, payment gateways, friend actions | Ownership scoping can be missed and intent is unclear. | Replace with `find()`, `findOrFail()`, or relationship-scoped lookups inside tested feature slices. |
+| File path and public upload compatibility | Legacy helpers and public assets | Moving paths can break existing uploads and URLs. | Add storage fake tests and document disk/path migration before changing storage. |
+
 ## Naming
 
 - PHP classes use StudlyCase / PascalCase.
