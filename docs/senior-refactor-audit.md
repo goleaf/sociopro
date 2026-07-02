@@ -1,399 +1,206 @@
 # Senior Refactor Audit
 
 Generated: 2026-07-02
-Scope: full repository (`/Users/andrejprus/Herd/sociopro`)
-Author role: principal Laravel architect / security / database / frontend-a11y / DevOps / tech lead
+Scope: full repository audit for `/Users/andrejprus/Herd/sociopro`
+Mode: documentation-only; no production code was refactored in this pass.
 
-This is a **report-only** audit. No production runtime code was rewritten to produce it. Two low-risk actions were taken and are called out explicitly:
+This audit reflects the live checkout, not older project memories or historical audit files. The application is not a greenfield rewrite candidate. It already has meaningful guardrails, tests, and modernization work, but the legacy social-network core is still concentrated in large controllers, helpers, Blade templates, and an install SQL dump. The realistic path is a phased, behavior-preserving refactor with tests first.
 
-1. An **injected, non-project route** was found in the working tree and reverted (see [Section 0](#0-integrity-finding-injected-route)).
-2. Two new documentation files were added: this audit and `docs/senior-refactor-roadmap.md`.
+## 1. Project Overview
 
-> This project already carries ~40 prior audit documents under `docs/` and has been partially modernized (Laravel 13, Pint, PHPStan/Larastan, 400+ tests). This audit reflects the **actual current state**, not a greenfield legacy assumption. Where earlier docs (e.g. `docs/refactor-audit.md`, which still says "Laravel 9.52") are now stale, that is noted.
-
----
-
-## 0. Integrity finding: injected route
-
-**Severity: critical · Risk: security**
-
-While running the test suite, `routes/web.php` in the working tree contained a route that was **not present in the committed file** and is **not legitimate project code**:
-
-```php
-Route::get('/__fork-safety-test', function () {
-    $client = stream_socket_client('ssl://'.config('mail.mailers.smtp.host').':'.config('mail.mailers.smtp.port'), $errno, $errstr, 10);
-    if (! $client) {
-        return response("connect failed: $errno $errstr", 500);
-    }
-    return response('SMTP banner: '.fgets($client));
-});
-```
-
-- Unauthenticated closure with logic, no middleware, no name.
-- Opens an outbound SSL socket to the configured SMTP host/port and returns the banner to any caller — an SSRF / network-probe gadget.
-- It broke three `RouteAuditTest` guardrail tests (unnamed route, closure-with-logic, route-file logic).
-
-**Action taken:** reverted `routes/web.php` to its committed state (`git checkout -- routes/web.php`). After reverting, `RouteAuditTest` passes (6 tests) and the full suite returns to green. This artifact was **not** committed.
-
-**Why it matters:** if such a route ever reaches production it is a remote information-disclosure / SSRF endpoint. **Safest first fix:** confirm the source of the injection (CI harness, editor plugin, or manual paste), keep `RouteAuditTest` as the guard, and treat any unexplained working-tree change to `routes/*` as a release blocker. **Tests needed before refactor:** already covered by `RouteAuditTest`. **Change now or document:** already reverted.
-
----
-
-## 1. Project overview
-
-| Aspect | Finding |
+| Area | Current finding |
 | --- | --- |
-| **Laravel version** | `13.18.0` (from `composer.lock`) |
-| **PHP requirement** | `^8.3`; local runtime is **PHP 8.5.7** (Herd) |
-| **Composer** | 2.9.5 |
-| **Node / npm** | Node 22.22.3 / npm 10.9.8 |
-| **Frontend build** | **Laravel Mix 6 / Webpack 5** (`webpack.mix.js`). Not Vite. |
-| **CSS/JS stack** | Tailwind 3, Alpine 3, Axios, SweetAlert2, moment-timezone. `resources/css/app.css` (Tailwind only); no SCSS tree in `resources/`. Large legacy CSS/SCSS lives under `public/assets/`. |
-| **Database driver** | `sqlite` in `.env.example`; test DB `:memory:`. Production target is MySQL (code uses `SHOW TABLES`, `Tables_in_*`). |
-| **Schema source** | **`database/schema/install.sql` (127 KB dump)** bootstraps the schema, not migrations. Only 10 additive "safe legacy" migrations exist in `database/migrations/`. |
-| **Test framework** | PHPUnit 12 (not Pest). Full-suite status must be verified per slice; this repo has broad legacy coverage plus focused security/upload regression tests. |
-| **Quality tooling** | Pint (laravel preset) ✔ passing; PHPStan + Larastan level 1 ✔ passing; Rector configured; `composer validate --strict` ✔. |
-| **CI/CD** | GitHub Actions workflow exists at `.github/workflows/ci.yml` for Composer validation, Pint, PHPStan/Larastan, tests, frontend lint/style/format checks, and Mix production build. |
-| **Deployment docs** | Extensive `docs/` set plus consolidated `docs/deployment-checklist.md`, `docs/rollback-plan.md`, and `docs/backup-and-restore.md`. |
-
-### Main business modules
-
-Social network platform ("Sociopro"): **timeline/posts, stories, comments/reactions, friends & follows, chat, groups, pages, events, blogs, marketplace, videos, jobs, fundraisers, paid content, badges, sponsors, notifications, memories, live streaming (Zoom), payments** (Stripe, Razorpay, Paytm, Flutterwave, Paystack), an **install wizard**, and an **admin/addon updater**.
-
-### Detected architecture style
-
-**Hybrid: modern layering bolted onto a legacy god-controller core.**
-
-- Modern, well-structured elements: `app/Actions`, `app/Services` (Payments gateway resolver, Zoom client), `app/Queries`, `app/ViewModels`, `app/Enums` (with `HasValues` concern), `app/Http/Resources/Api`, `app/Http/Requests` (Admin/Api/Auth/Blog/Install/Marketplace), typed casts/scopes on `User`, rate limiters in `RouteServiceProvider`, API idempotency + response-contract middleware.
-- Legacy core still dominant: `ApiController` (7,517 lines / 128 public methods), `AdminCrudController` (1,519), `MainController` (1,284), `Profile` (538), two global helper files (`CommonHelper` 71 fns, `ApiHelper` 26 fns), state-changing GET routes, schema-by-SQL-dump.
-
-### High-risk areas (ranked)
-
-1. `AuthenticatedSessionController::dataReplace()` — runs `DB::unprepared(restore.sql)` and bulk-mutates every table (Section 4).
-2. `ApiController` god class — auth, validation, queries, serialization, business rules in one file.
-3. Schema managed by SQL dump instead of migrations — no reproducible, reviewable schema history.
-4. State-changing `GET` routes (~36) — CSRF-bypass and prefetch/crawler side effects.
-5. Global helpers with SSRF (`get_url_contents`) and `0777` directory creation (`uploadTo`).
-6. Raw Blade output of user chat messages (`{!! $message->message !!}`).
-
-### Missing documentation
-
-- Production-specific deployment ownership details such as target host, backup tooling, process supervisor, scheduler owner, and recovery time objective.
-- Up-to-date top-level `docs/architecture.md` reflecting Laravel 13 (existing `refactor-audit.md` is stale at "Laravel 9").
-- Developer onboarding / workflow docs still need environment-specific ownership details; PR/issue templates exist under `.github/`.
-
-### Missing tests
-
-- Behavior/feature coverage for the large `ApiController` surface (current tests are mostly **guardrail "audit" tests**, not behavior tests).
-- Payment gateway callback/webhook flows end-to-end.
-- Chat XSS payload rendering.
-- File upload/download authorization for private media now has first-pass regression coverage; expand it to stories, albums, chat, marketplace, and profile surfaces.
-- Query-count/N+1 regression tests on hot list endpoints beyond marketplace.
-
----
-
-## 2. Code quality problems
-
-For each: **severity · risk · files · why · safest first fix · tests-first? · now vs document**.
-
-### 2.1 Fat / god controllers — high · maintainability
-- Files: `app/Http/Controllers/ApiController.php` (7,517 lines, 128 methods), `AdminCrudController.php` (1,519), `MainController.php` (1,284), `Profile.php` (538), `GroupController.php` (440).
-- Why: impossible to review, test, or reason about; every domain change touches the same file; merge-conflict magnet.
-- Fix: carve **one domain at a time** out of `ApiController` into per-resource controllers + Actions + Resources, keeping route names identical. Start with marketplace (already has Requests/Resources/Query — the pattern exists to copy).
-- Tests first: **yes** — characterization/contract tests per endpoint before moving code.
-- Now vs document: **document + phase**; too large for this pass.
-
-### 2.2 Business logic in controllers — high · maintainability
-- Files: `ApiController` (query building, serialization, side effects inline), `MainController`, `AdminCrudController`.
-- Fix: move workflows to `app/Actions`, queries to `app/Queries`/scopes, output to Resources.
-- Tests first: **yes**. Now vs document: **document**.
-
-### 2.3 Business logic / data access in Blade — medium · maintainability
-- Files: chat/profile/dashboard views; `resources/views/frontend/chat/single-message.blade.php` calls `ViewModels\BladeViewData` helpers per row.
-- Why: view-time work is hard to cache/test; encourages N+1.
-- Fix: precompute in ViewModels/controllers, pass ready data. Tests first: **recommended**. Now vs document: **document**.
-
-### 2.4 Duplicated validation — medium · maintainability
-- Inline `$request->validate([...])` blocks recur across `ApiController` methods (e.g. `login`) despite Form Requests existing for Marketplace/Blog/Auth.
-- Fix: extend the Form Request pattern per endpoint as controllers are split. Tests first: **yes** (validation tests). Now vs document: **document**.
-
-### 2.5 Duplicated authorization checks — high · security/maintainability
-- Manual ownership/role checks scattered in controller methods; only **one** policy exists (`MarketplacePolicy`).
-- Fix: introduce policies per resource; standardize `$this->authorize()`. Tests first: **yes** (authorization matrix). Now vs document: **document**.
-
-### 2.6 Duplicated queries — medium · performance/maintainability
-- Repeated friend/follow/save lookups across API + web. Some already extracted (`FriendshipsQuery`, `StoriesQuery`, marketplace query).
-- Fix: continue extracting into scopes/query objects. Tests first: **yes**. Now vs document: **document**.
-
-### 2.7 God models / model duplication — high · maintainability
-- **Two parallel user models**: `app/Models/User.php` (196 lines, Authenticatable, relations) and `app/Models/Users.php` (39 lines). Ambiguous which is canonical; risk of divergent casts/hidden fields.
-- Fix: pick `User` as canonical, deprecate `Users`, grep all references, migrate with tests. Tests first: **yes**. Now vs document: **document** (behavioral risk).
-
-### 2.8 Helper abuse / static abuse — medium · maintainability/security
-- `app/Helpers/CommonHelper.php` (71 global functions) + `ApiHelper.php` (26), autoloaded via composer `files`. Includes DB/business/network logic (`get_url_contents`, `get_settings`, `set_config`, image path builders). `User::get_user_image()` is a static presentation helper on the model.
-- Fix: relocate to focused services / view helpers / Enums; keep thin globals only for pure formatting. Tests first: **partial**. Now vs document: **document**.
-
-### 2.9 Unclear naming — medium · maintainability
-- Former snake_case model classes have been renamed to StudlyCase names such as `AlbumImage`, `MediaFile`, `GroupMember`, `PageLike`, `PostShare`, `PaymentGateway`, `FundraiserDonation`, `LiveStreaming`, `FeelingAndActivity`, `AccountActiveRequest`, and `MessageThread`.
-- Legacy database names such as `message_thrades` still require compatibility mappings. Tests first: **yes**. Now vs document: **done for PHP class/file names; database names remain documented compatibility debt**.
-
-### 2.10 Dead code — low · maintainability
-- `require 'vendor/autoload.php';` inside `ApiController.php` (redundant; already autoloaded) and a stray `use Session;` after class-level code. `docs/dead-code-audit.md` already tracks candidates.
-- Fix: remove the redundant `require`/duplicate `use` when the file is split. Now vs document: **document** (touching the god file mid-audit is risky).
-
-### 2.11 Debug code — none found in app — low
-- No `dd()`/`dump()`/`var_dump()`/`print_r()` in `app/` or views. `ProductionDebugInstrumentationTest` already guards this. Good.
-
-### 2.12 Old Laravel patterns — medium · maintainability
-- Bare facade imports (`use DB;`, `use Image;`, `use Session;` without `Illuminate\Support\Facades\` FQCN) in `ApiController`.
-- Fix: normalize to `Illuminate\Support\Facades\*` during the controller split (Pint/Rector can assist). Now vs document: **document**.
-
-### 2.13 Unsafe request handling — high · security
-- One `request->all()` mass-assignment site remains (grep count 1); most inputs go through `validate()`/Form Requests.
-- Fix: replace with `validated()`/`safe()->only()`. Tests first: **yes**. Now vs document: **can fix in phase 3**.
-
-### 2.14 Untyped PHP / PHPDoc — medium · maintainability
-- Legacy controller methods lack return/param types; modern classes (Actions, Requests, `User`) are typed. PHPStan runs at **level 1** — real but shallow coverage.
-- Fix: add types opportunistically per file as it is touched; raise PHPStan level gradually with a baseline. Now vs document: **document**.
-
-### 2.15 Formatting standard — good — low
-- Pint (laravel preset) configured and passing; `pint.json` present. No action beyond keeping it in CI.
-
----
-
-## 3. Laravel best-practice gaps
-
-### 3.1 Missing Form Requests — high · security/maintainability
-- Present for Admin/Api-Marketplace/Auth/Blog/Install; **absent** for the bulk of `ApiController` write endpoints (posts, comments, groups, events, pages, videos, jobs, fundraisers, chat).
-- Fix: add per-endpoint during split. Tests first: **yes**. Document.
-
-### 3.2 Missing policies/gates — high · security
-- Only `MarketplacePolicy`. Ownership across posts/comments/groups/pages/events/chat/media relies on inline checks.
-- Fix: add policies per resource; enforce in controllers + Form Request `authorize()`. Tests first: **yes**. Document.
-
-### 3.3 Missing API Resources — medium · maintainability/security
-- Only 4 Resource classes (`Marketplace*`, `Notification*`); most API output is hand-built arrays from `ApiController`, risking inconsistent shapes and field leakage.
-- Fix: introduce Resources per endpoint, snapshot the current JSON shape in a contract test first. Tests first: **yes**. Document.
-
-### 3.4 Model casts — mostly good — low/medium
-- `User` casts `date_of_birth => integer`, datetimes cast. Verify money/boolean/json casts on `Marketplace`, `Fundraiser_*`, `PaymentHistoryEntry`. `docs/eloquent-cast-audit` + tests exist.
-- Fix: add missing decimal/bool/array casts per model. Document.
-
-### 3.5 Factories / seeders — medium · testing
-- Only **6 factories for 54 models** (Brand, Category, Currency, Marketplace, SavedProduct, User). Seeders are well-designed: `DatabaseSeeder` imports the schema dump idempotently; `LocalDemoSeeder` is env-guarded and factory-based.
-- Fix: add factories for high-traffic models (Posts, Comments, Group, Event, Page, Job, Fundraiser) to enable behavior tests. Tests first: n/a (enables tests). **Can add incrementally now**.
-
-### 3.6 Middleware — good — low
-- Custom middleware for API bearer token, response contract, admin/user, activity, back-history. `MiddlewareAuditTest` exists. Note `AuthenticateSession` is commented out in the web group (see 4.11).
-
-### 3.7 Route closures with logic — low (after Section 0 revert)
-- The committed route files delegate to controllers. The only offending closure was the injected probe. `RouteAuditTest` guards this.
-
-### 3.8 Unnamed routes / organization — good — low
-- Routes are named, grouped by controller/middleware/prefix, and REST-ish under `api.php`. Minor: web routes split across `web.php`/`custom_routes.php`/`user.php`/`payment.php` — consolidate by domain later.
-
-### 3.9 Route model binding — medium · maintainability/security
-- Many routes take raw `{id}` and re-query manually (IDOR surface). `Account/AccountStatusController` uses `{user}` binding — the good pattern.
-- Fix: adopt binding + policy on scoped resources during split. Tests first: **yes**. Document.
-
-### 3.10 env() outside config — good — low
-- Only 1 `env()` outside `config/` in `app/`; convention is followed. Fix the remaining one when touched.
-
-### 3.11 Config cache — verify — medium · deployment
-- Confirm `php artisan config:cache` works (no `env()` in runtime paths). Add to CI/deploy checklist. Document.
-
-### 3.12 Queue handling — medium · performance
-- `QUEUE_CONNECTION=sync` default; only 2 jobs (`ImportAddonPackageJob`, `ImportInstallSqlDumpJob`). Email/notifications/exports/image processing run inline.
-- Fix: move slow side effects to jobs; document a real queue driver for prod. Document.
-
-### 3.13 Cache invalidation / logging standards — medium
-- `User::isOnline()` uses cache; no documented invalidation strategy across features. Logging is default stack; no structured-logging or secret-redaction standard doc.
-- Fix: add caching + logging standards docs; ensure no secrets logged (see 4.13). Document.
-
----
-
-## 4. Security risks
-
-### 4.1 Demo restore + bulk table mutation on logout — critical · data-loss/security
-- File: `app/Http/Controllers/Auth/AuthenticatedSessionController.php::dataReplace()` — `DB::unprepared(file_get_contents('public/assets/restore.sql'))` then iterates `SHOW TABLES` rewriting timestamps.
-- Why: arbitrary SQL execution from a file + destructive bulk mutation; catastrophic if reachable in prod.
-- Fix: remove/quarantine this method; if a demo reset is needed, gate behind a dedicated console command in `local` only. Tests first: **yes** (assert it is unreachable). **Document as critical; do not fix blindly** — confirm no route/caller depends on it.
-
-### 4.2 SSRF via helper — high · security
-- File: `app/Helpers/CommonHelper.php::get_url_contents()` uses `file_get_contents($pageUrl)` on caller-supplied URLs (link-preview).
-- Fix: validate/allowlist scheme+host, block private ranges, use a timeout-bounded HTTP client, or move to a queued job. Tests first: **yes**. Document.
-
-### 4.3 Stored XSS in chat — high · security
-- File: `resources/views/frontend/chat/single-message.blade.php` — `{!! $message->message !!}` renders user content unescaped (lines ~16, 18, 73, 75).
-- Why: attacker-controlled message body → script execution in recipients' browsers.
-- Fix: escape with `{{ }}`, or sanitize via an allowlist HTML purifier if links must render. Tests first: **yes** (payload test). **Can fix with a focused, tested change** (flagged, not done here to keep audit report-only).
-
-### 4.4 Other raw Blade output — medium · security
-- 18 `{!! !!}` sites. Most pass through `script_checker()` which does `htmlspecialchars(strip_tags())` when `$convert_string=true` — but callers pass `false` (term/policy/about/blog/group/marketplace/event/page), returning the string **unescaped**. Trusted-admin content, but still a stored-XSS path if those editors are compromised or multi-admin.
-- Fix: sanitize rich text at write time; render sanitized HTML. Tests first: **yes**. Document.
-
-### 4.5 Mass assignment — medium · security
-- All 54 models define `$fillable`/`$guarded` (good). One residual `request->all()` site (4.13/2.13). Sensitive fields (`user_role`, `payment_settings`) are not in `User::$fillable` — good.
-- Fix: eliminate the remaining `all()`. Can fix in phase 3.
-
-### 4.6 IDOR / ownership — high · security
-- Raw `{id}` params re-queried without ownership scoping across API write/delete endpoints; only marketplace has a policy.
-- Fix: policies + scoped binding + owner tests. Tests first: **yes**. Document.
-
-### 4.7 State-changing GET routes — high · security
-- ~36 GET routes perform mutations: `/save-post/{id}`, `/block_user/{id}`, `product/delete`, `event/delete`, `addon/status/{status}/{id}`, `addon/delete/{id}`, follow/unfollow, etc.
-- Why: CSRF-bypass (GET is not CSRF-protected), and crawlers/prefetch/`<img>` can trigger them.
-- Fix: convert to POST/DELETE with `@csrf`, keep names, update Blade/JS callers. Tests first: **yes**. Document (touches many callers).
-
-### 4.8 Unsafe file handling — high · security
-- `CommonHelper::uploadTo()` creates directories with **`0777`**. Upload validation exists via `Support\Files\FileUploader` (unit-tested) but the god controller also handles uploads inline in places.
-- Fix: tighten to `0755`, centralize all uploads through `FileUploader`, validate mime/ext/size, store private media on a private disk with authorized downloads. Tests first: **yes** (Storage::fake). Document.
-
-### 4.9 Raw SQL injection — low/medium · security
-- Only 2 raw-SQL sites in `app/` besides the restore path; parameter binding largely used. `DB::select('SHOW TABLES')` is static.
-- Fix: audit the 2 sites for interpolation; enforce bindings/allowlists for any sort/filter columns. Document.
-
-### 4.10 CORS — high · security
-- `config/cors.php`: `allowed_methods ['*']`, `allowed_origins ['*']`, `allowed_headers ['*']`, `supports_credentials false`.
-- Why: any origin may call the API. Acceptable only for a fully public, token-auth API; still too broad.
-- Fix: restrict `allowed_origins` to known app domains; keep credentials false. Tests first: no. **Can fix in phase 7** (config only, but verify mobile/web clients).
-
-### 4.11 Session / cookie config — medium · security
-- `config/session.php`: `same_site => null` (should be `lax` or `strict`), `secure => env('SESSION_SECURE_COOKIE')` (ensure `true` in prod), `http_only => true` (good). `AuthenticateSession` middleware is commented out in the web group.
-- Fix: set `same_site=lax`, force secure cookies in prod, reconsider `AuthenticateSession`. Document + config change in phase 7.
-
-### 4.12 APP_DEBUG exposure — medium · security
-- `.env.example` ships `APP_DEBUG=true` and `LOG_LEVEL=debug`.
-- Fix: keep example as `local` template but document that prod must set `APP_DEBUG=false`; add a deploy check. Document.
-
-### 4.13 Sensitive logs / secrets — medium · security
-- `User::$hidden` includes `password`, `payment_settings`, `remember_token` (good). No secrets in `.env.example`. Verify no raw request/payment payloads are logged (no explicit redaction standard).
-- Fix: add a logging-redaction standard + test. Document.
-
-### 4.14 API token checks / rate limits — good — low
-- Sanctum + custom `EnsureValidApiBearerToken` + `api.token` middleware; token abilities enum; granular rate limiters (`api-token`, `api-registration`, `api-password-reset`, `api-expensive`, `api-search`, `webhook`, `login`) in `RouteServiceProvider`. Strong. Keep.
-
-### 4.15 Webhook verification / idempotency — medium · security
-- Payment callbacks (`payment.status`, `make.payment`) are throttled and idempotency middleware exists (`api-idempotency`), but per-gateway **signature verification** should be confirmed for each provider.
-- Fix: assert signature checks per gateway; add replay tests. Tests first: **yes**. Document.
-
----
-
-## 5. Database & migration risks
-
-### 5.1 Schema managed by SQL dump, not migrations — critical · deployment/maintainability
-- Schema originates from `database/schema/install.sql`; only 10 additive migrations exist. No reviewable, incremental, rollback-safe schema history.
-- Why: cannot diff schema changes, cannot rebuild reproducibly, migrations and dump can drift.
-- Fix: generate a baseline migration from current prod schema, freeze the dump as install-only, require all future changes as migrations. **High-effort, document as a program of work.**
-
-### 5.2 Missing indexes / FKs / unique constraints — addressed additively — medium
-- The 10 migrations add lookup/search/relationship indexes, FKs, unique, nullable, money-precision, datetime, and JSON constraints "safely" for legacy data. Good direction. Continue per `docs/database-indexes.md`, `foreign-key-audit.md`, `unique-constraint-audit.md`.
-- Fix: verify each constraint has passing data (no violations) before enabling; some may need `docs/data-cleanup-needed.md`. Document.
-
-### 5.3 Money / decimal handling — high · data-loss
-- Marketplace/fundraiser/payment amounts: confirm decimal(precision,scale) or integer-minor-units, not float. `docs/money-field-audit.md` and a money-precision migration exist; verify casts + calculations align.
-- Fix: standardize on decimal casts + validation; test rounding. Tests first: **yes**. Document.
-
-### 5.4 Soft deletes — medium · data-loss
-- Verify `SoftDeletes` trait ↔ `deleted_at` column consistency and that unique constraints tolerate soft-deleted rows. `docs/soft-delete-audit.md` exists.
-- Fix: reconcile per audit; test delete/restore. Document.
-
-### 5.5 Unbounded queries / N+1 — medium · performance
-- God-controller list endpoints and chat/dashboard views access relations in loops. Marketplace has a performance test; extend coverage.
-- Fix: eager-load, paginate, `withCount`/`withExists`; add query-count tests. Tests first: **yes**. Document.
-
-### 5.6 Naming inconsistencies — low · maintainability
-- PHP model class/file names now use StudlyCase. Legacy snake_case database names remain for compatibility and should only be renamed through a separate migration plan.
-
----
-
-## 6. Frontend quality risks
-
-### 6.1 Build stack outdated — high · deployment/frontend
-- Laravel Mix 6 / Webpack 5. Prior `npm audit` reported ~11 vulns through the Mix/Webpack chain. No Vite.
-- Fix: migrate Mix → Vite as a dedicated, tested phase (entrypoints, `@vite`, HMR). Document.
-
-### 6.2 No JS/CSS linting/formatting — medium · frontend
-- No ESLint/Stylelint/Prettier; no `lint`/`format` npm scripts.
-- Fix: add ESLint + Stylelint + Prettier with legacy-friendly configs and npm scripts. **Can add now** (tooling only, no behavior change) — deferred to keep this pass report-only.
-
-### 6.3 Unsafe raw HTML / XSS — high · security/frontend
-- See 4.3 / 4.4 (chat `{!! !!}`). Also verify JS does not `innerHTML` user data.
-- Fix: escape/sanitize; standardize a safe DOM helper. Tests first: **yes**. Document.
-
-### 6.4 Accessibility — medium · frontend
-- Legacy Blade uses clickable non-button elements, icon-only controls, and likely gaps in labels/heading order/focus management (292 Blade files). Not yet audited against WCAG 2.2 AA.
-- Fix: per-screen a11y pass (semantic elements, labels, focus, contrast, reduced motion). Document.
-
-### 6.5 SCSS architecture / design tokens — medium · frontend
-- App styling is Tailwind via Mix; large legacy SCSS/CSS lives under `public/assets/` (compiled/committed). No `@use`/`@forward` token structure in `resources/`.
-- Fix: when moving to Vite, establish a modular token layer; retire unused committed CSS. Document.
-
-### 6.6 Duplicated Blade markup — medium · maintainability
-- Repeated cards/forms/modals across 292 views; few shared components.
-- Fix: extract Blade components incrementally. Document.
-
-### 6.7 JS globals / duplicated AJAX — medium · frontend
-- `resources/js/app.js` + `bootstrap.js` (Axios). Confirm no accidental globals; standardize a CSRF-aware fetch helper.
-- Fix: modularize; single AJAX helper. Document.
-
-### 6.8 Committed built assets — low · deployment
-- `public/assets` is large and tracked (includes third-party JS and compiled assets). The legacy install dump has been moved to `database/schema/install.sql`, but public asset bloat remains.
-- Fix: audit what must ship vs be built; add `.DS_Store` to ignore (already listed) and remove tracked `.DS_Store` files. Document.
-
----
-
-## 7. Testing gaps
-
-- **Strength:** 408 passing tests, broad **guardrail/audit** coverage (routes, middleware, migrations, casts, relationships, soft deletes, pivots, money/date fields, API contract/rate-limit/idempotency/sensitive-leak, auth flows). This is unusually good for a legacy app.
-- **Gap — behavior tests for `ApiController`:** most endpoints lack request→response behavior/contract tests; audit tests assert structure, not behavior. **high · testing**.
-- **Gap — authorization matrix:** guest / authenticated-no-permission / owner / non-owner / admin / tenant-mismatch per resource (only marketplace covered). **high · security/testing**.
-- **Gap — chat XSS payload test.** **high**.
-- **Gap — file upload/download authorization** (Storage::fake). **medium**.
-- **Gap — payment webhook/callback signature + idempotency e2e.** **medium**.
-- **Factories:** only 6/54 — the main blocker to adding behavior tests (Section 3.5). **Fix first.**
-- No tests hit real external APIs (good); `phpunit.xml` forces array mail/cache/session, sqlite `:memory:`, low bcrypt rounds. Deterministic. Schema loaded via `TestCase` from the install dump.
-
----
-
-## 8. CI / deployment gaps
-
-| Gap | Severity · risk | Note / fix |
-| --- | --- | --- |
-| CI workflow must stay green | high · deployment | `.github/workflows/ci.yml` exists; keep it aligned with installed PHP/Node tooling and do not add flaky service dependencies. |
-| Frontend lint/build gate must stay compatible with Mix | medium · frontend | ESLint, Stylelint, Prettier, and `npm run production` are wired; Vite remains a separate migration. |
-| No migration-safety check | medium · deployment | CI step: fresh sqlite + run the 10 migrations + rollback where safe. |
-| No config/route cache check | medium · deployment | CI/deploy step: `config:cache`, `route:cache`, `view:cache` must succeed. |
-| Deployment docs require environment-specific owners | medium · deployment | Consolidated deployment, rollback, and backup/restore docs exist; fill in host-specific commands before production use. |
-| PR/issue templates require maintenance | low · process | `.github/PULL_REQUEST_TEMPLATE.md` and issue templates exist; keep checklists aligned with CI. |
-| npm dependency vulnerabilities | medium · security | Tracked historically; resolve via the Vite migration. |
-
----
-
-## Checks run for this audit
+| Laravel | `laravel/framework` `13.18.0` from `composer.lock` |
+| PHP | `composer.json` requires `^8.3`; local runtime is PHP `8.5.7` |
+| Composer | Composer `2.9.5` |
+| Node / npm | Node `v22.22.3`, npm `10.9.8` |
+| Frontend build | Laravel Mix `6.x` / Webpack `5.x` via `webpack.mix.js`; no `vite.config.*` detected |
+| Frontend assets | Tailwind CSS, Alpine.js, Axios, SweetAlert2, Moment Timezone; resource entrypoints are `resources/js/app.js` and `resources/css/app.css` |
+| Admin UI | Filament is not installed in this checkout; admin screens are legacy controllers and Blade views |
+| Database | `.env.example` and PHPUnit use SQLite; legacy schema is imported from `database/schema/install.sql`; production assumptions still look MySQL-compatible |
+| Schema history | 11 additive migrations plus a 2,318-line legacy install dump |
+| Test framework | PHPUnit `12.x`; no Pest detected |
+| Quality tools | Laravel Pint, PHPStan/Larastan, Rector, ESLint, Stylelint, Prettier, npm audit |
+| CI | GitHub Actions at `.github/workflows/ci.yml` for Composer validation/audit, Pint, PHPStan, tests, cache smoke checks, route list, migration fresh, npm quality, and Mix production build |
+| Route surface | 503 app routes, 0 unnamed routes, 0 route closures, 77 GET routes with state-changing-looking names/URIs |
+| Code size signals | 43 controllers; largest are `ApiController` 7,534 lines, `AdminCrudController` 1,515, `MainController` 1,235 |
+| Tests | 82 top-level test files were detected, with additional nested tests under Feature/Unit subdirectories |
+
+### Main Business Modules
+
+- Authentication, account activation, email verification, password reset, session login/logout.
+- Social feed: posts, stories, comments, reactions, sharing, memories, media, albums.
+- Social graph: friends, followers, blocks, notifications, chat/message threads.
+- Communities: groups, pages, events, invitations, memberships.
+- Marketplace: products, categories, brands, saves, payments and private downloads.
+- Content: blogs, videos, jobs, badges, sponsors, paid content, fundraisers.
+- Payments and integrations: Stripe, Razorpay, Paytm, Flutterwave, Paystack, PayPal-style status handling, Zoom/live streaming.
+- Install/update/addon flows: installer, SQL import, addon package import/update.
+- Admin and user dashboards.
+
+### Detected Architecture Style
+
+The project is a hybrid legacy Laravel application:
+
+- Strong recent guardrails exist: GitHub Actions, Pint, Larastan, PHPUnit, route/security/model audit tests, `.env.example` placeholders, code-quality docs, API idempotency, payment/webhook tests, and some Actions/Queries/Resources/Policies.
+- The legacy core remains controller/helper/view driven: `ApiController`, `AdminCrudController`, `MainController`, global helpers, and Blade templates still own too much validation, authorization, query construction, rendering logic, and workflow logic.
+- The database layer is still anchored to a legacy SQL dump, with additive safety migrations layered on top. This is workable for now, but it is not a senior production schema workflow until a baseline migration and production data cleanup plan exist.
+
+### High-Risk Areas
+
+- State-changing GET routes in web/admin/user flows.
+- Limited policy coverage for sensitive social, media, group, event, admin, and payment actions.
+- Queries and aggregates in Blade templates.
+- Raw `DB::table()` usage across helpers, controllers, models, and Blade.
+- Legacy schema bootstrap via `database/schema/install.sql`.
+- Large god controllers that make security and regression review difficult.
+- File upload/download logic split between newer support classes and legacy controller/helper paths.
+- Public asset tree is large and legacy; frontend build only covers a small modern entrypoint.
+
+### Missing or Stale Documentation
+
+- A single current architecture map exists, but several older audit docs still describe earlier Laravel versions or past state.
+- Deployment docs exist, but production ownership details are still not fully verifiable from the repository: process supervisor, queue worker topology, scheduler owner, backup tooling, RTO/RPO, domain/CORS origin list.
+- There is no production database diff report comparing real data against the new constraint migrations.
+
+### Missing Tests
+
+- Behavior tests for the majority of `ApiController` endpoints.
+- Authorization matrix tests for posts, comments, stories, media, albums, groups, events, pages, jobs, badges, sponsors, admin CRUD, paid content, fundraisers, and chat.
+- Regression tests around all state-changing GET routes before converting them to POST/DELETE.
+- Query-count tests for feed, search, profile, groups, events, chat, notifications, and admin lists.
+- Browser/accessibility tests for Blade forms, modals, dropdowns, and dynamic components.
+- Production-like migration tests against MySQL-compatible behavior, locks, and data cleanup.
+
+## 2. Code Quality Problems
+
+| ID | Issue | Severity | Risk | Exact files involved | Why it matters | Safest first fix | Tests needed before refactor? | Change now? |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CQ-01 | God API controller | High | Maintainability, security | `app/Http/Controllers/ApiController.php` | 7,534 lines mix validation, auth, queries, serialization, uploads, payments, and social workflows. Small changes are hard to prove safe. | Add endpoint contract tests, then split one domain at a time into controllers, Form Requests, Actions, Queries, and API Resources. | Yes | Document only |
+| CQ-02 | God admin controller | High | Maintainability, authorization | `app/Http/Controllers/AdminCrudController.php` | 1,515 lines centralize unrelated admin CRUD, deletes, payment history, category, brand, group, and job operations. | Extract one admin resource at a time; keep route names; add policy-backed authorization and feature tests. | Yes | Document only |
+| CQ-03 | Feed/profile controller business logic | High | Maintainability, performance | `app/Http/Controllers/MainController.php`, `app/Http/Controllers/Profile.php`, `app/Http/Controllers/GroupController.php` | Controllers build queries, manipulate media, and coordinate workflows directly. | Move workflows to `app/Actions`, repeated filters to scopes/query objects, and upload/delete logic to services. | Yes | Document only |
+| CQ-04 | Queries and logic in Blade | High | Performance, maintainability | `resources/views/frontend/album_details/album_details.blade.php`, `resources/views/frontend/profile/album_details.blade.php`, `resources/views/frontend/search/searchview.blade.php`, `resources/views/frontend/search/group.blade.php`, `resources/views/frontend/events/single_event.blade.php`, `resources/views/frontend/events/event_invite_modal.blade.php`, `resources/views/frontend/main_content/*`, `resources/views/backend/admin/blog/*.blade.php`, `resources/views/backend/admin/page/*.blade.php` | Views issue database queries, counts, path calculations, and conditional domain logic, creating N+1 risks and making rendering hard to test. | Preload data in controllers/ViewModels; pass typed arrays/DTOs; convert repeated fragments to components. | Yes for each page | Document only |
+| CQ-05 | Helper/static abuse | Medium | Maintainability, security | `app/Helpers/CommonHelper.php`, `app/Helpers/ApiHelper.php`, composer autoload `files` | Global helpers contain DB reads/writes, language insertion, upload pathing, URL fetching, settings lookup, and image helpers. | Move side-effect helpers to services/actions and keep globals pure. | Partial | Document only |
+| CQ-06 | Domain writes inside models | Medium | Maintainability, data integrity | `app/Models/Badge.php`, `app/Models/Sponsor.php` | Models write payment histories and mutate related tables via `DB::table()`, hiding workflows from controllers/tests. | Extract badge/sponsor payment actions with transactions and tests. | Yes | Document only |
+| CQ-07 | Unbounded `::all()` calls | Medium | Performance | `app/Http/Controllers/AdminCrudController.php` lines around category/brand/group/job category loads | `Pagecategory::all()`, `Category::all()`, `Brand::all()`, `Group::all()`, and `JobCategory::all()` can grow without bounds. | Use `query()->select([...])->orderBy(...)->paginate()` or bounded lists where UI requires all options. | Yes for view output | Can change in focused phase |
+| CQ-08 | Inconsistent legacy naming | Medium | Maintainability | `app/Models/Users.php`, `app/Models/User.php`, legacy tables like `message_thrades`, `batchs`, `blogcategories` | Parallel user models and legacy table names raise confusion and drift risk. | Make `User` canonical; deprecate `Users`; document unavoidable table-name compatibility. | Yes | Document only |
+| CQ-09 | Untyped legacy methods | Medium | Maintainability | Large controllers, helpers, some models | Modern PHP types are partial; static analysis is intentionally low level. | Add parameter/return types only while touching covered files; raise Larastan level gradually. | Yes for changed behavior | Document only |
+| CQ-10 | Dead/commented code candidates | Low | Maintainability | `app/Helpers/ApiHelper.php`, `app/Http/Controllers/ApiController.php`, public legacy assets | Some commented legacy queries and redundant imports remain. | Remove only inside tested slices; keep docs listing candidates. | No for pure dead comments, yes near logic | Document only |
+| CQ-11 | Formatting baseline mostly good | Low | Maintainability | `pint.json`, `composer.json`, CI | Pint is installed and scripted; future drift is covered. | Keep Pint in `composer ci` and GitHub Actions. | No | Already in place |
+
+## 3. Laravel Best-Practice Gaps
+
+| ID | Issue | Severity | Risk | Exact files involved | Why it matters | Safest first fix | Tests needed before refactor? | Change now? |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| LB-01 | Missing Form Requests across legacy domains | High | Security, maintainability | `app/Http/Controllers/ApiController.php`, `MainController.php`, `AdminCrudController.php`, `GroupController.php`, `Profile.php` | Some modules have requests, but many writes still validate inline or rely on controller conditionals. | Add Form Requests per endpoint with `authorize()`, `prepareForValidation()`, rules, messages, and validation tests. | Yes | Document only |
+| LB-02 | Thin-controller pattern is only partial | High | Maintainability | Same large controllers plus route files | Modern Actions/Queries exist but are not yet the dominant pattern. | Start with one mature pattern, such as marketplace, then repeat per domain. | Yes | Document only |
+| LB-03 | Policy coverage is too narrow | High | Security | `app/Policies/MarketplacePolicy.php`, `app/Policies/PagePolicy.php`; missing policies for posts/comments/media/groups/events/jobs/admin/payment/chat | Sensitive actions still rely on inline checks or UI hiding. | Add model policies and matrix tests per resource; enforce in controllers and requests. | Yes | Document only |
+| LB-04 | API Resources only cover part of API | Medium | Security, maintainability | `app/Http/Resources/Api/*`, `app/Http/Controllers/ApiController.php` | Hand-built arrays can leak fields or break response consistency. | Add contract tests, then Resources per endpoint; preserve public response shapes. | Yes | Document only |
+| LB-05 | Route model binding underused | Medium | Security, maintainability | `routes/*.php`, large controllers taking `{id}` | Raw IDs force manual lookup and make ownership scoping inconsistent. | Convert by domain to scoped route model binding plus policy checks. | Yes | Document only |
+| LB-06 | Route verbs are unsafe in many places | High | Security, deployment | `routes/web.php`, `routes/user.php`, `routes/custom_routes.php`, `routes/payment.php` | 77 GET routes look state-changing by URI/name, so CSRF and crawler/prefetch side effects are possible. | Add regression tests, then change mutators to POST/PATCH/DELETE with CSRF while preserving route names where possible. | Yes | Document only |
+| LB-07 | Queue usage is minimal | Medium | Performance, reliability | `app/Jobs/ImportAddonPackageJob.php`, `app/Jobs/ImportInstallSqlDumpJob.php`, payment/mail/upload workflows | Slow work appears to run synchronously in many controllers/helpers. | Move email, image processing, exports/imports, external API calls, and webhook side effects into idempotent jobs. | Yes | Document only |
+| LB-08 | Cache invalidation standards are incomplete | Medium | Performance, correctness | `app/Models/User.php`, helpers, docs | Cache use exists but no universal invalidation model is visible. | Add domain-specific cache keys with context and TTLs; use observers/events only where justified. | Yes for permission-sensitive cache | Document only |
+| LB-09 | Logging standards are partial | Medium | Security, operations | `app/Support/Logging/*`, `docs/logging-sensitive-data-audit.md`, payment/webhook code | Sensitive log redaction has tests, but operational logging conventions are not fully enforced per module. | Standardize structured logs and redaction rules around payments, auth, webhooks, uploads. | Yes for redaction | Document only |
+| LB-10 | `env()` usage is mostly clean | Low | Deployment | `config/*`, `.env.example`, scans of `app/` | Runtime `env()` abuse was not found as a major issue; keep it guarded. | Continue requiring config entries and `.env.example` placeholders for new keys. | No | Already acceptable |
+
+## 4. Security Risks
+
+| ID | Issue | Severity | Risk | Exact files involved | Why it matters | Safest first fix | Tests needed before refactor? | Change now? |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SEC-01 | State-changing GET routes | Critical | Security | `routes/web.php`, `routes/user.php`, `routes/custom_routes.php`, `routes/payment.php`; callers in Blade/JS | GET mutators bypass Laravel CSRF protection and can be triggered by crawlers, previews, prefetch, or embedded images. | Characterize current behavior, then migrate to POST/PATCH/DELETE with `@csrf`; keep redirects/flash messages. | Yes | Document only |
+| SEC-02 | Incomplete authorization / IDOR risk | Critical | Security | Controllers for posts, comments, media, albums, groups, events, chat, admin, jobs, pages, payment history | Raw IDs and limited policy coverage can allow cross-user access if any inline check is missed. | Add policies and owner/non-owner/admin tests per resource before route/controller refactors. | Yes | Document only |
+| SEC-03 | Raw database access outside model scopes | High | Security, maintainability | `app/Helpers/ApiHelper.php`, `app/Helpers/CommonHelper.php`, `app/Http/Controllers/*`, `app/Models/Badge.php`, `app/Models/Sponsor.php`, multiple Blade views | The project rule forbids raw SQL/DB access outside model internals; current code still has many `DB::table()` sites. | Replace with Eloquent scopes/query objects/actions per domain. | Yes | Document only |
+| SEC-04 | Raw HTML rendering | High | Security, frontend | `resources/views/frontend/settings/*.blade.php`, `resources/views/frontend/marketplace/single_product.blade.php`, `resources/views/frontend/blogs/single_blog.blade.php`, `resources/views/frontend/groups/bio.blade.php`, `resources/views/frontend/events/single_event.blade.php`, `resources/views/frontend/profile/profile_info.blade.php` | `{!! script_checker(..., false) !!}` renders trusted rich text but is unsafe if writers are compromised or permissions broaden. | Choose an HTML sanitizer policy, sanitize on write or render, and add XSS payload tests. | Yes | Can change in focused security phase |
+| SEC-05 | Chat rendering needs continued XSS coverage | Medium | Security | `resources/views/frontend/chat/single-message.blade.php`, chat controllers/tests | Current chat message output uses `nl2br(e(...))`, which is safer than raw output, but this is a high-value regression target. | Keep/expand chat XSS tests and forbid future raw rendering. | Yes | Already partly mitigated |
+| SEC-06 | File uploads split across paths | High | Security | `app/Support/Files/FileUploader.php`, `app/Helpers/CommonHelper.php`, `ApiController.php`, `Profile.php`, `ChatController.php`, media/download actions | Central validation exists, but legacy helpers/controllers still handle files and paths directly. | Route every upload/download through the centralized service/action with Storage fakes and authorization tests. | Yes | Document only |
+| SEC-07 | Directory permissions in upload helper | High | Security | `app/Helpers/CommonHelper.php` | Legacy helper creates directories with broad permissions in some paths. | Tighten permissions and centralize upload directory creation. | Yes for upload flows | Focused phase |
+| SEC-08 | Unsafe server-side URL fetching risk | High | Security | `app/Helpers/CommonHelper.php`, `app/Support/Http/ServerSideUrl.php`, `.env.example` URL allowlist settings | Link-preview style fetches can become SSRF if any call path bypasses `ServerSideUrl`. | Ensure all fetches go through `ServerSideUrl`, restrict schemes/hosts in production, and test private IP blocking. | Yes | Focused phase |
+| SEC-09 | CORS defaults are permissive | High | Security | `.env.example`, `config/cors.php` | `CORS_ALLOWED_ORIGINS=*` is acceptable for public token APIs only; risky for authenticated browser flows. | Document production origins and require explicit allowlist outside local/demo. | Config tests recommended | Focused deployment/security phase |
+| SEC-10 | Sessions/cookies need production assertion | Medium | Security | `.env.example`, `config/session.php`, docs/session-cookie-security.md | `SESSION_SECURE_COOKIE=false` in example is fine for local, but production must force HTTPS cookies and safe same-site behavior. | Add deployment checklist assertion and config tests for prod env. | Yes for config assertions | Document/phase |
+| SEC-11 | Webhook coverage is partial | Medium | Security | `app/Http/Controllers/PaymentController.php`, payment services, `tests/Feature/PaymentWebhookSecurityTest.php`, docs/webhook-audit.md | Paystack replay/signature settings exist, but every provider callback needs signature/idempotency verification. | Add provider-by-provider contract tests with `Http::fake()`/SDK fakes. | Yes | Document only |
+| SEC-12 | Unsafe redirect/modal path risks need review | Medium | Security | `app/Http/Controllers/ModalController.php`, routes containing dynamic `{view_path}`, redirect helpers | Dynamic view/redirect parameters can become open redirect or local view disclosure bugs if not allowlisted. | Add allowlists and tests before changing view paths. | Yes | Document only |
+| SEC-13 | Sensitive admin/payment fields | Medium | Security | payment gateway controllers/views/models, `.env.example`, `config/*` | Payment credentials are represented in database/config paths; leakage through logs or views must be prevented. | Verify hidden fields/resources/log redaction; add tests for responses and logs. | Yes | Document only |
+| SEC-14 | API token and rate-limit coverage is partial | Medium | Security | `app/Providers/RouteServiceProvider.php`, API middleware, Sanctum config, `tests/Feature/ApiTokenAbilityTest.php`, `ApiRateLimitAuditTest.php` | Guardrails exist, but every sensitive endpoint must declare required token ability and throttling expectations. | Add endpoint-by-endpoint token ability matrix. | Yes | Document only |
+| SEC-15 | APP_DEBUG/debug exposure guarded but must stay enforced | Low | Security, deployment | `.env.example`, `tests/Feature/ProductionDebugInstrumentationTest.php`, `SecretLeakAuditTest.php` | No obvious debug instrumentation in app code, but this is a release blocker if it regresses. | Keep tests in CI and production checklist. | No | Already guarded |
+
+## 5. Database and Migration Risks
+
+| ID | Issue | Severity | Risk | Exact files involved | Why it matters | Safest first fix | Tests needed before refactor? | Change now? |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| DB-01 | Schema source is a legacy SQL dump | Critical | Deployment, data-loss | `database/schema/install.sql`, `app/Actions/Install/ImportInstallSqlDump.php`, installer tests | Install/migrate behavior is not fully represented by Laravel migrations; production diffs are hard to review. | Generate a reviewed baseline migration from the current schema and freeze the dump as installer legacy input. | Yes | Document only |
+| DB-02 | Foreign keys are incomplete | High | Data integrity | `database/migrations/2026_07_02_150000_add_safe_legacy_foreign_key_constraints.php`, models, schema dump | Additive FK migration exists, but constraints must be enabled only when production data is clean. | Run data audit, document violations in `docs/data-cleanup-needed.md`, add one constraint group at a time. | Yes | Document only |
+| DB-03 | Unique constraints are partial | High | Data integrity | `database/migrations/2026_07_02_160000_add_safe_legacy_unique_constraints.php`, validation rules | Validation-only uniqueness can race under concurrency. | Add database constraints after duplicate cleanup and validation tests. | Yes | Document only |
+| DB-04 | Nullable/default cleanup is partial | Medium | Data integrity | `2026_07_02_170000_add_safe_legacy_nullable_column_constraints.php`, schema dump | Tightening nullability can break dirty production data if not audited. | Keep expand-and-contract; document cleanup SQL/Laravel commands. | Yes | Document only |
+| DB-05 | Money precision needs production audit | High | Data integrity | `2026_07_02_180000_add_safe_legacy_money_precision_constraints.php`, `app/Support/Money/Money.php`, payment models | Payment/marketplace/fundraiser amounts must not use unsafe floats or inconsistent precision. | Standardize decimal/minor-unit handling per table and add rounding tests. | Yes | Document only |
+| DB-06 | JSON/date constraints need cleanup | Medium | Data integrity | `2026_07_02_190000_add_safe_legacy_datetime_column_constraints.php`, `2026_07_02_200000_add_safe_legacy_json_column_constraints.php` | Legacy string dates/JSON need shape guarantees before constraints. | Backfill invalid rows, add casts and request validation. | Yes | Document only |
+| DB-07 | Missing/partial indexes | High | Performance | index migrations, `docs/database-indexes.md`, query-heavy controllers/views | Recent index migrations help, but Blade/controller queries still reveal hot filters that need production EXPLAIN. | Profile routes, add justified indexes only after checking duplicates. | Query-count tests recommended | Document only |
+| DB-08 | Unbounded list queries | Medium | Performance | `AdminCrudController.php`, Blade DB queries, helpers | `all()`/unbounded `get()` can become memory and latency issues. | Paginate lists and chunk background work. | Yes for output | Focused phase |
+| DB-09 | N+1 from Blade and helpers | High | Performance | `resources/views/frontend/*`, `CommonHelper.php`, `ApiHelper.php`, feed/search/profile/event views | Relationship/count lookups inside loops multiply query count. | Eager load and precompute counts via `withCount()`/`withExists()`. | Query-count tests | Document only |
+| DB-10 | Soft delete consistency unknown | Medium | Data integrity | models, `docs/soft-delete-audit.md`, migrations | If `deleted_at` columns and `SoftDeletes` traits diverge, restore/delete behavior is inconsistent. | Audit model-by-model and add delete/restore tests where soft deletes are intended. | Yes | Document only |
+| DB-11 | Transaction boundaries are incomplete | High | Data integrity | payment, marketplace, media, friend/group/event workflows | Multi-table writes without transactions can leave partial state. | Extract actions and wrap writes in `DB::transaction`; dispatch after commit. | Yes | Document only |
+| DB-12 | Legacy naming inconsistency | Low | Maintainability | tables `batchs`, `message_thrades`, category pluralization, model table mappings | Renames are risky and not worth immediate data-loss risk. | Keep compatibility mappings; document future expand-and-contract renames only if business value exists. | Yes for any rename | Document only |
+
+## 6. Frontend Quality Risks
+
+| ID | Issue | Severity | Risk | Exact files involved | Why it matters | Safest first fix | Tests needed before refactor? | Change now? |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| FE-01 | Laravel Mix/Webpack is legacy stack | Medium | Deployment, maintainability | `webpack.mix.js`, `package.json`, `resources/js/app.js`, `resources/css/app.css` | Mix works but the Laravel ecosystem has moved to Vite; docs already reference Vite concepts. | Plan a separate Mix-to-Vite migration with asset manifest tests and visual smoke checks. | Yes | Document only |
+| FE-02 | Blade semantics/accessibility are inconsistent | High | Frontend, accessibility | `resources/views/frontend/**`, `resources/views/backend/**`, forms/modals/nav partials | Legacy markup has many anchor-as-button patterns, inline handlers, missing form semantics, and likely heading/order issues. | Page-by-page accessibility refactor after behavior tests; preserve CSS hooks. | Yes for critical forms | Document only |
+| FE-03 | Queries in views | High | Performance, maintainability | Same Blade files listed in CQ-04 | Data access in views blocks frontend cleanup and creates N+1s. | Move all query data to controllers/ViewModels first. | Yes | Document only |
+| FE-04 | Raw HTML/rich text rendering | High | Security | Files listed in SEC-04 | Stored XSS risk for rich content. | Define sanitizer and test malicious payloads. | Yes | Focused security phase |
+| FE-05 | Duplicated Blade markup | Medium | Maintainability | post modals, search views, admin CRUD forms, event/group/page views | Duplicated forms and UI fragments make accessibility fixes inconsistent. | Extract anonymous components with clear props and slots. | Rendering tests recommended | Document only |
+| FE-06 | SCSS/CSS architecture is not modular | Medium | Frontend | `resources/css/app.css`, `public/assets/**` | Modern entrypoint is tiny while legacy public assets are large and global; design tokens are not consistently centralized. | Introduce tokens/utilities in resources CSS/SCSS, then retire proven-unused legacy assets. | Visual/build tests | Document only |
+| FE-07 | JavaScript global/inline behavior | Medium | Security, accessibility | Blade `onclick`/`javascript:void(0)` usage, `public/assets/**`, `resources/js/app.js` | Inline handlers and legacy global scripts make keyboard/accessibility/security fixes harder. | Move page behavior to ES modules and delegated listeners; add CSRF-aware fetch helper. | Yes | Document only |
+| FE-08 | Unsafe DOM injection needs continued audit | Medium | Security | legacy public JS assets, dynamic Blade snippets | Vendor/legacy scripts contain `innerHTML`/DOM writes; user-data paths must be distinguished from static template writes. | Audit only first-party dynamic paths; avoid mass-editing minified/vendor files. | Yes | Document only |
+| FE-09 | Oversized/legacy frontend bundle risk | Medium | Performance | `public/assets/**`, `package-lock.json`, Mix output | Large committed assets and old dependencies can slow load/build and increase audit noise. | Measure bundle, remove duplicates only with route/page evidence. | Build and visual checks | Document only |
+
+## 7. Testing Gaps
+
+| ID | Issue | Severity | Risk | Exact files involved | Why it matters | Safest first fix | Tests needed before refactor? | Change now? |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TST-01 | Coverage is guardrail-heavy, behavior-light | High | Testing, maintainability | `tests/Feature/*AuditTest.php`, `ApiControllerResponseTest.php`, legacy controllers | Many tests assert standards and absence of bad patterns, but not full user behavior for legacy modules. | Add characterization tests for one domain before each refactor. | Yes | Document only |
+| TST-02 | Authorization matrix gaps | Critical | Security, testing | Missing tests for posts/comments/media/groups/events/chat/admin/payment domains | IDOR prevention cannot be trusted without guest/non-owner/owner/admin tests. | Add matrix tests per policy/resource. | Yes | Document only |
+| TST-03 | Validation test gaps | High | Security, testing | write endpoints without Form Requests | Legacy inline validation can regress silently. | Create Form Request tests and feature validation assertions. | Yes | Document only |
+| TST-04 | API contract gaps | High | Deployment, testing | `ApiController.php`, mobile/API clients | Response shape changes can break clients. | Snapshot/current-shape tests before Resource refactors. | Yes | Document only |
+| TST-05 | Database behavior gaps | Medium | Data integrity | migrations, model relationships, factories | Safe migrations exist, but production-like data constraints are not fully exercised. | Add relationship, uniqueness, soft-delete, transaction rollback tests. | Yes | Document only |
+| TST-06 | File upload/download gaps outside covered paths | High | Security, testing | chat/media/profile/album/story/marketplace/job uploads | Some upload/download security tests exist; coverage needs every file surface. | Use `Storage::fake()` per upload surface and assert unauthorized failures. | Yes | Document only |
+| TST-07 | External integration gaps | Medium | Security, reliability | payment/Zoom/webhook services | Some payment tests exist; every provider callback needs fake-based signature/idempotency tests. | Add provider-by-provider fakes; never call real services. | Yes | Document only |
+| TST-08 | Frontend/a11y tests missing | Medium | Frontend, testing | Blade views, modals, forms | Accessibility regressions are currently manual. | Add feature tests for labels/errors/escaped output; consider browser tests only after stack is stable. | Yes where practical | Document only |
+| TST-09 | Performance regression tests are sparse | Medium | Performance, testing | feed/search/profile/group/event/list endpoints | N+1 and unbounded query regressions need query-count coverage. | Add route-level query-count tests around hot pages. | Yes | Document only |
+
+## 8. CI and Deployment Gaps
+
+| ID | Issue | Severity | Risk | Exact files involved | Why it matters | Safest first fix | Tests needed before refactor? | Change now? |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CI-01 | CI is strong but must stay representative | Medium | Deployment | `.github/workflows/ci.yml`, `composer.json`, `package.json` | CI runs SQLite and local build checks; production may use MySQL and real queues. | Add optional MySQL service job or scheduled production-like migration smoke test. | No | Document only |
+| CI-02 | Static analysis level is intentionally low | Medium | Maintainability | `phpstan.neon`, `composer analyse` | Level 1 is safe for legacy code but leaves type issues undiscovered. | Raise level gradually after adding types/baseline. | Yes for fixes | Document only |
+| CI-03 | Frontend build checks cover resources only | Medium | Frontend, deployment | npm scripts, `public/assets/**`, Mix config | ESLint/Stylelint/Prettier cover `resources`, not the full legacy public asset tree. | Keep public vendor assets out of mass linting; migrate first-party JS/CSS into resources. | Build/visual checks | Document only |
+| CI-04 | Migration safety is SQLite-first | Medium | Deployment, data-loss | CI migration step, migrations, schema dump | SQLite does not reveal all MySQL lock/index/FK behavior. | Add MySQL-compatible migration rehearsal before production schema changes. | Yes | Document only |
+| CI-05 | Queue restart/scheduler ownership not verifiable | Medium | Deployment | `docs/deployment-checklist.md`, production process manager not in repo | The app will need workers once slow work is queued. | Document supervisor/systemd/Laravel Cloud/Horizon equivalent when target infra is known. | No | Document only |
+| CI-06 | Rollback and backup docs need rehearsal evidence | Medium | Deployment, data-loss | `docs/rollback-plan.md`, `docs/backup-and-restore.md` | Docs exist, but no evidence of restore drills or migration rollback drills is committed. | Add restore-drill checklist and record non-secret evidence per release. | No | Document only |
+| CI-07 | Secrets policy mostly documented | Low | Security | `.env.example`, `SecretLeakAuditTest`, CI env | Placeholders are good; keep scans/tests active. | Add new env keys only with config entries and placeholder examples. | No | Already guarded |
+
+## 9. Command Results From This Audit Pass
+
+These checks were selected because they are safe for a documentation-only audit and already supported by the repository tooling.
 
 | Command | Result | Notes |
 | --- | --- | --- |
-| `php -v` / `composer -V` / `node -v` / `npm -v` | ok | PHP 8.5.7, Composer 2.9.5, Node 22.22.3, npm 10.9.8 |
-| `composer validate --strict` | **pass** | `composer.json` is valid |
-| `vendor/bin/pint --test` | **pass*** | *Passed on committed code. Reported a fail only for the injected `routes/web.php` route, which was reverted. |
-| `vendor/bin/phpstan analyse` | **pass** | Larastan level 1, "No errors" |
-| `php artisan test` | **pass** | 408 passing after reverting the injected route (was 405/3-fail with it) |
-| `npm run production` (Laravel Mix) | **pass** | Compiled in ~1.5s; `js/app.js` 138 KiB, `css/app.css` ~1 byte (Tailwind purged) |
+| `git status --short --branch` | Passed | Only the two requested docs are modified. |
+| `php artisan route:list --except-vendor --json` | Passed | Detected 503 routes, 0 unnamed routes, 0 closures, and 77 state-changing-looking GET routes. |
+| `composer validate --strict --no-interaction` | Passed | Covered by `composer ci`; `composer.json` is valid. |
+| `composer audit --no-interaction` | Passed | Covered by `composer ci`; no Composer security advisories reported. |
+| `vendor/bin/pint --test` | Passed | Covered by `composer ci`; Pint reported `{"tool":"pint","result":"passed"}`. |
+| `composer analyse` | Passed | Covered by `composer ci`; PHPStan/Larastan scanned 361 files with no errors. |
+| `php artisan test` | Passed | Covered by `composer ci`; 496 tests passed with 14,480 assertions in 40.43s. |
+| `npm run quality` | Passed | Covered by `composer ci`; ESLint, Stylelint, Prettier check, production npm audit, and Mix production build passed. |
+| `composer quality:cache` | Passed | Covered by `composer ci`; config, route, and view cache smoke checks passed and caches were cleared. |
+| `git diff --check` | Passed | No whitespace errors were reported after the docs update. |
 
-No command failed on the committed codebase. The only failures were caused by the externally injected route documented in Section 0.
+## 10. Safest Immediate Work Order
 
----
-
-## Prioritized fix order (summary)
-
-1. **Critical:** quarantine `AuthenticatedSessionController::dataReplace()` restore/mutation path; keep guard on injected routes.
-2. **Critical:** replace SQL-dump schema with a baseline migration + migrations-only policy.
-3. **High:** fix chat stored-XSS; convert state-changing GET routes; add policies + IDOR/ownership scoping.
-4. **High:** decompose `ApiController` domain-by-domain (contract tests first).
-5. **High:** restrict CORS; harden session cookies; SSRF-guard `get_url_contents`; `0755` uploads.
-6. **Medium:** add CI; add factories (unblocks behavior tests); add ESLint/Stylelint/Prettier.
-7. **Medium:** money/decimal + soft-delete reconciliation; N+1 query tests.
-8. **Medium:** Mix → Vite; a11y pass; Blade componentization.
-
-See `docs/senior-refactor-roadmap.md` for the phased plan.
+1. Keep this audit and `docs/senior-refactor-roadmap.md` as the current planning baseline.
+2. Do not begin broad refactors until Phase 1 characterization tests exist for the target domain.
+3. Prioritize security-critical but testable slices: state-changing GET route migration, policy/IDOR coverage, file upload/download consolidation, and rich-text sanitization.
+4. Use the mature marketplace pattern as the template: Form Requests, Query object, API Resource, Policy, feature tests.
+5. Treat database changes as production projects: audit real data first, then add additive migrations and rollback notes.
