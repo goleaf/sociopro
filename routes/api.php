@@ -19,19 +19,19 @@ Route::name('api.')->group(function () {
     // Legacy unversioned API surface. Add versioned groups beside this one only
     // after client migration tests prove the public URLs remain supported.
     Route::controller(ApiController::class)->group(function () {
-        Route::get('/data', 'userdata')->name('data.index');
+        Route::get('/data', 'userdata')->middleware('throttle:api-expensive')->name('data.index');
 
-        Route::post('/login', 'login')->name('auth.login');
-        Route::post('/signup', 'signup')->name('auth.signup');
-        Route::post('/forgot_password', 'forgot_password')->name('password.forgot');
+        Route::post('/login', 'login')->middleware('throttle:api-token')->name('auth.login');
+        Route::post('/signup', 'signup')->middleware('throttle:api-registration')->name('auth.signup');
+        Route::post('/forgot_password', 'forgot_password')->middleware('throttle:api-password-reset')->name('password.forgot');
     });
 
-    Route::middleware('api.token')->group(function () {
+    Route::middleware(['api.token', 'throttle:api-authenticated'])->group(function () {
         Route::controller(ApiController::class)->group(function () {
             Route::post('/update_password', 'update_password')->name('password.update');
 
-            Route::get('/user', 'user')->name('me.feed');
-            Route::get('/user_post', 'user_post')->name('me.posts');
+            Route::get('/user', 'user')->middleware('throttle:api-expensive')->name('me.feed');
+            Route::get('/user_post', 'user_post')->middleware('throttle:api-expensive')->name('me.posts');
 
             Route::get('/friends', 'friends')->name('friends.index');
             Route::post('/add_friend/{id}', 'add_friend')->name('friends.store');
@@ -41,8 +41,8 @@ Route::name('api.')->group(function () {
             Route::get('/friend_request', 'friend_request')->name('friend_requests.index');
 
             Route::get('/getPostReactions/{postId}', 'getPostReactions')->name('post_reactions.index');
-            Route::get('/timeline', 'timeline')->name('timeline.index');
-            Route::get('/load_timeline', 'load_timeline')->name('timeline.load');
+            Route::get('/timeline', 'timeline')->middleware('throttle:api-expensive')->name('timeline.index');
+            Route::get('/load_timeline', 'load_timeline')->middleware('throttle:api-expensive')->name('timeline.load');
             Route::get('/stories', 'stories')->name('stories.index');
             Route::post('/create_story', 'create_story')->name('stories.store');
             Route::post('/reaction', 'reaction')->name('reactions.store');
@@ -98,11 +98,11 @@ Route::name('api.')->group(function () {
             Route::get('/pages_timeline/{page_id}', 'pages_timeline')->name('pages.timeline.index');
             Route::get('/page_photos/{id}', 'page_photos')->name('pages.photos.index');
 
-            Route::get('/marketplace', 'marketplace')->name('marketplace.index');
+            Route::get('/marketplace', 'marketplace')->middleware('throttle:api-expensive')->name('marketplace.index');
             Route::get('/marketplace_category', 'marketplace_category')->name('marketplace.categories.index');
             Route::get('/marketplace_brand', 'marketplace_brand')->name('marketplace.brands.index');
             Route::get('/currencies', 'currencies')->name('currencies.index');
-            Route::get('/filter', 'filter')->name('marketplace.filter');
+            Route::get('/filter', 'filter')->middleware('throttle:api-search')->name('marketplace.filter');
             Route::post('/create_marketplace', 'create_marketplace')->name('marketplace.store');
             Route::post('/update_marketplace/{id}', 'update_marketplace')->name('marketplace.update');
             Route::post('/delete_marketplace/{product_id}', 'delete_marketplace')->name('marketplace.destroy');
@@ -154,7 +154,7 @@ Route::name('api.')->group(function () {
         });
 
         Route::controller(ApiNotificationController::class)->group(function () {
-            Route::get('/notifications', 'notifications')->name('notifications.index');
+            Route::get('/notifications', 'notifications')->middleware('throttle:api-expensive')->name('notifications.index');
             Route::post('/accept_friend_notification/{id}', 'accept_friend_notification')->name('notifications.friends.accept');
             Route::post('/decline_friend_notification/{id}', 'decline_friend_notification')->name('notifications.friends.decline');
             Route::post('/accept_group_notification/{id}/{group_id}', 'accept_group_notification')->name('notifications.groups.accept');
@@ -167,17 +167,17 @@ Route::name('api.')->group(function () {
         });
 
         Route::controller(ApiController::class)->group(function () {
-            Route::get('/chat', 'chat')->name('chat.index');
-            Route::get('/chat_msg/{msg_thrade}', 'chat_msg')->name('chat.messages.index');
+            Route::get('/chat', 'chat')->middleware('throttle:api-expensive')->name('chat.index');
+            Route::get('/chat_msg/{msg_thrade}', 'chat_msg')->middleware('throttle:api-expensive')->name('chat.messages.index');
             Route::post('/chat_save', 'chat_save')->name('chat.messages.store');
             Route::post('/thread_save', 'thread_save')->name('chat.threads.store');
             Route::post('/remove_chat/{chat_id}', 'remove_chat')->name('chat.messages.destroy');
             Route::post('/chat_read_option/{user_id}', 'chat_read_option')->name('chat.read.store');
             Route::post('/react_chat', 'react_chat')->name('chat.reactions.store');
 
-            Route::get('/all_user', 'all_user')->name('users.index');
+            Route::get('/all_user', 'all_user')->middleware('throttle:api-expensive')->name('users.index');
             Route::get('/invite/{group_event_id}', 'invite')->name('invitations.show');
-            Route::get('/count_notification', 'count_notification')->name('notifications.count');
+            Route::get('/count_notification', 'count_notification')->middleware('throttle:api-expensive')->name('notifications.count');
 
             Route::get('/roomName', 'roomName')->name('rooms.name');
             Route::get('/about_policy', 'about_policy')->name('policies.about');

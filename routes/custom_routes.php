@@ -83,7 +83,7 @@ Route::controller(BlogController::class)->middleware('auth', 'user', 'verified',
     Route::get('/load_blog_by_scrolling', 'load_blog_by_scrolling')->name('load_blog_by_scrolling');
     Route::get('blog/view/{id}', 'show')->name('single.blog');
     Route::get('/blog/category/{category}', 'category_blog')->name('category.blog');
-    Route::get('/blog/search/', 'search')->name('search.blog');
+    Route::get('/blog/search/', 'search')->middleware('throttle:search')->name('search.blog');
 });
 
 //  FrontEnd Jobs Route
@@ -100,7 +100,7 @@ if (class_exists(JobController::class)) {
         Route::get('job/follow/{id}/{user_id}', 'job_follow')->name('job.follow');
 
         Route::get('job/save/view', 'job_save')->name('job.save.view');
-        Route::get('job/search/view', 'search_job')->name('search.job');
+        Route::get('job/search/view', 'search_job')->middleware('throttle:search')->name('search.job');
         Route::get('/job/filter/{category?}/{max?}/{location?}', 'job_filter')->name('filter.job');
 
         Route::get('job/single/details/{id}', 'single_job_details')->name('job.single.details');
@@ -151,7 +151,7 @@ Route::controller(GroupController::class)->middleware('auth', 'user', 'verified'
     Route::get('/group/event/view/{id}', 'group_event')->name('group.event.view');
     Route::get('group/join/{id}', 'join')->name('group.join');
     Route::get('group/rjoin/{id}', 'rjoin')->name('group.rjoin');
-    Route::get('group/search/view', 'search_group')->name('search.group');
+    Route::get('group/search/view', 'search_group')->middleware('throttle:search')->name('search.group');
     Route::get('group/all/view', 'group_all_view')->name('all.group.view');
     Route::get('group/user/create', 'group_user_create')->name('group.user.created');
     Route::get('group/user/joined', 'group_user_joined')->name('group.user.joined');
@@ -189,7 +189,7 @@ Route::controller(ChatController::class)->middleware('auth', 'user', 'verified',
     Route::POST('/chat/save', 'chat_save')->name('chat.save');
     Route::get('chat/own/remove/{id}', 'remove_chat')->name('remove.chat');
     Route::POST('/my_message_react', 'react_chat')->name('react.chat');
-    Route::get('/chat/profile/search/', 'search_chat')->name('search.chat');
+    Route::get('/chat/profile/search/', 'search_chat')->middleware('throttle:search')->name('search.chat');
 
     Route::get('/chat/inbox/load/data/ajax/', 'chat_load')->name('chat.load');
     Route::get('/chat/inbox/read/message/ajax/', 'chat_read_option')->name('chat.read');
@@ -202,7 +202,7 @@ Route::controller(FollowController::class)->middleware('auth', 'user', 'verified
 });
 
 //  whole website ssearch
-Route::controller(SearchController::class)->middleware('auth', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {
+Route::controller(SearchController::class)->middleware('auth', 'user', 'verified', 'activity', 'prevent-back-history', 'throttle:search')->group(function () {
     Route::get('/search', 'search')->name('search');
     Route::get('/search/people/', 'search_people')->name('search.people');
     Route::get('/search/post/', 'search_post')->name('search.post');
@@ -236,7 +236,7 @@ Route::controller(SettingController::class)->group(function () {
     Route::get('about/page/view/', 'about_view')->name('about.view')->middleware('auth', 'user', 'verified', 'prevent-back-history');
     Route::get('policy/page/view/', 'policy_view')->name('policy.view')->middleware('auth', 'user', 'verified', 'prevent-back-history');
     Route::get('contact/us/view/', 'contact_view')->name('contact.view');
-    Route::POST('contact/us/send/', 'contact_send')->name('contact.send');
+    Route::POST('contact/us/send/', 'contact_send')->middleware('throttle:contact')->name('contact.send');
 
     Route::get('term/condition/view/', 'term_view')->name('term.view');
     Route::get('settings/page/view/', 'all_settings_view')->name('all_settings.view')->middleware('auth', 'user', 'verified', 'prevent-back-history');

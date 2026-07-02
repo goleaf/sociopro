@@ -16,6 +16,7 @@ Route::middleware('guest')->group(function () {
             ->name('register');
 
         Route::post('register', 'store')
+            ->middleware('throttle:registration')
             ->name('register.store');
     });
 
@@ -24,6 +25,7 @@ Route::middleware('guest')->group(function () {
             ->name('login');
 
         Route::post('login', 'store')
+            ->middleware('throttle:login')
             ->name('login.store');
     });
 
@@ -32,6 +34,7 @@ Route::middleware('guest')->group(function () {
             ->name('password.request');
 
         Route::post('forgot-password', 'store')
+            ->middleware('throttle:password-reset')
             ->name('password.email');
     });
 
