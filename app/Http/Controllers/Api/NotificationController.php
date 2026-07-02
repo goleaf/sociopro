@@ -9,8 +9,12 @@ use App\Models\Event;
 use App\Models\Friendships;
 use App\Models\Invite;
 use App\Models\Notification;
+use App\Models\User;
+use App\Support\Api\ApiErrorResponse;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class NotificationController extends Controller
 {
@@ -26,7 +30,6 @@ class NotificationController extends Controller
     public function notifications(Request $request)
     {
         $token = $request->bearerToken();
-        $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
@@ -45,11 +48,8 @@ class NotificationController extends Controller
 
             return new NotificationCollection($new_notification->getCollection(), $older_notification->getCollection());
         } else {
-            $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            return $this->legacyAuthenticationError();
         }
-
-        return $response;
     }
 
     private function perPage(Request $request): int
@@ -73,8 +73,7 @@ class NotificationController extends Controller
             $response['success'] = true;
             $response['message'] = 'Friend request accept';
         } else {
-            $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            return $this->legacyAuthenticationError();
         }
 
         return $response;
@@ -92,8 +91,7 @@ class NotificationController extends Controller
             $response['success'] = true;
             $response['message'] = 'successfully decline';
         } else {
-            $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            return $this->legacyAuthenticationError();
         }
 
         return $response;
@@ -118,12 +116,10 @@ class NotificationController extends Controller
                 $response['success'] = true;
                 $response['message'] = 'Group request accept';
             } else {
-                $response['success'] = false;
-                $response['message'] = 'not found request';
+                return ApiErrorResponse::notFound('not found request', Response::HTTP_OK);
             }
         } else {
-            $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            return $this->legacyAuthenticationError();
         }
 
         return $response;
@@ -142,8 +138,7 @@ class NotificationController extends Controller
             $response['success'] = true;
             $response['message'] = 'group notification decline';
         } else {
-            $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            return $this->legacyAuthenticationError();
         }
 
         return $response;
@@ -177,12 +172,10 @@ class NotificationController extends Controller
                 $response['success'] = true;
                 $response['message'] = 'event invite request accept';
             } else {
-                $response['success'] = false;
-                $response['message'] = 'not request found ';
+                return ApiErrorResponse::notFound('not request found ', Response::HTTP_OK);
             }
         } else {
-            $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            return $this->legacyAuthenticationError();
         }
 
         return $response;
@@ -201,12 +194,10 @@ class NotificationController extends Controller
                 $response['success'] = true;
                 $response['message'] = 'event request decline';
             } else {
-                $response['success'] = false;
-                $response['message'] = 'not found request';
+                return ApiErrorResponse::notFound('not found request', Response::HTTP_OK);
             }
         } else {
-            $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            return $this->legacyAuthenticationError();
         }
 
         return $response;
@@ -218,17 +209,28 @@ class NotificationController extends Controller
         $response = [];
 
         if (isset($token) && $token != '') {
-            $done = Notification::where('id', $id)->update(['status' => '1', 'view' => '1']);
-            if ($done) {
-                $response['success'] = true;
-                $response['message'] = 'mark as read';
-            } else {
-                $response['success'] = false;
-                $response['message'] = 'not found';
+            $user = auth('sanctum')->user();
+            if (! $user instanceof User) {
+                return $this->legacyAuthenticationError();
             }
+
+            $notification = Notification::query()->whereKey($id)->first();
+            if (! $notification instanceof Notification) {
+                return ApiErrorResponse::notFound('not found', Response::HTTP_OK);
+            }
+
+            if ((int) $notification->reciver_user_id !== (int) $user->id) {
+                return ApiErrorResponse::authorization(transportStatus: Response::HTTP_OK);
+            }
+
+            $notification->status = '1';
+            $notification->view = '1';
+            $notification->save();
+
+            $response['success'] = true;
+            $response['message'] = 'mark as read';
         } else {
-            $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            return $this->legacyAuthenticationError();
         }
 
         return $response;
@@ -250,8 +252,7 @@ class NotificationController extends Controller
             $notify->type = 'fundraiser_request_accept';
             $notify->save();
         } else {
-            $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            return $this->legacyAuthenticationError();
         }
 
         return $response;
@@ -267,10 +268,14 @@ class NotificationController extends Controller
             Invite::where('invite_sender_id', $id)->where('invite_reciver_id', $user_id)->where('fundraiser_id', $fundraiser_id)->delete();
             Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->delete();
         } else {
-            $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            return $this->legacyAuthenticationError();
         }
 
         return $response;
+    }
+
+    private function legacyAuthenticationError(): JsonResponse
+    {
+        return ApiErrorResponse::authentication(transportStatus: Response::HTTP_OK);
     }
 }

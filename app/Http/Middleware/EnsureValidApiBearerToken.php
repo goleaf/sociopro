@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Support\Api\ApiErrorResponse;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,9 +43,6 @@ class EnsureValidApiBearerToken
 
     private function unauthorized(): JsonResponse
     {
-        return response()->json([
-            'success' => false,
-            'message' => 'Unauthorized access',
-        ]);
+        return ApiErrorResponse::authentication(transportStatus: Response::HTTP_OK);
     }
 }

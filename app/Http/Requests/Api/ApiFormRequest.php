@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Enums\ApiErrorCode;
 use App\Enums\ApiTokenAbility;
 use App\Models\User;
+use App\Support\Api\ApiErrorResponse;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Laravel\Sanctum\PersonalAccessToken;
+use Symfony\Component\HttpFoundation\Response;
 
 abstract class ApiFormRequest extends FormRequest
 {
@@ -18,9 +21,14 @@ abstract class ApiFormRequest extends FormRequest
 
     protected function failedValidation(Validator $validator): never
     {
-        throw new HttpResponseException(response()->json([
-            'validationError' => $validator->errors()->toArray(),
-        ]));
+        throw new HttpResponseException(
+            ApiErrorResponse::make(
+                code: ApiErrorCode::Validation,
+                message: 'Validation failed',
+                details: $validator->errors()->toArray(),
+                transportStatus: Response::HTTP_OK
+            )
+        );
     }
 
     protected function skipValidationForLegacyGuestFlow(): bool

@@ -40,6 +40,13 @@ class ApiNotificationControllerTest extends TestCase
             ->assertJson([
                 'success' => false,
                 'message' => 'Unauthorized access',
+                'error' => [
+                    'code' => 'AUTHENTICATION_ERROR',
+                    'category' => 'authentication',
+                    'message' => 'Unauthorized access',
+                    'http_status' => 401,
+                    'details' => [],
+                ],
             ]);
     }
 
@@ -238,6 +245,65 @@ class ApiNotificationControllerTest extends TestCase
 
         $this->assertSame(1, (int) $notification->status);
         $this->assertSame(1, (int) $notification->view);
+    }
+
+    public function test_mark_as_read_returns_not_found_error_for_missing_notification(): void
+    {
+        $receiver = User::factory()->create();
+
+        $this->authenticateApiUser($receiver);
+
+        $this->withToken($this->apiToken)
+            ->postJson(route('api.notifications.read', 999999))
+            ->assertOk()
+            ->assertJson([
+                'success' => false,
+                'message' => 'not found',
+                'error' => [
+                    'code' => 'NOT_FOUND',
+                    'category' => 'not_found',
+                    'message' => 'not found',
+                    'http_status' => 404,
+                    'details' => [],
+                ],
+            ]);
+    }
+
+    public function test_mark_as_read_denies_notifications_owned_by_another_user(): void
+    {
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $sender = User::factory()->create();
+
+        $notification = $this->notification([
+            'sender_user_id' => $sender->id,
+            'reciver_user_id' => $owner->id,
+            'type' => 'friend_request',
+            'status' => 0,
+            'view' => 0,
+        ]);
+
+        $this->authenticateApiUser($otherUser);
+
+        $this->withToken($this->apiToken)
+            ->postJson(route('api.notifications.read', $notification))
+            ->assertOk()
+            ->assertJson([
+                'success' => false,
+                'message' => 'Forbidden',
+                'error' => [
+                    'code' => 'AUTHORIZATION_ERROR',
+                    'category' => 'authorization',
+                    'message' => 'Forbidden',
+                    'http_status' => 403,
+                    'details' => [],
+                ],
+            ]);
+
+        $notification->refresh();
+
+        $this->assertSame(0, (int) $notification->status);
+        $this->assertSame(0, (int) $notification->view);
     }
 
     /**
