@@ -12,7 +12,7 @@ The local SQLite database currently has no application foreign keys. It also has
 
 Added `database/migrations/2026_07_02_150000_add_safe_legacy_foreign_key_constraints.php`.
 
-The migration adds child indexes when a leading index is missing, checks for existing constraints, checks `nullOnDelete` child-column nullability, checks for orphan rows, and then adds the constraint. Rollback drops constraints in reverse order and removes helper indexes created by the migration.
+The migration adds child indexes when a leading index is missing, checks for existing constraints, checks `nullOnDelete` child-column nullability, checks for orphan rows, and then adds the constraint. Rollback drops constraints in reverse order and intentionally retains helper indexes because it cannot prove whether a helper-named index existed before the migration.
 
 | Child | Parent | Delete behavior | Reason |
 |---|---|---|---|
@@ -81,4 +81,4 @@ Use these steps before adding any deferred foreign key:
 
 ## Verification
 
-Added coverage to `tests/Feature/MigrationSafetyAuditTest.php` for the new foreign-key migration. The test verifies `up()`, `down()`, and `up()` again, including target table, target columns, delete behavior, and helper-index reversibility.
+Added coverage to `tests/Feature/MigrationSafetyAuditTest.php` for the new foreign-key migration. The test verifies `up()`, `down()`, and `up()` again, including target table, target columns, delete behavior, and non-destructive helper-index retention.

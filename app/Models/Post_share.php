@@ -24,6 +24,14 @@ class Post_share extends Model
     }
 
     /**
+     * @return BelongsTo<User, Post_share>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
      * @return BelongsTo<Posts, Post_share>
      */
     public function post(): BelongsTo

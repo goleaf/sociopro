@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Badge;
+use App\Models\BlockUser;
 use App\Models\Blog;
 use App\Models\Blogcategory;
 use App\Models\Brand;
@@ -10,6 +11,7 @@ use App\Models\Category;
 use App\Models\Comments;
 use App\Models\Currency;
 use App\Models\Event;
+use App\Models\Follower;
 use App\Models\Friendships;
 use App\Models\Fundraiser;
 use App\Models\Group;
@@ -30,6 +32,7 @@ use App\Models\User;
 use App\Models\Video;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -74,6 +77,38 @@ class EloquentRelationshipAuditTest extends TestCase
             if ($relationship instanceof HasMany) {
                 $this->assertSame($contract['parent'], $relationship->getQualifiedParentKeyName());
             }
+        }
+    }
+
+    public function test_many_to_many_relationships_use_explicit_pivot_tables_keys_and_metadata(): void
+    {
+        foreach ($this->belongsToManyContracts() as $contract) {
+            $relationship = (new $contract['model'])->{$contract['method']}();
+
+            $this->assertInstanceOf(BelongsToMany::class, $relationship);
+            $this->assertSame($contract['related'], get_class($relationship->getRelated()));
+            $this->assertSame($contract['table'], $relationship->getTable());
+            $this->assertSame($contract['foreign_pivot_key'], $relationship->getForeignPivotKeyName());
+            $this->assertSame($contract['related_pivot_key'], $relationship->getRelatedPivotKeyName());
+
+            foreach ($contract['pivot_columns'] as $column) {
+                $this->assertTrue(
+                    $relationship->hasPivotColumn($column),
+                    "{$contract['model']}::{$contract['method']}() must expose {$column} on the pivot."
+                );
+            }
+        }
+    }
+
+    public function test_pivot_like_models_define_parent_relationships_for_their_foreign_keys(): void
+    {
+        foreach ($this->pivotModelRelationshipContracts() as $contract) {
+            $relationship = (new $contract['model'])->{$contract['method']}();
+
+            $this->assertInstanceOf(BelongsTo::class, $relationship);
+            $this->assertSame($contract['related'], get_class($relationship->getRelated()));
+            $this->assertSame($contract['foreign'], $relationship->getQualifiedForeignKeyName());
+            $this->assertSame($contract['owner'], $relationship->getQualifiedOwnerKeyName());
         }
     }
 
@@ -203,6 +238,84 @@ class EloquentRelationshipAuditTest extends TestCase
             ['model' => SavedProduct::class, 'method' => 'productData', 'relation' => BelongsTo::class, 'related' => Marketplace::class, 'foreign' => 'saved_products.product_id', 'owner' => 'marketplaces.id'],
             ['model' => Saveforlater::class, 'method' => 'getVideo', 'relation' => BelongsTo::class, 'related' => Video::class, 'foreign' => 'saveforlaters.video_id', 'owner' => 'videos.id'],
             ['model' => Video::class, 'method' => 'getUser', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'videos.user_id', 'owner' => 'users.id'],
+        ];
+    }
+
+    /**
+     * @return list<array{
+     *     model: class-string<Model>,
+     *     method: string,
+     *     related: class-string<Model>,
+     *     table: string,
+     *     foreign_pivot_key: string,
+     *     related_pivot_key: string,
+     *     pivot_columns: list<string>
+     * }>
+     */
+    private function belongsToManyContracts(): array
+    {
+        return [
+            ['model' => User::class, 'method' => 'blockedUsers', 'related' => User::class, 'table' => 'block_users', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'block_user', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'blockedByUsers', 'related' => User::class, 'table' => 'block_users', 'foreign_pivot_key' => 'block_user', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'followingUsers', 'related' => User::class, 'table' => 'followers', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'follow_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'followedByUsers', 'related' => User::class, 'table' => 'followers', 'foreign_pivot_key' => 'follow_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'followedPages', 'related' => Page::class, 'table' => 'followers', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'page_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'followedGroups', 'related' => Group::class, 'table' => 'followers', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'group_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'joinedGroups', 'related' => Group::class, 'table' => 'group_members', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'group_id', 'pivot_columns' => ['id', 'is_accepted', 'role', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'likedPages', 'related' => Page::class, 'table' => 'page_likes', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'page_id', 'pivot_columns' => ['id', 'role', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'savedProducts', 'related' => Marketplace::class, 'table' => 'saved_products', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'product_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'savedVideos', 'related' => Video::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'video_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'savedGroups', 'related' => Group::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'group_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'savedPosts', 'related' => Posts::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'post_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'savedMarketplaceItems', 'related' => Marketplace::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'marketplace_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'savedEvents', 'related' => Event::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'event_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => User::class, 'method' => 'savedBlogs', 'related' => Blog::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'user_id', 'related_pivot_key' => 'blog_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => Group::class, 'method' => 'followedByUsers', 'related' => User::class, 'table' => 'followers', 'foreign_pivot_key' => 'group_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => Group::class, 'method' => 'members', 'related' => User::class, 'table' => 'group_members', 'foreign_pivot_key' => 'group_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'is_accepted', 'role', 'created_at', 'updated_at']],
+            ['model' => Group::class, 'method' => 'savedByUsers', 'related' => User::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'group_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => Page::class, 'method' => 'followedByUsers', 'related' => User::class, 'table' => 'followers', 'foreign_pivot_key' => 'page_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => Page::class, 'method' => 'likedByUsers', 'related' => User::class, 'table' => 'page_likes', 'foreign_pivot_key' => 'page_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'role', 'created_at', 'updated_at']],
+            ['model' => Marketplace::class, 'method' => 'savedByUsers', 'related' => User::class, 'table' => 'saved_products', 'foreign_pivot_key' => 'product_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => Marketplace::class, 'method' => 'savedForLaterByUsers', 'related' => User::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'marketplace_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => Posts::class, 'method' => 'savedByUsers', 'related' => User::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'post_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => Event::class, 'method' => 'savedByUsers', 'related' => User::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'event_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => Blog::class, 'method' => 'savedByUsers', 'related' => User::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'blog_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+            ['model' => Video::class, 'method' => 'savedByUsers', 'related' => User::class, 'table' => 'saveforlaters', 'foreign_pivot_key' => 'video_id', 'related_pivot_key' => 'user_id', 'pivot_columns' => ['id', 'created_at', 'updated_at']],
+        ];
+    }
+
+    /**
+     * @return list<array{
+     *     model: class-string<Model>,
+     *     method: string,
+     *     related: class-string<Model>,
+     *     foreign: string,
+     *     owner: string
+     * }>
+     */
+    private function pivotModelRelationshipContracts(): array
+    {
+        return [
+            ['model' => BlockUser::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'block_users.user_id', 'owner' => 'users.id'],
+            ['model' => BlockUser::class, 'method' => 'blockedUser', 'related' => User::class, 'foreign' => 'block_users.block_user', 'owner' => 'users.id'],
+            ['model' => Follower::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'followers.user_id', 'owner' => 'users.id'],
+            ['model' => Follower::class, 'method' => 'followedUser', 'related' => User::class, 'foreign' => 'followers.follow_id', 'owner' => 'users.id'],
+            ['model' => Follower::class, 'method' => 'page', 'related' => Page::class, 'foreign' => 'followers.page_id', 'owner' => 'pages.id'],
+            ['model' => Follower::class, 'method' => 'group', 'related' => Group::class, 'foreign' => 'followers.group_id', 'owner' => 'groups.id'],
+            ['model' => Group_member::class, 'method' => 'group', 'related' => Group::class, 'foreign' => 'group_members.group_id', 'owner' => 'groups.id'],
+            ['model' => Group_member::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'group_members.user_id', 'owner' => 'users.id'],
+            ['model' => Page_like::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'page_likes.user_id', 'owner' => 'users.id'],
+            ['model' => Page_like::class, 'method' => 'page', 'related' => Page::class, 'foreign' => 'page_likes.page_id', 'owner' => 'pages.id'],
+            ['model' => Post_share::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'post_shares.user_id', 'owner' => 'users.id'],
+            ['model' => SavedProduct::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'saved_products.user_id', 'owner' => 'users.id'],
+            ['model' => SavedProduct::class, 'method' => 'product', 'related' => Marketplace::class, 'foreign' => 'saved_products.product_id', 'owner' => 'marketplaces.id'],
+            ['model' => Saveforlater::class, 'method' => 'user', 'related' => User::class, 'foreign' => 'saveforlaters.user_id', 'owner' => 'users.id'],
+            ['model' => Saveforlater::class, 'method' => 'video', 'related' => Video::class, 'foreign' => 'saveforlaters.video_id', 'owner' => 'videos.id'],
+            ['model' => Saveforlater::class, 'method' => 'group', 'related' => Group::class, 'foreign' => 'saveforlaters.group_id', 'owner' => 'groups.id'],
+            ['model' => Saveforlater::class, 'method' => 'post', 'related' => Posts::class, 'foreign' => 'saveforlaters.post_id', 'owner' => 'posts.post_id'],
+            ['model' => Saveforlater::class, 'method' => 'marketplace', 'related' => Marketplace::class, 'foreign' => 'saveforlaters.marketplace_id', 'owner' => 'marketplaces.id'],
+            ['model' => Saveforlater::class, 'method' => 'event', 'related' => Event::class, 'foreign' => 'saveforlaters.event_id', 'owner' => 'events.id'],
+            ['model' => Saveforlater::class, 'method' => 'blog', 'related' => Blog::class, 'foreign' => 'saveforlaters.blog_id', 'owner' => 'blogs.id'],
         ];
     }
 }

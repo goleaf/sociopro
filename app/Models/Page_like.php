@@ -25,6 +25,16 @@ class Page_like extends Model
 
     public function pageData(): BelongsTo
     {
+        return $this->page();
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function page(): BelongsTo
+    {
         return $this->belongsTo(Page::class, 'page_id');
     }
 }

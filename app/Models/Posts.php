@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Posts extends Model
@@ -111,5 +112,12 @@ class Posts extends Model
     public function shares(): HasMany
     {
         return $this->hasMany(Post_share::class, 'post_id', 'post_id');
+    }
+
+    public function savedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'saveforlaters', 'post_id', 'user_id')
+            ->withPivot('id')
+            ->withTimestamps();
     }
 }

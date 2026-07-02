@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Marketplace extends Model
 {
@@ -54,5 +55,19 @@ class Marketplace extends Model
     public function getCurrency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'currency_id');
+    }
+
+    public function savedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'saved_products', 'product_id', 'user_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function savedForLaterByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'saveforlaters', 'marketplace_id', 'user_id')
+            ->withPivot('id')
+            ->withTimestamps();
     }
 }

@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cache;
@@ -75,6 +76,111 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isOnline(): bool
     {
         return Cache::has('user-is-online-'.$this->id);
+    }
+
+    public function blockedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'block_users', 'user_id', 'block_user')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function blockedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'block_users', 'block_user', 'user_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function followingUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'followers', 'user_id', 'follow_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function followedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'followers', 'follow_id', 'user_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function followedPages(): BelongsToMany
+    {
+        return $this->belongsToMany(Page::class, 'followers', 'user_id', 'page_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function followedGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'followers', 'user_id', 'group_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function joinedGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'group_members', 'user_id', 'group_id')
+            ->withPivot('id', 'is_accepted', 'role')
+            ->withTimestamps();
+    }
+
+    public function likedPages(): BelongsToMany
+    {
+        return $this->belongsToMany(Page::class, 'page_likes', 'user_id', 'page_id')
+            ->withPivot('id', 'role')
+            ->withTimestamps();
+    }
+
+    public function savedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Marketplace::class, 'saved_products', 'user_id', 'product_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function savedVideos(): BelongsToMany
+    {
+        return $this->belongsToMany(Video::class, 'saveforlaters', 'user_id', 'video_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function savedGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'saveforlaters', 'user_id', 'group_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function savedPosts(): BelongsToMany
+    {
+        return $this->belongsToMany(Posts::class, 'saveforlaters', 'user_id', 'post_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function savedMarketplaceItems(): BelongsToMany
+    {
+        return $this->belongsToMany(Marketplace::class, 'saveforlaters', 'user_id', 'marketplace_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function savedEvents(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'saveforlaters', 'user_id', 'event_id')
+            ->withPivot('id')
+            ->withTimestamps();
+    }
+
+    public function savedBlogs(): BelongsToMany
+    {
+        return $this->belongsToMany(Blog::class, 'saveforlaters', 'user_id', 'blog_id')
+            ->withPivot('id')
+            ->withTimestamps();
     }
 
     public static function get_user_image($file_name = '', $optimized = '')

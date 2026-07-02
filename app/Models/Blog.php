@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Blog extends Model
 {
@@ -36,5 +37,12 @@ class Blog extends Model
     public function cagtegory(): BelongsTo
     {
         return $this->category();
+    }
+
+    public function savedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'saveforlaters', 'blog_id', 'user_id')
+            ->withPivot('id')
+            ->withTimestamps();
     }
 }

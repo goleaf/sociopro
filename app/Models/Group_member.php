@@ -20,10 +20,20 @@ class Group_member extends Model
 
     public function getGroup(): BelongsTo
     {
-        return $this->belongsTo(Group::class, 'group_id');
+        return $this->group();
     }
 
     public function getUser(): BelongsTo
+    {
+        return $this->user();
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class, 'group_id');
+    }
+
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }

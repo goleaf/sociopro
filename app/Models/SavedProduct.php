@@ -24,9 +24,25 @@ class SavedProduct extends Model
     }
 
     /**
+     * @return BelongsTo<User, SavedProduct>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
      * @return BelongsTo<Marketplace, SavedProduct>
      */
     public function productData(): BelongsTo
+    {
+        return $this->product();
+    }
+
+    /**
+     * @return BelongsTo<Marketplace, SavedProduct>
+     */
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Marketplace::class, 'product_id');
     }
