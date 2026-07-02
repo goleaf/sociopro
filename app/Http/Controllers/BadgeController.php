@@ -2,36 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Badge;
+use App\Actions\Badges\BuildBadgePageDataAction;
 use App\Support\Validation\DateTimeRules;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class BadgeController extends Controller
 {
-    public function badge()
+    public function badge(Request $request, BuildBadgePageDataAction $buildBadgePageData)
     {
-        $currentDate = Carbon::now();
-
-        // $page_data['badge'] = Badge::whereDate('start_date', '<=', $currentDate)
-        //     ->whereDate('end_date', '>=', $currentDate)
-        //     ->orderBy('id', 'DESC')
-        //     ->first();
-
-        $page_data['badges'] = Badge::where('user_id', auth()->user()->id)
-            ->orderBy('id', 'DESC')
-            ->get();
-
-        $page_data['view_path'] = 'frontend.badge.badge';
-
-        return view('frontend.index', $page_data);
+        return view('frontend.index', $buildBadgePageData->index($request->user()));
     }
 
-    public function badge_info()
+    public function badge_info(Request $request, BuildBadgePageDataAction $buildBadgePageData)
     {
-        $page_data['view_path'] = 'frontend.badge.badge_info';
-
-        return view('frontend.index', $page_data);
+        return view('frontend.index', $buildBadgePageData->confirmation($request->user()));
     }
 
     public function payment_configuration($id, Request $request)
@@ -64,7 +49,7 @@ class BadgeController extends Controller
             'custom_field' => [
                 'start_date' => $startDate,
                 'end_date' => $endDate,
-                'user_id' => auth()->user()->id,
+                'user_id' => $request->user()->id,
                 'description' => $description,
             ],
             'success_method' => [
