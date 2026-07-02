@@ -1,0 +1,15 @@
+{
+    "extends": ["stylelint-config-standard"],
+    "ignoreFiles": ["public/**", "vendor/**", "node_modules/**"],
+    "rules": {
+        "at-rule-no-unknown": [
+            true,
+            {
+                "ignoreAtRules": ["tailwind", "apply", "variants", "responsive", "screen", "layer"]
+            }
+        ],
+        "no-descending-specificity": null,
+        "no-empty-source": null,
+        "import-notation": null
+    }
+}

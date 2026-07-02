@@ -1,0 +1,32 @@
+{
+    "root": true,
+    "env": {
+        "browser": true,
+        "es2022": true,
+        "node": true
+    },
+    "parserOptions": {
+        "ecmaVersion": 2022,
+        "sourceType": "module"
+    },
+    "extends": ["eslint:recommended", "prettier"],
+    "globals": {
+        "Alpine": "readonly",
+        "axios": "readonly",
+        "_": "readonly",
+        "Swal": "readonly",
+        "moment": "readonly",
+        "$": "readonly",
+        "jQuery": "readonly"
+    },
+    "rules": {
+        "no-unused-vars": "warn",
+        "no-console": ["warn", { "allow": ["warn", "error"] }],
+        "no-debugger": "error",
+        "no-eval": "error",
+        "no-implied-eval": "error",
+        "no-var": "warn",
+        "prefer-const": "warn"
+    },
+    "ignorePatterns": ["public/**", "vendor/**", "node_modules/**", "resources/js/bootstrap.js"]
+}

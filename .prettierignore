@@ -1,0 +1,9 @@
+public
+vendor
+node_modules
+storage
+bootstrap/cache
+*.blade.php
+resources/js/bootstrap.js
+package-lock.json
+composer.lock
