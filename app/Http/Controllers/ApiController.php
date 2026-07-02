@@ -15,7 +15,7 @@ use App\Http\Resources\Api\MarketplaceCollection;
 use App\Models\AlbumImage;
 use App\Models\Albums;
 use App\Models\Blog;
-use App\Models\Blogcategory;
+use App\Models\BlogCategory;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Chat;
@@ -40,14 +40,14 @@ use App\Models\MediaFile;
 use App\Models\MessageThread;
 use App\Models\Notification;
 use App\Models\Page;
-use App\Models\Pagecategory;
+use App\Models\PageCategory;
 use App\Models\PageLike;
 use App\Models\PaidContentCreator;
 use App\Models\PaidContentPackages;
 use App\Models\Posts;
 use App\Models\Report;
 use App\Models\SavedProduct;
-use App\Models\Saveforlater;
+use App\Models\SaveForLater;
 use App\Models\Setting;
 use App\Models\Stories;
 use App\Models\User;
@@ -3731,7 +3731,7 @@ class ApiController extends Controller
                 $pageArray = [];
 
                 foreach ($pages as $page) {
-                    $category = Pagecategory::where('id', $page->category_id)->first();
+                    $category = PageCategory::where('id', $page->category_id)->first();
                     $like_count = PageLike::where('page_id', $page->id)->count();
                     $is_Liked = PageLike::where('page_id', $page->id)->where('user_id', $user_id)->first();
 
@@ -3780,7 +3780,7 @@ class ApiController extends Controller
                 $pageArray = [];
 
                 // foreach ($pages as $page) {
-                $category = Pagecategory::where('id', $page->category_id)->first();
+                $category = PageCategory::where('id', $page->category_id)->first();
                 $like_count = PageLike::where('page_id', $page->id)->count();
                 $is_Liked = PageLike::where('page_id', $page->id)->where('user_id', $user_id)->first();
 
@@ -4070,7 +4070,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $blogs = Pagecategory::orderBy('id', 'desc')->get();
+            $blogs = PageCategory::orderBy('id', 'desc')->get();
 
             if ($blogs->isEmpty()) {
                 $response['success'] = false;
@@ -5186,8 +5186,8 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
             $done = true;
-            if (! Saveforlater::where('video_id', $id)->where('user_id', $user_id)->exists()) {
-                $saveforlater = new Saveforlater;
+            if (! SaveForLater::where('video_id', $id)->where('user_id', $user_id)->exists()) {
+                $saveforlater = new SaveForLater;
                 $saveforlater->user_id = $user_id;
                 $saveforlater->video_id = $id;
                 $done = $saveforlater->save();
@@ -5215,7 +5215,7 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $done = Saveforlater::where('video_id', $id)->where('user_id', $user_id)->delete();
+            $done = SaveForLater::where('video_id', $id)->where('user_id', $user_id)->delete();
             if ($done) {
                 $response['success'] = true;
                 $response['message'] = 'unsave successfully';
@@ -5972,7 +5972,7 @@ class ApiController extends Controller
 
                 foreach ($blogs as $blog) {
                     $user = User::where('id', $blog->user_id)->first();
-                    $category = Blogcategory::where('id', $blog->category_id)->first();
+                    $category = BlogCategory::where('id', $blog->category_id)->first();
                     // comment count
                     $commentsCount = Comments::where('id_of_type', $blog->id)->count();
 
@@ -6021,7 +6021,7 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
 
-            $blogs = Blogcategory::orderBy('id', 'desc')->get();
+            $blogs = BlogCategory::orderBy('id', 'desc')->get();
 
             if ($blogs->isEmpty()) {
                 $response['success'] = false;

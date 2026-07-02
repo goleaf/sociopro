@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Saveforlater extends Model
+class SaveForLater extends Model
 {
     use HasFactory;
 
     protected $guarded = ['*'];
+
+    protected $table = 'saveforlaters';
 
     /**
      * @return array<string, string>

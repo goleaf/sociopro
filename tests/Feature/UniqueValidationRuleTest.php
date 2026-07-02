@@ -4,10 +4,10 @@ namespace Tests\Feature;
 
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
-use App\Models\Blogcategory;
+use App\Models\BlogCategory;
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\Pagecategory;
+use App\Models\PageCategory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -133,7 +133,7 @@ class UniqueValidationRuleTest extends TestCase
     {
         return [
             [
-                'model' => Pagecategory::class,
+                'model' => PageCategory::class,
                 'field' => 'pagecategory',
                 'createRoute' => 'admin.create.category',
                 'storeRoute' => 'admin.save.category',
@@ -160,7 +160,7 @@ class UniqueValidationRuleTest extends TestCase
                 'indexRoute' => 'admin.view.product.brand',
             ],
             [
-                'model' => Blogcategory::class,
+                'model' => BlogCategory::class,
                 'field' => 'blogcategory',
                 'createRoute' => 'admin.create.blog.category',
                 'storeRoute' => 'admin.save.blog.category',

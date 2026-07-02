@@ -2,15 +2,15 @@
 
 namespace Database\Factories;
 
-use App\Models\Pagecategory;
+use App\Models\PageCategory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Pagecategory>
+ * @extends Factory<PageCategory>
  */
-class PagecategoryFactory extends Factory
+class PageCategoryFactory extends Factory
 {
-    protected $model = Pagecategory::class;
+    protected $model = PageCategory::class;
 
     /**
      * @return array{name: string}

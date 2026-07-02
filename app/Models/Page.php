@@ -27,7 +27,7 @@ class Page extends Model
 
     public function getCategory(): BelongsTo
     {
-        return $this->belongsTo(Pagecategory::class, 'category_id');
+        return $this->belongsTo(PageCategory::class, 'category_id');
     }
 
     public function getUser(): BelongsTo

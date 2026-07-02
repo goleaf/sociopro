@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\BlogCategory;
+use App\Models\PageCategory;
+use App\Models\SaveForLater;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
@@ -84,6 +87,46 @@ class NamingStandardsAuditTest extends TestCase
             $offenders,
             'Use StudlyCase PHP model class references. Keep legacy database names documented separately.'
         );
+    }
+
+    public function test_legacy_non_studly_compound_class_names_are_absent_from_runtime_code(): void
+    {
+        $offenders = [];
+        $legacyTokens = [
+            'Blog'.'category',
+            'Page'.'category',
+            'Page'.'categoryFactory',
+            'Save'.'forlater',
+        ];
+
+        foreach ($this->phpFiles(['app', 'database/factories', 'database/seeders', 'routes', 'config', 'tests']) as $path) {
+            $contents = File::get($path);
+
+            foreach ($legacyTokens as $legacyToken) {
+                if (str_contains($contents, $legacyToken)) {
+                    $offenders[] = $this->relativePath($path).": {$legacyToken}";
+                }
+            }
+
+            foreach ($legacyTokens as $legacyToken) {
+                if (str_contains(pathinfo($path, PATHINFO_FILENAME), $legacyToken)) {
+                    $offenders[] = $this->relativePath($path).': filename uses '.$legacyToken;
+                }
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $offenders,
+            'Use StudlyCase compound class names such as BlogCategory, PageCategory, and SaveForLater.'
+        );
+    }
+
+    public function test_renamed_legacy_compound_models_keep_existing_table_contracts(): void
+    {
+        $this->assertSame('blogcategories', (new BlogCategory)->getTable());
+        $this->assertSame('pagecategories', (new PageCategory)->getTable());
+        $this->assertSame('saveforlaters', (new SaveForLater)->getTable());
     }
 
     /**

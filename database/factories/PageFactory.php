@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Page;
-use App\Models\Pagecategory;
+use App\Models\PageCategory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -22,7 +22,7 @@ class PageFactory extends Factory
         return [
             'user_id' => User::factory(),
             'title' => ucfirst($this->faker->words(3, true)),
-            'category_id' => Pagecategory::factory(),
+            'category_id' => PageCategory::factory(),
             'logo' => null,
             'coverphoto' => null,
             'description' => $this->faker->paragraph(),
@@ -37,7 +37,7 @@ class PageFactory extends Factory
         ]);
     }
 
-    public function forCategory(Pagecategory $category): static
+    public function forCategory(PageCategory $category): static
     {
         return $this->state([
             'category_id' => $category->id,

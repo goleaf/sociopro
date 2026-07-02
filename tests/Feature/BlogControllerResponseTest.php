@@ -9,7 +9,7 @@ use App\Http\Requests\Blog\BlogRequest;
 use App\Http\Requests\Blog\StoreBlogRequest;
 use App\Http\Requests\Blog\UpdateBlogRequest;
 use App\Models\Blog;
-use App\Models\Blogcategory;
+use App\Models\BlogCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -62,7 +62,7 @@ class BlogControllerResponseTest extends TestCase
         $firstCategory = $this->blogCategory('First category');
         $secondCategory = $this->blogCategory('Second category');
 
-        $categories = Blogcategory::query()->forSelect()->get();
+        $categories = BlogCategory::query()->forSelect()->get();
         $firstOption = $categories->first();
 
         $this->assertNotNull($firstOption);
@@ -373,9 +373,9 @@ class BlogControllerResponseTest extends TestCase
         ]);
     }
 
-    private function blogCategory(string $name = 'Blog category'): Blogcategory
+    private function blogCategory(string $name = 'Blog category'): BlogCategory
     {
-        $category = new Blogcategory;
+        $category = new BlogCategory;
         $category->name = $name;
         $category->save();
 

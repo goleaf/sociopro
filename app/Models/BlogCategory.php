@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Blogcategory extends Model
+class BlogCategory extends Model
 {
     use HasFactory;
 
     protected $guarded = ['*'];
+
+    protected $table = 'blogcategories';
 
     public function scopeOrdered(Builder $query): Builder
     {

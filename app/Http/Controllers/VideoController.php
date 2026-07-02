@@ -6,7 +6,7 @@ use App\Enums\ContentStatus;
 use App\Enums\VideoCategory;
 use App\Enums\Visibility;
 use App\Models\Posts;
-use App\Models\Saveforlater;
+use App\Models\SaveForLater;
 use App\Models\Video;
 use App\Support\Files\FileUploader;
 // Used for Form data validation
@@ -121,8 +121,8 @@ class VideoController extends Controller
     {
         $userId = auth()->user()->id;
 
-        if (! Saveforlater::where('video_id', $id)->where('user_id', $userId)->exists()) {
-            $saveforlater = new Saveforlater;
+        if (! SaveForLater::where('video_id', $id)->where('user_id', $userId)->exists()) {
+            $saveforlater = new SaveForLater;
             $saveforlater->user_id = $userId;
             $saveforlater->video_id = $id;
             $saveforlater->save();
@@ -136,7 +136,7 @@ class VideoController extends Controller
 
     public function unsave_for_later($id)
     {
-        $done = Saveforlater::where('video_id', $id)->where('user_id', auth()->user()->id)->delete();
+        $done = SaveForLater::where('video_id', $id)->where('user_id', auth()->user()->id)->delete();
         if ($done) {
             Session::flash('success_message', get_phrase('Unsaved Successfully'));
             $response = ['reload' => 1];
@@ -147,7 +147,7 @@ class VideoController extends Controller
 
     public function save_all()
     {
-        $page_data['videos'] = Saveforlater::where('user_id', auth()->user()->id)->whereNotNull('video_id')->whereNull('group_id')->whereNull('post_id')->whereNull('marketplace_id')->whereNull('event_id')->whereNull('blog_id')->get();
+        $page_data['videos'] = SaveForLater::where('user_id', auth()->user()->id)->whereNotNull('video_id')->whereNull('group_id')->whereNull('post_id')->whereNull('marketplace_id')->whereNull('event_id')->whereNull('blog_id')->get();
         $page_data['view_path'] = 'frontend.video-shorts.saved';
 
         return view('frontend.index', $page_data);

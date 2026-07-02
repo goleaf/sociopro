@@ -6,7 +6,7 @@ use App\Enums\MediaFileType;
 use App\Models\Marketplace;
 use App\Models\MediaFile;
 use App\Models\Page;
-use App\Models\Pagecategory;
+use App\Models\PageCategory;
 use App\ViewModels\BladeViewData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -75,7 +75,7 @@ class ModalController extends Controller
             'frontend.pages.create_page',
             'frontend.pages.edit-modal',
         ], true)) {
-            $pageData['pageCategories'] = Pagecategory::query()
+            $pageData['pageCategories'] = PageCategory::query()
                 ->select(['id', 'name'])
                 ->orderBy('name')
                 ->get();

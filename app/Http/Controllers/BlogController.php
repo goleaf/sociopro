@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Blog\StoreBlogRequest;
 use App\Http\Requests\Blog\UpdateBlogRequest;
 use App\Models\Blog;
-use App\Models\Blogcategory;
+use App\Models\BlogCategory;
 use App\Models\Comments;
 use App\Queries\FriendshipsQuery;
 use App\Support\Files\FileUploader;
@@ -244,10 +244,10 @@ class BlogController extends Controller
     }
 
     /**
-     * @return EloquentCollection<int, Blogcategory>
+     * @return EloquentCollection<int, BlogCategory>
      */
     private function blogCategoriesForSelect(): EloquentCollection
     {
-        return Blogcategory::query()->forSelect()->get();
+        return BlogCategory::query()->forSelect()->get();
     }
 }

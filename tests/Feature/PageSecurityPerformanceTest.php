@@ -9,7 +9,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Requests\Page\StorePageRequest;
 use App\Http\Requests\Page\UpdatePageRequest;
 use App\Models\Page;
-use App\Models\Pagecategory;
+use App\Models\PageCategory;
 use App\Models\PageLike;
 use App\Models\Posts;
 use App\Models\User;
@@ -56,7 +56,7 @@ class PageSecurityPerformanceTest extends TestCase
     {
         $owner = $this->activeUser();
         $otherUser = $this->activeUser();
-        $category = Pagecategory::factory()->create();
+        $category = PageCategory::factory()->create();
         $page = $this->page($owner, [
             'title' => 'Original owner page',
             'description' => 'Original safe description.',
@@ -83,7 +83,7 @@ class PageSecurityPerformanceTest extends TestCase
     {
         $owner = $this->activeUser();
         $otherUser = $this->activeUser();
-        $category = Pagecategory::factory()->create();
+        $category = PageCategory::factory()->create();
         $page = $this->page($owner, [
             'status' => '1',
         ]);
@@ -197,7 +197,7 @@ class PageSecurityPerformanceTest extends TestCase
             File::get(resource_path('views/frontend/pages/edit-cover-photo.blade.php')),
             File::get(resource_path('views/frontend/pages/edit-page-info.blade.php')),
         ] as $blade) {
-            $this->assertStringNotContainsString('Pagecategory::all()', $blade);
+            $this->assertStringNotContainsString('PageCategory::all()', $blade);
             $this->assertStringNotContainsString('Page::find', $blade);
         }
 
@@ -308,7 +308,7 @@ class PageSecurityPerformanceTest extends TestCase
     public function test_pages_index_batches_page_like_lookups_for_rendered_cards(): void
     {
         $viewer = $this->activeUser();
-        $category = Pagecategory::factory()->create();
+        $category = PageCategory::factory()->create();
         $viewerPages = Page::factory()
             ->count(5)
             ->forOwner($viewer)
@@ -368,7 +368,7 @@ class PageSecurityPerformanceTest extends TestCase
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
-    private function pagePayload(Pagecategory $category, array $overrides = []): array
+    private function pagePayload(PageCategory $category, array $overrides = []): array
     {
         return [
             'name' => 'Updated page title',

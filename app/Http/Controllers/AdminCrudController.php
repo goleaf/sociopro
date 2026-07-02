@@ -8,7 +8,7 @@ use App\Enums\UserRole;
 use App\Models\AccountActiveRequest;
 use App\Models\Badge;
 use App\Models\Blog;
-use App\Models\Blogcategory;
+use App\Models\BlogCategory;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Currency;
@@ -20,7 +20,7 @@ use App\Models\JobCategory;
 use App\Models\JobWishlist;
 use App\Models\Marketplace;
 use App\Models\Page;
-use App\Models\Pagecategory;
+use App\Models\PageCategory;
 use App\Models\PageLike;
 use App\Models\PaymentGateway;
 use App\Models\Posts;
@@ -168,7 +168,7 @@ class AdminCrudController extends Controller
     {
         $year = (int) $request->query('year', date('Y'));
 
-        $page_data['all_category'] = Pagecategory::all();
+        $page_data['all_category'] = PageCategory::all();
         $page_data['year'] = $year;
         $page_data['dashboardCounts'] = [
             'users' => User::query()->nonAdmins()->count(),
@@ -195,7 +195,7 @@ class AdminCrudController extends Controller
     // page category
     public function view_category()
     {
-        $page_data['all_category'] = Pagecategory::all();
+        $page_data['all_category'] = PageCategory::all();
         $page_data['view_path'] = 'page_category.index';
 
         return view('backend.index', $page_data);
@@ -213,7 +213,7 @@ class AdminCrudController extends Controller
         $validated = $request->validate([
             'pagecategory' => ['required', 'max:255', 'string', $this->uniqueRule('pagecategories', 'name')],
         ]);
-        $pagecategory = new Pagecategory;
+        $pagecategory = new PageCategory;
         $pagecategory->name = $request->pagecategory;
         $done = $pagecategory->save();
         if ($done) {
@@ -225,7 +225,7 @@ class AdminCrudController extends Controller
 
     public function edit_category($id)
     {
-        $page_data['pagecategory'] = Pagecategory::find($id);
+        $page_data['pagecategory'] = PageCategory::find($id);
         $page_data['view_path'] = 'page_category.edit';
 
         return view('backend.index', $page_data);
@@ -233,7 +233,7 @@ class AdminCrudController extends Controller
 
     public function update_category(Request $request, $id)
     {
-        $pagecategory = Pagecategory::findOrFail($id);
+        $pagecategory = PageCategory::findOrFail($id);
         $validated = $request->validate([
             'pagecategory' => ['required', 'max:255', 'string', $this->uniqueRule('pagecategories', 'name', $pagecategory)],
         ]);
@@ -248,7 +248,7 @@ class AdminCrudController extends Controller
 
     public function delete_category($id)
     {
-        $category = Pagecategory::find($id);
+        $category = PageCategory::find($id);
         $category->delete();
         flash()->addSuccess('Page Category has been Deleted successfully!');
 
@@ -384,7 +384,7 @@ class AdminCrudController extends Controller
     // blog category
     public function view_blog_category()
     {
-        $page_data['all_category'] = Blogcategory::query()->ordered()->get();
+        $page_data['all_category'] = BlogCategory::query()->ordered()->get();
         $page_data['view_path'] = 'blog_category.index';
 
         return view('backend.index', $page_data);
@@ -402,7 +402,7 @@ class AdminCrudController extends Controller
         $validated = $request->validate([
             'blogcategory' => ['required', 'max:255', 'string', $this->uniqueRule('blogcategories', 'name')],
         ]);
-        $blogcategories = new Blogcategory;
+        $blogcategories = new BlogCategory;
         $blogcategories->name = $request->blogcategory;
         $done = $blogcategories->save();
         if ($done) {
@@ -414,7 +414,7 @@ class AdminCrudController extends Controller
 
     public function edit_blog_category($id)
     {
-        $page_data['blogcategories'] = Blogcategory::find($id);
+        $page_data['blogcategories'] = BlogCategory::find($id);
         $page_data['view_path'] = 'blog_category.edit';
 
         return view('backend.index', $page_data);
@@ -422,7 +422,7 @@ class AdminCrudController extends Controller
 
     public function update_blog_category(Request $request, $id)
     {
-        $blogcategories = Blogcategory::findOrFail($id);
+        $blogcategories = BlogCategory::findOrFail($id);
         $validated = $request->validate([
             'blogcategory' => ['required', 'max:255', 'string', $this->uniqueRule('blogcategories', 'name', $blogcategories)],
         ]);
@@ -437,7 +437,7 @@ class AdminCrudController extends Controller
 
     public function delete_blog_category($id)
     {
-        $blogcategories = Blogcategory::find($id);
+        $blogcategories = BlogCategory::find($id);
         $blogcategories->delete();
         flash()->addSuccess('Blog Category Brand has been Deleted successfully!');
 

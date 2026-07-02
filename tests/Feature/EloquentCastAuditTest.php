@@ -30,7 +30,7 @@ use App\Models\Posts;
 use App\Models\PostShare;
 use App\Models\Report;
 use App\Models\SavedProduct;
-use App\Models\Saveforlater;
+use App\Models\SaveForLater;
 use App\Models\Share;
 use App\Models\Sponsor;
 use App\Models\Stories;
@@ -286,7 +286,7 @@ class EloquentCastAuditTest extends TestCase
             Posts::class => ['user_id', 'publisher_id', 'activity_id', 'report_status'],
             Report::class => ['user_id', 'post_id', 'status'],
             SavedProduct::class => ['user_id', 'product_id'],
-            Saveforlater::class => ['user_id', 'video_id', 'group_id', 'post_id', 'marketplace_id', 'event_id', 'blog_id'],
+            SaveForLater::class => ['user_id', 'video_id', 'group_id', 'post_id', 'marketplace_id', 'event_id', 'blog_id'],
             Share::class => ['event_id', 'page_id', 'group_id'],
             Stories::class => ['user_id', 'publisher_id'],
             Users::class => ['date_of_birth'],
