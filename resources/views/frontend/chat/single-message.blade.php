@@ -13,9 +13,9 @@
                             @else
                                 <iframe src="{{ route('single.product.iframe',$viewData->sharedTargetId($message->message)) }}?shared=yes" scrolling="no"  class="w-100" onload="resizeIframe(this)" frameborder="0"></iframe>
                             @endif
-                            <a class="text-dark ellipsis-line-2" href="{{ $message->message }}" target="_blank">{!! $message->message !!}</a>
+                            <a class="text-dark ellipsis-line-2" href="{{ $message->message }}" target="_blank">{{ $message->message }}</a>
                         @else
-                        {!! $message->message !!}
+                        {!! nl2br(e($message->message)) !!}
                         @endif
                         <div class="quote-react d-flex position-relative">
                             <span class="entry-react post-react" id="ShowReactId_{{ $message->id }}">
@@ -70,9 +70,9 @@
                         @else
                             <iframe src="{{ route('single.product.iframe',$viewData->sharedTargetId($message->message)) }}?shared=yes" scrolling="no"  class="w-100" onload="resizeIframe(this)" frameborder="0"></iframe>
                         @endif
-                        <a href="{{ $message->message }}" class="text-dark ellipsis-line-2" target="_blank">{!! $message->message !!}</a>
+                        <a href="{{ $message->message }}" class="text-dark ellipsis-line-2" target="_blank">{{ $message->message }}</a>
                     @else
-                    {!! $message->message !!}
+                    {!! nl2br(e($message->message)) !!}
                     @endif
 
                 </div>

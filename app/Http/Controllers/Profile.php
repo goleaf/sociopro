@@ -20,6 +20,7 @@ use App\Support\Validation\DateTimeRules;
 use App\ViewModels\ProfileFollowList;
 use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Session;
 
@@ -55,7 +56,7 @@ class Profile extends Controller
         $page_data['user'] = $this->user;
         $page_data['view_path'] = 'frontend.profile.index';
 
-        return view('frontend.index', $page_data);
+        return view('frontend.index', $this->withProfileSidebarData($page_data));
     }
 
     public function load_post_by_scrolling(Request $request)
@@ -107,7 +108,7 @@ class Profile extends Controller
         $page_data['user_info'] = $this->user;
         $page_data['view_path'] = 'frontend.profile.index';
 
-        return view('frontend.index', $page_data);
+        return view('frontend.index', $this->withProfileSidebarData($page_data));
     }
 
     public function photos()
@@ -134,7 +135,7 @@ class Profile extends Controller
 
         $page_data['view_path'] = 'frontend.profile.index';
 
-        return view('frontend.index', $page_data);
+        return view('frontend.index', $this->withProfileSidebarData($page_data));
     }
 
     public function load_photos(Request $request)
@@ -234,7 +235,7 @@ class Profile extends Controller
         $page_data['user_info'] = $this->user;
         $page_data['view_path'] = 'frontend.profile.index';
 
-        return view('frontend.index', $page_data);
+        return view('frontend.index', $this->withProfileSidebarData($page_data));
     }
 
     public function load_videos(Request $request)
@@ -534,5 +535,34 @@ class Profile extends Controller
         $page_data['view_path'] = 'frontend.profile.index';
 
         return view('frontend.index', $page_data);
+    }
+
+    /**
+     * @param  array<string, mixed>  $pageData
+     * @return array<string, mixed>
+     */
+    private function withProfileSidebarData(array $pageData): array
+    {
+        $pageData['media_files'] = $this->profileSidebarMediaFiles();
+
+        return $pageData;
+    }
+
+    /**
+     * @return Collection<int, Media_files>
+     */
+    private function profileSidebarMediaFiles(): Collection
+    {
+        return Media_files::query()
+            ->select(['id', 'user_id', 'post_id', 'file_name', 'file_type'])
+            ->where('user_id', $this->user->id)
+            ->whereNull('story_id')
+            ->whereNull('product_id')
+            ->whereNull('page_id')
+            ->whereNull('group_id')
+            ->whereNull('chat_id')
+            ->orderByDesc('id')
+            ->take(9)
+            ->get();
     }
 }
