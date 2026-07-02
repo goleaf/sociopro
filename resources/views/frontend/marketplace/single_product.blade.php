@@ -49,7 +49,7 @@
                                 </div>
                                 <div class="pb-share e_market d-flex justify-content-between">
                                     @can('messageSeller', $product)
-                                        <a href="{{ route('chat',['reciver'=>$product->user_id,'product'=>$product->id]) }}" class="btn sold_btn common_btn"> {{get_phrase('Message')}} </a>
+                                        <a href="{{ route('chat',['receiver'=>$product->user_id,'product'=>$product->id]) }}" class="btn sold_btn common_btn"> {{get_phrase('Message')}} </a>
                                     @else
                                         <a href="javascript:void(0)" class="btn sold_btn common_btn"> {{get_phrase('Sold')}} </a>
                                     @endcan
@@ -157,7 +157,7 @@
                     <div class="thumbnail-196-196" style="background-image: url('{{get_product_image($related_product->image,'coverphoto')}}');"></div>
                 </a>
                 {{-- @if ($related_product->user_id!=auth()->user()->id)
-                    <a class="message-trigger" href="{{ route('chat',['reciver'=>$related_product->user_id,'product'=>$related_product->id]) }}"><i class="fa fa-message"></i></a>
+                    <a class="message-trigger" href="{{ route('chat',['receiver'=>$related_product->user_id,'product'=>$related_product->id]) }}"><i class="fa fa-message"></i></a>
                 @endif --}}
             </div>
              <div class="p-8">

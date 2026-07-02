@@ -2,9 +2,11 @@
 
 ## Current Finding
 
-No Eloquent accessors or mutators are currently defined in `app/Models`.
+Only the chat naming compatibility adapter currently defines Eloquent accessors or mutators in `app/Models`.
 
-The current model layer does not define legacy `getFooAttribute` accessors, legacy `setFooAttribute` mutators, `Attribute::make()` accessors, typed `Attribute` return methods, or `$appends` computed serialization attributes. Model serialization is therefore mostly driven by stored attributes, casts, hidden fields, and loaded relationships.
+`App\Models\Chat` and `App\Models\MessageThread` define narrow `Attribute::make()` accessors/mutators that translate canonical PHP names such as `message_thread_id`, `receiver_id`, and `chat_center` to legacy persisted columns such as `message_thrade`, `reciver_id`, and `chatcenter`. These adapters are pure, query-free, and covered by `Tests\Feature\ChatNamingCompatibilityTest`.
+
+No other model should define legacy `getFooAttribute` accessors, legacy `setFooAttribute` mutators, `Attribute::make()` accessors, typed `Attribute` return methods, or `$appends` computed serialization attributes without updating this audit and adding focused tests. Model serialization should stay driven by stored attributes, casts, hidden fields, and loaded relationships.
 
 ## Existing Presentation Boundaries
 
@@ -24,12 +26,12 @@ These methods should remain regular explicit helpers. Do not convert them into a
 
 | Risk | Current Status | Required Future Standard |
 | --- | --- | --- |
-| Hidden queries in accessors | No accessor/mutator definitions found | Accessors must not query. Use eager loading, scopes, resources, or view models. |
-| Mutator side effects | No mutator definitions found | Mutators must not send mail, write files, dispatch jobs, touch sessions, call APIs, or mutate unrelated records. |
+| Hidden queries in accessors | Chat naming accessors read direct attributes only | Accessors must not query. Use eager loading, scopes, resources, or view models. |
+| Mutator side effects | Chat naming mutators only remap one assigned attribute to a legacy column | Mutators must not send mail, write files, dispatch jobs, touch sessions, call APIs, or mutate unrelated records. |
 | Expensive formatting | No model formatting accessors found | Date, currency, image URL, and profile display formatting belongs in resources/view models. |
 | Date/time bugs | No date formatting accessors found | Models should cast dates; timezone-aware display formatting belongs at the presentation boundary. |
 | Serialization leaks | Payment and user secret fields are already covered by model audit tests | Never append provider keys, tokens, passwords, transaction IDs, or private storage paths to model serialization. |
-| Inconsistent naming | Legacy model class names remain out of scope for this audit | New accessors must follow Laravel naming only when justified by a tested consumer. |
+| Inconsistent naming | Chat naming compatibility accessors bridge legacy database names to canonical PHP names | New accessors must follow Laravel naming only when justified by a tested consumer. |
 
 ## Out-of-Scope But Related Debt
 

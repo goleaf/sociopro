@@ -286,7 +286,7 @@ class MarketplaceAuthorizationTest extends TestCase
             'title' => 'Policy visible product',
         ]);
         $chatUrl = route('chat', [
-            'reciver' => $owner->id,
+            'receiver' => $owner->id,
             'product' => $product->id,
         ]);
 
@@ -313,7 +313,7 @@ class MarketplaceAuthorizationTest extends TestCase
         $response = $this
             ->actingAs($owner)
             ->get(route('chat', [
-                'reciver' => $owner->id,
+                'receiver' => $owner->id,
                 'product' => $product->id,
             ]));
 
@@ -330,7 +330,7 @@ class MarketplaceAuthorizationTest extends TestCase
         $response = $this
             ->actingAs($buyer)
             ->get(route('chat', [
-                'reciver' => $otherUser->id,
+                'receiver' => $otherUser->id,
                 'product' => $product->id,
             ]));
 
@@ -346,7 +346,7 @@ class MarketplaceAuthorizationTest extends TestCase
         $response = $this
             ->actingAs($buyer)
             ->get(route('chat', [
-                'reciver' => $seller->id,
+                'receiver' => $seller->id,
                 'product' => $product->id,
             ]));
 
@@ -363,7 +363,7 @@ class MarketplaceAuthorizationTest extends TestCase
         $response = $this
             ->actingAs($buyer)
             ->post(route('chat.save'), [
-                'reciver_id' => $otherUser->id,
+                'receiver_id' => $otherUser->id,
                 'product_id' => $product->id,
                 'message' => 'Is this still available?',
                 'messagecenter' => null,
@@ -381,7 +381,7 @@ class MarketplaceAuthorizationTest extends TestCase
         $response = $this
             ->actingAs($owner)
             ->post(route('chat.save'), [
-                'reciver_id' => $owner->id,
+                'receiver_id' => $owner->id,
                 'product_id' => $product->id,
                 'message' => 'Is my product still available?',
                 'messagecenter' => null,

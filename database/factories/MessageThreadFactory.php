@@ -20,8 +20,8 @@ class MessageThreadFactory extends Factory
     {
         return [
             'sender_id' => User::factory(),
-            'reciver_id' => User::factory(),
-            'chatcenter' => 'chat',
+            'receiver_id' => User::factory(),
+            'chat_center' => 'chat',
         ];
     }
 
@@ -29,8 +29,8 @@ class MessageThreadFactory extends Factory
     {
         return $this->state([
             'sender_id' => $sender->id,
-            'reciver_id' => $receiver->id,
-            'chatcenter' => 'chat',
+            'receiver_id' => $receiver->id,
+            'chat_center' => 'chat',
         ]);
     }
 }

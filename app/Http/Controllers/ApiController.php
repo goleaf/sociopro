@@ -2000,18 +2000,12 @@ class ApiController extends Controller
             $is_chat = 'not_chat'; // Initialize profile ID as 0
             $msgthread_id = 0; // Initialize profile ID as 0
 
-            // Get chat messages involving the current user
-            $chats = MessageThread::whereIn('reciver_id', [$my_id, $user_id])
-                ->WhereIn('sender_id', [$my_id, $user_id])
-                ->get();
+            $chats = MessageThread::betweenParticipants($my_id, (int) $user_id)->get();
 
-            // Loop through chat messages to find matching profile ID
             foreach ($chats as $chat) {
-                if ($chat->reciver_id == $my_id || $chat->sender_id == $my_id) {
-                    // Set the profile ID to the matching user ID
+                if ($chat->receiver_id == $my_id || $chat->sender_id == $my_id) {
                     $is_chat = 'chat';
                     $msgthread_id = $chat->id;
-                    // Break the loop once a match is found
                     break;
                 }
             }
@@ -4875,9 +4869,7 @@ class ApiController extends Controller
 
     private function marketplaceMessageThreadId(int $userId): int
     {
-        return (int) (MessageThread::query()
-            ->where('reciver_id', $userId)
-            ->orWhere('sender_id', $userId)
+        return (int) (MessageThread::forParticipant($userId)
             ->value('id') ?? 0);
     }
 
@@ -6866,14 +6858,14 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $previousChatList = MessageThread::where('reciver_id', auth('sanctum')->user()->id)->orWhere('sender_id', auth('sanctum')->user()->id)->orderBy('id', 'DESC')->get();
+            $previousChatList = MessageThread::forParticipant($user_id)->orderBy('id', 'DESC')->get();
 
             $chatList = [];
             foreach ($previousChatList as $chat) {
-                $profile_id = $chat->reciver_id == $user_id ? $chat->sender_id : $chat->reciver_id;
+                $profile_id = $chat->receiver_id == $user_id ? $chat->sender_id : $chat->receiver_id;
                 $user = User::find($profile_id);
-                $last_chat = Chat::where('message_thrade', $chat->id)->orderBy('id', 'DESC')->first();
-                $last_chat1 = Chat::where('reciver_id', $user_id)->where('read_status', 0)->first();
+                $last_chat = Chat::forMessageThread($chat->id)->orderBy('id', 'DESC')->first();
+                $last_chat1 = Chat::unreadForReceiver($user_id)->first();
                 if ($last_chat) {
                     $createdDate = Carbon::createFromTimestamp(strtotime($last_chat->created_at));
                     $formattedDate = $createdDate->format('h:i A');
@@ -6887,6 +6879,7 @@ class ApiController extends Controller
 
                 $chatList[] = [
                     'id' => $chat->id,
+                    'receiver_id' => $chat->receiver_id,
                     'reciver_id' => $chat->reciver_id,
                     'sender_id' => $chat->sender_id,
                     'profile_id' => $profile_id,
@@ -6907,7 +6900,7 @@ class ApiController extends Controller
         return $response;
     }
 
-    public function chat_msg(Request $request, $msg_thrade)
+    public function chat_msg(Request $request, $messageThread)
     {
         $token = $request->bearerToken();
         $response = [];
@@ -6915,20 +6908,20 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $allchat = Chat::where('message_thrade', $msg_thrade)->get();
+            $allchat = Chat::forMessageThread((int) $messageThread)->get();
 
             $chatList = [];
             foreach ($allchat as $chat) {
-                // $profile_id = $chat->reciver_id == $user_id ? $chat->sender_id : $chat->reciver_id;
                 $user = User::find($chat->sender_id);
-                // $last_chat = Chat::where('message_thrade', $chat->id)->orderBy('id', 'DESC')->first();
 
                 $createdDate = Carbon::createFromTimestamp(strtotime($chat->created_at));
                 $formattedDate = $createdDate->format('h:i A');
 
                 $chatList[] = [
                     'id' => $chat->id,
+                    'message_thread_id' => $chat->message_thread_id,
                     'message_thrade' => $chat->message_thrade,
+                    'receiver_id' => $chat->receiver_id,
                     'reciver_id' => $chat->reciver_id,
                     'sender_id' => $chat->sender_id,
                     'sender' => $chat->sender_id == $user_id ? 'my' : ' not_mine',
@@ -6957,43 +6950,28 @@ class ApiController extends Controller
             $user_id = auth('sanctum')->user()->id;
             Auth::guard('web')->setUser(auth('sanctum')->user());
 
-            $reciver = $request->reciver_id;
+            $receiverId = $this->chatReceiverIdFromRequest($request);
             $multipleFiles = $request->file('multiple_files', []);
             if ($multipleFiles instanceof UploadedFile) {
                 $multipleFiles = [$multipleFiles];
             }
 
-            $firstMessageThread = MessageThread::where(function ($query) use ($reciver, $user_id) {
-                $query->where('sender_id', $reciver)
-                    ->where('reciver_id', $user_id);
-            })->orWhere(function ($query) use ($reciver, $user_id) {
-                $query->where('sender_id', $user_id)
-                    ->where('reciver_id', $reciver);
-            })
-                ->first();
-
-            $messageThreadCount = MessageThread::where(function ($query) use ($reciver, $user_id) {
-                $query->where('sender_id', $reciver)
-                    ->where('reciver_id', $user_id);
-            })->orWhere(function ($query) use ($reciver, $user_id) {
-                $query->where('sender_id', $user_id)
-                    ->where('reciver_id', $reciver);
-            })
-                ->count();
+            $firstMessageThread = MessageThread::betweenParticipants($receiverId, $user_id)->first();
+            $messageThreadCount = MessageThread::betweenParticipants($receiverId, $user_id)->count();
 
             if ($messageThreadCount <= 0) {
                 $messageThread = new MessageThread;
-                $messageThread->sender_id = auth('sanctum')->user()->id;
-                $messageThread->reciver_id = $request->reciver_id;
-                $messageThread->chatcenter = $request->messagecenter;
+                $messageThread->sender_id = $user_id;
+                $messageThread->receiver_id = $receiverId;
+                $messageThread->chat_center = $request->messagecenter;
                 $done = $messageThread->save();
                 if ($done) {
                     $chat = new Chat;
-                    $chat->reciver_id = $request->reciver_id;
-                    $chat->sender_id = auth('sanctum')->user()->id;
-                    $chat->chatcenter = $request->messagecenter;
+                    $chat->receiver_id = $receiverId;
+                    $chat->sender_id = $user_id;
+                    $chat->chat_center = $request->messagecenter;
                     $chat->message = $request->message;
-                    $chat->message_thrade = $messageThread->id;
+                    $chat->message_thread_id = $messageThread->id;
                     $chat->thumbsup = $request->thumbsup;
                     $chat->file = '1';
                     $chat->save();
@@ -7019,15 +6997,15 @@ class ApiController extends Controller
                             }
                             $file_name = $file_name.'.'.$file_extention;
 
-                            $media_file_data = ['user_id' => auth('sanctum')->user()->id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public'];
+                            $media_file_data = ['user_id' => $user_id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public'];
                             $media_file_data['created_at'] = time();
                             $media_file_data['updated_at'] = $media_file_data['created_at'];
                             MediaFile::create($media_file_data);
                         }
                     }
-                    $page_data['message'] = Chat::where('message_thrade', $messageThread->id)->orderBy('id', 'DESC')->limit('1')->get();
+                    $page_data['message'] = Chat::forMessageThread($messageThread->id)->orderBy('id', 'DESC')->limit('1')->get();
                     $message = view('frontend.chat.single-message', $page_data)->render();
-                    $url = route('chat', $request->reciver_id);
+                    $url = route('chat', $receiverId);
                     if (isset($request->product_id) && ! empty($request->product_id)) {
                         $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox', 'replaceUrl' => '#message_body', 'url' => $url];
                     } else {
@@ -7038,11 +7016,11 @@ class ApiController extends Controller
                 }
             } else {
                 $chat = new Chat;
-                $chat->reciver_id = $request->reciver_id;
-                $chat->sender_id = auth('sanctum')->user()->id;
-                $chat->chatcenter = $request->messagecenter;
+                $chat->receiver_id = $receiverId;
+                $chat->sender_id = $user_id;
+                $chat->chat_center = $request->messagecenter;
                 $chat->message = $request->message;
-                $chat->message_thrade = $firstMessageThread->id;
+                $chat->message_thread_id = $firstMessageThread->id;
                 $chat->thumbsup = $request->thumbsup;
                 $chat->file = '1';
                 $chat->save();
@@ -7068,7 +7046,7 @@ class ApiController extends Controller
                         }
                         $file_name = $file_name.'.'.$file_extention;
 
-                        $media_file_data = ['user_id' => auth('sanctum')->user()->id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public'];
+                        $media_file_data = ['user_id' => $user_id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public'];
 
                         $media_file_data['chat_id'] = $chat->id;
                         $media_file_data['created_at'] = time();
@@ -7091,13 +7069,18 @@ class ApiController extends Controller
             $user_id = auth('sanctum')->user()->id;
 
             $messageThread = new MessageThread;
-            $messageThread->sender_id = auth('sanctum')->user()->id;
-            $messageThread->reciver_id = $request->reciver_id;
-            $messageThread->chatcenter = $request->messagecenter;
+            $messageThread->sender_id = $user_id;
+            $messageThread->receiver_id = $this->chatReceiverIdFromRequest($request);
+            $messageThread->chat_center = $request->messagecenter;
             $done = $messageThread->save();
         }
 
         return $response;
+    }
+
+    private function chatReceiverIdFromRequest(Request $request): int
+    {
+        return $request->integer('receiver_id') ?: $request->integer('reciver_id');
     }
 
     public function remove_chat(Request $request, $chat_id)
@@ -7125,69 +7108,6 @@ class ApiController extends Controller
         return $response;
     }
 
-    // public function chat_read_option(Request $request, $user_id)
-    // {
-    //     $token = $request->bearerToken();
-    //     $response = array();
-
-    //     if (isset($token) && $token != '') {
-    //         // $user_id = auth('sanctum')->user()->id;
-    //         $messageThread = MessageThread::whereIn('sender_id', [auth('sanctum')->user()->id, $user_id])->whereIn('reciver_id', [auth('sanctum')->user()->id, $user_id])->first();
-    //         if (!empty($messageThread)) {
-    //             $done = Chat::where('message_thrade', $messageThread->id)->where('read_status', '0')->where('reciver_id', auth('sanctum')->user()->id)->update(['read_status' => '1']);
-    //             if ($done) {
-    //                 $response['success'] = true;
-    //                 $response['message'] = 'read successfully';
-    //             } else {
-    //                 $response['success'] = false;
-    //                 $response['message'] = 'not found';
-    //             }
-    //         }
-    //     } else {
-    //         $response['success'] = false;
-    //         $response['message'] = 'Unauthorized access';
-    //     }
-    //     return $response;
-    // }
-    // public function chat_read_option(Request $request, $user_id)
-    // {
-    //     $token = $request->bearerToken();
-    //     $response = array();
-
-    //     if (isset($token) && $token != '') {
-    //         $authUserId = auth('sanctum')->user()->id;
-
-    //         // Retrieve message thread
-    //         $messageThread = MessageThread::whereIn('sender_id', [$authUserId, $user_id])
-    //             ->whereIn('reciver_id', [$authUserId, $user_id])
-    //             ->first();
-
-    //         if (!empty($messageThread)) {
-    //             // Mark messages as read
-    //             $done = Chat::where('message_thrade', $messageThread->id)
-    //                 ->where('read_status', '0')
-    //                 ->where('reciver_id', $authUserId)
-    //                 ->update(['read_status' => '1']);
-
-    //             if ($done !== false) {
-    //                 $response['success'] = true;
-    //                 $response['message'] = 'Messages marked as read successfully';
-    //             } else {
-    //                 $response['success'] = false;
-    //                 $response['message'] = 'Failed to mark messages as read';
-    //             }
-    //         } else {
-    //             $response['success'] = false;
-    //             $response['message'] = 'Message thread not found';
-    //         }
-    //     } else {
-    //         $response['success'] = false;
-    //         $response['message'] = 'Unauthorized access';
-    //     }
-
-    //     return $response;
-    // }
-
     public function chat_read_option(Request $request, $user_id)
     {
         $token = $request->bearerToken();
@@ -7196,16 +7116,11 @@ class ApiController extends Controller
         if (isset($token) && $token != '') {
             $authUserId = auth('sanctum')->user()->id;
 
-            // Retrieve message thread
-            $messageThread = MessageThread::whereIn('sender_id', [$authUserId, $user_id])
-                ->whereIn('reciver_id', [$authUserId, $user_id])
-                ->first();
+            $messageThread = MessageThread::betweenParticipants($authUserId, (int) $user_id)->first();
 
             if (! empty($messageThread)) {
-                // Mark messages as read
-                $done = Chat::where('message_thrade', $messageThread->id)
-                    ->where('read_status', '0')
-                    ->where('reciver_id', $authUserId)
+                $done = Chat::forMessageThread($messageThread->id)
+                    ->unreadForReceiver($authUserId)
                     ->update(['read_status' => '1']);
 
                 if ($done) {
@@ -7266,18 +7181,12 @@ class ApiController extends Controller
                 $profile_id = 'not_chat'; // Initialize profile ID as 0
                 $msgthread_id = 0; // Initialize profile ID as 0
 
-                // Get chat messages involving the current user
-                $chats = MessageThread::where('reciver_id', $user_id)
-                    ->orWhere('sender_id', $user_id)
-                    ->get();
+                $chats = MessageThread::forParticipant($user_id)->get();
 
-                // Loop through chat messages to find matching profile ID
                 foreach ($chats as $chat) {
-                    if ($chat->reciver_id == $users->id || $chat->sender_id == $users->id) {
-                        // Set the profile ID to the matching user ID
+                    if ($chat->receiver_id == $users->id || $chat->sender_id == $users->id) {
                         $profile_id = 'chat';
                         $msgthread_id = $chat->id;
-                        // Break the loop once a match is found
                         break;
                     }
                 }
@@ -7439,7 +7348,7 @@ class ApiController extends Controller
             $new_notification = Notification::where('reciver_user_id', $user_id)->where('status', '0')
                 ->orderBy('id', 'DESC')->count();
 
-            $chats = Chat::where('reciver_id', $user_id)->where('read_status', 0)->count();
+            $chats = Chat::unreadForReceiver($user_id)->count();
 
             $response['notification'] = $new_notification;
             $response['chat'] = $chats;
@@ -7461,7 +7370,6 @@ class ApiController extends Controller
     //         // $new_notification = Notification::where('reciver_user_id', $user_id)->where('status', '0')
     //         //     ->orderBy('id', 'DESC')->count();
 
-    //         // $chats = Chat::where('reciver_id', $user_id)->where('read_status', 0)->count();
     //         $jitsis = json_decode(get_settings('zitsi_configuration'), true);
     //         $room = get_settings('system_name');
     //         $roomName = $jitsis->jitsi_app_id + '/' + $room;

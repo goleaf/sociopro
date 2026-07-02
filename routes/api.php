@@ -169,7 +169,7 @@ Route::name('api.')->group(function () {
 
         Route::controller(ApiController::class)->group(function () {
             Route::get('/chat', 'chat')->middleware('throttle:api-expensive')->name('chat.index');
-            Route::get('/chat_msg/{msg_thrade}', 'chat_msg')->middleware('throttle:api-expensive')->name('chat.messages.index');
+            Route::get('/chat_msg/{message_thread}', 'chat_msg')->middleware('throttle:api-expensive')->name('chat.messages.index');
             Route::post('/chat_save', 'chat_save')->name('chat.messages.store');
             Route::post('/thread_save', 'thread_save')->name('chat.threads.store');
             Route::post('/remove_chat/{chat_id}', 'remove_chat')->name('chat.messages.destroy');

@@ -233,8 +233,10 @@ Http::timeout(config('services.example.timeout'))->post(config('services.example
 
 ## Compatibility Notes
 
-- Legacy database names such as `message_thrades` and columns such as `message_thrade` remain database compatibility contracts until a separate migration plan changes them.
-- Legacy API keys such as `thrade` must not be renamed without versioning or a compatibility adapter.
+- Chat code must use canonical names in PHP: `MessageThread`, `message_thread_id`, `receiver_id`, `receiver`, `chat_center`, and `message_thread`.
+- Legacy chat storage names such as `message_thrades`, `message_thrade`, `reciver_id`, and `chatcenter` remain persisted database compatibility contracts until a separate expand/backfill/contract migration changes them.
+- New chat code must go through the `MessageThread` and `Chat` model accessors/scopes instead of querying legacy chat column names directly outside those models.
+- Legacy chat API keys such as `message_thrade` and `reciver_id` may remain as additive response/request compatibility fields, but new clients and tests should prefer `message_thread_id` and `receiver_id`.
 - Public route URIs and controller method names can be cleaned only when route definitions, tests, and external consumers are updated together.
 - Legacy plural model classes such as `Posts`, `Comments`, `Users`, `Albums`, `Stories`, `Friendships`, and `PaidContentPackages` should be renamed only in a dedicated compatibility slice. Before changing them, check factories, seeders, policies, route model binding, queue payloads, serialized data, morph types, API resources, tests, and public contracts.
 - `Users` is especially risky because this codebase also has the canonical Laravel `User` model. Prefer deprecating `Users` behind a tested migration plan instead of making a broad blind rename.

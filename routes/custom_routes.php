@@ -185,7 +185,7 @@ Route::controller(VideoController::class)->middleware('auth', 'user', 'verified'
 
 //  video
 Route::controller(ChatController::class)->middleware('auth', 'user', 'verified', 'activity', 'prevent-back-history')->group(function () {
-    Route::get('/chat/inbox/{reciver}/{product?}/', 'chat')->name('chat');
+    Route::get('/chat/inbox/{receiver}/{product?}/', 'chat')->name('chat');
     Route::POST('/chat/save', 'chat_save')->name('chat.save');
     Route::get('chat/own/remove/{id}', 'remove_chat')->name('remove.chat');
     Route::POST('/my_message_react', 'react_chat')->name('react.chat');

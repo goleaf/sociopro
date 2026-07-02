@@ -31,7 +31,7 @@ class ChatUploadSecurityTest extends TestCase
             $this
                 ->actingAs($sender)
                 ->post(route('chat.save'), [
-                    'reciver_id' => $receiver->id,
+                    'receiver_id' => $receiver->id,
                     'messagecenter' => 'chat',
                     'message' => 'Video upload',
                     'thumbsup' => 0,
@@ -67,7 +67,7 @@ class ChatUploadSecurityTest extends TestCase
             $this
                 ->actingAs($sender)
                 ->post(route('chat.save'), [
-                    'reciver_id' => $receiver->id,
+                    'receiver_id' => $receiver->id,
                     'messagecenter' => 'chat',
                     'message' => 'Follow-up video upload',
                     'thumbsup' => 0,
@@ -100,7 +100,7 @@ class ChatUploadSecurityTest extends TestCase
         $response = $this
             ->withToken($sender->createToken('chat-upload-test')->plainTextToken)
             ->post(route('api.chat.messages.store'), [
-                'reciver_id' => $receiver->id,
+                'receiver_id' => $receiver->id,
                 'messagecenter' => 'chat',
                 'message' => 'API video upload',
                 'thumbsup' => 0,

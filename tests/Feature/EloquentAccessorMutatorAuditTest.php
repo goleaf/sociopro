@@ -17,7 +17,9 @@ class EloquentAccessorMutatorAuditTest extends TestCase
         $contents = file_get_contents($path) ?: '';
 
         foreach ([
-            'No Eloquent accessors or mutators are currently defined',
+            'Only the chat naming compatibility adapter currently defines Eloquent accessors or mutators',
+            'App\Models\Chat',
+            'App\Models\MessageThread',
             'Serialization leaks',
             'app/ViewModels',
             'resources/view models',
@@ -26,11 +28,15 @@ class EloquentAccessorMutatorAuditTest extends TestCase
         }
     }
 
-    public function test_models_do_not_define_eloquent_accessors_or_mutators(): void
+    public function test_models_do_not_define_unreviewed_eloquent_accessors_or_mutators(): void
     {
         foreach ($this->modelSourceFiles() as $file) {
             $contents = file_get_contents($file) ?: '';
             $relativePath = str_replace(base_path().DIRECTORY_SEPARATOR, '', $file);
+
+            if (in_array($relativePath, $this->allowedAccessorAndMutatorFiles(), true)) {
+                continue;
+            }
 
             foreach ($this->accessorAndMutatorPatterns() as $description => $pattern) {
                 $this->assertDoesNotMatchRegularExpression(
@@ -92,6 +98,17 @@ class EloquentAccessorMutatorAuditTest extends TestCase
         sort($files);
 
         return array_values($files);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function allowedAccessorAndMutatorFiles(): array
+    {
+        return [
+            'app/Models/Chat.php',
+            'app/Models/MessageThread.php',
+        ];
     }
 
     /**
