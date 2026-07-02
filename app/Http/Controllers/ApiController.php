@@ -1782,7 +1782,6 @@ class ApiController extends Controller
             $response['email_verified_at'] = $user->email_verified_at;
             $response['created_at'] = date_create($user->created_at)->format('l,j F Y');
             $response['updated_at'] = $user->updated_at;
-            $response['payment_settings'] = $user->payment_settings;
 
             // Fetch Posts by the User
             $posts = Posts::orderBy('post_id', 'desc')->where('user_id', $user->id)->where('posts.publisher', 'post')->get();
@@ -2004,31 +2003,19 @@ class ApiController extends Controller
             // $response['frnd'] = $frnd_id;
             $response['requested'] = $requested;
             $response['follow'] = $follow;
-            $response['user_role'] = $user->user_role;
             $response['username'] = $user->username;
-            $response['email'] = $user->email;
             $response['name'] = $user->name;
             $response['nickname'] = $user->nickname;
-            $response['friend'] = $user->friends;
             $response['followers'] = $followers;
             $response['gender'] = $user->gender;
             $response['studied_at'] = $user->studied_at;
-            $response['address'] = $user->address;
             $response['profession'] = $user->profession;
             $response['job'] = $user->job;
             $response['marital_status'] = $user->marital_status;
-            $response['phone'] = $user->phone;
-            $response['date_of_birth'] = date('Y-m-d', $user->date_of_birth);
             $response['about'] = $user->about;
             $response['photo'] = get_user_images($user->id, 'optimized');
             $response['cover_photo'] = get_cover_photos($user->id, 'optimized');
-            $response['status'] = $user->status;
-            $response['lastActive'] = $user->lastActive;
-            $response['timezone'] = $user->timezone;
-            $response['email_verified_at'] = $user->email_verified_at;
             $response['created_at'] = date_create($user->created_at)->format('l,j F Y');
-            $response['updated_at'] = $user->updated_at;
-            $response['payment_settings'] = $user->payment_settings;
 
             // Fetch Posts by the User
             $posts = Posts::orderBy('post_id', 'desc')->where('user_id', $user->id)->where('posts.publisher', 'post')->get();

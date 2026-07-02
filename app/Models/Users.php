@@ -21,6 +21,7 @@ class Users extends Model
      */
     protected $hidden = [
         'password',
+        'payment_settings',
         'remember_token',
     ];
 
