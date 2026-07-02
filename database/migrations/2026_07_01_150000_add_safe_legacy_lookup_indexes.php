@@ -161,7 +161,10 @@ return new class extends Migration
             }
 
             foreach ($indexes as $name => $columns) {
-                if (! $this->hasColumns($table, $columns)) {
+                if (! $this->hasColumns($table, $columns)
+                    || Schema::hasIndex($table, $name)
+                    || Schema::hasIndex($table, $columns)
+                ) {
                     continue;
                 }
 
@@ -180,7 +183,7 @@ return new class extends Migration
             }
 
             foreach (array_reverse($indexes, true) as $name => $columns) {
-                if (! $this->hasColumns($tableName, $columns)) {
+                if (! $this->hasColumns($tableName, $columns) || ! Schema::hasIndex($tableName, $name)) {
                     continue;
                 }
 

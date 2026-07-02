@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use ReflectionMethod;
+use ReflectionProperty;
 use SplFileInfo;
 use Tests\TestCase;
 
@@ -27,6 +29,48 @@ class MigrationSafetyAuditTest extends TestCase
         }
 
         $this->assertSame([], $missingDownMethods);
+    }
+
+    public function test_safe_legacy_lookup_indexes_are_idempotent_and_reversible(): void
+    {
+        $migration = require database_path('migrations/2026_07_01_150000_add_safe_legacy_lookup_indexes.php');
+        $indexes = $this->migrationIndexDefinitions($migration);
+
+        $migration->down();
+        $this->assertIndexesDoNotExist($indexes);
+
+        $migration->up();
+        $migration->up();
+        $this->assertIndexesExist($indexes);
+
+        $migration->down();
+        $migration->down();
+        $this->assertIndexesDoNotExist($indexes);
+
+        $migration->up();
+        $this->assertIndexesExist($indexes);
+    }
+
+    public function test_marketplace_search_filter_indexes_are_idempotent_and_reversible(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_120000_add_marketplace_search_filter_indexes.php');
+        $indexes = [
+            'marketplaces' => $this->migrationFlatIndexDefinitions($migration),
+        ];
+
+        $migration->down();
+        $this->assertIndexesDoNotExist($indexes);
+
+        $migration->up();
+        $migration->up();
+        $this->assertIndexCoverageExists($indexes);
+
+        $migration->down();
+        $migration->down();
+        $this->assertIndexesDoNotExist($indexes);
+
+        $migration->up();
+        $this->assertIndexCoverageExists($indexes);
     }
 
     public function test_high_value_legacy_lookup_indexes_are_present_and_reversible(): void
@@ -67,11 +111,37 @@ class MigrationSafetyAuditTest extends TestCase
 
         $migration->down();
         $this->assertForeignKeysDoNotExist($this->expectedSafeForeignKeys());
-        $this->assertIndexesDoNotExist($this->expectedForeignKeyHelperIndexes());
+        $this->assertIndexesExist($this->expectedForeignKeyHelperIndexes());
 
         $migration->up();
         $this->assertForeignKeysExist($this->expectedSafeForeignKeys());
         $this->assertIndexesExist($this->expectedForeignKeyHelperIndexes());
+    }
+
+    public function test_foreign_key_rollback_preserves_pre_existing_helper_named_indexes(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_150000_add_safe_legacy_foreign_key_constraints.php');
+
+        $migration->down();
+
+        if (! array_key_exists('album_images_page_id_fk_idx', $this->indexesFor('album_images'))) {
+            Schema::table('album_images', function (Blueprint $table): void {
+                $table->index(['page_id'], 'album_images_page_id_fk_idx');
+            });
+        }
+
+        $this->assertSame(
+            ['page_id'],
+            $this->indexesFor('album_images')['album_images_page_id_fk_idx'] ?? null
+        );
+
+        $migration->up();
+        $migration->down();
+
+        $this->assertSame(
+            ['page_id'],
+            $this->indexesFor('album_images')['album_images_page_id_fk_idx'] ?? null
+        );
     }
 
     public function test_safe_legacy_unique_constraints_are_present_and_reversible(): void
@@ -300,6 +370,30 @@ class MigrationSafetyAuditTest extends TestCase
         ]);
     }
 
+    public function test_project_migrations_run_from_imported_schema_cleanly(): void
+    {
+        $this->runProjectMigrationsDownInReverseOrder();
+        $this->runProjectMigrationsUpInOrder();
+        $this->runProjectMigrationsDownInReverseOrder();
+        $this->runProjectMigrationsUpInOrder();
+
+        $this->assertTrue(Schema::hasTable('settings'));
+    }
+
+    public function test_migration_rollback_audit_documents_intentional_limits(): void
+    {
+        $path = base_path('docs/migration-rollback-audit.md');
+
+        $this->assertFileExists($path);
+
+        $contents = file_get_contents($path);
+
+        $this->assertIsString($contents);
+        $this->assertStringContainsString('No current migration is intentionally irreversible', $contents);
+        $this->assertStringContainsString('Foreign-key helper indexes are intentionally retained', $contents);
+        $this->assertStringContainsString('backup-required rollback', $contents);
+    }
+
     /**
      * @return iterable<SplFileInfo>
      */
@@ -314,6 +408,81 @@ class MigrationSafetyAuditTest extends TestCase
         }
     }
 
+    private function runProjectMigrationsUpInOrder(): void
+    {
+        foreach ($this->projectMigrationInstances() as $migration) {
+            $migration->up();
+        }
+    }
+
+    private function runProjectMigrationsDownInReverseOrder(): void
+    {
+        foreach (array_reverse($this->projectMigrationInstances()) as $migration) {
+            $migration->down();
+        }
+    }
+
+    /**
+     * @return list<object>
+     */
+    private function projectMigrationInstances(): array
+    {
+        return array_map(
+            static function (string $path): object {
+                $migration = require $path;
+
+                assert(is_object($migration));
+
+                return $migration;
+            },
+            $this->projectMigrationPaths()
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function projectMigrationPaths(): array
+    {
+        $paths = glob(database_path('migrations/*.php')) ?: [];
+
+        sort($paths);
+
+        return array_values($paths);
+    }
+
+    /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function migrationIndexDefinitions(object $migration): array
+    {
+        $property = new ReflectionProperty($migration, 'indexes');
+        $property->setAccessible(true);
+
+        $indexes = $property->getValue($migration);
+
+        $this->assertIsArray($indexes);
+
+        /** @var array<string, array<string, list<string>>> $indexes */
+        return $indexes;
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private function migrationFlatIndexDefinitions(object $migration): array
+    {
+        $property = new ReflectionProperty($migration, 'indexes');
+        $property->setAccessible(true);
+
+        $indexes = $property->getValue($migration);
+
+        $this->assertIsArray($indexes);
+
+        /** @var array<string, list<string>> $indexes */
+        return $indexes;
+    }
+
     /**
      * @param  array<string, array<string, list<string>>>  $expectedIndexes
      */
@@ -324,6 +493,18 @@ class MigrationSafetyAuditTest extends TestCase
 
             foreach ($indexes as $name => $columns) {
                 $this->assertSame($columns, $actualIndexes[$name] ?? null, "{$table}.{$name}");
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, array<string, list<string>>>  $expectedIndexes
+     */
+    private function assertIndexCoverageExists(array $expectedIndexes): void
+    {
+        foreach ($expectedIndexes as $table => $indexes) {
+            foreach ($indexes as $name => $columns) {
+                $this->assertTrue(Schema::hasIndex($table, $columns), "{$table}.{$name}");
             }
         }
     }

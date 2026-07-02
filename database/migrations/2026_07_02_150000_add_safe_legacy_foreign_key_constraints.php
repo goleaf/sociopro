@@ -117,6 +117,8 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Keep helper indexes: rollback cannot prove whether a helper-named index
+        // was created here or already existed for production query performance.
         foreach (array_reverse($this->foreignKeys, true) as $table => $foreignKeys) {
             if (! Schema::hasTable($table)) {
                 continue;
@@ -128,37 +130,8 @@ return new class extends Migration
                         $table->dropForeign($this->dropForeignArgument($name, $definition['columns']));
                     });
                 }
-
-                $this->dropOwnedIndex($table, $definition['columns']);
             }
         }
-    }
-
-    /**
-     * @param  list<string>  $columns
-     */
-    private function dropOwnedIndex(string $table, array $columns): void
-    {
-        $name = $this->indexName($table, $columns[0]);
-
-        if (! $this->indexExists($table, $name)) {
-            return;
-        }
-
-        Schema::table($table, function (Blueprint $table) use ($name): void {
-            $table->dropIndex($name);
-        });
-    }
-
-    private function indexExists(string $table, string $name): bool
-    {
-        foreach (Schema::getIndexes($table) as $index) {
-            if (($index['name'] ?? null) === $name) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
