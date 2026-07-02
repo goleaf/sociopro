@@ -9,6 +9,7 @@ use App\Http\Requests\Page\UpdatePageCoverPhotoRequest;
 use App\Http\Requests\Page\UpdatePageInfoRequest;
 use App\Http\Requests\Page\UpdatePageRequest;
 use App\Models\Albums;
+use App\Models\Comments;
 use App\Models\MediaFile;
 use App\Models\Page;
 use App\Models\PageLike;
@@ -179,28 +180,34 @@ class PageController extends Controller
 
     public function single_page($id)
     {
+        $userId = (int) auth()->id();
         $friendsid = FriendshipsQuery::acceptedFriendIdsForUser(auth()->user());
+        $page = $this->pageProfileQuery($userId)->findOrFail($id);
 
-        $all_videos = MediaFile::where('page_id', $id)
+        $all_videos = MediaFile::where('page_id', $page->id)
             ->ofType(MediaFileType::Video)
             ->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;
 
-        $all_photos = MediaFile::where('page_id', $id)
+        $all_photos = MediaFile::where('page_id', $page->id)
             ->take(30)->orderBy('id', 'DESC')->get();
         $page_data['all_photos'] = $all_photos;
 
         $posts = Posts::notPrivate()
-            ->forPublisher('page', $id)
+            ->forPublisher('page', $page->id)
             ->active()
             ->join('pages', 'posts.publisher_id', '=', 'pages.id')
             ->select('posts.*', 'pages.id', 'pages.title', 'pages.logo', 'posts.created_at as created_at')
             ->orderBy('posts.post_id', 'DESC')->get();
 
         $page_data['posts'] = $posts;
-        $page_data['suggestedpages'] = PageLike::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
-        $page_data['page'] = Page::find($id);
+        $page_data['comments'] = $this->pageRootComments($page->id);
+        $page_data['suggestedpages'] = $this->suggestedPageQuery($userId, $friendsid)
+            ->limit(1)
+            ->get();
+        $page_data['page'] = $page;
+        $page_data['pageIntro'] = ellipsis($page->description ?? '', 500);
 
         $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
             ->take(15)->get();
@@ -212,25 +219,30 @@ class PageController extends Controller
 
     public function page_photos($id)
     {
+        $userId = (int) auth()->id();
         $friendsid = FriendshipsQuery::acceptedFriendIdsForUser(auth()->user());
+        $page = $this->pageProfileQuery($userId)->findOrFail($id);
 
-        $all_photos = MediaFile::where('page_id', $id)
+        $all_photos = MediaFile::where('page_id', $page->id)
             ->ofType(MediaFileType::Image)
             ->take(20)->orderBy('id', 'DESC')->get();
 
-        $all_albums = Albums::where('page_id', $id)
+        $all_albums = Albums::where('page_id', $page->id)
             ->take(6)->orderBy('id', 'DESC')->get();
 
-        $page_data['all_videos'] = MediaFile::where('page_id', $id)
+        $page_data['all_videos'] = MediaFile::where('page_id', $page->id)
             ->ofType(MediaFileType::Video)
             ->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['all_photos'] = $all_photos;
         $page_data['all_albums'] = $all_albums;
         $page_data['page_identifire'] = 'page';
-        $page_data['page'] = Page::find($id);
+        $page_data['page'] = $page;
+        $page_data['pageIntro'] = ellipsis($page->description ?? '', 500);
 
-        $page_data['suggestedpages'] = PageLike::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
+        $page_data['suggestedpages'] = $this->suggestedPageQuery($userId, $friendsid)
+            ->limit(1)
+            ->get();
         $page_data['view_path'] = 'frontend.pages.photos';
 
         return view('frontend.index', $page_data);
@@ -238,21 +250,26 @@ class PageController extends Controller
 
     public function videos($id)
     {
+        $userId = (int) auth()->id();
         $friendsid = FriendshipsQuery::acceptedFriendIdsForUser(auth()->user());
+        $page = $this->pageProfileQuery($userId)->findOrFail($id);
 
-        $all_videos = MediaFile::where('page_id', $id)
+        $all_videos = MediaFile::where('page_id', $page->id)
             ->ofType(MediaFileType::Video)
             ->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;
 
-        $page_data['page'] = Page::find($id);
-        $all_photos = MediaFile::where('page_id', $id)
+        $page_data['page'] = $page;
+        $page_data['pageIntro'] = ellipsis($page->description ?? '', 500);
+        $all_photos = MediaFile::where('page_id', $page->id)
             ->ofType(MediaFileType::Image)
             ->take(20)->orderBy('id', 'DESC')->get();
         $page_data['all_photos'] = $all_photos;
 
-        $page_data['suggestedpages'] = PageLike::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
+        $page_data['suggestedpages'] = $this->suggestedPageQuery($userId, $friendsid)
+            ->limit(1)
+            ->get();
         $page_data['view_path'] = 'frontend.pages.video';
 
         return view('frontend.index', $page_data);
@@ -293,6 +310,46 @@ class PageController extends Controller
                 'likedByUsers as liked_by_current_user' => fn (Builder $query): Builder => $query
                     ->where('users.id', $userId),
             ]);
+    }
+
+    private function pageProfileQuery(int $userId): Builder
+    {
+        return $this->pageCardQuery($userId)
+            ->with(['getCategory:id,name'])
+            ->withCount('posts');
+    }
+
+    /**
+     * @param  list<int>  $friendIds
+     */
+    private function suggestedPageQuery(int $userId, array $friendIds): Builder
+    {
+        return $this->pageCardQuery($userId)
+            ->whereIn('id', PageLike::query()
+                ->select('page_id')
+                ->whereIn('user_id', $friendIds)
+                ->where('user_id', '!=', $userId))
+            ->whereNotIn('id', PageLike::query()
+                ->select('page_id')
+                ->where('user_id', $userId))
+            ->orderByDesc('id');
+    }
+
+    private function pageRootComments(int $pageId)
+    {
+        return Comments::query()
+            ->select(['comment_id', 'user_id', 'parent_id', 'is_type', 'id_of_type', 'description', 'user_reacts', 'created_at', 'updated_at'])
+            ->with(['user:id,name,photo'])
+            ->where('is_type', 'page')
+            ->where('id_of_type', $pageId)
+            ->where('parent_id', 0)
+            ->orderByDesc('comment_id')
+            ->take(1)
+            ->get()
+            ->each(function (Comments $comment): void {
+                $comment->setAttribute('name', $comment->user?->name);
+                $comment->setAttribute('photo', $comment->user?->photo);
+            });
     }
 
     public function like($id)

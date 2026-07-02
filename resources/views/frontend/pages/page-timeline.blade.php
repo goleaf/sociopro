@@ -7,9 +7,6 @@
                 @if ($page->user_id==auth()->user()->id)
                     @include('frontend.main_content.create_post',['page_id'=>$page->id])
                 @endif
-                @php
-                    $comments = DB::table('comments')->join('users', 'comments.user_id', '=', 'users.id')->where('comments.is_type', 'page')->where('comments.id_of_type', $page->id)->where('comments.parent_id', 0)->select('comments.*', 'users.name', 'users.photo')->orderBy('comment_id', 'DESC')->take(1)->get();                                                                
-                @endphp
 
                 @include('frontend.main_content.comments',['comments'=>$comments,'post_id'=>$page->id,'type'=>"page"])
                 

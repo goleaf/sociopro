@@ -10,6 +10,7 @@ use App\Http\Requests\Page\UpdatePageRequest;
 use App\Models\Page;
 use App\Models\Pagecategory;
 use App\Models\PageLike;
+use App\Models\Posts;
 use App\Models\User;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -214,6 +215,52 @@ class PageSecurityPerformanceTest extends TestCase
             $this->assertStringNotContainsString('PageLike::where', $blade);
             $this->assertStringNotContainsString('Page::find', $blade);
         }
+    }
+
+    public function test_page_profile_blades_use_preloaded_view_data(): void
+    {
+        foreach ([
+            resource_path('views/frontend/pages/bio.blade.php'),
+            resource_path('views/frontend/pages/timeline-header.blade.php'),
+            resource_path('views/frontend/pages/page-timeline.blade.php'),
+        ] as $path) {
+            $blade = File::get($path);
+
+            $this->assertStringNotContainsString('App\\Models\\', $blade);
+            $this->assertStringNotContainsString('PageLike::where', $blade);
+            $this->assertStringNotContainsString('Posts::where', $blade);
+            $this->assertStringNotContainsString('DB::table', $blade);
+        }
+    }
+
+    public function test_single_page_renders_escaped_intro_and_preloaded_counts(): void
+    {
+        $viewer = $this->activeUser();
+        $owner = $this->activeUser();
+        $page = $this->page($owner, [
+            'description' => '<script>alert("page-xss")</script> Public page intro',
+            'job' => 'Community organizer',
+            'location' => 'Vilnius',
+            'lifestyle' => 'Accessible events',
+        ]);
+
+        PageLike::factory()->forPage($page)->count(2)->create();
+        PageLike::factory()->forUser($viewer)->forPage($page)->create();
+        Posts::factory()->forOwner($owner)->create([
+            'publisher' => 'page',
+            'publisher_id' => $page->id,
+        ]);
+
+        $response = $this
+            ->actingAs($viewer)
+            ->get(route('single.page', ['id' => $page->id]));
+
+        $response
+            ->assertOk()
+            ->assertDontSee('<script>alert("page-xss")</script>', false)
+            ->assertSee(e('alert("page-xss") Public page intro'), false)
+            ->assertSee('3', false)
+            ->assertSee(get_phrase('Posts'), false);
     }
 
     public function test_pages_index_batches_page_like_lookups_for_rendered_cards(): void

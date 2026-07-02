@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Page extends Model
 {
@@ -46,5 +47,14 @@ class Page extends Model
         return $this->belongsToMany(User::class, 'page_likes', 'page_id', 'user_id')
             ->withPivot('id', 'role')
             ->withTimestamps();
+    }
+
+    /**
+     * @return HasMany<Posts, Page>
+     */
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Posts::class, 'publisher_id')
+            ->where('publisher', 'page');
     }
 }
