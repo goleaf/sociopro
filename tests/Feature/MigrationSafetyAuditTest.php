@@ -115,6 +115,40 @@ class MigrationSafetyAuditTest extends TestCase
         ]);
     }
 
+    public function test_safe_legacy_nullable_column_constraints_are_present_and_reversible(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_170000_add_safe_legacy_nullable_column_constraints.php');
+
+        $migration->down();
+        $this->assertColumnsAreNullable($this->expectedSafeRequiredColumns());
+
+        $migration->up();
+        $this->assertColumnsAreRequired($this->expectedSafeRequiredColumns());
+
+        $migration->down();
+        $this->assertColumnsAreNullable($this->expectedSafeRequiredColumns());
+
+        $migration->up();
+        $this->assertColumnsAreRequired($this->expectedSafeRequiredColumns());
+    }
+
+    public function test_safe_legacy_nullable_column_constraints_skip_dirty_null_data(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_170000_add_safe_legacy_nullable_column_constraints.php');
+
+        $migration->down();
+
+        DB::table('currencies')->where('id', 1)->update(['name' => null]);
+
+        $migration->up();
+        $this->assertColumnNullable('currencies', 'name');
+
+        DB::table('currencies')->where('id', 1)->update(['name' => 'Leke']);
+
+        $migration->up();
+        $this->assertColumnRequired('currencies', 'name');
+    }
+
     /**
      * @return iterable<SplFileInfo>
      */
@@ -199,6 +233,54 @@ class MigrationSafetyAuditTest extends TestCase
                 $this->assertContains($name, $actualUniqueIndexes, "{$table}.{$name} is not unique");
             }
         }
+    }
+
+    /**
+     * @param  array<string, array<string, array{default?: string|null}>>  $expectedColumns
+     */
+    private function assertColumnsAreRequired(array $expectedColumns): void
+    {
+        foreach ($expectedColumns as $table => $columns) {
+            foreach ($columns as $column => $expectations) {
+                $this->assertColumnRequired($table, $column);
+
+                if (array_key_exists('default', $expectations)) {
+                    $this->assertSame(
+                        $expectations['default'],
+                        $this->normalizedColumnDefault($table, $column),
+                        "{$table}.{$column} default"
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, array<string, array{default?: string|null}>>  $expectedColumns
+     */
+    private function assertColumnsAreNullable(array $expectedColumns): void
+    {
+        foreach ($expectedColumns as $table => $columns) {
+            foreach (array_keys($columns) as $column) {
+                $this->assertColumnNullable($table, $column);
+            }
+        }
+    }
+
+    private function assertColumnRequired(string $table, string $column): void
+    {
+        $this->assertFalse(
+            (bool) ($this->columnFor($table, $column)['nullable'] ?? true),
+            "{$table}.{$column} should be required"
+        );
+    }
+
+    private function assertColumnNullable(string $table, string $column): void
+    {
+        $this->assertTrue(
+            (bool) ($this->columnFor($table, $column)['nullable'] ?? false),
+            "{$table}.{$column} should remain nullable"
+        );
     }
 
     /**
@@ -453,6 +535,43 @@ class MigrationSafetyAuditTest extends TestCase
     }
 
     /**
+     * @return array<string, array<string, array{default?: string|null}>>
+     */
+    private function expectedSafeRequiredColumns(): array
+    {
+        return [
+            'account_active_requests' => [
+                'status' => ['default' => 'pending'],
+            ],
+            'currencies' => [
+                'name' => [],
+                'code' => [],
+                'symbol' => [],
+                'paypal_supported' => ['default' => '0'],
+                'stripe_supported' => ['default' => '0'],
+            ],
+            'payment_gateways' => [
+                'identifier' => [],
+                'currency' => [],
+                'title' => [],
+                'test_mode' => ['default' => '1'],
+                'status' => ['default' => '0'],
+                'is_addon' => ['default' => '0'],
+            ],
+            'settings' => [
+                'type' => [],
+            ],
+            'users' => [
+                'name' => [],
+                'email' => [],
+                'password' => [],
+                'user_role' => ['default' => 'general'],
+                'status' => ['default' => '0'],
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, list<string>>
      */
     private function indexesFor(string $table): array
@@ -472,6 +591,32 @@ class MigrationSafetyAuditTest extends TestCase
             ->pluck('name')
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function columnFor(string $table, string $column): array
+    {
+        $columns = collect(Schema::getColumns($table))->keyBy('name');
+
+        $this->assertTrue($columns->has($column), "{$table}.{$column} is missing");
+
+        return $columns->get($column);
+    }
+
+    private function normalizedColumnDefault(string $table, string $column): ?string
+    {
+        $default = $this->columnFor($table, $column)['default'] ?? null;
+
+        if ($default === null) {
+            return null;
+        }
+
+        $default = trim((string) $default);
+        $default = trim($default, "'\"");
+
+        return strtoupper($default) === 'NULL' ? null : $default;
     }
 
     /**

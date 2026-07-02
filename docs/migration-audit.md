@@ -1,5 +1,25 @@
 # Migration Audit
 
+## 2026-07-02 Update: Safe Nullable Column Constraint Pass
+
+### Scope
+
+Audited nullable columns against live dump-backed SQLite metadata, current validation rules, factories, seeders, auth/payment/settings write paths, and known legacy sentinel defaults. Full details are in `docs/nullable-column-audit.md`.
+
+### Safe Fix Applied
+
+Added `database/migrations/2026_07_02_170000_add_safe_legacy_nullable_column_constraints.php`.
+
+The migration makes selected business-required columns non-null only when the current data contains no nulls and, for key string fields, no blank strings. It also adds safe defaults for account activation status, user role/status, currency support flags, and payment gateway flags. Dirty production data causes the affected column to be skipped instead of failing deployment.
+
+### Deferred Unsafe Constraints
+
+Deferred cleanup-first candidates include language phrase columns until language write paths validate inputs, `payment_gateways.model_name` until gateway creation sets it atomically, user JSON/profile state columns until factories and legacy insert paths are normalized, and sentinel columns such as `comments.parent_id` until `0` sentinel behavior is replaced with nullable relationship semantics.
+
+### Verification Added
+
+Updated `tests/Feature/MigrationSafetyAuditTest.php` to verify required-column metadata, defaults, reversibility, and dirty-data skipping for nullable-column constraints.
+
 ## 2026-07-02 Update: Safe Unique Constraint Pass
 
 ### Scope
