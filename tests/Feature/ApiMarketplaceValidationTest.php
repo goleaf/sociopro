@@ -58,6 +58,56 @@ class ApiMarketplaceValidationTest extends TestCase
             ]);
     }
 
+    public function test_marketplace_filter_rejects_malicious_sorting_payloads(): void
+    {
+        $this->authenticateApiUser();
+
+        $response = $this->withToken($this->apiToken)->getJson($this->apiMarketplaceFilterUrl([
+            'sort' => 'title desc, (select password from users)',
+            'direction' => 'desc; drop table marketplaces; --',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure([
+                'validationError' => [
+                    'sort',
+                    'direction',
+                ],
+            ]);
+    }
+
+    public function test_marketplace_filter_treats_malicious_search_payloads_as_literal_text(): void
+    {
+        $owner = $this->authenticateApiUser();
+        [$category, $brand, $currency] = $this->createMarketplaceLookups();
+
+        $this->marketplace([
+            'user_id' => $owner->id,
+            'title' => 'Safe API Search Product',
+            'price' => '100.00',
+            'location' => 'Vilnius',
+            'category' => (string) $category->id,
+            'condition' => 'new',
+            'status' => '1',
+            'brand' => (string) $brand->id,
+            'currency_id' => $currency->id,
+            'description' => 'This product must not be returned by an injected search payload.',
+        ]);
+
+        $response = $this->withToken($this->apiToken)->getJson($this->apiMarketplaceFilterUrl([
+            'search' => "%' OR 1=1 --",
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertExactJson([]);
+
+        $this->assertDatabaseHas('marketplaces', [
+            'title' => 'Safe API Search Product',
+        ]);
+    }
+
     public function test_marketplace_filter_rejects_overlong_search_query_with_legacy_error_shape(): void
     {
         $this->authenticateApiUser();
@@ -322,8 +372,8 @@ class ApiMarketplaceValidationTest extends TestCase
         $response = $this->withToken($this->apiToken)->getJson(route('api.marketplace.index', [
             'page' => 0,
             'per_page' => 101,
-            'sort' => 'password',
-            'direction' => 'sideways',
+            'sort' => 'id desc, (select password from users)',
+            'direction' => 'desc; drop table users; --',
             'include_pagination' => 'definitely',
         ]));
 

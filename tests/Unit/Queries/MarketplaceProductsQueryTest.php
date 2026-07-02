@@ -54,6 +54,43 @@ class MarketplaceProductsQueryTest extends TestCase
         $this->assertSame([$literalUnderscoreMatch->id], $underscoreProducts->pluck('id')->all());
     }
 
+    public function test_handle_keeps_malicious_search_payloads_bound_and_literal(): void
+    {
+        $owner = User::factory()->create();
+        $category = Category::factory()->electronics()->create();
+        $brand = Brand::factory()->acme()->create();
+        $currency = Currency::factory()->euro()->create();
+        $payload = "%' OR 1=1 --";
+
+        $this->marketplace($owner, $category, $brand, $currency, [
+            'title' => 'Safe Camera Listing',
+            'description' => 'This row must not match an injected search payload.',
+            'location' => 'Vilnius',
+        ]);
+
+        $capturedSql = [];
+        $capturedBindings = [];
+
+        DB::listen(function (QueryExecuted $query) use (&$capturedSql, &$capturedBindings): void {
+            if (str_contains($query->sql, 'from "marketplaces"')) {
+                $capturedSql[] = $query->sql;
+                $capturedBindings[] = $query->bindings;
+            }
+        });
+
+        $products = app(MarketplaceProductsQuery::class)->handle($this->filters([
+            'search' => $payload,
+        ]));
+
+        $marketplaceSql = implode("\n", $capturedSql);
+        $marketplaceBindings = array_merge(...$capturedBindings);
+
+        $this->assertCount(0, $products);
+        $this->assertStringContainsString('LIKE ? ESCAPE', $marketplaceSql);
+        $this->assertStringNotContainsString($payload, $marketplaceSql);
+        $this->assertContains("%\\%' OR 1=1 --%", $marketplaceBindings);
+    }
+
     public function test_handle_uses_id_as_deterministic_tiebreaker_for_non_id_sort_fields(): void
     {
         $owner = User::factory()->create();
