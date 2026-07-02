@@ -15,4 +15,15 @@ return [
         'max_response_bytes' => (int) env('SERVER_SIDE_URL_MAX_RESPONSE_BYTES', 1048576),
         'user_agent' => env('SERVER_SIDE_URL_USER_AGENT', 'SocioproLinkPreview/1.0'),
     ],
+
+    'webhooks' => [
+        'paystack' => [
+            'signature_header' => 'X-Paystack-Signature',
+            'timestamp_header' => 'X-Sociopro-Timestamp',
+            'require_timestamp' => filter_var(env('PAYSTACK_WEBHOOK_REQUIRE_TIMESTAMP', false), FILTER_VALIDATE_BOOL),
+            'timestamp_tolerance_seconds' => (int) env('PAYSTACK_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS', 300),
+            'idempotency_header' => 'X-Paystack-Event',
+            'replay_ttl_seconds' => (int) env('PAYSTACK_WEBHOOK_REPLAY_TTL_SECONDS', 86400),
+        ],
+    ],
 ];

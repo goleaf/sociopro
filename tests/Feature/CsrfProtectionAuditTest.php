@@ -41,17 +41,22 @@ class CsrfProtectionAuditTest extends TestCase
         }
     }
 
-    public function test_csrf_middleware_does_not_bypass_web_routes(): void
+    public function test_csrf_middleware_only_bypasses_documented_signed_webhooks(): void
     {
         $middleware = app(VerifyCsrfToken::class);
         $reflection = new ReflectionClass($middleware);
         $except = $reflection->getProperty('except');
         $except->setAccessible(true);
 
-        $this->assertSame([], $except->getValue($middleware));
+        $this->assertSame(['paystack/payment/*'], $except->getValue($middleware));
 
         $source = File::get(app_path('Http/Middleware/VerifyCsrfToken.php'));
         $this->assertStringNotContainsString('$this->except[]', $source);
+
+        $route = Route::getRoutes()->getByName('make.payment');
+
+        $this->assertNotNull($route);
+        $this->assertContains('payment.webhook:paystack', $route->gatherMiddleware());
     }
 
     public function test_mutating_blade_forms_include_csrf_tokens(): void

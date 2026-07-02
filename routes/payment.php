@@ -16,5 +16,5 @@ Route::controller(PaymentController::class)->group(function () {
         Route::get('make/{identifier}/status', 'paytm_paymentCallback')->middleware('throttle:webhook')->name('payment.status');
     });
 
-    Route::post('paystack/payment/{identifier}', 'payment_success')->middleware('throttle:webhook')->name('make.payment');
+    Route::post('paystack/payment/{identifier}', 'payment_success')->middleware(['throttle:webhook', 'payment.webhook:paystack'])->name('make.payment');
 });

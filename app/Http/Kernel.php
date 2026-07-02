@@ -16,6 +16,7 @@ use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\UserActivity;
 use App\Http\Middleware\UserMiddleware;
 use App\Http\Middleware\VerifyCsrfToken;
+use App\Http\Middleware\VerifyPaymentWebhook;
 use Illuminate\Auth\Middleware\AuthenticateWithBasicAuth;
 use Illuminate\Auth\Middleware\Authorize;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
@@ -98,5 +99,6 @@ class Kernel extends HttpKernel
         'api.token' => EnsureValidApiBearerToken::class,
         'user' => UserMiddleware::class,
         'prevent-back-history' => PreventBackHistory::class,
+        'payment.webhook' => VerifyPaymentWebhook::class,
     ];
 }
