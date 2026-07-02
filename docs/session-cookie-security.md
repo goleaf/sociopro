@@ -15,6 +15,23 @@ Authentication lifecycle checks are in place:
 
 Cookie configuration is controlled through `config/session.php` and must be set through environment variables, not direct `env()` calls outside config files.
 
+## Audited Controls
+
+| Control | Current status | Source of truth |
+| --- | --- | --- |
+| Session driver | Configurable with `SESSION_DRIVER`; repository default remains `file` until database/Redis session storage is provisioned. | `config/session.php`, `.env.example` |
+| Session lifetime | Configurable with `SESSION_LIFETIME`; production runbook documents a 120-minute default and recommends lowering it for admin-heavy deployments. | `config/session.php`, `.env.example` |
+| Expire on close | Configurable with `SESSION_EXPIRE_ON_CLOSE`; default remains `false` for legacy compatibility. | `config/session.php`, `.env.example` |
+| Session encryption | Configurable with `SESSION_ENCRYPT`; production runbook recommends `true` with a planned re-login window. | `config/session.php`, `.env.example` |
+| Cookie domain | Configurable with `SESSION_DOMAIN`; blank is recommended unless subdomain sharing is intentional. | `config/session.php`, `.env.example` |
+| Secure cookie | Configurable with `SESSION_SECURE_COOKIE`; defaults to true in `APP_ENV=production` unless explicitly overridden. | `config/session.php`, `.env.example` |
+| HTTP-only cookie | Configurable with `SESSION_HTTP_ONLY`; default is `true`. | `config/session.php`, `.env.example` |
+| SameSite cookie | Configurable with `SESSION_SAME_SITE`; default is `lax`. | `config/session.php`, `.env.example` |
+| Session regeneration | Successful login regenerates the session ID. | `AuthenticatedSessionController`, `AuthenticationTest` |
+| Logout invalidation | Logout clears the web guard, invalidates session data, and regenerates the CSRF token. | `AuthenticatedSessionController`, `AuthenticationTest` |
+| Remember me | Login form exposes remember me and passes the boolean to Laravel auth. | `LoginRequest`, `auth/login.blade.php`, `AuthenticationTest` |
+| Production docs | HTTPS, proxy trust, secure cookie flags, session encryption, driver choice, and rollback notes are documented here. | This runbook |
+
 ## Production Session Settings
 
 Use HTTPS in every production environment and ensure proxy/load balancer headers are trusted correctly through `TrustProxies`.
