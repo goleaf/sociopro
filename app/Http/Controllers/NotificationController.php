@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Friends\AcceptFriendRequestAction;
 use App\Models\Event;
 use App\Models\Friendships;
 use App\Models\Fundraiser;
 use App\Models\Invite;
 use App\Models\Notification;
-use App\Models\User;
 use Carbon\Carbon;
 use Session;
 
@@ -38,45 +38,11 @@ class NotificationController extends Controller
         return view('frontend.index', $page_data);
     }
 
-    public function accept_friend_notification($id)
+    public function accept_friend_notification(AcceptFriendRequestAction $acceptFriendRequest, $id)
     {
         $response = [];
-        $is_updated = Friendships::where('requester', $id)->where('accepter', auth()->user()->id)->update(['is_accepted' => '1']);
-        Notification::where('sender_user_id', $id)->where('reciver_user_id', auth()->user()->id)->update(['status' => '1', 'view' => '1']);
 
-        if ($is_updated == 1) {
-            // update my id to my friend list
-            $my_friends = User::where('id', auth()->user()->id)->value('friends');
-            $my_friends = json_decode($my_friends);
-            if (is_array($my_friends)) {
-                array_push($my_friends, (int) $id);
-            } else {
-                $my_friends = [(int) $id];
-            }
-            $my_friends = json_encode($my_friends);
-
-            User::where('id', auth()->user()->id)->update(['friends' => $my_friends]);
-
-            // update my id to my friend list
-            $my_friends_of_friends = User::where('id', $id)->value('friends');
-            $my_friends_of_friends = json_decode($my_friends_of_friends);
-
-            if (is_array($my_friends_of_friends)) {
-                array_push($my_friends_of_friends, (int) auth()->user()->id);
-            } else {
-                $my_friends_of_friends = [(int) auth()->user()->id];
-            }
-            $my_friends_of_friends = json_encode($my_friends_of_friends);
-
-            User::where('id', $id)->update(['friends' => $my_friends_of_friends]);
-        }
-
-        $notify = new Notification;
-        $notify->sender_user_id = auth()->user()->id;
-        $notify->reciver_user_id = $id;
-        $notify->type = 'friend_request_accept';
-        $notify->save();
-
+        $acceptFriendRequest->acceptFromNotification(auth()->user(), (int) $id);
         Session::flash('success_message', get_phrase('Friend Request Accepted'));
         $response = ['reload' => 1];
 

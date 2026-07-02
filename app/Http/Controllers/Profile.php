@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Friends\AcceptFriendRequestAction;
 use App\Enums\ContentStatus;
 use App\Enums\MediaFileType;
 use App\Enums\PostType;
 use App\Enums\Visibility;
 use App\Models\Album_image;
 use App\Models\Albums;
-use App\Models\Follower;
 use App\Models\Friendships;
 use App\Models\Media_files;
-use App\Models\Notification;
 use App\Models\Posts;
 use App\Models\User;
 use App\Models\Users;
@@ -274,54 +273,11 @@ class Profile extends Controller
         return view('frontend.profile.friend_requests_single_data', $page_data);
     }
 
-    public function accept_friend_request(Request $request)
+    public function accept_friend_request(Request $request, AcceptFriendRequestAction $acceptFriendRequest)
     {
         $response = [];
-        if (! Follower::where('follow_id', $request->user_id)->where('user_id', auth()->user()->id)->exists()) {
-            $follwer = new Follower;
-            $follwer->follow_id = $request->user_id;
-            $follwer->user_id = auth()->user()->id;
-            $follwer->save();
-        }
 
-        $is_updated = Friendships::where('accepter', $this->user->id)
-            ->where('requester', $request->user_id)
-            ->update(['is_accepted' => 1]);
-
-        if ($is_updated == 1) {
-            // update my friends id to my friend list
-            $my_friends = User::where('id', $this->user->id)->value('friends');
-            $my_friends = json_decode($my_friends);
-            if (is_array($my_friends)) {
-                array_push($my_friends, (int) $request->user_id);
-            } else {
-                $my_friends = [(int) $request->user_id];
-            }
-            $my_friends = json_encode($my_friends);
-
-            User::where('id', $this->user->id)->update(['friends' => $my_friends]);
-
-            // update my id to my friend list
-            $my_friends_of_friends = User::where('id', $request->user_id)->value('friends');
-            $my_friends_of_friends = json_decode($my_friends_of_friends);
-
-            if (is_array($my_friends_of_friends)) {
-                array_push($my_friends_of_friends, (int) $this->user->id);
-            } else {
-                $my_friends_of_friends = [(int) $this->user->id];
-            }
-            $my_friends_of_friends = json_encode($my_friends_of_friends);
-
-            User::where('id', $request->user_id)->update(['friends' => $my_friends_of_friends]);
-
-            // Send notification
-            Notification::where('sender_user_id', (int) $request->user_id)->where('reciver_user_id', $this->user->id)->update(['status' => '1', 'view' => '1']);
-            $notify = new Notification;
-            $notify->sender_user_id = auth()->user()->id;
-            $notify->reciver_user_id = (int) $request->user_id;
-            $notify->type = 'friend_request_accept';
-            $notify->save();
-
+        if ($acceptFriendRequest->acceptFromProfile($this->user, (int) $request->user_id)) {
             $response = ['alertMessage' => get_phrase('Friend request accepted'), 'showElem' => "#friendRequestAcceptedBtn$request->user_id", 'hideElem' => "#friendRequestConfirmBtn$request->user_id"];
         }
 

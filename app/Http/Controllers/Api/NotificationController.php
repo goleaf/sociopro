@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Actions\Friends\AcceptFriendRequestAction;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Friendships;
 use App\Models\Invite;
 use App\Models\Notification;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
@@ -97,53 +97,15 @@ class NotificationController extends Controller
         return min($perPage, self::MAX_PER_PAGE);
     }
 
-    public function accept_friend_notification(Request $request, $id)
+    public function accept_friend_notification(Request $request, AcceptFriendRequestAction $acceptFriendRequest, $id)
     {
         $token = $request->bearerToken();
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            $is_updated = Friendships::where('requester', $id)->where('accepter', $user_id)->update(['is_accepted' => '1']);
-            Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->update(['status' => '1', 'view' => '1']);
-
-            if ($is_updated == 1) {
-                $my_friends = User::where('id', $user_id)->value('friends');
-                $my_friends = json_decode($my_friends);
-                if (is_array($my_friends)) {
-                    array_push($my_friends, (int) $id);
-                } else {
-                    $my_friends = [(int) $id];
-                }
-                $my_friends = json_encode($my_friends);
-
-                User::where('id', $user_id)->update(['friends' => $my_friends]);
-
-                $my_friends_of_friends = User::where('id', $id)->value('friends');
-                $my_friends_of_friends = json_decode($my_friends_of_friends);
-
-                if (is_array($my_friends_of_friends)) {
-                    array_push($my_friends_of_friends, (int) $user_id);
-                } else {
-                    $my_friends_of_friends = [(int) $user_id];
-                }
-                $my_friends_of_friends = json_encode($my_friends_of_friends);
-
-                User::where('id', $id)->update(['friends' => $my_friends_of_friends]);
-            }
-
-            $notify = new Notification;
-            $notify->sender_user_id = $user_id;
-            $notify->reciver_user_id = $id;
-            $notify->type = 'friend_request_accept';
-            $save = $notify->save();
-            if ($save) {
-                $response['success'] = true;
-                $response['message'] = 'Friend request accept';
-            } else {
-                $response['success'] = false;
-                $response['message'] = 'not found request';
-            }
+            $acceptFriendRequest->acceptFromNotification(auth('sanctum')->user(), (int) $id);
+            $response['success'] = true;
+            $response['message'] = 'Friend request accept';
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
