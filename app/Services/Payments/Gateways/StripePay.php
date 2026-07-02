@@ -5,6 +5,7 @@ namespace App\Services\Payments\Gateways;
 use App\Enums\PaymentGatewayIdentifier;
 use App\Exceptions\Payments\PaymentGatewayException;
 use App\Models\Payment_gateway;
+use App\Support\Money\Money;
 use Stripe\Checkout\Session as CheckoutSession;
 use Stripe\Exception\ApiErrorException;
 use Stripe\PaymentIntent;
@@ -87,7 +88,7 @@ class StripePay
                         'product_data' => [
                             'name' => get_phrase('Purchasing').' '.$products_name,
                         ],
-                        'unit_amount' => round($payment_details['payable_amount'] * 100, 2),
+                        'unit_amount' => Money::toMinorUnits($payment_details['payable_amount']),
                         'currency' => $payment_gateway->currency,
                     ],
                     'quantity' => 1,

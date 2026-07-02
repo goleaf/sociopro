@@ -4,6 +4,7 @@ namespace App\Services\Payments\Gateways;
 
 use App\Models\Payment_gateway;
 use App\Models\Users;
+use App\Support\Money\Money;
 use Illuminate\Support\Str;
 use Razorpay\Api\Api;
 
@@ -68,17 +69,18 @@ class Razorpay
 
         $receipt_id = Str::random(20);
         $api = new Api($public_key, $secret_key);
+        $amountMinorUnits = Money::toMinorUnits($payment_details['items'][0]['price']);
 
         $order = $api->order->create([
             'receipt' => $receipt_id,
-            'amount' => $payment_details['items'][0]['price'] * 100,
+            'amount' => $amountMinorUnits,
             'currency' => 'USD',
         ]);
 
         $page_data = [
             'order_id' => $order['id'],
             'razorpay_id' => $public_key,
-            'amount' => $payment_details['items'][0]['price'] * 100,
+            'amount' => $amountMinorUnits,
 
             'name' => $user->name,
             'currency' => 'USD',

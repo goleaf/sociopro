@@ -149,6 +149,51 @@ class MigrationSafetyAuditTest extends TestCase
         $this->assertColumnRequired('currencies', 'name');
     }
 
+    public function test_safe_legacy_money_precision_constraints_are_present_and_reversible(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_180000_add_safe_legacy_money_precision_constraints.php');
+
+        $migration->down();
+        $this->assertColumnsHaveTypeNames($this->expectedLegacyMoneyColumnTypes());
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames($this->expectedSafeMoneyColumnTypes());
+
+        $migration->down();
+        $this->assertColumnsHaveTypeNames($this->expectedLegacyMoneyColumnTypes());
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames($this->expectedSafeMoneyColumnTypes());
+    }
+
+    public function test_safe_legacy_money_precision_constraints_skip_dirty_money_values(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_180000_add_safe_legacy_money_precision_constraints.php');
+
+        $migration->down();
+
+        DB::table('marketplaces')->insert([
+            'title' => 'Dirty price fixture',
+            'price' => 'free',
+        ]);
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames([
+            'marketplaces' => [
+                'price' => ['text', 'varchar'],
+            ],
+        ]);
+
+        DB::table('marketplaces')->where('title', 'Dirty price fixture')->delete();
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames([
+            'marketplaces' => [
+                'price' => ['numeric'],
+            ],
+        ]);
+    }
+
     /**
      * @return iterable<SplFileInfo>
      */
@@ -263,6 +308,24 @@ class MigrationSafetyAuditTest extends TestCase
         foreach ($expectedColumns as $table => $columns) {
             foreach (array_keys($columns) as $column) {
                 $this->assertColumnNullable($table, $column);
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, array<string, list<string>>>  $expectedColumns
+     */
+    private function assertColumnsHaveTypeNames(array $expectedColumns): void
+    {
+        foreach ($expectedColumns as $table => $columns) {
+            foreach ($columns as $column => $allowedTypeNames) {
+                $actualTypeName = $this->columnTypeName($table, $column);
+
+                $this->assertContains(
+                    $actualTypeName,
+                    $allowedTypeNames,
+                    "{$table}.{$column} type [{$actualTypeName}] was not expected."
+                );
             }
         }
     }
@@ -572,6 +635,42 @@ class MigrationSafetyAuditTest extends TestCase
     }
 
     /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function expectedLegacyMoneyColumnTypes(): array
+    {
+        return [
+            'marketplaces' => [
+                'price' => ['text', 'varchar'],
+            ],
+            'payment_histories' => [
+                'amount' => ['double', 'real'],
+            ],
+            'sponsors' => [
+                'paid_amount' => ['double', 'real'],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function expectedSafeMoneyColumnTypes(): array
+    {
+        return [
+            'marketplaces' => [
+                'price' => ['numeric'],
+            ],
+            'payment_histories' => [
+                'amount' => ['numeric'],
+            ],
+            'sponsors' => [
+                'paid_amount' => ['numeric'],
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, list<string>>
      */
     private function indexesFor(string $table): array
@@ -617,6 +716,11 @@ class MigrationSafetyAuditTest extends TestCase
         $default = trim($default, "'\"");
 
         return strtoupper($default) === 'NULL' ? null : $default;
+    }
+
+    private function columnTypeName(string $table, string $column): string
+    {
+        return strtolower((string) ($this->columnFor($table, $column)['type_name'] ?? ''));
     }
 
     /**

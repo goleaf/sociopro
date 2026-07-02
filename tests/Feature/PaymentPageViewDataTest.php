@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\PaymentController;
+use App\Models\Payment_gateway;
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\View\View;
 use Tests\TestCase;
 
@@ -41,5 +43,42 @@ class PaymentPageViewDataTest extends TestCase
         $this->assertInstanceOf(View::class, $response);
         $this->assertSame('SocioPro Test', $response->getData()['system_name']);
         $this->assertSame('favicon-test.png', $response->getData()['system_favicon']);
+    }
+
+    public function test_paystack_view_data_uses_precomputed_minor_unit_amount(): void
+    {
+        $user = User::factory()->create();
+
+        Payment_gateway::query()
+            ->where('identifier', 'paystack')
+            ->update([
+                'keys' => json_encode([
+                    'public_test_key' => 'pk_test_paystack',
+                ]),
+                'test_mode' => 1,
+            ]);
+
+        session(['payment_details' => [
+            'payable_amount' => '19.50',
+            'success_url' => '/payment/success',
+            'cancel_url' => '/payment/cancel',
+            'items' => [
+                [
+                    'title' => 'Test item',
+                    'price' => '19.50',
+                    'discount_percentage' => 0,
+                    'discount_price' => '19.50',
+                ],
+            ],
+            'tax' => 0,
+        ]]);
+
+        $this->actingAs($user);
+
+        $response = app(PaymentController::class)->show_payment_gateway_by_ajax('paystack');
+
+        $this->assertInstanceOf(View::class, $response);
+        $this->assertSame('19.50', $response->getData()['amount']);
+        $this->assertSame(1950, $response->getData()['amount_minor']);
     }
 }

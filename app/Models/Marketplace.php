@@ -20,6 +20,7 @@ class Marketplace extends Model
         return [
             'user_id' => 'integer',
             'currency_id' => 'integer',
+            'price' => 'decimal:2',
         ];
     }
 

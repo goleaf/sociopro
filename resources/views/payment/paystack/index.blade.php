@@ -11,7 +11,7 @@
         var handler = PaystackPop.setup({
             key: '{{ $key }}',
             email: '{{ $user_details->email }}',
-            amount: '{{ $amount * 100 }}',
+            amount: '{{ $amount_minor }}',
             currency: "{{ $payment_gateway->currency }}",
             metadata: {
                 custom_fields: [

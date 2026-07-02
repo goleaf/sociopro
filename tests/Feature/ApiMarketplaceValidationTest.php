@@ -110,6 +110,29 @@ class ApiMarketplaceValidationTest extends TestCase
             ]);
     }
 
+    public function test_marketplace_filter_rejects_money_filters_with_more_than_two_decimal_places(): void
+    {
+        $this->authenticateApiUser();
+
+        $response = $this->withToken($this->apiToken)->getJson($this->apiMarketplaceFilterUrl([
+            'min' => '10.999',
+            'filters' => [
+                'price' => [
+                    'max' => '99.999',
+                ],
+            ],
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure([
+                'validationError' => [
+                    'min',
+                    'filters.price.max',
+                ],
+            ]);
+    }
+
     public function test_marketplace_filter_uses_default_pagination_and_safe_default_ordering(): void
     {
         $owner = $this->authenticateApiUser();
@@ -240,6 +263,35 @@ class ApiMarketplaceValidationTest extends TestCase
         $this->assertSame('The marketplace condition must be one of the following values: new, used.', $errors['condition'][0]);
         $this->assertSame('The marketplace status must be one of the following values: 0, 1.', $errors['status'][0]);
         $this->assertSame('Each marketplace image must be an image.', $errors['multiple_files.0'][0]);
+    }
+
+    public function test_create_marketplace_rejects_money_with_more_than_two_decimal_places(): void
+    {
+        $this->authenticateApiUser();
+        [$category, $brand, $currency] = $this->createMarketplaceLookups();
+
+        $response = $this->withToken($this->apiToken)->postJson(route('api.marketplace.store'), [
+            'title' => 'Bad Precision API Marketplace Payload',
+            'price' => '25.555',
+            'location' => 'Vilnius',
+            'category' => $category->id,
+            'condition' => 'new',
+            'status' => 1,
+            'brand' => $brand->id,
+            'currency' => $currency->id,
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure([
+                'validationError' => [
+                    'price',
+                ],
+            ]);
+
+        $this->assertDatabaseMissing('marketplaces', [
+            'title' => 'Bad Precision API Marketplace Payload',
+        ]);
     }
 
     public function test_create_marketplace_rejects_invalid_upload_array_before_creating_product(): void

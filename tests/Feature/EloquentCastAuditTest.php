@@ -128,6 +128,23 @@ class EloquentCastAuditTest extends TestCase
         $this->assertSame('2026-07-31 17:30:00', $sponsor->end_date->format('Y-m-d H:i:s'));
     }
 
+    public function test_marketplace_casts_price_as_two_decimal_money_string(): void
+    {
+        $marketplace = new Marketplace;
+        $marketplace->forceFill([
+            'user_id' => '7',
+            'currency_id' => '1',
+            'title' => 'Money cast fixture',
+            'price' => '19.5',
+        ])->save();
+
+        $marketplace->refresh();
+
+        $this->assertSame(7, $marketplace->user_id);
+        $this->assertSame(1, $marketplace->currency_id);
+        $this->assertSame('19.50', $marketplace->price);
+    }
+
     public function test_legacy_models_cast_numeric_identifiers_and_flags_before_persistence(): void
     {
         foreach ($this->legacyIntegerCastContracts() as $class => $attributes) {

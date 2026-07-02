@@ -39,7 +39,7 @@ trait ValidatesMarketplacePayload
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'price' => ['required', 'numeric', 'decimal:0,2', 'min:0', 'max:9999999999.99'],
             'location' => ['required', 'string', 'max:255'],
             'category' => ['required', 'integer', 'exists:categories,id'],
             'condition' => ['required', 'string', Rule::in(['new', 'used'])],

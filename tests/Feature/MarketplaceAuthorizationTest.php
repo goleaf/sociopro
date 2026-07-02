@@ -83,6 +83,25 @@ class MarketplaceAuthorizationTest extends TestCase
             ]);
     }
 
+    public function test_web_marketplace_store_rejects_non_decimal_price(): void
+    {
+        $user = $this->activeUser();
+
+        $response = $this
+            ->actingAs($user)
+            ->post(route('product.store'), $this->marketplacePayload([
+                'price' => 'free',
+            ]));
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure([
+                'validationError' => [
+                    'price',
+                ],
+            ]);
+    }
+
     public function test_web_marketplace_update_validation_still_runs_before_model_authorization(): void
     {
         $owner = $this->activeUser();
@@ -108,6 +127,26 @@ class MarketplaceAuthorizationTest extends TestCase
                     'location',
                     'condition',
                     'status',
+                ],
+            ]);
+    }
+
+    public function test_web_marketplace_update_rejects_more_than_two_decimal_places(): void
+    {
+        $owner = $this->activeUser();
+        $product = $this->marketplace($owner);
+
+        $response = $this
+            ->actingAs($owner)
+            ->post(route('product.update', ['id' => $product->id]), $this->marketplacePayload([
+                'price' => '25.555',
+            ]));
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure([
+                'validationError' => [
+                    'price',
                 ],
             ]);
     }

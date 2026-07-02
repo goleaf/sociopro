@@ -10,13 +10,13 @@ class UpdateMarketplaceRequest extends MarketplaceRequest
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
             'title' => 'required|max:255',
-            'price' => 'required',
+            'price' => ['required', 'numeric', 'decimal:0,2', 'min:0', 'max:9999999999.99'],
             'location' => 'required',
             'condition' => 'required',
             'status' => 'required',

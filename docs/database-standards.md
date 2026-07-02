@@ -142,7 +142,8 @@ Use this document together with:
 - Always store the currency code in a separate `currency_code` or `currency_id` column when amounts may vary by currency.
 - Use ISO 4217 currency codes for string currency fields.
 - Add casts for money columns, for example `decimal:2`, or map to a value object in a focused refactor.
-- Legacy money-like fields such as `payment_histories.amount`, `sponsors.paid_amount`, and `marketplaces.price` require data cleanup before type conversion.
+- Legacy money-like fields such as `payment_histories.amount`, `sponsors.paid_amount`, and `marketplaces.price` are covered by a safe decimal migration that skips dirty values instead of silently coercing them. See `docs/money-field-audit.md`.
+- Convert provider-facing values to integer minor units before calling payment SDKs or rendering payment JavaScript.
 
 ## JSON Columns
 

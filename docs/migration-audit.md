@@ -154,7 +154,8 @@ The migration intentionally avoids uniqueness, foreign keys, nullability changes
 | `2026_07_01_150000_add_safe_legacy_lookup_indexes.php` | Medium | Additive and reversible, but `up()` does not check for existing indexes before creating them. It may fail on production databases where DBAs already added equivalent manual indexes. | Do not edit the existing migration. Compare production indexes before deployment. Future migrations must use `Schema::hasIndex()`. |
 | `2026_07_01_150000_add_safe_legacy_lookup_indexes.php` | High | Some indexed columns are `TEXT` in the legacy MySQL dump, including `groups.user_id`, `marketplaces.category`, `posts.album_image_id`, and `videos.category`. MySQL may reject full indexes on `TEXT` columns without prefix lengths. | Documented as deployment risk. Do not add more `TEXT` indexes without a type cleanup or explicit MySQL prefix strategy. |
 | `2026_07_02_120000_add_marketplace_search_filter_indexes.php` | Medium | Uses guards and rollback checks. The `status/title` composite can be wide because both columns are varchar-like in the dump; older MySQL/InnoDB settings may reject it. | Keep, but verify on the target MySQL version before production deployment. |
-| `2026_07_02_120000_add_marketplace_search_filter_indexes.php` | High | `marketplaces.price` is stored as text, so price sorting/filtering remains semantically fragile even with an index. | Defer a decimal money migration until data quality and UI/API compatibility are tested. |
+| `2026_07_02_120000_add_marketplace_search_filter_indexes.php` | Medium | `marketplaces.price` was originally stored as text, so price sorting/filtering depended on legacy string storage. | Covered by `2026_07_02_180000_add_safe_legacy_money_precision_constraints.php`, which converts clean values to `decimal(12, 2)` and skips dirty values. |
+| `2026_07_02_180000_add_safe_legacy_money_precision_constraints.php` | Medium | Converts `marketplaces.price`, `payment_histories.amount`, and `sponsors.paid_amount` to nullable `decimal(12, 2)` only when existing data is safe. | Verify production data before deploy; dirty text, negative, over-precision, or out-of-range values cause the affected column to be skipped. |
 | `2026_07_02_130000_add_safe_legacy_relationship_indexes.php` | Low | Additive, guarded, reversible indexes only. | Applied as the safe fix for this pass. |
 
 ### Schema Risks Still Deferred
@@ -164,7 +165,7 @@ These are not safe one-step fixes:
 - No complete reversible baseline migration exists for the dump-backed application schema.
 - The legacy dump still has no application foreign keys or cascade rules.
 - Foreign-key-like columns have inconsistent types, for example `groups.user_id` as `text` and `marketplaces.category` as `text`.
-- Money-like fields use floating-point or text storage, including `payment_histories.amount`, `sponsors.paid_amount`, and `marketplaces.price`.
+- Core local money columns are covered by a safe decimal migration. Money-like settings and optional addon tables still need typed settings/addon-specific migrations before conversion.
 - Timestamp columns mix `timestamp`, `varchar(100)`, text, nullable values, and `CURRENT_TIMESTAMP` defaults.
 - Many relationship columns are nullable even though application code assumes related owners or targets.
 - Unique constraints for pivot-like tables are still deferred because duplicate data must be checked first.

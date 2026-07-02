@@ -10,6 +10,7 @@ use App\Models\PaymentHistoryEntry;
 use App\Models\Setting;
 use App\Models\Users;
 use App\Services\Payments\PaymentGatewayResolver;
+use App\Support\Money\Money;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -324,6 +325,7 @@ class PaymentController extends Controller
                 ? ($keys['public_test_key'] ?? '')
                 : ($keys['public_live_key'] ?? ''),
             'amount' => $paymentDetails['items'][0]['price'],
+            'amount_minor' => Money::toMinorUnits($paymentDetails['items'][0]['price']),
             'user_details' => auth()->user(),
         ];
     }
