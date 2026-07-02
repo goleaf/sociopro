@@ -46,7 +46,7 @@ If a future global scope is added, the same change must include:
 
 ## Soft-Delete-Like Behavior
 
-No model currently uses `SoftDeletes` and the current `users` table has no `deleted_at` column.
+No model currently uses `SoftDeletes` and the current schema has no canonical `deleted_at` columns. See `docs/soft-delete-audit.md` for the full restore, cascade, index, unique-constraint, and query-expectation checklist.
 
 If soft deletes are introduced later, add tests for:
 
