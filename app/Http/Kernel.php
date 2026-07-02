@@ -5,6 +5,7 @@ namespace App\Http;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\EnsureApiResponseContract;
 use App\Http\Middleware\EnsureValidApiBearerToken;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
@@ -67,6 +68,7 @@ class Kernel extends HttpKernel
 
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            EnsureApiResponseContract::class,
             'throttle:api',
             SubstituteBindings::class,
         ],
