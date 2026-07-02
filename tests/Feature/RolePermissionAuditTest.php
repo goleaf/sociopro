@@ -7,6 +7,16 @@ use Tests\TestCase;
 
 class RolePermissionAuditTest extends TestCase
 {
+    /**
+     * @var array<string, list<string>>
+     */
+    private static array $sourceFilesByDirectorySet = [];
+
+    /**
+     * @var array<string, string>
+     */
+    private static array $commentlessSourceByFile = [];
+
     public function test_project_does_not_install_or_partially_configure_a_permission_package(): void
     {
         $permissionPackages = [
@@ -75,7 +85,7 @@ class RolePermissionAuditTest extends TestCase
         $matches = [];
 
         foreach ($this->sourceFiles($directories) as $file) {
-            $contents = $this->withoutComments(File::get($file));
+            $contents = $this->commentlessSource($file);
 
             if (preg_match($pattern, $contents)) {
                 $matches[] = str_replace(base_path().DIRECTORY_SEPARATOR, '', $file);
@@ -91,7 +101,9 @@ class RolePermissionAuditTest extends TestCase
      */
     private function sourceFiles(array $directories): array
     {
-        return collect($directories)
+        $cacheKey = implode('|', $directories);
+
+        return self::$sourceFilesByDirectorySet[$cacheKey] ??= collect($directories)
             ->map(fn (string $directory): string => base_path($directory))
             ->filter(fn (string $path): bool => File::isDirectory($path))
             ->flatMap(fn (string $path) => File::allFiles($path))
@@ -99,6 +111,11 @@ class RolePermissionAuditTest extends TestCase
             ->map(fn ($file): string => $file->getRealPath())
             ->values()
             ->all();
+    }
+
+    private function commentlessSource(string $file): string
+    {
+        return self::$commentlessSourceByFile[$file] ??= $this->withoutComments(File::get($file));
     }
 
     private function withoutComments(string $contents): string

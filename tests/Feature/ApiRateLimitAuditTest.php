@@ -8,12 +8,15 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class ApiRateLimitAuditTest extends TestCase
 {
     use RefreshDatabase;
+
+    private const CLIENT_RATE_LIMIT_KEY = 'ip:127.0.0.1';
 
     public function test_abuse_sensitive_routes_have_named_throttle_middleware(): void
     {
@@ -50,17 +53,21 @@ class ApiRateLimitAuditTest extends TestCase
 
     public function test_api_login_token_generation_is_rate_limited(): void
     {
+        $email = 'token-limit@example.com';
         $user = $this->activeUser([
-            'email' => 'token-limit@example.com',
+            'email' => $email,
             'password' => Hash::make('password'),
         ]);
+        $throttleKey = $this->namedThrottleKey('api-token', $this->emailAndClientKey($email));
 
-        for ($attempt = 0; $attempt < 10; $attempt++) {
-            $this->postJson(route('api.auth.login'), [
-                'email' => $user->email,
-                'password' => 'password',
-            ])->assertCreated();
-        }
+        RateLimiter::clear($throttleKey);
+
+        $this->postJson(route('api.auth.login'), [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertCreated();
+
+        $this->primeThrottleKey($throttleKey, 9);
 
         $response = $this->postJson(route('api.auth.login'), [
             'email' => $user->email,
@@ -76,11 +83,15 @@ class ApiRateLimitAuditTest extends TestCase
 
     public function test_api_registration_is_rate_limited_by_client(): void
     {
-        for ($attempt = 0; $attempt < 10; $attempt++) {
-            $this->postJson(route('api.auth.signup'), [])
-                ->assertOk()
-                ->assertJsonStructure(['validationError']);
-        }
+        $throttleKey = $this->namedThrottleKey('api-registration', self::CLIENT_RATE_LIMIT_KEY);
+
+        RateLimiter::clear($throttleKey);
+
+        $this->postJson(route('api.auth.signup'), [])
+            ->assertOk()
+            ->assertJsonStructure(['validationError']);
+
+        $this->primeThrottleKey($throttleKey, 9);
 
         $this->postJson(route('api.auth.signup'), [])
             ->assertTooManyRequests()
@@ -89,14 +100,19 @@ class ApiRateLimitAuditTest extends TestCase
 
     public function test_api_password_reset_is_rate_limited_by_email_and_client(): void
     {
-        for ($attempt = 0; $attempt < 5; $attempt++) {
-            $this->postJson(route('api.password.forgot'), [
-                'email' => 'missing-reset@example.com',
-            ])->assertOk();
-        }
+        $email = 'missing-reset@example.com';
+        $throttleKey = $this->namedThrottleKey('api-password-reset', $this->emailAndClientKey($email));
+
+        RateLimiter::clear($throttleKey);
 
         $this->postJson(route('api.password.forgot'), [
-            'email' => 'missing-reset@example.com',
+            'email' => $email,
+        ])->assertOk();
+
+        $this->primeThrottleKey($throttleKey, 4);
+
+        $this->postJson(route('api.password.forgot'), [
+            'email' => $email,
         ])
             ->assertTooManyRequests()
             ->assertJsonPath('error.code', 'RATE_LIMITED');
@@ -104,13 +120,20 @@ class ApiRateLimitAuditTest extends TestCase
 
     public function test_authenticated_api_search_and_expensive_reads_are_rate_limited(): void
     {
-        $token = $this->activeUser()->createToken('api-rate-limit-test')->plainTextToken;
+        $user = $this->activeUser();
+        $token = $user->createToken('api-rate-limit-test')->plainTextToken;
+        $throttleKey = $this->namedThrottleKey(
+            'api-search',
+            'token:'.sha1($token).':api.marketplace.filter'
+        );
 
-        for ($attempt = 0; $attempt < 20; $attempt++) {
-            $this->withToken($token)
-                ->getJson(route('api.marketplace.filter'))
-                ->assertOk();
-        }
+        RateLimiter::clear($throttleKey);
+
+        $this->withToken($token)
+            ->getJson(route('api.marketplace.filter'))
+            ->assertOk();
+
+        $this->primeThrottleKey($throttleKey, 19);
 
         $this->withToken($token)
             ->getJson(route('api.marketplace.filter'))
@@ -121,24 +144,28 @@ class ApiRateLimitAuditTest extends TestCase
     public function test_contact_form_submission_is_rate_limited(): void
     {
         Mail::fake();
+        $email = 'sender@example.com';
+        $throttleKey = $this->namedThrottleKey('contact', $this->emailAndClientKey($email));
 
         $this->activeUser([
             'email' => 'admin-contact@example.com',
             'user_role' => UserRole::Admin->value,
         ]);
 
-        for ($attempt = 0; $attempt < 5; $attempt++) {
-            $this->post(route('contact.send'), [
-                'name' => 'Contact Sender',
-                'email' => 'sender@example.com',
-                'subject' => 'Hello',
-                'details' => 'Testing contact throttling.',
-            ])->assertRedirect();
-        }
+        RateLimiter::clear($throttleKey);
 
         $this->post(route('contact.send'), [
             'name' => 'Contact Sender',
-            'email' => 'sender@example.com',
+            'email' => $email,
+            'subject' => 'Hello',
+            'details' => 'Testing contact throttling.',
+        ])->assertRedirect();
+
+        $this->primeThrottleKey($throttleKey, 4);
+
+        $this->post(route('contact.send'), [
+            'name' => 'Contact Sender',
+            'email' => $email,
             'subject' => 'Hello',
             'details' => 'Testing contact throttling.',
         ])->assertTooManyRequests();
@@ -154,5 +181,20 @@ class ApiRateLimitAuditTest extends TestCase
             'status' => UserAccountStatus::Active->value,
             'timezone' => 'UTC',
         ], $overrides));
+    }
+
+    private function emailAndClientKey(string $email): string
+    {
+        return 'email:'.mb_strtolower(trim($email)).':'.self::CLIENT_RATE_LIMIT_KEY;
+    }
+
+    private function namedThrottleKey(string $limiterName, string $limitKey): string
+    {
+        return md5($limiterName.$limitKey);
+    }
+
+    private function primeThrottleKey(string $throttleKey, int $attempts): void
+    {
+        RateLimiter::increment($throttleKey, decaySeconds: 60, amount: $attempts);
     }
 }
