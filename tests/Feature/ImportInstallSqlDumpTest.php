@@ -4,10 +4,12 @@ namespace Tests\Feature;
 
 use App\Actions\Install\ImportInstallSqlDump;
 use App\Jobs\ImportInstallSqlDumpJob;
+use Illuminate\Database\SQLiteConnection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
+use PDO;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -174,6 +176,63 @@ SQL);
         $this->assertTrue($result->hasFailures());
         $this->assertSame('validated_widgets', $result->errors()[0]['table']);
         $this->assertSame(2, $result->errors()[0]['row']);
+    }
+
+    public function test_native_import_skips_destructive_or_unexpected_dump_statements(): void
+    {
+        File::ensureDirectoryExists(dirname($this->dumpPath));
+        File::put($this->dumpPath, <<<'SQL'
+CREATE TABLE `native_widgets` (
+  `id` integer NOT NULL,
+  `name` text
+);
+
+INSERT INTO `native_widgets` (`id`, `name`) VALUES
+(1, 'Safe widget');
+
+DROP TABLE `native_widgets`;
+DELETE FROM `native_widgets`;
+UPDATE `native_widgets` SET `name` = 'Injected widget';
+
+ALTER TABLE `native_widgets` ADD COLUMN `extra` text;
+SQL);
+
+        DB::extend('native_sqlite_test', function (array $config): SQLiteConnection {
+            $pdo = new PDO('sqlite:'.$config['database']);
+
+            return new class($pdo, $config['database'], '', $config) extends SQLiteConnection
+            {
+                public function getDriverName()
+                {
+                    return 'mysql';
+                }
+            };
+        });
+
+        Config::set('database.default', 'native_sqlite_test');
+        Config::set('database.connections.native_sqlite_test', [
+            'driver' => 'native_sqlite_test',
+            'database' => $this->databasePath,
+            'prefix' => '',
+        ]);
+
+        DB::purge('native_sqlite_test');
+
+        try {
+            $result = app(ImportInstallSqlDump::class)->handle($this->dumpPath);
+
+            $this->assertSame(3, $result->skippedStatements());
+            $this->assertSame(1, $result->insertStatements());
+            $this->assertSame(1, $result->insertedRows());
+            $this->assertSame('Safe widget', DB::table('native_widgets')->where('id', 1)->value('name'));
+            $this->assertTrue(Schema::hasColumn('native_widgets', 'extra'));
+        } finally {
+            DB::disconnect('native_sqlite_test');
+            DB::purge('native_sqlite_test');
+            DB::forgetExtension('native_sqlite_test');
+
+            Config::set('database.default', 'sqlite');
+        }
     }
 
     public function test_database_seeder_imports_install_sql_dump(): void

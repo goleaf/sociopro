@@ -33,21 +33,31 @@ class ImportInstallSqlDump
             return $this->importSqliteDump($connection, $dumpPath, $batchSize, $result);
         }
 
-        return $this->importNativeDump($connection, $dumpPath, $result);
+        return $this->importNativeDump($connection, $dumpPath, $batchSize, $result);
     }
 
     private function importNativeDump(
         Connection $connection,
         string $dumpPath,
+        int $batchSize,
         InstallSqlImportResult $result
     ): InstallSqlImportResult {
         foreach ($this->statementReader->statements($dumpPath) as $statement) {
-            if (stripos($statement, 'INSERT INTO') === 0) {
-                $result->recordInsertStatement();
-            } else {
-                $result->recordSchemaStatement();
+            $statement = trim($statement);
+
+            if ($statement === '' || $this->shouldSkipForNative($statement)) {
+                $result->recordSkippedStatement();
+
+                continue;
             }
 
+            if (stripos($statement, 'INSERT INTO') === 0) {
+                $this->importNativeInsert($connection, $statement, $batchSize, $result);
+
+                continue;
+            }
+
+            $result->recordSchemaStatement();
             $connection->getPdo()->exec($statement);
         }
 
@@ -133,6 +143,31 @@ class ImportInstallSqlDump
 
         foreach (array_chunk($insert->rows, $batchSize, true) as $batch) {
             $this->importSqliteBatch($connection, $insert, $batch, $metadata, $result);
+        }
+    }
+
+    private function importNativeInsert(
+        Connection $connection,
+        string $statement,
+        int $batchSize,
+        InstallSqlImportResult $result
+    ): void {
+        $insert = $this->insertParser->parse($statement);
+
+        if (! $insert) {
+            $result->recordSkippedStatement();
+
+            return;
+        }
+
+        $result->recordInsertStatement();
+
+        foreach (array_chunk($insert->rows, $batchSize) as $batch) {
+            $connection->transaction(function () use ($connection, $insert, $batch): void {
+                $connection->table($insert->table)->insert($batch);
+            });
+
+            $result->recordInsertedRows(count($batch));
         }
     }
 
@@ -327,6 +362,21 @@ class ImportInstallSqlDump
     private function shouldSkipForSqlite(string $statement): bool
     {
         return preg_match('/^(SET|START TRANSACTION|COMMIT|ALTER TABLE)/i', $statement) === 1;
+    }
+
+    private function shouldSkipForNative(string $statement): bool
+    {
+        return ! $this->isAllowedNativeStatement($statement);
+    }
+
+    private function isAllowedNativeStatement(string $statement): bool
+    {
+        return preg_match('/^SET\s+/i', $statement) === 1
+            || preg_match('/^START\s+TRANSACTION$/i', $statement) === 1
+            || preg_match('/^COMMIT$/i', $statement) === 1
+            || preg_match('/^CREATE\s+TABLE\s+`[^`]+`\s*\(/is', $statement) === 1
+            || preg_match('/^INSERT\s+INTO\s+`[^`]+`\s*\(/is', $statement) === 1
+            || preg_match('/^ALTER\s+TABLE\s+`[^`]+`\s+(?:ADD|MODIFY)\s+/is', $statement) === 1;
     }
 
     /**
