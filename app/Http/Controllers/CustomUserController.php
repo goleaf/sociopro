@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Friends\SendFriendRequestAction;
 use App\Enums\MediaFileType;
+use App\Enums\Visibility;
 use App\Models\Albums;
 use App\Models\Follower;
 use App\Models\Friendships;
@@ -231,6 +232,25 @@ class CustomUserController extends Controller
     {
         $response = [];
         $media_file = Media_files::find($id);
+        if (! $media_file instanceof Media_files) {
+            abort(404);
+        }
+
+        abort_unless($this->canManageMediaFile($media_file), 403);
+
+        $mediaType = MediaFileType::tryFrom((string) $media_file->file_type);
+        $filePath = $mediaType instanceof MediaFileType
+            ? $this->mediaDownloadPath($media_file, $mediaType)
+            : null;
+        if ($filePath !== null) {
+            File::delete($filePath);
+
+            $optimizedPath = dirname($filePath).DIRECTORY_SEPARATOR.'optimized'.DIRECTORY_SEPARATOR.basename($filePath);
+            if (is_file($optimizedPath)) {
+                File::delete($optimizedPath);
+            }
+        }
+
         $media_file->delete();
         Session::flash('success_message', get_phrase('Deleted successfully'));
         $response = ['reload' => 1];
@@ -241,27 +261,15 @@ class CustomUserController extends Controller
     public function download_mediafile($id)
     {
         $media_file = Media_files::find($id);
-        $filename = public_path().'/storage/post/videos/'.$media_file->file_name;
-        if (File::exists($filename)) {
-            return Response::download($filename);
-        } else {
-            return back();
-        }
+
+        return $this->downloadMediaFile($media_file, MediaFileType::Video);
     }
 
     public function download_mediafile_image($id)
     {
         $media_file = Media_files::find($id);
-        $filename = public_path().'/storage/post/images/'.$media_file->file_name;
-        $headers = [
-            'Content-Type: application',
-        ];
 
-        if (File::exists($filename)) {
-            return Response::download($filename);
-        } else {
-            return back();
-        }
+        return $this->downloadMediaFile($media_file, MediaFileType::Image);
     }
 
     public function account_status($id)
@@ -275,5 +283,92 @@ class CustomUserController extends Controller
         flash()->addSuccess('Your account has been deactivated. You have been logged out.');
 
         return json_encode(['url' => route('login')]);
+    }
+
+    private function downloadMediaFile(?Media_files $mediaFile, MediaFileType $expectedType)
+    {
+        if (! $mediaFile instanceof Media_files) {
+            abort(404);
+        }
+
+        abort_unless($this->canDownloadMediaFile($mediaFile), 403);
+
+        $filePath = $this->mediaDownloadPath($mediaFile, $expectedType);
+        if ($filePath === null) {
+            abort(404);
+        }
+
+        return Response::download($filePath, basename($filePath));
+    }
+
+    private function canDownloadMediaFile(Media_files $mediaFile): bool
+    {
+        if ($this->canManageMediaFile($mediaFile)) {
+            return true;
+        }
+
+        $post = $mediaFile->post;
+
+        return $mediaFile->privacy === Visibility::Public->value
+            || ($post instanceof Posts && $post->privacy === Visibility::Public->value);
+    }
+
+    private function canManageMediaFile(Media_files $mediaFile): bool
+    {
+        $user = Auth::user();
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        if ((int) $mediaFile->user_id === (int) $user->id) {
+            return true;
+        }
+
+        $post = $mediaFile->post;
+
+        return $post instanceof Posts && (int) $post->user_id === (int) $user->id;
+    }
+
+    private function mediaDownloadPath(Media_files $mediaFile, MediaFileType $expectedType): ?string
+    {
+        if ($mediaFile->file_type !== $expectedType->value) {
+            return null;
+        }
+
+        $fileName = (string) $mediaFile->file_name;
+        if (! $this->isSafeMediaFileName($fileName)) {
+            return null;
+        }
+
+        $directory = $expectedType === MediaFileType::Video ? 'post/videos' : 'post/images';
+        $root = realpath(public_path('storage/'.$directory));
+        $file = realpath(public_path('storage/'.$directory.'/'.$fileName));
+
+        if ($root === false || $file === false || ! is_file($file)) {
+            return null;
+        }
+
+        return str_starts_with($file, rtrim($root, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR)
+            ? $file
+            : null;
+    }
+
+    private function isSafeMediaFileName(string $fileName): bool
+    {
+        if ($fileName === ''
+            || str_contains($fileName, "\0")
+            || str_starts_with($fileName, '/')
+            || str_contains($fileName, '\\')
+            || ! preg_match('/\A[A-Za-z0-9._\/-]+\z/', $fileName)) {
+            return false;
+        }
+
+        foreach (explode('/', $fileName) as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..') {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

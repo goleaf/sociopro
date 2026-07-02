@@ -5981,15 +5981,3 @@ nav.profile-nav {
 	margin-right: 16px;
   	margin-top: 4px;
 }
-.ai_image_generate_img{
-	margin-top: 10px;
-}
-.ai_image_generate_img .hidden{
-	display: none;
-}
-
-.ai_image_generate_img img {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}

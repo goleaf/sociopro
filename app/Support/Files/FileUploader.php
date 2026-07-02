@@ -10,6 +10,25 @@ use RuntimeException;
 
 class FileUploader
 {
+    /**
+     * @var list<string>
+     */
+    private const EXECUTABLE_EXTENSIONS = [
+        'bat',
+        'cgi',
+        'cmd',
+        'com',
+        'exe',
+        'js',
+        'msi',
+        'phtml',
+        'phar',
+        'php',
+        'pl',
+        'py',
+        'sh',
+    ];
+
     public static function upload($uploaded_file, $upload_to, $width = null, $height = null, $optimized_width = 250, $optimized_height = null)
     {
         if (! $uploaded_file) {
@@ -19,6 +38,8 @@ class FileUploader
         if (! $uploaded_file instanceof UploadedFile) {
             throw new InvalidArgumentException('Uploaded file must be an instance of UploadedFile.');
         }
+
+        self::assertAllowedUploadedFile($uploaded_file);
 
         $s3_keys = get_settings('amazon_s3', 'object');
         if ((int) ($s3_keys->active ?? 0) !== 1) {
@@ -115,7 +136,9 @@ class FileUploader
             throw new RuntimeException('Unable to read uploaded file.');
         }
 
-        Storage::disk('public')->put($path, $contents, ['visibility' => 'public']);
+        if (Storage::disk('public')->put($path, $contents, ['visibility' => 'public']) === false) {
+            throw new RuntimeException('Unable to write uploaded file.');
+        }
     }
 
     private static function putResizedImage(UploadedFile $uploadedFile, string $path, int $width, ?int $height): void
@@ -136,7 +159,9 @@ class FileUploader
                 throw new RuntimeException('Unable to read optimized image.');
             }
 
-            Storage::disk('public')->put($path, $contents, ['visibility' => 'public']);
+            if (Storage::disk('public')->put($path, $contents, ['visibility' => 'public']) === false) {
+                throw new RuntimeException('Unable to write optimized image.');
+            }
         } finally {
             @unlink($temporaryPath);
         }
@@ -155,7 +180,7 @@ class FileUploader
 
     private static function generatedFileName(UploadedFile $uploadedFile): string
     {
-        $extension = strtolower((string) ($uploadedFile->extension() ?: $uploadedFile->getClientOriginalExtension()));
+        $extension = self::safeExtension($uploadedFile);
         if ($extension === '') {
             throw new InvalidArgumentException('Uploaded file extension could not be detected.');
         }
@@ -181,5 +206,28 @@ class FileUploader
         if (! preg_match('/\A[A-Za-z0-9._-]+\z/', $fileName) || str_starts_with($fileName, '.')) {
             throw new InvalidArgumentException('Upload filename is invalid.');
         }
+
+        $extension = strtolower((string) pathinfo($fileName, PATHINFO_EXTENSION));
+        if (in_array($extension, self::EXECUTABLE_EXTENSIONS, true)) {
+            throw new InvalidArgumentException('Executable uploads are not allowed.');
+        }
+    }
+
+    private static function assertAllowedUploadedFile(UploadedFile $uploadedFile): void
+    {
+        $originalName = $uploadedFile->getClientOriginalName();
+        if (str_contains($originalName, "\0")) {
+            throw new InvalidArgumentException('Uploaded filename is invalid.');
+        }
+
+        $extension = self::safeExtension($uploadedFile);
+        if (in_array($extension, self::EXECUTABLE_EXTENSIONS, true)) {
+            throw new InvalidArgumentException('Executable uploads are not allowed.');
+        }
+    }
+
+    private static function safeExtension(UploadedFile $uploadedFile): string
+    {
+        return strtolower((string) ($uploadedFile->extension() ?: $uploadedFile->getClientOriginalExtension()));
     }
 }

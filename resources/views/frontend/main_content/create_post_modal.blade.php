@@ -120,32 +120,6 @@
                     </div>
                 </div>
 
-                {{-- Text to Image --}}
-                <div id="tab-ai" class="post-inner file-tab cursor-pointer p-0 mt-2">
-                    <span class="close-btn z-index-2000"><i class="fa fa-close"></i></span>
-
-                    <div class="widget friend-widget">
-                        <div class="n_pro_con d-flex align-items-start">
-                            <div class="demo-badge">
-                                <h4>{{get_phrase('Text-to-Image Generator')}}</h4>
-                            </div>
-                        </div>
-                    
-                        <form id="text-form">
-                            <label for="input-text" class="widget-title">{{get_phrase('Enter your text:')}}</label>
-                            <input type="text" id="input-text" placeholder="Type something...">
-                            <input type="hidden" id="base64-image" name="ai_image">
-                            <button type="button" id="generate-button" class="btn common mt-3 rounded w-100 btn-lg active">
-                                {{get_phrase('Generate Image')}}
-                            </button>
-                        </form>
-                        <div class="output ai_image_generate_img">
-                            <img id="generated-image" src="" alt="Generated Image" class="hidden">
-                            <a id="download-button" class="hidden btn common mt-3 rounded w-100 btn-lg active" download="generated-image.png"><i class="fa-solid fa-download"></i> {{get_phrase('Download Image')}} </a>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="post-inner py-3" id="tab-tag">
                     <h4 class="h5"> <a href="javascript:void(0)"
                             onclick="$('#tab-tag').removeClass('current')" class="prev-btn"><i
@@ -196,7 +170,6 @@
                                     <button type="button" data-tab="tab-file" class="btn btn-secondary m_btn"><img
                                         src="{{ asset('storage/images/image.svg') }}"
                                         alt="photo"></button>
-                                    <button type="button" data-tab="tab-ai" class="btn btn-secondary m_btn"><i class="fa-solid fa-robot" style="color:#0950a9e6"></i></button>
                                 <button type="button" data-tab="tab-tag" class="btn btn-secondary m_btn"><img
                                         src="{{ asset('storage/images/peoples.png') }}"
                                         alt="photo"></button>
@@ -240,73 +213,6 @@ $(document).ready(function() {
     });
     $('#multiFileUploader').on('change', function() {
         checkInputs();
-    });
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('text-form');
-    const inputText = document.getElementById('input-text');
-    const base64Input = document.getElementById('base64-image');
-    const outputImage = document.getElementById('generated-image');
-    const generateButton = document.getElementById('generate-button');
-    const submitButton = document.getElementById('submit-button');
-    const downloadButton = document.getElementById('download-button');
-    const generateImageUrl = "{{ route('ai_image.generate') }}";
-    const csrfToken = document.querySelector('meta[name="csrf_token"], meta[name="csrf-token"]')?.getAttribute('content') || "{{ csrf_token() }}";
-
-    // Function to fetch image and convert to Base64
-    async function fetchImageWithRetry(text, retries = 3, delay = 5000) {
-        for (let i = 0; i < retries; i++) {
-            try {
-                outputImage.src = "{{asset('assets/frontend/images/loader.gif')}}";
-                outputImage.classList.remove('hidden');
-
-                const response = await fetch(generateImageUrl, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ prompt: text }),
-                });
-
-                if (response.ok) {
-                    return await response.json();
-                } else {
-                    const errorDetails = await response.json();
-                    if (response.status !== 503) {
-                        throw new Error(errorDetails.error || response.statusText);
-                    }
-                }
-            } catch (error) {
-                if (i === retries - 1) throw error;
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-    }
-
-    generateButton.addEventListener('click', async () => {
-        const text = inputText.value.trim();
-        if (!text) {
-            alert("Please enter valid text.");
-            return;
-        }
-
-        try {
-            const generatedImage = await fetchImageWithRetry(text);
-
-            outputImage.src = generatedImage.image_url;
-            base64Input.value = generatedImage.image_base64;
-            outputImage.classList.remove('hidden');
-            downloadButton.href = generatedImage.image_url;
-            downloadButton.classList.remove('hidden');
-
-            // Show the submit button
-            submitButton.classList.remove('hidden');
-        } catch (error) {
-            alert(`An error occurred: ${error.message}`);
-        }
     });
 });
 

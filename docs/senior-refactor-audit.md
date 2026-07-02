@@ -51,10 +51,10 @@ Route::get('/__fork-safety-test', function () {
 | **CSS/JS stack** | Tailwind 3, Alpine 3, Axios, SweetAlert2, moment-timezone. `resources/css/app.css` (Tailwind only); no SCSS tree in `resources/`. Large legacy CSS/SCSS lives under `public/assets/`. |
 | **Database driver** | `sqlite` in `.env.example`; test DB `:memory:`. Production target is MySQL (code uses `SHOW TABLES`, `Tables_in_*`). |
 | **Schema source** | **`public/assets/install.sql` (127 KB dump)** bootstraps the schema, not migrations. Only 10 additive "safe legacy" migrations exist in `database/migrations/`. |
-| **Test framework** | PHPUnit 12 (not Pest). 408 tests, **all passing** after the Section 0 revert. |
+| **Test framework** | PHPUnit 12 (not Pest). Full-suite status must be verified per slice; this repo has broad legacy coverage plus focused security/upload regression tests. |
 | **Quality tooling** | Pint (laravel preset) ✔ passing; PHPStan + Larastan level 1 ✔ passing; Rector configured; `composer validate --strict` ✔. |
-| **CI/CD** | **None.** No `.github/workflows`. Composer `ci`/`quality` scripts exist but are run manually. |
-| **Deployment docs** | Extensive `docs/` set (zero-downtime plan, migration risk, rollback audit) but no single deployment checklist / runbook. |
+| **CI/CD** | GitHub Actions workflow exists at `.github/workflows/ci.yml` for Composer validation, Pint, PHPStan/Larastan, tests, frontend lint/style/format checks, and Mix production build. |
+| **Deployment docs** | Extensive `docs/` set plus consolidated `docs/deployment-checklist.md`, `docs/rollback-plan.md`, and `docs/backup-and-restore.md`. |
 
 ### Main business modules
 
@@ -78,16 +78,16 @@ Social network platform ("Sociopro"): **timeline/posts, stories, comments/reacti
 
 ### Missing documentation
 
-- Single deployment checklist / rollback runbook / backup-restore procedure (fragments exist across many docs).
+- Production-specific deployment ownership details such as target host, backup tooling, process supervisor, scheduler owner, and recovery time objective.
 - Up-to-date top-level `docs/architecture.md` reflecting Laravel 13 (existing `refactor-audit.md` is stale at "Laravel 9").
-- Developer onboarding / workflow doc and PR/issue templates (`.github/` is absent).
+- Developer onboarding / workflow docs still need environment-specific ownership details; PR/issue templates exist under `.github/`.
 
 ### Missing tests
 
 - Behavior/feature coverage for the large `ApiController` surface (current tests are mostly **guardrail "audit" tests**, not behavior tests).
 - Payment gateway callback/webhook flows end-to-end.
 - Chat XSS payload rendering.
-- File upload/download authorization for private media.
+- File upload/download authorization for private media now has first-pass regression coverage; expand it to stories, albums, chat, marketplace, and profile surfaces.
 - Query-count/N+1 regression tests on hot list endpoints beyond marketplace.
 
 ---
@@ -360,12 +360,12 @@ For each: **severity · risk · files · why · safest first fix · tests-first?
 
 | Gap | Severity · risk | Note / fix |
 | --- | --- | --- |
-| **No CI at all** (`.github/workflows` absent) | high · deployment | Add a workflow running `composer validate`, `composer install`, `pint --test`, `phpstan`, `php artisan test` (sqlite `:memory:`), `npm ci` + `npm run production`. Composer `ci`/`quality` scripts already encapsulate most of it. |
-| No frontend lint/build gate | medium · frontend | Add once ESLint/Stylelint/Prettier exist; wire `npm run production` into CI. |
+| CI workflow must stay green | high · deployment | `.github/workflows/ci.yml` exists; keep it aligned with installed PHP/Node tooling and do not add flaky service dependencies. |
+| Frontend lint/build gate must stay compatible with Mix | medium · frontend | ESLint, Stylelint, Prettier, and `npm run production` are wired; Vite remains a separate migration. |
 | No migration-safety check | medium · deployment | CI step: fresh sqlite + run the 10 migrations + rollback where safe. |
 | No config/route cache check | medium · deployment | CI/deploy step: `config:cache`, `route:cache`, `view:cache` must succeed. |
-| No consolidated deployment checklist / rollback / backup-restore | high · deployment | Fragments exist (`zero-downtime-migration-plan.md`, `migration-rollback-audit.md`); consolidate into `deployment-checklist.md`, `rollback-plan.md`, `backup-and-restore.md`. |
-| No PR/issue templates | low · process | Add `.github/PULL_REQUEST_TEMPLATE.md` + issue templates. |
+| Deployment docs require environment-specific owners | medium · deployment | Consolidated deployment, rollback, and backup/restore docs exist; fill in host-specific commands before production use. |
+| PR/issue templates require maintenance | low · process | `.github/PULL_REQUEST_TEMPLATE.md` and issue templates exist; keep checklists aligned with CI. |
 | npm dependency vulnerabilities | medium · security | Tracked historically; resolve via the Vite migration. |
 
 ---

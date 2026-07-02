@@ -9,9 +9,9 @@ This roadmap turns the audit into an ordered, testable, reversible plan. It is d
 
 - Laravel `13.18.0`, PHP `^8.3` (runtime 8.5.7), Composer 2.9.5, Node 22.22.3, npm 10.9.8.
 - Frontend: Laravel Mix 6 / Webpack 5 (not Vite). Tailwind 3, Alpine 3, Axios.
-- Tests: PHPUnit 12, **408 passing**. Pint ✔, PHPStan/Larastan level 1 ✔, `composer validate` ✔, Mix build ✔.
+- Tests: PHPUnit 12. Pint, PHPStan/Larastan level 1, Composer validation, and Mix build are wired locally and in CI; record the exact fresh test count in each implementation summary.
 - Schema bootstrapped from `public/assets/install.sql`; 10 additive migrations.
-- No CI. Only `MarketplacePolicy` exists. 6 factories for 54 models.
+- GitHub Actions CI exists. Only `MarketplacePolicy` exists. 6 factories for 54 models.
 
 ## Ground rules (apply to every phase)
 
@@ -42,8 +42,8 @@ Per-phase verification gate (minimum): `vendor/bin/pint --test` · `vendor/bin/p
 
 **Goal:** automated guardrails on every push.
 
-- Add `.github/workflows/ci.yml`: `composer validate --strict`, `composer install`, `pint --test`, `phpstan`, `php artisan test` (sqlite `:memory:`), `npm ci`, `npm run production`. Use safe test env vars; no real secrets/services.
-- Add frontend tooling (no behavior change): ESLint, Stylelint, Prettier with legacy-friendly configs; npm scripts `lint`, `lint:fix`, `format`, `format:check`, `stylelint`, `build`.
+- Keep `.github/workflows/ci.yml` green: `composer validate --strict`, `composer install`, `pint --test`, `phpstan`, `php artisan test` (sqlite `:memory:`), `npm ci`, frontend lint/style/format checks, and `npm run production`. Use safe test env vars; no real secrets/services.
+- Maintain frontend tooling (no behavior change): ESLint, Stylelint, Prettier with legacy-friendly configs; npm scripts `lint`, `lint:fix`, `format`, `format:check`, `stylelint`, `build`.
 - Add migration-safety CI step: fresh sqlite → run 10 migrations → rollback where safe.
 - Raise PHPStan gradually: generate a baseline, then increase level one notch per subsequent phase.
 
@@ -126,7 +126,7 @@ Per-phase verification gate (minimum): `vendor/bin/pint --test` · `vendor/bin/p
 
 **Goal:** production-ready delivery and recovery.
 
-- Consolidate into: `docs/architecture.md`, `docs/development-workflow.md`, `docs/deployment-checklist.md`, `docs/rollback-plan.md`, `docs/backup-and-restore.md`, `docs/known-technical-debt.md` (reuse existing zero-downtime/rollback fragments).
+- Keep consolidated operations docs current: `docs/deployment-checklist.md`, `docs/rollback-plan.md`, `docs/backup-and-restore.md`, `docs/performance-audit.md`, and `docs/senior-upgrade-summary.md` (reuse existing zero-downtime/rollback fragments).
 - Deployment checklist: `composer install --no-dev --optimize-autoloader`, `npm ci && npm run build`, `migrate --force`, `config:cache`, `route:cache`, `view:cache`, `storage:link`, queue restart, scheduler, health check, smoke tests, failed-jobs review.
 - Production config review: `APP_DEBUG=false`, `LOG_LEVEL` sane, real cache/session/queue drivers, trusted proxies, CORS, cookies, Vite env; `.env.example` placeholders only.
 - Add `.github/PULL_REQUEST_TEMPLATE.md` + issue templates (bug/feature/security/refactor) with testing/security/deployment checklists.

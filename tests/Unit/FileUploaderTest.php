@@ -58,6 +58,18 @@ class FileUploaderTest extends TestCase
         }
     }
 
+    public function test_local_upload_rejects_executable_file_targets(): void
+    {
+        Storage::fake('public');
+
+        $this->expectException(InvalidArgumentException::class);
+
+        FileUploader::upload(
+            UploadedFile::fake()->create('payload.php', 1, 'application/x-php'),
+            'public/storage/test-uploader/payload.php'
+        );
+    }
+
     public function test_s3_upload_uses_public_visibility_when_enabled(): void
     {
         DB::table('settings')->updateOrInsert(

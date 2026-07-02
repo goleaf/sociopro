@@ -84,7 +84,7 @@ Risk labels describe implementation risk:
 ## Security
 
 - [ ] **High risk**: Remove `eval()` and unprepared SQL execution paths before any broad refactor.
-- [ ] **High risk**: Stop exposing Hugging Face, payment, or other provider secrets in Blade, JavaScript, logs, or versioned config files.
+- [ ] **High risk**: Stop exposing payment or other provider secrets in Blade, JavaScript, logs, or versioned config files.
 - [ ] **High risk**: Add policies for user, post, comment, story, media, group, page, notification, payment, and admin setting actions.
 - [ ] **High risk**: Enforce authenticated API access through middleware rather than manually checking bearer tokens in each method.
 - [ ] **High risk**: Convert destructive GET endpoints to CSRF-protected write methods.
@@ -103,7 +103,7 @@ Risk labels describe implementation risk:
 - [ ] **Medium risk**: Add policy tests for the core content, payment, settings, and admin domains.
 - [ ] **Medium risk**: Add request validation tests for uploads, payment callbacks, profile updates, story creation, post creation, and admin settings.
 - [ ] **Medium risk**: Add query-count tests for dashboard, timeline, profile, blog, album, comments, and notification views.
-- [ ] **Medium risk**: Add HTTP client fakes for external payment and AI/provider calls.
+- [ ] **Medium risk**: Add HTTP client fakes for external payment and remaining provider calls.
 - [ ] **Small risk**: Expand factories so tests do not rely on manual inserts or SQL dump fixtures.
 - [ ] **Small risk**: Add smoke tests for route registration, route names, config cache, and view rendering.
 - [ ] **Small risk**: Keep documentation-only commits separate from failing behavioral changes until the baseline is repaired.
@@ -120,7 +120,7 @@ Risk labels describe implementation risk:
 
 ## Jobs
 
-- [ ] **High risk**: Create jobs for provider-backed AI generation instead of calling external APIs from browser JavaScript.
+- [ ] **High risk**: Create jobs for remaining provider-backed long-running work instead of calling external APIs from browser JavaScript.
 - [ ] **High risk**: Create payment confirmation/webhook jobs that are idempotent and authorization-aware.
 - [ ] **Medium risk**: Create media-processing jobs for image/video resizing, thumbnailing, and cleanup after deletes.
 - [ ] **Medium risk**: Create notification fanout jobs for comments, friend requests, group activity, and admin alerts.

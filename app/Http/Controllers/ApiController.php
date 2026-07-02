@@ -73,6 +73,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -6602,15 +6603,15 @@ class ApiController extends Controller
             $request->validate([
                 'email' => 'required',
                 'phone' => 'required',
-                'image' => 'file|mimes:pdf|max:10240',
+                'image' => 'file|mimes:pdf|extensions:pdf|max:10240',
             ]);
 
             $file_name = null;
             if ($request->hasFile('image') && $request->file('image')->isValid()) {
                 $file = $request->file('image');
-                $file_extension = $file->getClientOriginalExtension();
+                $file_extension = strtolower((string) ($file->extension() ?: $file->getClientOriginalExtension()));
                 $file_name = Str::random(40).'.'.$file_extension;
-                move_uploaded_file($file->getPathname(), 'public/storage/job/cv/'.$file_name);
+                Storage::disk('local')->putFileAs('job/cv', $file, $file_name);
             }
 
             $owner_id = Job::where('id', $id)->first()->user_id;

@@ -13,7 +13,6 @@ use App\Models\Media_files;
 use App\Models\Post_share;
 use App\Models\Posts;
 use App\Models\Report;
-use App\Models\Setting;
 use App\Models\Stories;
 use App\Models\User;
 use App\Queries\FriendshipsQuery;
@@ -22,16 +21,13 @@ use App\Services\Zoom\ZoomMeetingClient;
 use App\Support\Files\FileUploader;
 use App\Support\Validation\NestedFileValidationErrors;
 use DB;
-use Exception;
 use Firebase\JWT\JWT;
 use Illuminate\Database\Query\JoinClause;
 // For used ZOOM
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Intervention\Image\Facades\Image;
 
 // Used for Form data validation
 
@@ -310,35 +306,6 @@ class MainController extends Controller
         $data['updated_at'] = $data['created_at'];
 
         $post_id = Posts::insertGetId($data);
-
-        if ($request->ai_image) {
-            $ai_image = $request->ai_image;
-
-            $imageData = base64_decode($ai_image);
-            $tempImagePath = sys_get_temp_dir().'/'.uniqid().'.png';
-            file_put_contents($tempImagePath, $imageData);
-
-            $fileName = uniqid('ai_image_').'.png';
-            $folderPath = 'public/storage/post/images/';
-            if (! is_dir(public_path($folderPath))) {
-                mkdir(public_path($folderPath), 0755, true);
-            }
-
-            $image = Image::make($tempImagePath);
-            $image->orientate()
-                ->resize(1000, null, function ($constraint) {
-                    $constraint->upsize();
-                    $constraint->aspectRatio();
-                });
-
-            $image->save('public/storage/post/images/'.$fileName);
-
-            $ai_media_file_data = ['user_id' => auth()->user()->id, 'post_id' => $post_id, 'file_name' => $fileName, 'file_type' => 'image', 'privacy' => $request->privacy];
-            $ai_media_file_data['created_at'] = time();
-            $ai_media_file_data['updated_at'] = time();
-            Media_files::create($ai_media_file_data);
-            unlink($tempImagePath);
-        }
 
         // add media files
         if ($this->hasPostMediaFiles($request)) {
@@ -1224,98 +1191,6 @@ class MainController extends Controller
         Session::flash('success_message', get_phrase('Post Unsave Successfully'));
 
         return redirect()->back();
-    }
-
-    public function imageGenerator()
-    {
-        $page_data['user_info'] = $this->user;
-        $page_data['view_path'] = 'frontend.ai_image.image_generator';
-
-        return view('frontend.index', $page_data);
-    }
-
-    public function generateImage(Request $request)
-    {
-        $request->validate([
-            'prompt' => 'required|string|max:255',
-        ]);
-
-        $prompt = $request->input('prompt');
-        $token = $this->huggingFaceToken();
-
-        if (! $token) {
-            return response()->json(['error' => 'Image generation is not configured'], 503);
-        }
-
-        try {
-            $response = Http::timeout(60)
-                ->withToken($token)
-                ->accept('image/png')
-                ->post($this->huggingFaceImageEndpoint(), [
-                    'inputs' => $prompt,
-                ]);
-
-            if ($response->failed()) {
-                return response()->json(['error' => 'Image generation request failed'], $this->providerErrorStatus($response->status()));
-            }
-
-            $imageData = $response->body();
-            $imageUrl = $this->saveImage($imageData);
-
-            // Save to database
-            // $generatedImage = GeneratedImage::create([
-            //     'prompt' => $prompt,
-            //     'image_url' => $imageUrl,
-            // ]);
-
-            return response()->json([
-                'image_url' => $imageUrl,
-                'image_base64' => base64_encode($imageData),
-            ]);
-        } catch (Exception $exception) {
-            report($exception);
-
-            return response()->json(['error' => 'Server error'], 500);
-        }
-    }
-
-    private function saveImage(string $imageData): string
-    {
-        $folderPath = public_path('storage/ai_images');
-        if (! is_dir($folderPath)) {
-            mkdir($folderPath, 0755, true);
-        }
-
-        $fileName = uniqid('generated_image_', true).'.png';
-        file_put_contents($folderPath.'/'.$fileName, $imageData);
-
-        return url('public/storage/ai_images/'.$fileName);
-    }
-
-    private function huggingFaceToken(): ?string
-    {
-        $configuredToken = config('services.huggingface.token');
-
-        if (is_string($configuredToken) && $configuredToken !== '') {
-            return $configuredToken;
-        }
-
-        $legacyToken = Setting::where('type', 'hugging_face_auth_key')->value('description');
-
-        return is_string($legacyToken) && $legacyToken !== '' ? $legacyToken : null;
-    }
-
-    private function huggingFaceImageEndpoint(): string
-    {
-        $baseUrl = rtrim((string) config('services.huggingface.base_url', 'https://api-inference.huggingface.co/models'), '/');
-        $model = ltrim((string) config('services.huggingface.image_model', 'stabilityai/stable-diffusion-2'), '/');
-
-        return $baseUrl.'/'.$model;
-    }
-
-    private function providerErrorStatus(int $status): int
-    {
-        return $status >= 400 && $status < 600 ? $status : 502;
     }
 
     private function zoomApiKey(): string

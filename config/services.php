@@ -39,10 +39,4 @@ return [
         'industry_type' => env('PAYTM_INDUSTRY_TYPE'),
     ],
 
-    'huggingface' => [
-        'token' => env('HUGGINGFACE_TOKEN'),
-        'image_model' => env('HUGGINGFACE_IMAGE_MODEL', 'stabilityai/stable-diffusion-2'),
-        'base_url' => env('HUGGINGFACE_BASE_URL', 'https://api-inference.huggingface.co/models'),
-    ],
-
 ];

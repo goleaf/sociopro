@@ -42,6 +42,24 @@ class SecurityHardeningTest extends TestCase
         }
     }
 
+    public function test_remove_file_does_not_delete_outside_public_storage_with_traversal(): void
+    {
+        $directory = public_path('storage/security_hardening_test');
+        $outsideFile = public_path('storage/security-hardening-outside.txt');
+
+        File::ensureDirectoryExists($directory);
+        File::put($outsideFile, 'keep me');
+
+        try {
+            remove_file('public/storage/security_hardening_test/../security-hardening-outside.txt');
+
+            $this->assertFileExists($outsideFile);
+        } finally {
+            File::deleteDirectory($directory);
+            File::delete($outsideFile);
+        }
+    }
+
     public function test_cors_allowed_origins_are_configurable_via_environment(): void
     {
         // Default behavior is preserved as a public allowlist.

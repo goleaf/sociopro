@@ -24,10 +24,10 @@ Use it together with:
 - npm: `10.9.8`
 - Frontend build tool: Laravel Mix / Webpack
 - JavaScript/CSS stack: Alpine, Axios, Tailwind CSS 3, PostCSS, Laravel Mix, Webpack
-- Present tooling: Pint, PHPUnit
-- Not currently installed: Larastan/PHPStan, Rector, Vite, ESLint, Stylelint, Prettier
+- Present tooling: Pint, PHPUnit, Larastan/PHPStan, Rector, ESLint, Stylelint, Prettier
+- Not currently installed: Vite
 
-Do not treat a tool as available until the repository files prove it. Vite, ESLint, Stylelint, Prettier, Larastan/PHPStan, and Rector standards in this document are target standards for planned adoption or future migrations, not permission to silently add packages inside unrelated work.
+Do not treat a tool as available until the repository files prove it. Vite standards in this document are target standards for a planned build-tool migration, not permission to silently add Vite inside unrelated work.
 
 ## Language Used in This Document
 

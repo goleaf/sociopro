@@ -64,8 +64,7 @@
             Route::currentRouteName() == 'search.event' ||
             Route::currentRouteName() == 'job.apply.form'||
             Route::currentRouteName() == 'search.type'||
-            Route::currentRouteName() == 'product.saved'||
-            Route::currentRouteName() == 'ai_image.image_generator'
+            Route::currentRouteName() == 'product.saved'
               
             )
         <div class="widget">

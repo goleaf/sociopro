@@ -10,7 +10,9 @@ use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\LazyCollection;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
@@ -86,6 +88,51 @@ class JobApplicationExportTest extends TestCase
         $downloadedContents = ob_get_clean();
 
         $this->assertSame($contents, $downloadedContents);
+    }
+
+    public function test_download_pdf_streams_private_storage_attachment(): void
+    {
+        Storage::fake('local');
+
+        $owner = $this->adminUser();
+        $fileName = 'test-export-private-'.str()->random(12).'.pdf';
+        $contents = '%PDF-1.4'.PHP_EOL.'private-storage-payload';
+        Storage::disk('local')->put('job/cv/'.$fileName, $contents);
+
+        $application = $this->jobApplication($owner, 2, [
+            'attachment' => $fileName,
+        ]);
+
+        $response = app(AdminCrudController::class)->downloadPdf($application->id);
+
+        $this->assertInstanceOf(StreamedResponse::class, $response);
+        $this->assertSame('attachment; filename='.$fileName, $response->headers->get('content-disposition'));
+
+        ob_start();
+        $response->sendContent();
+        $downloadedContents = ob_get_clean();
+
+        $this->assertSame($contents, $downloadedContents);
+    }
+
+    public function test_download_pdf_rejects_traversal_attachment_names(): void
+    {
+        $owner = $this->adminUser();
+        $outsideFile = public_path('storage/job/test-export-outside.pdf');
+        File::ensureDirectoryExists(dirname($outsideFile));
+        File::put($outsideFile, '%PDF-1.4 outside');
+
+        try {
+            $application = $this->jobApplication($owner, 3, [
+                'attachment' => '../test-export-outside.pdf',
+            ]);
+
+            $response = app(AdminCrudController::class)->downloadPdf($application->id);
+
+            $this->assertNotInstanceOf(StreamedResponse::class, $response);
+        } finally {
+            File::delete($outsideFile);
+        }
     }
 
     private function ensureJobAppliesTable(): void

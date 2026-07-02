@@ -39,17 +39,47 @@ if (! function_exists('get_image')) {
 if (! function_exists('remove_file')) {
     function remove_file($url = null)
     {
-        $url = $url = str_replace('optimized/', '', $url);
-        $url_arr = explode('/', $url);
-        $file_name = $url_arr[count($url_arr) - 1];
+        if (! is_string($url) || trim($url) === '') {
+            return;
+        }
 
-        if (is_file($url) && file_exists($url) && ! empty($file_name)) {
-            unlink($url);
+        $url = str_replace('\\', '/', str_replace('optimized/', '', $url));
+        if (str_contains($url, "\0")) {
+            return;
+        }
 
-            $url = str_replace($file_name, 'optimized/'.$file_name, $url);
-            if (is_file($url) && file_exists($url)) {
-                unlink($url);
+        foreach (explode('/', trim($url, '/')) as $segment) {
+            if ($segment === '.' || $segment === '..') {
+                return;
             }
+        }
+
+        $storageRoot = realpath(base_path('public/storage'));
+        if ($storageRoot === false) {
+            return;
+        }
+
+        $relativePath = ltrim($url, '/');
+        $targetPath = realpath(base_path($relativePath));
+        if ($targetPath === false || ! is_file($targetPath)) {
+            return;
+        }
+
+        $storageRoot = rtrim($storageRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+        if (! str_starts_with($targetPath, $storageRoot)) {
+            return;
+        }
+
+        $fileName = basename($targetPath);
+        if ($fileName === '') {
+            return;
+        }
+
+        unlink($targetPath);
+
+        $optimizedPath = realpath(dirname($targetPath).DIRECTORY_SEPARATOR.'optimized'.DIRECTORY_SEPARATOR.$fileName);
+        if ($optimizedPath !== false && is_file($optimizedPath) && str_starts_with($optimizedPath, $storageRoot)) {
+            unlink($optimizedPath);
         }
     }
 }

@@ -8,65 +8,36 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class SecretLeakAuditTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_ai_image_views_do_not_render_hugging_face_tokens(): void
+    public function test_removed_external_image_creator_routes_and_provider_hooks_stay_absent(): void
     {
-        $token = 'hf_'.str_repeat('a', 32);
-        $user = $this->activeUser();
+        $removedRoutePrefix = 'ai'.'_image.';
 
-        Setting::query()->insert([
-            'type' => 'hugging_face_auth_key',
-            'description' => $token,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $this->assertFalse(Route::has($removedRoutePrefix.'image_generator'));
+        $this->assertFalse(Route::has($removedRoutePrefix.'generate'));
+        $this->assertFileDoesNotExist(resource_path('views/frontend/'.'ai'.'_image/image_generator.blade.php'));
 
-        $this->actingAs($user);
+        $forbiddenFragments = [
+            'hug'.'ging_face_auth_key',
+            'HUG'.'GING'.'FACE_',
+            'services.'.'hug'.'gingface',
+            'api'.'-inference.'.'hug'.'gingface.co',
+            $removedRoutePrefix,
+        ];
 
-        $response = $this->get(route('ai_image.image_generator'));
+        foreach ($this->externalImageCreatorRemovalFiles() as $path) {
+            $contents = File::get($path);
 
-        $response
-            ->assertOk()
-            ->assertDontSee($token, false)
-            ->assertDontSee('api-inference.huggingface.co', false)
-            ->assertDontSee('Authorization', false);
-
-        $modal = view('frontend.main_content.create_post_modal', [
-            'user_info' => $user,
-        ])->render();
-
-        $this->assertStringNotContainsString($token, $modal);
-        $this->assertStringNotContainsString('api-inference.huggingface.co', $modal);
-        $this->assertStringNotContainsString('Authorization', $modal);
-    }
-
-    public function test_ai_image_generation_requires_server_side_token_configuration(): void
-    {
-        config(['services.huggingface.token' => null]);
-
-        Setting::query()->insert([
-            'type' => 'hugging_face_auth_key',
-            'description' => '',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $response = $this
-            ->actingAs($this->activeUser())
-            ->postJson(route('ai_image.generate'), [
-                'prompt' => 'a small safe test prompt',
-            ]);
-
-        $response
-            ->assertStatus(503)
-            ->assertJson([
-                'error' => 'Image generation is not configured',
-            ]);
+            foreach ($forbiddenFragments as $fragment) {
+                $this->assertStringNotContainsString($fragment, $contents, $path);
+            }
+        }
     }
 
     public function test_zoom_live_streaming_view_uses_server_signature_without_api_secret(): void
@@ -110,7 +81,6 @@ class SecretLeakAuditTest extends TestCase
     {
         $offenders = [];
         $patterns = [
-            'hugging face token' => '/\bhf_[A-Za-z0-9]{20,}\b/',
             'private key block' => '/-----BEGIN (?:RSA |DSA |EC |OPENSSH |PGP )?PRIVATE KEY-----/',
             'certificate block' => '/-----BEGIN CERTIFICATE-----/',
             'old demo login email' => '/(?:admin|karenjrios)@example\.com/',
@@ -134,6 +104,25 @@ class SecretLeakAuditTest extends TestCase
         }
 
         $this->assertSame([], $offenders, 'Remove hardcoded secrets, demo credentials, and private key material from production-facing files.');
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function externalImageCreatorRemovalFiles(): array
+    {
+        return [
+            app_path('Http/Controllers/MainController.php'),
+            app_path('Http/Controllers/SettingController.php'),
+            base_path('routes/web.php'),
+            config_path('services.php'),
+            resource_path('views/backend/admin/setting/system.blade.php'),
+            resource_path('views/frontend/header.blade.php'),
+            resource_path('views/frontend/main_content/create_post_modal.blade.php'),
+            resource_path('views/frontend/right_sidebar.blade.php'),
+            base_path('.env.example'),
+            base_path('public/assets/install.sql'),
+        ];
     }
 
     private function activeUser(): User

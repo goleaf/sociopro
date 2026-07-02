@@ -111,8 +111,6 @@ Route::controller(MainController::class)->middleware('auth', 'user', 'verified',
     Route::post('/block_user_post/{id}', 'block_user_post')->name('block_user_post');
     Route::get('/unblock_user/{id}', 'unblock_user')->name('unblock_user');
 
-    Route::get('/ai/image-generator', 'imageGenerator')->name('ai_image.image_generator');
-    Route::post('/ai/generate-image', 'generateImage')->name('ai_image.generate');
 });
 
 // Memories Controller

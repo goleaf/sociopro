@@ -100,9 +100,9 @@ Primary controller roles:
 
 - `ApiController`: mobile/API surface for auth, feed, posts, stories, comments, profiles, groups, pages, marketplace, videos, events, blogs, jobs, notifications, chat, and paid content.
 - `AdminCrudController`: admin dashboard and CRUD for users, pages, blogs, groups, jobs, payment settings/history, badges, categories, products, reports, sponsors, purchase code, and server-side user data.
-- `MainController`: web timeline/feed, live streaming/Zoom, Hugging Face image generation, memories, addons, and general frontend pages.
+- `MainController`: web timeline/feed, live streaming/Zoom, memories, addons, and general frontend pages.
 - `Profile`: profile edit, photos/videos, albums, friend requests, blocks, saved posts, and profile media.
-- `SettingController`: system, SMTP, S3, live-video/Jitsi, about/privacy/terms, reported posts, Hugging Face, and contact mail flows.
+- `SettingController`: system, SMTP, S3, live-video/Jitsi, about/privacy/terms, reported posts, and contact mail flows.
 - `PaymentController`: payment gateway selection, Paytm callback, gateway model dispatch, gateway view data, and payment creation/status routes.
 - `Updater`: product/addon update and addon manager/status/delete routes.
 - Smaller domain controllers: `BlogController`, `EventController`, `GroupController`, `MarketplaceController`, `PageController`, `VideoController`, `ChatController`, `NotificationController`, `FollowController`, `SponsorController`, `StoryController`, `LanguageController`, `BadgeController`, `UserController`, `CustomUserController`, `MemoriesController`, `ModalController`, and `SearchController`.
@@ -269,7 +269,7 @@ Main view areas:
 
 - `resources/views/auth`: login, registration, password reset, email verification.
 - `resources/views/backend`: admin/user layouts, dashboards, settings, categories, users, payment history, reports, sponsors, badges.
-- `resources/views/frontend`: social feed, header/sidebar, profile, user pages, groups, pages, events, marketplace, chat, stories, notifications, blogs, video shorts, AI image generation, live streaming, settings.
+- `resources/views/frontend`: social feed, header/sidebar, profile, user pages, groups, pages, events, marketplace, chat, stories, notifications, blogs, video shorts, live streaming, settings.
 - `resources/views/install`: installation wizard and final setup.
 - `resources/views/payment`: gateway selection and gateway-specific views for Stripe, Paytm, Razorpay, PayPal, Paystack, and Flutterwave.
 - `resources/views/components`: default Blade components from the auth scaffold.
@@ -351,11 +351,10 @@ Communication/social:
 - Laravel Share package.
 - Flasher notifications.
 
-Live/video/AI:
+Live/video:
 
 - Zoom integration through `ZoomMeetingTrait`, Firebase JWT, and Zoom SDK views.
 - Jitsi/JaaS integration through settings and `frontend/main_content/jitsi_streaming.blade.php`.
-- Hugging Face image generation token is read from settings and used by frontend views.
 
 Admin/data tooling:
 

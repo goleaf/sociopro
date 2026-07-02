@@ -35,7 +35,7 @@ This document inventories the business modules and feature surfaces found in the
 | Profile/social graph | `profile/*`, `user/*`, follow/friend/block routes | `Profile`, `CustomUserController`, `FollowController`, `MainController`, `ApiController` | `users`, `friendships`, `followers`, `block_users`, `media_files`, `albums` | `FriendshipsQueryTest` | `P1` |
 | Feed/posts/comments | root timeline, post/comment/reaction/report routes, API feed | `MainController`, `ApiController`, `ModalController`, `MemoriesController` | `posts`, `comments`, `media_files`, `post_shares`, `shares`, `reports`, `activities` | API response tests | `P0` |
 | Stories | story routes and API story endpoints | `StoryController`, `ApiController` | `stories`, `media_files`, `users` | `StoryControllerRefactorTest` | `P1` |
-| Media/albums/uploads/live/AI | album, media delete/download, live/Jitsi/Zoom, AI image generator | `MainController`, `Profile`, `GroupController`, `PageController`, `VideoController`, `SettingController`, `ApiController` | `media_files`, `albums`, `album_images`, `live_streamings`, `settings` | Limited indirect tests | `P0` |
+| Media/albums/uploads/live | album, media delete/download, live/Jitsi/Zoom | `MainController`, `Profile`, `GroupController`, `PageController`, `VideoController`, `SettingController`, `ApiController` | `media_files`, `albums`, `album_images`, `live_streamings`, `settings` | Limited indirect tests | `P0` |
 | Groups | `groups`, `group/*`, admin group routes, API group endpoints | `GroupController`, `AdminCrudController`, `ApiController`, `NotificationController` | `groups`, `group_members`, `posts`, `media_files`, `albums`, `invites` | None module-specific | `P1` |
 | Pages | `pages`, `page/*`, admin page routes, API page endpoints | `PageController`, `AdminCrudController`, `ApiController`, `SettingController` | `pages`, `page_likes`, `pagecategories`, `posts`, `media_files`, `albums` | None module-specific | `P1` |
 | Events | `events`, `event/*`, invites, API event endpoints | `EventController`, `ApiController`, `NotificationController` | `events`, `invites`, `shares`, `posts`, `groups` | None module-specific | `P1` |
@@ -144,22 +144,22 @@ This document inventories the business modules and feature surfaces found in the
 - External dependencies: uploader/media assets.
 - Refactor priority: `P1`. Existing tests make this a good candidate for the next safe extraction.
 
-### Media, Albums, Uploads, Live Video, and AI Image Generation
+### Media, Albums, Uploads, and Live Video
 
-- Routes: album routes in `routes/web.php` and `routes/custom_routes.php`; media delete/download routes; live routes `live/{post_id}`, `live-ended/{post_id}`, `streaming/live/{id}`; settings routes for live/Jitsi; `ai/image-generator`; API media/profile/album endpoints.
+- Routes: album routes in `routes/web.php` and `routes/custom_routes.php`; media delete/download routes; live routes `live/{post_id}`, `live-ended/{post_id}`, `streaming/live/{id}`; settings routes for live/Jitsi; API media/profile/album endpoints.
 - Controllers: `MainController`, `Profile`, `GroupController`, `PageController`, `VideoController`, `SettingController`, `CustomUserController`, `ApiController`.
 - Requests: none module-specific.
 - Models: `Media_files`, `Albums`, `Album_image`, `Live_streamings`, `FileUploader`, `Posts`, `Setting`, `User`.
 - Database tables: `media_files`, `albums`, `album_images`, `live_streamings`, `posts`, `settings`.
 - Migrations: lookup indexes for `media_files`, `albums`, `album_images`, `posts`, `settings`.
-- Views: `resources/views/frontend/live_streaming/*`, `resources/views/frontend/main_content/jitsi_streaming.blade.php`, profile/page/group media views, `resources/views/frontend/ai_image/image_generator.blade.php`.
+- Views: `resources/views/frontend/live_streaming/*`, `resources/views/frontend/main_content/jitsi_streaming.blade.php`, profile/page/group media views.
 - JS: `public/assets/frontend/uploader/*`, `public/assets/frontend/js/jitsi.js`, `public/assets/frontend/plyr/*`, `public/assets/frontend/js/plyr*`, shared frontend JS.
 - SCSS: public frontend CSS and addon/fundraiser assets; no module source SCSS in `resources`.
 - Jobs: none, even though uploads/video/live-provider calls are slow side effects.
 - Events/listeners: none.
 - Policies: none.
-- Tests: no direct media/live/AI tests.
-- External dependencies: AWS S3 Flysystem, Intervention Image, FFMPEG config, Firebase JWT/Zoom trait, Jitsi/JaaS, Hugging Face settings/token usage.
+- Tests: no direct media/live tests.
+- External dependencies: AWS S3 Flysystem, Intervention Image, FFMPEG config, Firebase JWT/Zoom trait, Jitsi/JaaS.
 - Refactor priority: `P0`. Storage/provider calls need service extraction, tests with fakes, and authorization.
 
 ### Groups
@@ -339,7 +339,7 @@ This document inventories the business modules and feature surfaces found in the
 - Events/listeners: none.
 - Policies: none.
 - Tests: indirect tests around account disable, payment page data, install safety; no broad admin CRUD coverage.
-- External dependencies: Yajra DataTables, Flasher, Mail, AWS S3 config, Jitsi/Zoom settings, Hugging Face settings, payment providers.
+- External dependencies: Yajra DataTables, Flasher, Mail, AWS S3 config, Jitsi/Zoom settings, payment providers.
 - Refactor priority: `P0`. Admin routes mutate users/settings/payments and need policy/Form Request coverage.
 
 ### Payments and Gateway Billing

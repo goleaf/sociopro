@@ -495,6 +495,10 @@ Use JSON for metadata-only create requests, or multipart form data when sending 
 | `multiple_files` | file array | No | Max `10` files |
 | `multiple_files.*` | image file | No | `jpeg`, `jpg`, `png`, `gif`, or `webp`; max `5120` KB; max `4096x4096` pixels |
 
+### Upload Storage Notes
+
+Local marketplace image uploads are served from `public/storage/marketplace/thumbnail` and `public/storage/marketplace/coverphoto`. The legacy public URL contract expects files at those paths, so upload tests assert the browser-visible path instead of Laravel's `storage/app/public` disk root.
+
 ### Example JSON Request
 
 ```http

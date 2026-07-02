@@ -49,11 +49,11 @@ High-risk backend files:
 
 - `app/Http/Controllers/ApiController.php`: mobile/API mega-controller, 134 routed endpoints, payment/addon/feed/profile/group/page/event/blog/video/chat coverage.
 - `app/Http/Controllers/AdminCrudController.php`: admin mega-controller, user/settings/payment/content/category/group/page/blog management.
-- `app/Http/Controllers/MainController.php`: feed, posts, live/Zoom, addon settings, AI image generation, profile/sidebar interactions.
+- `app/Http/Controllers/MainController.php`: feed, posts, live/Zoom, addon settings, profile/sidebar interactions.
 - `app/Http/Controllers/PaymentController.php`: gateway selection, gateway callbacks, payment creation/status.
 - `app/Http/Controllers/InstallController.php`: installer state, database setup, admin creation, SQL dump import flow.
 - `app/Http/Controllers/Profile.php`: profile, album, media, friend requests, account state.
-- `app/Http/Controllers/SettingController.php`: settings, mail/S3/live/Jitsi/Hugging Face, static pages, contact mail.
+- `app/Http/Controllers/SettingController.php`: settings, mail/S3/live/Jitsi, static pages, contact mail.
 - `app/Http/Controllers/Updater.php`: addon/product update and addon status/delete operations.
 - `app/Helpers/CommonHelper.php` and `app/Helpers/ApiHelper.php`: globally autoloaded helper logic with cross-module reach.
 - `app/ViewModels/BladeViewData.php`: shared view data source used across layouts and sidebars.

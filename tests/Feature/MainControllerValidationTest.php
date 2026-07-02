@@ -5,9 +5,12 @@ namespace Tests\Feature;
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Enums\Visibility;
+use App\Models\Media_files;
+use App\Models\Posts;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class MainControllerValidationTest extends TestCase
@@ -38,6 +41,57 @@ class MainControllerValidationTest extends TestCase
         $this->assertArrayHasKey('multiple_files', $payload['validationError']);
         $this->assertArrayNotHasKey('multiple_files.0', $payload['validationError']);
         $this->assertStringContainsString('post media upload', $payload['validationError']['multiple_files'][0]);
+    }
+
+    public function test_create_post_with_image_upload_creates_public_post_image(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create([
+            'friends' => json_encode([]),
+            'status' => UserAccountStatus::Active->value,
+            'user_role' => UserRole::General->value,
+        ]);
+
+        $mediaFile = null;
+
+        try {
+            $response = $this->actingAs($user)->post(route('create_post'), [
+                'privacy' => Visibility::Public->value,
+                'description' => 'Image upload regression',
+                'multiple_files' => [
+                    UploadedFile::fake()->image('post-photo.jpg', 640, 480),
+                ],
+            ]);
+
+            $response->assertOk();
+
+            $payload = json_decode($response->getContent(), true);
+
+            $this->assertSame(['reload' => 1], $payload);
+
+            $post = Posts::query()
+                ->where('user_id', $user->id)
+                ->latest('post_id')
+                ->first();
+
+            $this->assertNotNull($post);
+
+            $mediaFile = Media_files::query()
+                ->where('post_id', $post->post_id)
+                ->first();
+
+            $this->assertNotNull($mediaFile);
+            $this->assertSame('image', $mediaFile->file_type);
+            Storage::disk('public')->assertExists('post/images/'.$mediaFile->file_name);
+        } finally {
+            if ($mediaFile instanceof Media_files) {
+                Storage::disk('public')->delete([
+                    'post/images/'.$mediaFile->file_name,
+                    'post/images/optimized/'.$mediaFile->file_name,
+                ]);
+            }
+        }
     }
 
     public function test_payment_settings_ignore_sensitive_raw_request_fields(): void

@@ -62,7 +62,7 @@ Known full-project PHPStan blockers:
 
 - Missing legacy model classes referenced by controllers and view models: `Job`, `JobApply`, `JobCategory`, `JobWishlist`, `PaidContentPackages`, `PaidContentPayout`, and `Fundraiser_payout`.
 - Pre-existing controller issues: `PaymentController` references `Paytm` in the controller namespace and has a missing return path in `paytm_paymentCallback()`.
-- `MainController::generateImage()` references `Http` without importing the facade; the method is not currently routed.
+- The obsolete controller helper has been removed.
 - `PageController` accesses an undefined `$user` property.
 - `Authenticate::redirectTo()` has a missing explicit `null` return.
 - `StripePay` catches `Exception` without importing the global exception class.

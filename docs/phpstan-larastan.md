@@ -46,7 +46,7 @@ composer ci
 - Replaced the `jorenvanhocht/laravel-share` facade alias in `BlogController` with the bound share service so PHPStan uses the package's real method signature.
 - Initialized nullable upload filenames before optional upload branches and only assigned image/file fields when an upload produced a filename.
 - Added safe defaults for response arrays that were previously initialized only inside authenticated branches.
-- Added the missing AI-image persistence helper for `MainController::generateImage()`.
+- Removed the obsolete controller helper from `MainController`.
 
 ## Level 2 Blockers
 

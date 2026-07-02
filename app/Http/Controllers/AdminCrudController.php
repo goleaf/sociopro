@@ -1111,11 +1111,7 @@ class AdminCrudController extends Controller
         $streamAttachment ??= app(StreamJobApplicationAttachmentAction::class);
 
         $job = JobApply::find($id);
-        $filePath = $job !== null && $job->attachment !== null
-            ? public_path('storage/job/cv/'.$job->attachment)
-            : null;
-
-        if ($filePath === null || ! is_file($filePath)) {
+        if ($job === null || $job->attachment === null || ! $streamAttachment->exists($job)) {
             return back();
         }
 

@@ -250,7 +250,7 @@ SQL);
 
         $this->assertSame(0, DB::table('users')->count());
         $this->assertSame('support@example.test', DB::table('settings')->where('type', 'system_email')->value('description'));
-        $this->assertSame('', DB::table('settings')->where('type', 'hugging_face_auth_key')->value('description'));
+        $this->assertFalse(DB::table('settings')->where('type', 'hug'.'ging_face_auth_key')->exists());
 
         $this->assertSame([
             'smtp_protocol' => 'smtp',

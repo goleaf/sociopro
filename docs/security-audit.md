@@ -33,6 +33,7 @@ rg security patterns across app, routes, config, resources, database, and tests
 | Session cookies | `same_site` was `null` despite secure default guidance | Changed default to `SESSION_SAME_SITE=lax`. |
 | Password hashing | Bcrypt default was `10` rounds | Changed default to `12`; tests keep `BCRYPT_ROUNDS=4` in `phpunit.xml`. |
 | Production defaults | `.env.example` encouraged debug logging | Changed template defaults to `APP_DEBUG=false`, `LOG_LEVEL=warning`, `SESSION_SAME_SITE=lax`, and `BCRYPT_ROUNDS=12`. |
+| External generated-image feature | Browser-facing provider flow and token-setting surface increased secret exposure risk | Removed public routes, post composer controls, standalone view, provider config/env keys, admin setting, and installer setting row. |
 
 ## Dependency Results
 
@@ -63,4 +64,4 @@ rg security patterns across app, routes, config, resources, database, and tests
 - SQL injection: remaining raw expression found in marketplace search is bound and column-allowlisted; removed one unused raw SQL helper.
 - File uploads: marketplace upload validation restricts image type, extension, size, and dimensions; additional upload surfaces still need feature-by-feature review.
 - Logging/debug: existing tests block dump/debug statements and raw exception-message logging; no fork-safety debug routes are present in the final route diff.
-- Secrets: staged changes were scanned for secret-like values; examples use placeholders only.
+- Secrets: generated-image provider settings were removed; staged changes were scanned for secret-like values, and examples use placeholders only.

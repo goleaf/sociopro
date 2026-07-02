@@ -124,13 +124,6 @@
                                         value="{{ $google_analytics_id }}" name="google_analytics_id">
                                 </div>
 
-                                <div class="fpb-7">
-                                    <label for="hugging_face_auth_key" class="eForm-label">
-                                        {{ get_phrase('Hugging Face Auth Key') }} <a href="https://huggingface.co/" target="_blank" title="{{get_phrase('Get Hugging Face Auth Key')}}"> <i class="fa-solid fa-link"></i></label></a>
-                                    <input type="text" class="form-control eForm-control" id="hugging_face_auth_key"
-                                        value="{{ $hugging_face_auth_key }}" name="hugging_face_auth_key">
-                                </div>
-
                                 {{-- facebook --}}
                                 <div class="fpb-7">
                                     <label for="meta_pixel_id" class="eForm-label">

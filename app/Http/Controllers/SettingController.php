@@ -176,7 +176,6 @@ class SettingController extends Controller
         $page_data['google_analytics_id'] = Setting::where('type', 'google_analytics_id')->value('description');
         $page_data['meta_pixel_id'] = Setting::where('type', 'meta_pixel_id')->value('description');
         $page_data['commission_rate'] = Setting::where('type', 'commission_rate')->value('description');
-        $page_data['hugging_face_auth_key'] = Setting::where('type', 'hugging_face_auth_key')->value('description');
         $page_data['system_currency'] = Setting::where('type', 'system_currency')->value('description');
         $page_data['system_language'] = Setting::where('type', 'system_language')->value('description');
         $page_data['public_signup'] = Setting::where('type', 'public_signup')->value('description');
@@ -210,7 +209,6 @@ class SettingController extends Controller
         Setting::where('type', 'system_currency')->update(['description' => $request->system_currency]);
         Setting::where('type', 'ad_charge_per_day')->update(['description' => $request->ad_charge_per_day]);
         Setting::where('type', 'google_analytics_id')->update(['description' => $request->google_analytics_id]);
-        Setting::where('type', 'hugging_face_auth_key')->update(['description' => $request->hugging_face_auth_key]);
         Setting::where('type', 'meta_pixel_id')->update(['description' => $request->meta_pixel_id]);
 
         Setting::where('type', 'commission_rate')->update(['description' => $request->commission_rate]);

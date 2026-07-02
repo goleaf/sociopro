@@ -105,10 +105,22 @@ class RolePermissionAuditTest extends TestCase
     {
         $contents = preg_replace('/\{\{--.*?--\}\}/s', '', $contents) ?? $contents;
         $tokens = token_get_all($contents);
+        $source = '';
 
-        return collect($tokens)
-            ->reject(fn ($token): bool => is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true))
-            ->map(fn ($token): string => is_array($token) ? $token[1] : $token)
-            ->implode('');
+        foreach ($tokens as $token) {
+            if (is_array($token)) {
+                if (in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                    continue;
+                }
+
+                $source .= $token[1];
+
+                continue;
+            }
+
+            $source .= $token;
+        }
+
+        return $source;
     }
 }

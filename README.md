@@ -19,11 +19,17 @@ Run Composer scripts with `composer <script>` from the project root.
 | `composer quality` | Run formatting checks, optional static analysis, and the full test suite. |
 | `composer ci` | Run Composer validation, Composer audit, formatting checks, optional static analysis, and tests. |
 
-Current installed PHP quality tools are PHPUnit and Laravel Pint. PHPStan and Rector are intentionally guarded so these scripts remain compatible before those tools are added.
+Current installed PHP quality tools are PHPUnit, Laravel Pint, Larastan/PHPStan, and Rector. Composer scripts still guard optional tool execution so local setup remains explicit and failure output is clear.
 
 ## Production Security
 
 Session and cookie hardening requirements are documented in [docs/session-cookie-security.md](docs/session-cookie-security.md). Review that runbook before changing auth, proxy, HTTPS, session driver, same-site, secure cookie, or remember-me behavior.
+
+## Current Runtime Notes
+
+- The external generated-image feature has been removed from the web UI, routes, provider configuration, installer data, admin settings, and regression fixtures. Do not reintroduce browser-exposed provider-token flows without a fresh server-side design and tests.
+- Local public media uploads are written under `public/storage/...` because legacy Blade/API helpers serve files from that public path. Do not move local uploads back to `storage/app/public` without updating the helper/view contract and upload tests.
+- Deployment, rollback, backup/restore, performance, and upgrade-slice notes live in `docs/deployment-checklist.md`, `docs/rollback-plan.md`, `docs/backup-and-restore.md`, `docs/performance-audit.md`, and `docs/senior-upgrade-summary.md`.
 
 ## Database Seeding
 

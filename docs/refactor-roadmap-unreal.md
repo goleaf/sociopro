@@ -12,9 +12,10 @@ This roadmap converts the audit, checklist, coding standards, and enterprise rul
 - Formatter: Laravel Pint `1.29.3`
 - Frontend build: Laravel Mix / Webpack
 - Current JavaScript/CSS stack: Alpine, Axios, Tailwind 3, PostCSS, Laravel Mix, Webpack
-- Not currently installed: Larastan/PHPStan, Rector, Vite, ESLint, Stylelint, Prettier
+- Installed quality tools: Larastan/PHPStan, Rector, ESLint, Stylelint, Prettier
+- Not currently installed: Vite
 
-Do not treat optional tools as available until they are added in a dedicated tooling phase. Do not combine tooling adoption with behavior refactors.
+Do not treat optional tools as available until repository files prove they exist. Keep future Vite adoption in a dedicated build-tool phase and do not combine it with behavior refactors.
 
 ## Roadmap Rules
 
