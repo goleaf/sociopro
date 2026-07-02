@@ -58,8 +58,8 @@ Focused verification for this audit:
 php artisan test tests/Unit/FileUploaderTest.php tests/Feature/SecurityHardeningTest.php tests/Feature/JobApplicationExportTest.php tests/Feature/MediaDownloadSecurityTest.php tests/Feature/ApiMarketplaceValidationTest.php tests/Feature/MainControllerValidationTest.php
 ```
 
-The default `php artisan test` runner can exhaust the inherited 128M PHP memory limit on this checkout. Direct PHPUnit broad verification passes with an explicit CLI memory limit:
+The default `php artisan test` runner can exhaust the inherited 128M PHP memory limit on this checkout. Direct PHPUnit broad verification passes with explicit testing database environment and CLI memory limit:
 
 ```bash
-php -d memory_limit=512M vendor/bin/phpunit
+APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=':memory:' php -d memory_limit=512M vendor/bin/phpunit
 ```
