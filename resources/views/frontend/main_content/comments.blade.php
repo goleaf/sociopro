@@ -93,6 +93,7 @@
 
         <div class="pl-45px comment-form  d-hidden parent_comment_reply_fields" id="reply_field{{$comment->comment_id}}">
             <form action="javascript:void(0)" class="w-100 ms-2" method="post">
+                @csrf
                 <input class="form-control" onkeypress="postComment(this, {{$comment->comment_id}}, {{$post_id}}, 0,'{{$type}}');" placeholder="Write your reply">
             </form>
         </div>

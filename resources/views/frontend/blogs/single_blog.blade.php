@@ -63,6 +63,7 @@
                             <div class="comment-form nBlog_user d-flex p-3 bg-secondary">
                                 <img src="{{get_user_image(Auth()->user()->photo, 'optimized')}}" alt="" class="rounded-circle h-39 img-fluid " width="40px">
                                 <form action="javascript:void(0)" class="w-100 ms-2" method="post">
+                                    @csrf
                                     <input class="form-control py-3" onkeypress="postComment(this, 0, {{$blog->id}}, 0,'blog');" rows="1" placeholder="Write Comments">
                                 </form>
                             </div>
