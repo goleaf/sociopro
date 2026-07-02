@@ -56,4 +56,75 @@ class SecurityHardeningTest extends TestCase
     {
         $this->assertContains(config('session.same_site'), ['lax', 'strict']);
     }
+
+    public function test_session_cookie_configuration_is_environment_driven_and_secure_by_default(): void
+    {
+        $config = File::get(config_path('session.php'));
+
+        $this->assertStringContainsString('SESSION_DRIVER', $config);
+        $this->assertStringContainsString('SESSION_LIFETIME', $config);
+        $this->assertStringContainsString('SESSION_EXPIRE_ON_CLOSE', $config);
+        $this->assertStringContainsString('SESSION_ENCRYPT', $config);
+        $this->assertStringContainsString('SESSION_DOMAIN', $config);
+        $this->assertStringContainsString('SESSION_SECURE_COOKIE', $config);
+        $this->assertStringContainsString('SESSION_HTTP_ONLY', $config);
+        $this->assertStringContainsString('SESSION_SAME_SITE', $config);
+        $this->assertStringContainsString("env('APP_ENV') === 'production'", $config);
+
+        $this->assertTrue(config('session.http_only'));
+        $this->assertContains(config('session.same_site'), ['lax', 'strict']);
+    }
+
+    public function test_env_example_documents_session_cookie_security_controls(): void
+    {
+        $envExample = File::get(base_path('.env.example'));
+
+        foreach ([
+            'SESSION_DRIVER=',
+            'SESSION_LIFETIME=',
+            'SESSION_EXPIRE_ON_CLOSE=',
+            'SESSION_ENCRYPT=',
+            'SESSION_DOMAIN=',
+            'SESSION_HTTP_ONLY=',
+            'SESSION_SAME_SITE=',
+            'SESSION_SECURE_COOKIE=',
+        ] as $expectedKey) {
+            $this->assertStringContainsString($expectedKey, $envExample);
+        }
+    }
+
+    public function test_authentication_session_lifecycle_uses_laravel_security_primitives(): void
+    {
+        $controller = File::get(app_path('Http/Controllers/Auth/AuthenticatedSessionController.php'));
+        $loginRequest = File::get(app_path('Http/Requests/Auth/LoginRequest.php'));
+        $loginView = File::get(resource_path('views/auth/login.blade.php'));
+
+        $this->assertStringContainsString('$request->session()->regenerate();', $controller);
+        $this->assertStringContainsString("Auth::guard('web')->logout();", $controller);
+        $this->assertStringContainsString('$request->session()->invalidate();', $controller);
+        $this->assertStringContainsString('$request->session()->regenerateToken();', $controller);
+        $this->assertStringContainsString('Auth::attempt(', $loginRequest);
+        $this->assertStringContainsString('$this->boolean(\'remember\')', $loginRequest);
+        $this->assertStringContainsString('name="remember"', $loginView);
+    }
+
+    public function test_session_cookie_production_runbook_documents_required_controls(): void
+    {
+        $runbook = File::get(base_path('docs/session-cookie-security.md'));
+
+        foreach ([
+            'SESSION_SECURE_COOKIE=true',
+            'SESSION_HTTP_ONLY=true',
+            'SESSION_SAME_SITE=lax',
+            'SESSION_ENCRYPT=true',
+            'SESSION_DRIVER=database',
+            'session()->regenerate()',
+            'session()->invalidate()',
+            'regenerateToken()',
+            'remember me',
+            'TrustProxies',
+        ] as $expectedText) {
+            $this->assertStringContainsString($expectedText, $runbook);
+        }
+    }
 }

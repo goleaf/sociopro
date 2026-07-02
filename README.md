@@ -21,6 +21,10 @@ Run Composer scripts with `composer <script>` from the project root.
 
 Current installed PHP quality tools are PHPUnit and Laravel Pint. PHPStan and Rector are intentionally guarded so these scripts remain compatible before those tools are added.
 
+## Production Security
+
+Session and cookie hardening requirements are documented in [docs/session-cookie-security.md](docs/session-cookie-security.md). Review that runbook before changing auth, proxy, HTTPS, session driver, same-site, secure cookie, or remember-me behavior.
+
 ## Database Seeding
 
 The default `DatabaseSeeder` imports the legacy install SQL dump only when the database has not already been initialized. Treat it as production-safe schema/reference data: it must not create demo users, real personal data, provider credentials, API keys, mail passwords, or other secrets.
