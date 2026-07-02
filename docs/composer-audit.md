@@ -1,16 +1,66 @@
-# Composer Dependency Audit
+# Composer and npm Dependency Audit
 
-Generated: 2026-07-01
+Generated: 2026-07-02
 
-This audit covers `composer.json` and `composer.lock` for outdated, abandoned, vulnerable, duplicated, unnecessary, and Laravel-incompatible Composer packages. It intentionally avoids major dependency upgrades and applies only low-risk cleanup.
+This audit covers `composer.json`, `composer.lock`, `package.json`, and `package-lock.json` for outdated, abandoned/deprecated, vulnerable, duplicated, unnecessary, and Laravel/frontend-build-incompatible packages. It intentionally avoids major dependency upgrades and applies only low-risk cleanup.
+
+## 2026-07-02 Audit Summary
+
+| Area | Result | Notes |
+| --- | --- | --- |
+| Composer advisories | Pass | `composer audit --format=json --no-interaction` reported `advisories: []`. |
+| Composer abandoned packages | Pass | `composer audit --format=json --no-interaction` reported `abandoned: []`. |
+| Composer compatibility | Pass with watch items | Locked packages install against PHP `8.5.7` and Laravel `13.18.0`; old-but-compatible payment/media/share packages remain upgrade risks. |
+| npm production audit | Pass | `npm audit --omit=dev --json` reported 0 vulnerabilities. |
+| npm full audit | Fails informationally | `npm audit --json` reported 11 dev-tool vulnerabilities: 5 low, 6 moderate, 0 high, 0 critical. npm reports no automatic fix. |
+| Safe update applied | None | `npm audit fix --dry-run` had no changes. A trial `webpack` lockfile update to `5.108.3` broke Laravel Mix production builds and was reverted. |
+| Direct npm deprecations | Pass | Direct packages checked with `npm view <package> deprecated`; no deprecation messages were reported. |
+
+## 2026-07-02 Commands Used
+
+```bash
+composer validate --strict --no-interaction
+composer audit --format=json --no-interaction
+composer outdated --direct --format=json --no-interaction
+npm audit --json
+npm audit --omit=dev --json
+npm audit fix --dry-run --json
+npm outdated --json
+npm ls --depth=0 --json
+npm explain webpack-dev-server webpack-notifier node-notifier sockjs uuid elliptic crypto-browserify node-libs-browser --json
+npm update webpack
+npm install --save-dev webpack@5.104.1
+```
+
+## npm Findings
+
+The full npm audit findings are development/build-tool scoped through `laravel-mix@6.0.49`:
+
+| Chain | Severity | Scope | Fix status | Safe decision |
+| --- | --- | --- | --- | --- |
+| `laravel-mix -> webpack-dev-server -> sockjs -> uuid` | Moderate | Dev server only | No npm fix available in current Mix chain | Do not force an override; migrate build tooling in a dedicated Mix-to-Vite/Webpack modernization. |
+| `laravel-mix -> webpack-notifier -> node-notifier -> uuid` | Moderate | Dev notification tooling | No npm fix available in current Mix chain | Avoid local notification/HMR exposure on untrusted networks; defer until build-tool migration. |
+| `laravel-mix -> node-libs-browser -> crypto-browserify -> browserify-sign/create-ecdh -> elliptic` | Low | Build polyfills | No npm fix available in current Mix chain | Treat as dev/build-chain debt, not runtime application exposure. |
+
+`npm audit fix --dry-run --json` reported `added: 0`, `removed: 0`, and `changed: 0`, so no automatic safe security update was available. Production/runtime dependencies remain clean under `npm audit --omit=dev --json`.
+
+## Safe Cleanup Decision on 2026-07-02
+
+| Package | Action | Reason | Runtime impact |
+| --- | --- | --- | --- |
+| `webpack` | Kept at `5.104.1` | Updating to `5.108.3` is inside the semver constraint but Laravel Mix 6 fails with `Cannot find module 'webpack/lib/SizeFormatHelpers'`. | Keeping the current lock preserves `npm run production`. Treat newer Webpack as part of the Mix-to-Vite or Mix replacement project. |
 
 ## Audit Sources
 
 - Local PHP runtime: PHP `8.5.7`
 - Composer: `2.9.5`
 - Laravel framework: `13.18.0`
+- Node: `v22.22.3`
+- npm: `10.9.8`
+- Frontend build: Laravel Mix `6.0.49` / Webpack `5.104.1`
 - Composer advisory source: Packagist security advisories via `composer audit`
 - Composer package metadata from the current lockfile and Packagist metadata
+- npm advisory source: npm audit report from the current lockfile
 
 Commands used:
 
@@ -109,6 +159,7 @@ Recommended order:
 5. Plan `stripe/stripe-php` major migration separately.
 6. Evaluate dev-tool cleanup for `laravel/sail` and `laravel/tinker`.
 7. Consider PHPUnit 13 only after current test suite and CI expectations are stable.
+8. Plan a Laravel Mix to Vite or supported Webpack pipeline migration to remove the dev-only npm audit chain.
 
 ## Follow-Up Checks to Add to CI
 
@@ -116,9 +167,11 @@ Recommended order:
 composer validate --strict --no-interaction
 composer audit --no-interaction
 composer outdated --direct --strict --no-interaction
+npm audit --omit=dev --audit-level=moderate
+npm run production
 ```
 
-For release gates, keep `composer audit` mandatory. Treat `composer outdated --direct --strict` as an informational dependency-health check unless the team wants outdated packages to fail CI.
+For release gates, keep `composer audit` and `npm audit --omit=dev` mandatory. Treat full `npm audit` and `composer outdated --direct --strict` as dependency-health checks until the Laravel Mix dev-tool chain is replaced.
 
 ## References
 
