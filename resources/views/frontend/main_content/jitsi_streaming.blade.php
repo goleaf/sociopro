@@ -14,12 +14,12 @@
 @if (auth()->user()->email == $user->email)
     <script type="text/javascript">
         window.onload = () => {
-            var email = "{{ $user->email }}";
-            var name = "{{ $user->name }}";
-            var join_pass = "{{ $join_pass }}";
-            var room = "{{ $room }}";
-            var jitsi_app_id = "{{ $jitsis['jitsi_app_id'] }}";
-            var jitsi_jwt = "{{ $jitsis['jitsi_jwt'] }}";
+            var email = {{ Illuminate\Support\Js::from($user->email) }};
+            var name = {{ Illuminate\Support\Js::from($user->name) }};
+            var join_pass = {{ Illuminate\Support\Js::from($join_pass) }};
+            var room = {{ Illuminate\Support\Js::from($room) }};
+            var jitsi_app_id = {{ Illuminate\Support\Js::from($jitsis['jitsi_app_id']) }};
+            var jitsi_jwt = {{ Illuminate\Support\Js::from($jitsis['jitsi_jwt']) }};
            
            
                 const api = new JitsiMeetExternalAPI(domain, {
@@ -89,7 +89,7 @@
                     displayName: name
                 },
                 interfaceConfig: {
-                    CONNECTION_DISCONNECTED_URL: '{{ $leaveUrl }}',
+                    CONNECTION_DISCONNECTED_URL: {{ Illuminate\Support\Js::from($leaveUrl) }},
                 },
 
             });
@@ -116,11 +116,11 @@
     </script>
 @else
     <script type="text/javascript">
-        var email = "{{ auth()->user()->email }}";
-        var name = "{{  auth()->user()->name }}";
-        var join_pass = "{{ $join_pass }}";
-        var room = "{{ $room }}";
-        var jitsi_app_id = "{{ $jitsis['jitsi_app_id'] }}";
+        var email = {{ Illuminate\Support\Js::from(auth()->user()->email) }};
+        var name = {{ Illuminate\Support\Js::from(auth()->user()->name) }};
+        var join_pass = {{ Illuminate\Support\Js::from($join_pass) }};
+        var room = {{ Illuminate\Support\Js::from($room) }};
+        var jitsi_app_id = {{ Illuminate\Support\Js::from($jitsis['jitsi_app_id']) }};
        
 
         window.onload = () => {
@@ -181,7 +181,7 @@
                     displayName: name
                 },
                 interfaceConfig: {
-                    CONNECTION_DISCONNECTED_URL: '{{ $leaveUrl }}', 
+                    CONNECTION_DISCONNECTED_URL: {{ Illuminate\Support\Js::from($leaveUrl) }},
                 },
             });
             // Redirect users to $leaveUrl upon closing the meeting

@@ -40,8 +40,17 @@
         <div class="eSection-wrap-2">
             <div class="eForm-layouts">
             <form method="POST" enctype="multipart/form-data" class="d-block ajaxForm" action="{{ route('admin.zitsi.live.settings.update') }}">
-                
+
                 @csrf
+                @if ($errors->any())
+                    <div class="alert alert-danger" role="alert">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 <div class="fpb-7">
                     <label for="account_email" class="eForm-label">{{ get_phrase('Account email*') }}</label>
                     <input type="text" class="form-control eForm-control" value="{{ get_settings('zitsi_configuration', true)['account_email'] }}" id="account_email" name="account_email" required="">

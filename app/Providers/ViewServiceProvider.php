@@ -174,11 +174,20 @@ class ViewServiceProvider extends ServiceProvider
         });
 
         View::composer('frontend.main_content.jitsi_streaming', function ($view): void {
-            $jitsiConfiguration = json_decode(get_settings('zitsi_configuration'), true) ?: [];
+            $storedConfiguration = get_settings('zitsi_configuration', true);
+            $jitsiConfiguration = array_replace([
+                'account_email' => '',
+                'jitsi_app_id' => '',
+                'jitsi_jwt' => '',
+            ], is_array($storedConfiguration) ? $storedConfiguration : []);
+
+            foreach (['account_email', 'jitsi_app_id', 'jitsi_jwt'] as $key) {
+                $jitsiConfiguration[$key] = is_scalar($jitsiConfiguration[$key]) ? (string) $jitsiConfiguration[$key] : '';
+            }
 
             $view->with([
                 'jitsis' => $jitsiConfiguration,
-                'jitsiAppId' => get_settings('jitsi_app_id'),
+                'jitsiAppId' => $jitsiConfiguration['jitsi_app_id'],
                 'leaveUrl' => route('timeline'),
             ]);
         });
