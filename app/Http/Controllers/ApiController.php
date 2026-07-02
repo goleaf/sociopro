@@ -67,6 +67,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -1668,7 +1669,7 @@ class ApiController extends Controller
                     $file_name = random(40);
                     $file_extention = strtolower($media_file->getClientOriginalExtension());
                     if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                        $media_file->move('public/storage/post/videos/', $file_name.'.'.$file_extention);
+                        FileUploader::upload($media_file, 'public/storage/post/videos/'.$file_name.'.'.$file_extention);
                         $file_type = 'video';
                     } else {
                         FileUploader::upload($media_file, 'public/storage/post/images/'.$file_name.'.'.$file_extention, 1000, null, 300);
@@ -6954,8 +6955,13 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
+            Auth::guard('web')->setUser(auth('sanctum')->user());
 
             $reciver = $request->reciver_id;
+            $multipleFiles = $request->file('multiple_files', []);
+            if ($multipleFiles instanceof UploadedFile) {
+                $multipleFiles = [$multipleFiles];
+            }
 
             $firstmessageThrade = Message_thrade::where(function ($query) use ($reciver, $user_id) {
                 $query->where('sender_id', $reciver)
@@ -6993,19 +6999,19 @@ class ApiController extends Controller
                     $chat->save();
                     $last_chat_id = $chat->id;
 
-                    if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
+                    if (is_array($multipleFiles) && ($multipleFiles[0] ?? null) != null) {
                         // Data validation
-                        $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
-                        $validator = Validator::make($request->multiple_files, $rules);
+                        $rules = ['multiple_files.*' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
+                        $validator = Validator::make(['multiple_files' => $multipleFiles], $rules);
                         if ($validator->fails()) {
                             return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
                         }
 
-                        foreach ($request->multiple_files as $key => $media_file) {
+                        foreach ($multipleFiles as $key => $media_file) {
                             $file_name = random(40);
                             $file_extention = strtolower($media_file->getClientOriginalExtension());
                             if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                                $media_file->move('storage/chat/videos/', $file_name.'.'.$file_extention);
+                                FileUploader::upload($media_file, 'public/storage/chat/videos/'.$file_name.'.'.$file_extention);
                                 $file_type = 'video';
                             } else {
                                 FileUploader::upload($media_file, 'public/storage/chat/images/'.$file_name, 1000, null, 300);
@@ -7042,19 +7048,19 @@ class ApiController extends Controller
                 $chat->save();
                 $last_chat_id = $chat->id;
 
-                if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
+                if (is_array($multipleFiles) && ($multipleFiles[0] ?? null) != null) {
                     // Data validation
-                    $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
-                    $validator = Validator::make($request->multiple_files, $rules);
+                    $rules = ['multiple_files.*' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
+                    $validator = Validator::make(['multiple_files' => $multipleFiles], $rules);
                     if ($validator->fails()) {
                         return response()->json(['validationError' => $validator->getMessageBag()->toArray()]);
                     }
 
-                    foreach ($request->multiple_files as $key => $media_file) {
+                    foreach ($multipleFiles as $key => $media_file) {
                         $file_name = random(40);
                         $file_extention = strtolower($media_file->getClientOriginalExtension());
                         if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                            $media_file->move('storage/chat/videos/', $file_name.'.'.$file_extention);
+                            FileUploader::upload($media_file, 'public/storage/chat/videos/'.$file_name.'.'.$file_extention);
                             $file_type = 'video';
                         } else {
                             FileUploader::upload($media_file, 'public/storage/chat/images/'.$file_name, 1000, null, 300);

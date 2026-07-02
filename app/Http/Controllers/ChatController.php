@@ -103,7 +103,7 @@ class ChatController extends Controller
                         $file_name = random(40);
                         $file_extention = strtolower($media_file->getClientOriginalExtension());
                         if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                            $media_file->move('storage/chat/videos/', $file_name.'.'.$file_extention);
+                            FileUploader::upload($media_file, 'public/storage/chat/videos/'.$file_name.'.'.$file_extention);
                             $file_type = 'video';
                         } else {
                             FileUploader::upload($media_file, 'public/storage/chat/images/'.$file_name, 1000, null, 300);
@@ -152,7 +152,7 @@ class ChatController extends Controller
                     $file_name = random(40);
                     $file_extention = strtolower($media_file->getClientOriginalExtension());
                     if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                        $media_file->move('storage/chat/videos/', $file_name.'.'.$file_extention);
+                        FileUploader::upload($media_file, 'public/storage/chat/videos/'.$file_name.'.'.$file_extention);
                         $file_type = 'video';
                     } else {
                         FileUploader::upload($media_file, 'public/storage/chat/images/'.$file_name, 1000, null, 300);

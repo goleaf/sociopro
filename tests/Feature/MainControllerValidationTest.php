@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ContentStatus;
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Enums\Visibility;
@@ -10,6 +11,8 @@ use App\Models\Posts;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -90,6 +93,73 @@ class MainControllerValidationTest extends TestCase
                     'post/images/'.$mediaFile->file_name,
                     'post/images/optimized/'.$mediaFile->file_name,
                 ]);
+            }
+        }
+    }
+
+    public function test_edit_post_with_video_upload_uses_public_storage_disk(): void
+    {
+        Storage::fake('public');
+        DB::table('settings')->updateOrInsert(
+            ['type' => 'amazon_s3'],
+            ['description' => json_encode(['active' => '0'])]
+        );
+
+        $user = User::factory()->create([
+            'friends' => json_encode([]),
+            'status' => UserAccountStatus::Active->value,
+            'user_role' => UserRole::General->value,
+        ]);
+
+        $postId = DB::table('posts')->insertGetId([
+            'user_id' => $user->id,
+            'publisher' => 'post',
+            'publisher_id' => $user->id,
+            'post_type' => 'general',
+            'privacy' => Visibility::Public->value,
+            'description' => 'Original video post',
+            'status' => ContentStatus::Active->value,
+            'user_reacts' => json_encode([]),
+            'shared_user' => json_encode([]),
+            'created_at' => time(),
+            'updated_at' => time(),
+        ], 'post_id');
+
+        $mediaFile = null;
+        $realFilePath = null;
+
+        try {
+            $response = $this->actingAs($user)->post(route('edit_post', $postId), [
+                'privacy' => Visibility::Public->value,
+                'description' => 'Updated with video upload',
+                'multiple_files' => [
+                    UploadedFile::fake()->create('edited-clip.mp4', 128, 'video/mp4'),
+                ],
+            ]);
+
+            $response->assertOk();
+
+            $payload = json_decode($response->getContent(), true);
+
+            $this->assertSame(['reload' => 1], $payload);
+
+            $mediaFile = Media_files::query()
+                ->where('post_id', $postId)
+                ->where('file_type', 'video')
+                ->latest('id')
+                ->first();
+
+            $this->assertNotNull($mediaFile);
+            $this->assertMatchesRegularExpression('/\A[A-Za-z0-9]{40}\.mp4\z/', $mediaFile->file_name);
+            $realFilePath = public_path('storage/post/videos/'.$mediaFile->file_name);
+            Storage::disk('public')->assertExists('post/videos/'.$mediaFile->file_name);
+        } finally {
+            if ($realFilePath !== null) {
+                File::delete($realFilePath);
+            }
+
+            if ($mediaFile instanceof Media_files) {
+                Storage::disk('public')->delete('post/videos/'.$mediaFile->file_name);
             }
         }
     }
