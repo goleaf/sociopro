@@ -56,6 +56,7 @@ use App\Models\Video;
 use App\Providers\RouteServiceProvider;
 use App\Queries\FriendshipsQuery;
 use App\Queries\Marketplace\MarketplaceProductsQuery;
+use App\Support\Api\ApiErrorResponse;
 use App\Support\Api\IdempotentApiRequest;
 use App\Support\Files\FileUploader;
 use App\Support\Validation\DateTimeRules;
@@ -81,6 +82,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Image;
 use Laravel\Sanctum\PersonalAccessToken;
+use Symfony\Component\HttpFoundation\Response;
 
 require 'vendor/autoload.php'; // Include Composer's autoloader
 
@@ -6908,7 +6910,15 @@ class ApiController extends Controller
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
-            $allchat = Chat::forMessageThread((int) $messageThread)->get();
+            $messageThread = MessageThread::forParticipant($user_id)
+                ->whereKey((int) $messageThread)
+                ->first();
+
+            if (! $messageThread) {
+                return ApiErrorResponse::authorization(transportStatus: Response::HTTP_OK);
+            }
+
+            $allchat = Chat::forMessageThread($messageThread->id)->get();
 
             $chatList = [];
             foreach ($allchat as $chat) {
@@ -7092,6 +7102,17 @@ class ApiController extends Controller
             $user_id = auth('sanctum')->user()->id;
 
             $chat = Chat::find($chat_id);
+            if (! $chat) {
+                $response['success'] = false;
+                $response['message'] = 'not found';
+
+                return $response;
+            }
+
+            if (! $chat->isParticipant($user_id)) {
+                return ApiErrorResponse::authorization(transportStatus: Response::HTTP_OK);
+            }
+
             $delete = $chat->delete();
             if ($delete) {
                 $response['success'] = true;
@@ -7153,6 +7174,13 @@ class ApiController extends Controller
                 'react',
             ]);
             $chat = Chat::find($form_data['messageId']);
+            if (! $chat) {
+                return ApiErrorResponse::notFound('not found', Response::HTTP_OK);
+            }
+
+            if (! $chat->isParticipant(auth('sanctum')->user()->id)) {
+                return ApiErrorResponse::authorization(transportStatus: Response::HTTP_OK);
+            }
 
             $reactionValue = $chat->react;
 

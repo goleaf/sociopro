@@ -33,8 +33,11 @@ The original legacy route variable was `reciver`; the current checkout already
 uses `{receiver}` for the web inbox route while keeping legacy request and
 storage fields.
 
-`chat.load` and `search.chat` currently read raw `$_GET` values instead of the
-Laravel `Request` object.
+`chat.load` and `search.chat` now read query-string values from the Laravel
+`Request` object instead of raw PHP superglobals.
+
+`search.chat` keeps the legacy HTML-string response contract, but contact rows
+are now rendered through an escaped Blade partial.
 
 ## API Routes Covered
 
@@ -102,22 +105,31 @@ array on success.
 - `success`
 - `message`
 
+## Authorization Behavior Covered
+
+- `GET /chat/own/remove/{id}` only deletes a message when the authenticated
+  web user is the sender or receiver.
+- `POST /my_message_react` only updates a reaction when the authenticated web
+  user is the sender or receiver.
+- `GET /api/chat_msg/{message_thread}` only returns messages when the Sanctum
+  user participates in the requested thread.
+- `POST /api/remove_chat/{chat_id}` only deletes a message when the Sanctum
+  user is the sender or receiver.
+- `POST /api/react_chat` only updates a reaction when the Sanctum user is the
+  sender or receiver.
+- Legacy API authorization failures keep HTTP 200 transport compatibility and
+  return the standard `AUTHORIZATION_ERROR` payload.
+
 ## Known Unsafe Behavior
 
-- Web chat deletion uses `GET chat/own/remove/{id}` and currently deletes by
-  global message ID without ownership authorization.
-- The standalone `chat.read` web route is currently registered without an `{id}`
-  route parameter even though `ChatController::chat_read_option()` requires one;
-  `chat.load` still marks messages read by calling the method internally.
-- API chat deletion currently deletes by global message ID without ownership
-  authorization.
-- API chat message lookup currently returns messages by global thread ID without
-  participant authorization.
-- Chat search returns a concatenated HTML string built in the controller.
-  User-supplied names and last-message text should be escaped during the future
-  frontend/security refactor.
-- `chat.load` and `search.chat` depend on raw PHP superglobals, which makes the
-  endpoints harder to test and less consistent with Laravel request handling.
+- Web chat deletion still uses state-changing `GET chat/own/remove/{id}`;
+  participant authorization is enforced, but the route verb still needs a
+  CSRF-protected migration.
+- The standalone `chat.read` web route keeps its query-string `id` contract and
+  now resolves that input through the Laravel `Request` object.
+- `search.chat` still performs a per-contact last-message lookup in the
+  controller. Move that query work into a scoped query/action with query-count
+  coverage before broadening the search UI.
 - Web chat upload validation has no explicit file-size limit in the current
   controller path.
 - API chat upload validation rejects invalid extensions before creating media

@@ -60,15 +60,14 @@ class LegacyApiChatTest extends TestCase
             ]);
     }
 
-    public function test_api_chat_messages_route_returns_messages_for_current_thread_parameter_and_allows_global_lookup(): void
+    public function test_api_chat_messages_route_returns_messages_for_current_thread_participant(): void
     {
         $sender = $this->activeUser();
         $receiver = $this->activeUser(['name' => 'Thread Receiver']);
-        $unrelatedUser = $this->activeUser();
         $thread = $this->createThread($sender, $receiver);
         $chat = $this->createChat($thread, $receiver, $sender, 'Legacy API thread message');
 
-        $this->getJson(route('api.chat.messages.index', $thread->id), $this->apiHeaders($unrelatedUser))
+        $this->getJson(route('api.chat.messages.index', $thread->id), $this->apiHeaders($sender))
             ->assertOk()
             ->assertJsonFragment([
                 'id' => $chat->id,
@@ -96,6 +95,30 @@ class LegacyApiChatTest extends TestCase
                     'react',
                     'msg_time',
                     'read',
+                ],
+            ]);
+    }
+
+    public function test_api_chat_messages_route_denies_unrelated_authenticated_user(): void
+    {
+        $sender = $this->activeUser();
+        $receiver = $this->activeUser();
+        $unrelatedUser = $this->activeUser();
+        $thread = $this->createThread($sender, $receiver);
+
+        $this->createChat($thread, $receiver, $sender, 'Protected API thread message');
+
+        $this->getJson(route('api.chat.messages.index', $thread->id), $this->apiHeaders($unrelatedUser))
+            ->assertOk()
+            ->assertJson([
+                'success' => false,
+                'message' => 'Forbidden',
+                'error' => [
+                    'code' => 'AUTHORIZATION_ERROR',
+                    'category' => 'authorization',
+                    'message' => 'Forbidden',
+                    'http_status' => 403,
+                    'details' => [],
                 ],
             ]);
     }
@@ -185,15 +208,14 @@ class LegacyApiChatTest extends TestCase
         ]);
     }
 
-    public function test_api_remove_chat_deletes_message_and_currently_allows_cross_user_delete(): void
+    public function test_api_remove_chat_deletes_message_for_participant(): void
     {
         $sender = $this->activeUser();
         $receiver = $this->activeUser();
-        $unrelatedUser = $this->activeUser();
         $thread = $this->createThread($sender, $receiver);
         $chat = $this->createChat($thread, $sender, $receiver, 'API removable message');
 
-        $this->postJson(route('api.chat.messages.destroy', $chat->id), [], $this->apiHeaders($unrelatedUser))
+        $this->postJson(route('api.chat.messages.destroy', $chat->id), [], $this->apiHeaders($sender))
             ->assertOk()
             ->assertJson([
                 'success' => true,
@@ -201,6 +223,31 @@ class LegacyApiChatTest extends TestCase
             ]);
 
         $this->assertDatabaseMissing('chats', ['id' => $chat->id]);
+    }
+
+    public function test_api_remove_chat_denies_unrelated_authenticated_user(): void
+    {
+        $sender = $this->activeUser();
+        $receiver = $this->activeUser();
+        $unrelatedUser = $this->activeUser();
+        $thread = $this->createThread($sender, $receiver);
+        $chat = $this->createChat($thread, $sender, $receiver, 'API protected removable message');
+
+        $this->postJson(route('api.chat.messages.destroy', $chat->id), [], $this->apiHeaders($unrelatedUser))
+            ->assertOk()
+            ->assertJson([
+                'success' => false,
+                'message' => 'Forbidden',
+                'error' => [
+                    'code' => 'AUTHORIZATION_ERROR',
+                    'category' => 'authorization',
+                    'message' => 'Forbidden',
+                    'http_status' => 403,
+                    'details' => [],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('chats', ['id' => $chat->id]);
     }
 
     public function test_api_chat_read_option_marks_only_auth_users_unread_messages(): void
@@ -243,6 +290,34 @@ class LegacyApiChatTest extends TestCase
             ->assertExactJson([]);
 
         $this->assertDatabaseHas('chats', ['id' => $chat->id, 'react' => 'haha']);
+    }
+
+    public function test_api_react_chat_denies_unrelated_authenticated_user(): void
+    {
+        $sender = $this->activeUser();
+        $receiver = $this->activeUser();
+        $unrelatedUser = $this->activeUser();
+        $thread = $this->createThread($sender, $receiver);
+        $chat = $this->createChat($thread, $sender, $receiver, 'API protected reaction message');
+
+        $this->postJson(route('api.chat.reactions.store'), [
+            'messageId' => $chat->id,
+            'react' => 'haha',
+        ], $this->apiHeaders($unrelatedUser))
+            ->assertOk()
+            ->assertJson([
+                'success' => false,
+                'message' => 'Forbidden',
+                'error' => [
+                    'code' => 'AUTHORIZATION_ERROR',
+                    'category' => 'authorization',
+                    'message' => 'Forbidden',
+                    'http_status' => 403,
+                    'details' => [],
+                ],
+            ]);
+
+        $this->assertDatabaseHas('chats', ['id' => $chat->id, 'react' => null]);
     }
 
     public function test_api_chat_save_rejects_invalid_upload_extension_without_creating_media(): void

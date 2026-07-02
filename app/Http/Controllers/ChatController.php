@@ -171,7 +171,10 @@ class ChatController extends Controller
 
     public function remove_chat($id)
     {
-        $chat = Chat::find($id);
+        $chat = Chat::findOrFail($id);
+
+        abort_unless($chat->isParticipant((int) auth()->id()), 403);
+
         $chat->delete();
 
         return redirect()->back();
@@ -185,11 +188,14 @@ class ChatController extends Controller
             'react',
         ]);
         if ($form_data['requestType'] == 'update') {
-            $chat = Chat::find($form_data['messageId']);
+            $chat = Chat::findOrFail($form_data['messageId']);
+
+            abort_unless($chat->isParticipant((int) auth()->id()), 403);
+
             $chat->react = $form_data['react'];
             $chat->save();
 
-            $page_data['message'] = Chat::find($form_data['messageId']);
+            $page_data['message'] = $chat;
             $message = view('frontend.chat.chat_react', $page_data)->render();
             $response = ['elemSelector' => '#ShowReactId_'.$form_data['messageId'], 'content' => $message];
 
@@ -197,10 +203,10 @@ class ChatController extends Controller
         }
     }
 
-    public function search_chat()
+    public function search_chat(Request $request)
     {
         $messageThreadsUserId = [];
-        $search = $_GET['search'];
+        $search = (string) $request->query('search', '');
         $view_btn_text = 'View Profile';
         $output = '';
 
@@ -218,77 +224,63 @@ class ChatController extends Controller
         foreach ($users as $key => $user) {
             $lastMsg = Chat::betweenParticipants(auth()->user()->id, $user->id)->limit(1)->orderBy('id', 'desc')->first();
 
-            $lastText = $lastMsg->thumbsup == '1' ? "<i class='fa-solid fa-thumbs-up'></i>" : $lastMsg->message;
-            $output .= '<div class="single-contact d-flex align-items-center justify-content-between">
-                        <div class="avatar d-flex align-items-center">
-                            <a href="'.route('chat', $user->id).' " class="d-flex align-items-center">
-                                <div class="avatar me-3">
-                                    <img src=" '.get_user_image($user->photo, 'optimized').' " class="img-fluid rounded-circle h-39" alt="">
-                                    
-                                </div>
-                            </a>
-                            <div class="avatar-info">
-                                <a href=" '.route('chat', $user->id).' "><h3 class="h6 mb-0"> '.$user->name.'</h3></a>
-                                <span>'.$lastText.'</span>
-                            </div>
-                        </div>
-                        <div class="m-user-action">
-                            <div class="post-controls dropdown dotted">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
-                                    role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                </a>
-                                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item" href="#"><i class="fa fa-user"></i>'.get_phrase($view_btn_text).'</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>';
+            $output .= view('frontend.chat.search-contact', [
+                'chatUrl' => route('chat', $user->id),
+                'imageUrl' => get_user_image($user->photo, 'optimized'),
+                'isThumbsup' => (int) $lastMsg->thumbsup === 1,
+                'lastMessage' => (string) $lastMsg->message,
+                'userName' => (string) $user->name,
+                'viewProfileText' => get_phrase($view_btn_text),
+            ])->render();
         }
 
         return $output;
     }
 
-    public function chat_load()
+    public function chat_load(Request $request)
     {
-        $id = $_GET['id'];
+        $id = $request->integer('id');
         $messageThread = MessageThread::betweenParticipants(auth()->user()->id, (int) $id)->first();
         $page_data['message'] = Chat::forMessageThread($messageThread->id)
             ->unreadForReceiver(auth()->user()->id)
             ->get();
         $message = view('frontend.chat.single-message', $page_data)->render();
-        $this->chat_read_option($id);
+        $this->markUnreadMessagesReadForAuthenticatedUser((int) $id);
         $response = ['appendElement' => '#message_body', 'content' => $message];
 
         return json_encode($response);
     }
 
-    public function chat_read_option($id)
+    public function chat_read_option(Request $request)
     {
-        $messageThread = MessageThread::betweenParticipants(auth()->user()->id, (int) $id)->first();
-        if (! empty($messageThread)) {
-            $done = Chat::forMessageThread($messageThread->id)
-                ->unreadForReceiver(auth()->user()->id)
-                ->update(['read_status' => '1']);
-        }
-    }
+        $receiverId = $request->integer('id');
 
-    // not using right now if need then we can use this
-    public function chat_read_optionN()
-    {
-        $id = $_GET['id'];
-        $messageThread = MessageThread::betweenParticipants(auth()->user()->id, (int) $id)->first();
-        if (! empty($messageThread)) {
-            return $done = Chat::forMessageThread($messageThread->id)
-                ->unreadForReceiver(auth()->user()->id)
-                ->update(['read_status' => '1']);
-
-            return $done;
+        if ($receiverId > 0) {
+            $this->markUnreadMessagesReadForAuthenticatedUser($receiverId);
         }
+
+        return response('');
     }
 
     private function receiverIdFromRequest(Request $request): int
     {
         return $request->integer('receiver_id') ?: $request->integer('reciver_id');
+    }
+
+    private function markUnreadMessagesReadForAuthenticatedUser(int $receiverId): int
+    {
+        $userId = (int) auth()->id();
+        $messageThread = MessageThread::betweenParticipants($userId, $receiverId)
+            ->select(['id'])
+            ->first();
+
+        if (! $messageThread) {
+            return 0;
+        }
+
+        return Chat::forMessageThread($messageThread->id)
+            ->unreadForReceiver($userId)
+            ->update(['read_status' => '1']);
     }
 
     private function authorizeMarketplaceProductChat(int $receiverId, int $productId): void

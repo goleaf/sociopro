@@ -218,7 +218,7 @@ class LegacyWebChatTest extends TestCase
         Storage::disk('public')->assertExists('chat/videos/'.$videoMedia->file_name.'.mp4');
     }
 
-    public function test_web_chat_read_route_currently_fails_because_route_does_not_bind_required_id(): void
+    public function test_web_chat_read_route_marks_only_auth_users_unread_messages(): void
     {
         $sender = $this->activeUser();
         $receiver = $this->activeUser();
@@ -232,26 +232,45 @@ class LegacyWebChatTest extends TestCase
         $unrelated = $this->createChat($unrelatedThread, $receiver, $otherUser, 'Unrelated unread');
 
         $this->actingAs($sender)
-            ->get(route('chat.read').'?id='.$receiver->id)
-            ->assertStatus(500);
+            ->get(route('chat.read', ['id' => $receiver->id]))
+            ->assertOk()
+            ->assertContent('');
 
-        $this->assertDatabaseHas('chats', ['id' => $incoming->id, 'read_status' => 0]);
+        $this->assertDatabaseHas('chats', ['id' => $incoming->id, 'read_status' => 1]);
         $this->assertDatabaseHas('chats', ['id' => $outgoing->id, 'read_status' => 0]);
         $this->assertDatabaseHas('chats', ['id' => $unrelated->id, 'read_status' => 0]);
+    }
+
+    public function test_web_chat_read_route_does_not_mark_messages_for_unrelated_user(): void
+    {
+        $sender = $this->activeUser();
+        $receiver = $this->activeUser();
+        $unrelatedUser = $this->activeUser();
+
+        $thread = $this->createThread($sender, $receiver);
+        $incoming = $this->createChat($thread, $receiver, $sender, 'Unread for sender');
+
+        $this->actingAs($unrelatedUser)
+            ->get(route('chat.read', ['id' => $receiver->id]))
+            ->assertOk()
+            ->assertContent('');
+
+        $this->assertDatabaseHas('chats', ['id' => $incoming->id, 'read_status' => 0]);
     }
 
     public function test_web_chat_load_returns_legacy_shape_and_marks_messages_read(): void
     {
         $sender = $this->activeUser();
         $receiver = $this->activeUser();
+        $wrongReceiver = $this->activeUser();
         $thread = $this->createThread($sender, $receiver);
         $incoming = $this->createChat($thread, $receiver, $sender, 'Load this unread message');
 
-        $_GET['id'] = (string) $receiver->id;
+        $_GET['id'] = (string) $wrongReceiver->id;
 
         try {
             $response = $this->actingAs($sender)
-                ->get(route('chat.load'));
+                ->get(route('chat.load', ['id' => $receiver->id]));
         } finally {
             unset($_GET['id']);
         }
@@ -263,20 +282,35 @@ class LegacyWebChatTest extends TestCase
         $this->assertDatabaseHas('chats', ['id' => $incoming->id, 'read_status' => 1]);
     }
 
-    public function test_web_remove_chat_deletes_message_and_redirects_even_for_unrelated_authenticated_user(): void
+    public function test_web_remove_chat_deletes_message_and_redirects_for_participant(): void
     {
         $sender = $this->activeUser();
         $receiver = $this->activeUser();
-        $unrelatedUser = $this->activeUser();
         $thread = $this->createThread($sender, $receiver);
-        $chat = $this->createChat($thread, $sender, $receiver, 'Message removed by unrelated user');
+        $chat = $this->createChat($thread, $sender, $receiver, 'Message removed by participant');
 
-        $this->actingAs($unrelatedUser)
+        $this->actingAs($sender)
             ->from(route('chat', ['receiver' => $receiver->id]))
             ->get(route('remove.chat', $chat->id))
             ->assertRedirect(route('chat', ['receiver' => $receiver->id]));
 
         $this->assertDatabaseMissing('chats', ['id' => $chat->id]);
+    }
+
+    public function test_web_remove_chat_forbids_unrelated_authenticated_user(): void
+    {
+        $sender = $this->activeUser();
+        $receiver = $this->activeUser();
+        $unrelatedUser = $this->activeUser();
+        $thread = $this->createThread($sender, $receiver);
+        $chat = $this->createChat($thread, $sender, $receiver, 'Message protected from unrelated user');
+
+        $this->actingAs($unrelatedUser)
+            ->from(route('chat', ['receiver' => $receiver->id]))
+            ->get(route('remove.chat', $chat->id))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('chats', ['id' => $chat->id]);
     }
 
     public function test_web_react_chat_updates_reaction_and_returns_rendered_partial_contract(): void
@@ -299,6 +333,23 @@ class LegacyWebChatTest extends TestCase
         $this->assertDatabaseHas('chats', ['id' => $chat->id, 'react' => 'love']);
     }
 
+    public function test_web_react_chat_forbids_unrelated_authenticated_user(): void
+    {
+        $sender = $this->activeUser();
+        $receiver = $this->activeUser();
+        $unrelatedUser = $this->activeUser();
+        $thread = $this->createThread($sender, $receiver);
+        $chat = $this->createChat($thread, $sender, $receiver, 'Reaction protected from unrelated user');
+
+        $this->actingAs($unrelatedUser)->post(route('react.chat'), [
+            'requestType' => 'update',
+            'messageId' => $chat->id,
+            'react' => 'wow',
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('chats', ['id' => $chat->id, 'react' => null]);
+    }
+
     public function test_web_chat_search_returns_html_for_existing_chat_contacts_only(): void
     {
         $sender = $this->activeUser(['name' => 'Search Sender']);
@@ -308,11 +359,11 @@ class LegacyWebChatTest extends TestCase
 
         $this->createChat($thread, $receiver, $sender, 'Searchable latest message');
 
-        $_GET['search'] = 'Legacy Search';
+        $_GET['search'] = 'No Matches From Superglobal';
 
         try {
             $response = $this->actingAs($sender)
-                ->get(route('search.chat'));
+                ->get(route('search.chat', ['search' => 'Legacy Search']));
         } finally {
             unset($_GET['search']);
         }
@@ -322,6 +373,25 @@ class LegacyWebChatTest extends TestCase
             ->assertSee('single-contact', false)
             ->assertSee('Legacy Search Contact', false)
             ->assertDontSee($nonContact->name, false);
+    }
+
+    public function test_web_chat_search_escapes_contact_name_and_last_message(): void
+    {
+        $sender = $this->activeUser(['name' => 'Search Sender']);
+        $receiver = $this->activeUser(['name' => 'Unsafe Search <script>alert("name")</script>']);
+        $thread = $this->createThread($sender, $receiver);
+
+        $this->createChat($thread, $receiver, $sender, '<img src=x onerror=alert("message")>');
+
+        $response = $this->actingAs($sender)
+            ->get(route('search.chat', ['search' => 'Unsafe Search']));
+
+        $response
+            ->assertOk()
+            ->assertSee(e($receiver->name), false)
+            ->assertSee(e('<img src=x onerror=alert("message")>'), false)
+            ->assertDontSee($receiver->name, false)
+            ->assertDontSee('<img src=x onerror=alert("message")>', false);
     }
 
     /**

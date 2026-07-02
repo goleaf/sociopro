@@ -53,6 +53,20 @@ class Chat extends Model
         });
     }
 
+    public function scopeForParticipant(Builder $query, int $userId): Builder
+    {
+        return $query->where(function (Builder $query) use ($userId): void {
+            $query->where('sender_id', $userId)
+                ->orWhere('reciver_id', $userId);
+        });
+    }
+
+    public function isParticipant(int $userId): bool
+    {
+        return (int) $this->sender_id === $userId
+            || (int) $this->reciver_id === $userId;
+    }
+
     public function messageThread(): BelongsTo
     {
         return $this->belongsTo(MessageThread::class, 'message_thrade');

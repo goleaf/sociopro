@@ -27,24 +27,34 @@ class AddonPackageImportTest extends TestCase
 
     private string $stepMarkerPath;
 
+    private string $distributedPath;
+
+    private string $nestedZipPath;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->packagePath = storage_path('framework/testing/addon-package.zip');
         $this->stepMarkerPath = storage_path('framework/testing/addon-step-executed.txt');
+        $this->distributedPath = base_path('storage/framework/testing/addon-distributed');
+        $this->nestedZipPath = storage_path('framework/testing/addon-nested.zip');
 
         File::delete($this->packagePath);
+        File::delete($this->nestedZipPath);
         File::delete($this->stepMarkerPath);
         File::delete(base_path('evil-addon.txt'));
+        File::deleteDirectory($this->distributedPath);
         File::ensureDirectoryExists(dirname($this->packagePath));
     }
 
     protected function tearDown(): void
     {
         File::delete($this->packagePath);
+        File::delete($this->nestedZipPath);
         File::delete($this->stepMarkerPath);
         File::delete(base_path('evil-addon.txt'));
+        File::deleteDirectory($this->distributedPath);
 
         parent::tearDown();
     }
@@ -158,6 +168,206 @@ class AddonPackageImportTest extends TestCase
         $this->assertFalse(File::exists(base_path('evil-addon.txt')));
     }
 
+    public function test_import_action_is_container_resolvable_and_accepts_uploaded_file_packages(): void
+    {
+        $this->assertInstanceOf(ImportAddonPackage::class, app(ImportAddonPackage::class));
+        $this->createAddonPackage($this->packagePath, 'uploaded-addon');
+
+        $result = app(ImportAddonPackage::class)->handle(
+            new UploadedFile($this->packagePath, 'uploaded-addon.zip', 'application/zip', null, true)
+        );
+
+        $this->assertSame('Addon installed successfully', $result->message);
+        $this->assertSame(1, Addon::query()->where('unique_identifier', 'uploaded-addon')->count());
+    }
+
+    public function test_it_rejects_missing_and_invalid_package_files(): void
+    {
+        $this->assertImportFails('/missing/addon.zip', 'Addon package was not found.');
+
+        File::put($this->packagePath, 'not a zip file');
+
+        $this->assertImportFails($this->packagePath, 'Addon package could not be opened.');
+    }
+
+    public function test_it_requires_exactly_one_manifest_root(): void
+    {
+        $this->createPackageFromEntries([
+            'addon/readme.txt' => 'missing manifest',
+        ]);
+
+        $this->assertImportFails($this->packagePath, 'Addon package must contain one step2_config.json manifest.');
+
+        $this->createPackageFromEntries([
+            'addon-a/step2_config.json' => $this->manifest('addon-a'),
+            'addon-b/step2_config.json' => $this->manifest('addon-b'),
+        ]);
+
+        $this->assertImportFails($this->packagePath, 'Addon package must contain one step2_config.json manifest.');
+    }
+
+    public function test_it_accepts_top_level_manifest_root(): void
+    {
+        $this->createPackageFromEntries([
+            'step2_config.json' => $this->manifest('top-level-addon'),
+        ]);
+
+        $result = app(ImportAddonPackage::class)->handle($this->packagePath);
+
+        $this->assertSame('Addon installed successfully', $result->message);
+        $this->assertSame(1, Addon::query()->where('unique_identifier', 'top-level-addon')->count());
+    }
+
+    public function test_it_rejects_invalid_manifest_json(): void
+    {
+        $this->createPackageFromEntries([
+            'broken-addon/step2_config.json' => '{',
+        ]);
+
+        $this->assertImportFails($this->packagePath, 'Addon manifest is not valid JSON.');
+    }
+
+    public function test_it_rejects_incompatible_addon_and_product_update_versions(): void
+    {
+        DB::table('settings')->where('type', 'version')->update(['description' => '1.0.0']);
+
+        $this->createPackageFromEntries([
+            'future-addon/step2_config.json' => $this->addonManifest(
+                addons: [[
+                    'unique_identifier' => 'future-addon',
+                    'title' => 'Future addon',
+                    'features' => 'Requires newer product',
+                ]],
+                minimumProductVersion: '9.9.9'
+            ),
+        ]);
+
+        $this->assertImportFails($this->packagePath, "You have to update your main application's version.");
+
+        $this->createPackageFromEntries([
+            'skipped-update/step2_config.json' => $this->productUpdateManifest(
+                minimumProductVersion: '1.1.0',
+                updateVersion: '1.2.0'
+            ),
+        ]);
+
+        $this->assertImportFails($this->packagePath, 'It looks like you are skipping a version.');
+    }
+
+    public function test_it_reports_product_updates_and_addon_updates_with_distinct_success_messages(): void
+    {
+        DB::table('settings')->where('type', 'version')->update(['description' => '1.0.0']);
+
+        $this->createPackageFromEntries([
+            'product-update/step2_config.json' => $this->productUpdateManifest(
+                minimumProductVersion: '1.0.0',
+                updateVersion: '1.1.0'
+            ),
+        ]);
+
+        $productUpdate = app(ImportAddonPackage::class)->handle($this->packagePath);
+
+        $this->assertSame('Version updated successfully', $productUpdate->message);
+        $this->assertSame('1.1.0', DB::table('settings')->where('type', 'version')->value('description'));
+
+        $this->createPackageFromEntries([
+            'addon-update/step2_config.json' => $this->addonManifest(
+                addons: [[
+                    'unique_identifier' => 'addon-update',
+                    'title' => 'Addon update',
+                    'features' => 'Update fixture',
+                ]],
+                minimumProductVersion: '1.1.0',
+                minimumAddonVersion: '1.0.0',
+                updateVersion: '1.2.0'
+            ),
+        ]);
+
+        $addonUpdate = app(ImportAddonPackage::class)->handle($this->packagePath);
+
+        $this->assertSame('Addon updated successfully', $addonUpdate->message);
+        $this->assertSame('1.2.0', Addon::query()->where('unique_identifier', 'addon-update')->value('version'));
+    }
+
+    public function test_it_distributes_sources_in_batches_and_extracts_nested_zip_files(): void
+    {
+        $this->createNestedZip([
+            'nested-inner.txt' => 'nested contents',
+        ]);
+
+        $this->createPackageFromEntries([
+            'source-addon/step2_config.json' => $this->manifest('source-addon'),
+            'source-addon/sources/storage/framework/testing/addon-distributed/copied.txt' => 'copied contents',
+            'source-addon/sources/storage/framework/testing/addon-distributed/nested.zip' => File::get($this->nestedZipPath),
+        ]);
+
+        $result = app(ImportAddonPackage::class)->handle($this->packagePath, batchSize: 1);
+
+        $this->assertSame(2, $result->filesDistributed);
+        $this->assertSame('copied contents', File::get($this->distributedPath.'/copied.txt'));
+        $this->assertSame('nested contents', File::get($this->distributedPath.'/nested-inner.txt'));
+        $this->assertFalse(File::exists($this->distributedPath.'/nested.zip'));
+    }
+
+    public function test_it_rejects_unsafe_nested_zip_entries(): void
+    {
+        $this->createNestedZip([
+            '../evil-addon.txt' => 'owned',
+        ]);
+
+        $this->createPackageFromEntries([
+            'nested-unsafe-addon/step2_config.json' => $this->manifest('nested-unsafe-addon'),
+            'nested-unsafe-addon/sources/storage/framework/testing/addon-distributed/nested.zip' => File::get($this->nestedZipPath),
+        ]);
+
+        $this->assertImportFails($this->packagePath, 'Addon package contains an unsafe path.');
+        $this->assertFalse(File::exists(base_path('evil-addon.txt')));
+    }
+
+    public function test_it_upserts_multiple_addons_with_parent_relationship(): void
+    {
+        $this->createPackageFromEntries([
+            'multi-addon/step2_config.json' => $this->addonManifest([
+                [
+                    'unique_identifier' => 'parent-addon',
+                    'title' => 'Parent addon',
+                    'features' => 'Parent fixture',
+                ],
+                [
+                    'unique_identifier' => 'child-addon',
+                    'title' => 'Child addon',
+                    'features' => 'Child fixture',
+                ],
+            ]),
+        ]);
+
+        $result = app(ImportAddonPackage::class)->handle($this->packagePath);
+
+        $parent = Addon::query()->where('unique_identifier', 'parent-addon')->firstOrFail();
+        $child = Addon::query()->where('unique_identifier', 'child-addon')->firstOrFail();
+
+        $this->assertSame(2, $result->addonRowsUpserted);
+        $this->assertNull($parent->parent_id);
+        $this->assertSame($parent->id, $child->parent_id);
+        $this->assertSame('1.0.0', $child->version);
+        $this->assertSame(1, $child->status);
+    }
+
+    public function test_zip_path_safety_rules_cover_private_path_checker(): void
+    {
+        $method = new \ReflectionMethod(ImportAddonPackage::class, 'isUnsafeZipPath');
+        $method->setAccessible(true);
+        $importer = app(ImportAddonPackage::class);
+
+        foreach (['', '../evil.txt', 'safe/../../evil.txt', '/absolute.txt', 'C:/absolute.txt', "null\0byte.txt"] as $path) {
+            $this->assertTrue($method->invoke($importer, $path), "Expected [{$path}] to be unsafe.");
+        }
+
+        foreach (['safe/file.txt', 'safe/nested/file.txt', 'storage/framework/testing/copied.txt'] as $path) {
+            $this->assertFalse($method->invoke($importer, $path), "Expected [{$path}] to be safe.");
+        }
+    }
+
     private function createAddonPackage(string $path, string $identifier): void
     {
         $zip = new ZipArchive;
@@ -185,23 +395,84 @@ SQL);
         $zip->close();
     }
 
+    /**
+     * @param  array<string, string>  $entries
+     */
+    private function createPackageFromEntries(array $entries): void
+    {
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($this->packagePath, ZipArchive::CREATE | ZipArchive::OVERWRITE));
+
+        foreach ($entries as $path => $contents) {
+            $zip->addFromString($path, $contents);
+        }
+
+        $zip->close();
+    }
+
+    /**
+     * @param  array<string, string>  $entries
+     */
+    private function createNestedZip(array $entries): void
+    {
+        $zip = new ZipArchive;
+        $this->assertTrue($zip->open($this->nestedZipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE));
+
+        foreach ($entries as $path => $contents) {
+            $zip->addFromString($path, $contents);
+        }
+
+        $zip->close();
+    }
+
+    private function assertImportFails(string $packagePath, string $expectedMessage): void
+    {
+        try {
+            app(ImportAddonPackage::class)->handle($packagePath);
+            $this->fail("Import should have failed with [{$expectedMessage}].");
+        } catch (RuntimeException $exception) {
+            $this->assertSame($expectedMessage, $exception->getMessage());
+        }
+    }
+
     private function manifest(string $identifier): string
     {
+        return $this->addonManifest([[
+            'unique_identifier' => $identifier,
+            'title' => 'Safe addon',
+            'features' => 'Import hardening fixture',
+        ]]);
+    }
+
+    /**
+     * @param  list<array{unique_identifier: string, title: string, features: string}>  $addons
+     */
+    private function addonManifest(
+        array $addons,
+        string $minimumProductVersion = '0',
+        string $minimumAddonVersion = '0',
+        string $updateVersion = '1.0.0'
+    ): string {
         return json_encode([
             'is_addon' => '1',
             'product_version' => [
-                'minimum_required_version' => '0',
+                'minimum_required_version' => $minimumProductVersion,
             ],
             'addon_version' => [
-                'minimum_required_version' => '0',
-                'update_version' => '1.0.0',
+                'minimum_required_version' => $minimumAddonVersion,
+                'update_version' => $updateVersion,
             ],
-            'addons' => [
-                [
-                    'unique_identifier' => $identifier,
-                    'title' => 'Safe addon',
-                    'features' => 'Import hardening fixture',
-                ],
+            'addons' => $addons,
+        ], JSON_THROW_ON_ERROR);
+    }
+
+    private function productUpdateManifest(string $minimumProductVersion, string $updateVersion): string
+    {
+        return json_encode([
+            'is_addon' => '0',
+            'product_version' => [
+                'minimum_required_version' => $minimumProductVersion,
+                'update_version' => $updateVersion,
             ],
         ], JSON_THROW_ON_ERROR);
     }
