@@ -5,6 +5,7 @@ namespace App\Queries\Marketplace;
 use App\Models\Marketplace;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\Paginator;
 use LogicException;
 
 final class MarketplaceProductsQuery
@@ -44,6 +45,55 @@ final class MarketplaceProductsQuery
      */
     public function handle(array $filters): Collection
     {
+        return $this->query($filters)
+            ->forPage($filters['page'], $filters['per_page'])
+            ->get();
+    }
+
+    /**
+     * @param  array{
+     *     search: mixed,
+     *     category: mixed,
+     *     condition: mixed,
+     *     min: mixed,
+     *     max: mixed,
+     *     brand: mixed,
+     *     location: mixed,
+     *     sort: string,
+     *     direction: string,
+     *     page: int,
+     *     per_page: int,
+     *     date_from: mixed,
+     *     date_to: mixed
+     * }  $filters
+     * @return Paginator<int, Marketplace>
+     */
+    public function paginate(array $filters): Paginator
+    {
+        return $this->query($filters)
+            ->simplePaginate($filters['per_page'], ['*'], 'page', $filters['page']);
+    }
+
+    /**
+     * @param  array{
+     *     search: mixed,
+     *     category: mixed,
+     *     condition: mixed,
+     *     min: mixed,
+     *     max: mixed,
+     *     brand: mixed,
+     *     location: mixed,
+     *     sort: string,
+     *     direction: string,
+     *     page: int,
+     *     per_page: int,
+     *     date_from: mixed,
+     *     date_to: mixed
+     * }  $filters
+     * @return Builder<Marketplace>
+     */
+    private function query(array $filters): Builder
+    {
         $query = Marketplace::query()
             ->with(['getUser', 'getCategory', 'getBrand', 'getCurrency'])
             ->where('status', 1);
@@ -56,9 +106,7 @@ final class MarketplaceProductsQuery
         $this->applyDateRange($query, $filters['date_from'], $filters['date_to']);
         $this->applySorting($query, $filters['sort'], $filters['direction']);
 
-        return $query
-            ->forPage($filters['page'], $filters['per_page'])
-            ->get();
+        return $query;
     }
 
     private function applySearchAndLocation(Builder $query, mixed $search, mixed $location): void

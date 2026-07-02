@@ -37,6 +37,7 @@ class FilterMarketplaceRequest extends ApiFormRequest
             'sort.in' => __('marketplace.validation.messages.in_values'),
             'direction.in' => __('marketplace.validation.messages.in_values'),
             'per_page.max' => __('marketplace.validation.messages.per_page_max'),
+            'include_pagination.boolean' => __('validation.boolean', ['attribute' => __('marketplace.validation.attributes.include_pagination')]),
         ];
     }
 
@@ -71,6 +72,7 @@ class FilterMarketplaceRequest extends ApiFormRequest
             'direction' => ['nullable', 'string', Rule::in(self::ALLOWED_DIRECTIONS)],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_PER_PAGE],
+            'include_pagination' => ['nullable', 'boolean'],
             'date_from' => DateTimeRules::nullableBrowserDate(),
             'date_to' => ['nullable', 'date_format:'.DateTimeRules::BROWSER_DATE_FORMAT, 'after_or_equal:date_from'],
             'filters' => ['nullable', 'array'],
@@ -131,6 +133,11 @@ class FilterMarketplaceRequest extends ApiFormRequest
             'date_from' => $this->input('date_from', $createdBetween['from'] ?? null),
             'date_to' => $this->input('date_to', $createdBetween['to'] ?? null),
         ];
+    }
+
+    public function includePagination(): bool
+    {
+        return $this->boolean('include_pagination');
     }
 
     protected function prepareForValidation(): void

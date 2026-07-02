@@ -10,6 +10,7 @@ use App\Http\Requests\Api\Marketplace\DestroyMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\FilterMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\StoreMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\UpdateMarketplaceRequest;
+use App\Http\Resources\Api\MarketplaceCollection;
 use App\Models\Album_image;
 use App\Models\Albums;
 use App\Models\Blog;
@@ -60,9 +61,10 @@ use Carbon\Carbon;
 use DB;
 use Exception;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
@@ -4431,24 +4433,27 @@ class ApiController extends Controller
         return $response;
     }
 
-    public function marketplace(Request $request)
+    public function marketplace(FilterMarketplaceRequest $request)
     {
         $token = $request->bearerToken();
         $response = [];
 
         if (isset($token) && $token != '') {
             $user_id = auth('sanctum')->user()->id;
+            $filters = $request->filters();
 
-            $marketplace = Marketplace::with(['getUser', 'getCategory', 'getBrand', 'getCurrency'])
-                ->orderBy('id', 'Desc')
-                ->simplePaginate($this->marketplacePerPage($request))
-                ->getCollection();
+            $marketplaceQuery = Marketplace::query()
+                ->with(['getUser', 'getCategory', 'getBrand', 'getCurrency']);
 
-            if ($marketplace->isEmpty()) {
+            $this->applyMarketplaceSorting($marketplaceQuery, $filters['sort'], $filters['direction']);
+
+            $marketplace = $marketplaceQuery->simplePaginate($filters['per_page'], ['*'], 'page', $filters['page']);
+
+            if ($marketplace->getCollection()->isEmpty() && ! $request->includePagination()) {
                 $response['success'] = false;
                 $response['message'] = 'No marketplace found';
             } else {
-                $response = $this->marketplaceResponseRows($marketplace, $user_id);
+                return $this->marketplaceCollectionResponse($request, $marketplace, $user_id, $filters);
             }
         } else {
             $response['success'] = false;
@@ -4774,8 +4779,9 @@ class ApiController extends Controller
             $user_id = auth('sanctum')->user()->id;
 
             $filters = $request->filters();
-            $marketplace = $marketplaceProducts->handle($filters);
-            $response = $this->marketplaceResponseRows($marketplace, $user_id);
+            $marketplace = $marketplaceProducts->paginate($filters);
+
+            return $this->marketplaceCollectionResponse($request, $marketplace, $user_id, $filters);
         } else {
             $response['success'] = false;
             $response['message'] = 'Unauthorized access';
@@ -4785,56 +4791,43 @@ class ApiController extends Controller
     }
 
     /**
-     * @param  Collection<int, Marketplace>  $marketplace
-     * @return list<array<string, mixed>>
+     * @param  Paginator<int, Marketplace>  $marketplace
+     * @param  array<string, mixed>  $filters
      */
-    private function marketplaceResponseRows($marketplace, int $userId): array
-    {
-        if ($marketplace->isEmpty()) {
-            return [];
-        }
+    private function marketplaceCollectionResponse(
+        FilterMarketplaceRequest $request,
+        Paginator $marketplace,
+        int $userId,
+        array $filters
+    ): MarketplaceCollection {
+        $marketplace->appends($request->except('page'));
 
         $savedProductIds = SavedProduct::query()
             ->where('user_id', $userId)
-            ->whereIn('product_id', $marketplace->pluck('id'))
+            ->whereIn('product_id', $marketplace->getCollection()->pluck('id'))
             ->pluck('product_id')
             ->mapWithKeys(fn (int|string $productId): array => [(int) $productId => true]);
-        $messageThreadId = $this->marketplaceMessageThreadId($userId);
-        $pageArray = [];
 
-        foreach ($marketplace as $page) {
-            $user = $page->getUser;
-            $category = $page->getCategory;
-            $brand = $page->getBrand;
-            $currency = $page->getCurrency;
+        return new MarketplaceCollection(
+            $marketplace,
+            $userId,
+            $savedProductIds,
+            $this->marketplaceMessageThreadId($userId),
+            $filters,
+            $request->includePagination()
+        );
+    }
 
-            $pageArray[] = [
-                'id' => $page->id,
-                'thrade' => $messageThreadId,
-                'user_id' => $page->user_id,
-                'user' => $user->name,
-                'photo' => $this->loadedUserImageUrl($user->photo),
-                'title' => $page->title,
-                'price' => $page->price,
-                'category_id' => $page->category,
-                'status_id' => $page->status,
-                'brand_id' => $page->brand,
-                'currency_id' => $page->currency_id,
-                'condition' => $page->condition,
-                'status' => $page->status,
-                'category' => $category->name,
-                'brand' => $brand->name,
-                'currency' => $currency->name,
-                'is_Saved' => $savedProductIds->has((int) $page->id) ? 'saved' : 'not_saved',
-                'my_product' => $page->user_id == $userId ? 'my_product' : 'not_my_product',
-                'description' => $page->description,
-                'location' => $page->location != null ? $page->location : '',
-                'coverphoto' => get_group_event_photos($page->image, 'coverphoto', 'marketplace'),
-                'created_at' => date('d-m-Y', strtotime($page->created_at)),
-            ];
+    /**
+     * @param  Builder<Marketplace>  $query
+     */
+    private function applyMarketplaceSorting(Builder $query, string $sort, string $direction): void
+    {
+        $query->orderBy($sort, $direction);
+
+        if ($sort !== 'id') {
+            $query->orderBy('id', $direction);
         }
-
-        return $pageArray;
     }
 
     private function marketplaceMessageThreadId(int $userId): int
@@ -4843,36 +4836,6 @@ class ApiController extends Controller
             ->where('reciver_id', $userId)
             ->orWhere('sender_id', $userId)
             ->value('id') ?? 0);
-    }
-
-    private function marketplacePerPage(Request $request): int
-    {
-        $perPage = $request->integer('per_page', FilterMarketplaceRequest::DEFAULT_PER_PAGE);
-
-        if ($perPage < 1) {
-            return FilterMarketplaceRequest::DEFAULT_PER_PAGE;
-        }
-
-        return min($perPage, FilterMarketplaceRequest::MAX_PER_PAGE);
-    }
-
-    private function loadedUserImageUrl(?string $fileName, string $optimized = ''): string
-    {
-        $optimized = trim($optimized, '/');
-        $optimizedPath = $optimized === '' ? '' : $optimized.'/';
-        $fileName = $fileName ?: 'default.png';
-
-        if (str_contains($fileName, 'https://')) {
-            return $fileName;
-        }
-
-        $path = 'public/storage/userimage/'.$optimizedPath.$fileName;
-
-        if (File::exists($path) && is_file($path)) {
-            return url($path);
-        }
-
-        return url('public/storage/userimage/default.png');
     }
 
     // save for later in marketplace product

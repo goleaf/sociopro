@@ -32,6 +32,7 @@ return [
             'direction' => 'sort direction',
             'page' => 'page',
             'per_page' => 'items per page',
+            'include_pagination' => 'pagination envelope',
             'date_from' => 'start date',
             'date_to' => 'end date',
             'filters.search' => 'filter search term',

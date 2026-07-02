@@ -162,6 +162,9 @@ class ApiMarketplaceValidationTest extends TestCase
 
         $this->assertCount(20, $products);
         $this->assertSame($latestVisibleProduct->id, $products[0]['id']);
+        $this->assertSame('1', $response->headers->get('X-Pagination-Current-Page'));
+        $this->assertSame('20', $response->headers->get('X-Pagination-Per-Page'));
+        $this->assertSame('true', $response->headers->get('X-Pagination-Has-More-Pages'));
     }
 
     public function test_marketplace_index_uses_default_pagination_while_preserving_array_shape(): void
@@ -193,14 +196,148 @@ class ApiMarketplaceValidationTest extends TestCase
 
         $this->assertIsArray($products);
         $this->assertArrayNotHasKey('data', $products);
+        $this->assertArrayNotHasKey('marketplaces', $products);
+        $this->assertArrayNotHasKey('meta', $products);
         $this->assertCount(20, $products);
         $this->assertSame($latestProduct->id, $products[0]['id']);
+        $this->assertSame('1', $response->headers->get('X-Pagination-Current-Page'));
+        $this->assertSame('20', $response->headers->get('X-Pagination-Per-Page'));
+        $this->assertSame('true', $response->headers->get('X-Pagination-Has-More-Pages'));
+        $this->assertNotEmpty($response->headers->get('Link'));
 
         $secondPage = $this->withToken($this->apiToken)
             ->getJson(route('api.marketplace.index', ['page' => 2]));
 
         $secondPage->assertOk();
         $this->assertCount(5, $secondPage->json());
+        $this->assertSame('2', $secondPage->headers->get('X-Pagination-Current-Page'));
+        $this->assertSame('false', $secondPage->headers->get('X-Pagination-Has-More-Pages'));
+    }
+
+    public function test_marketplace_filter_can_return_standard_pagination_envelope_with_links_and_meta(): void
+    {
+        $owner = $this->authenticateApiUser();
+        [$category, $brand, $currency] = $this->createMarketplaceLookups();
+
+        $expensiveProduct = $this->marketplace([
+            'user_id' => $owner->id,
+            'title' => 'Expensive Product',
+            'price' => '300.00',
+            'location' => 'Vilnius',
+            'category' => (string) $category->id,
+            'condition' => 'new',
+            'status' => '1',
+            'brand' => (string) $brand->id,
+            'currency_id' => $currency->id,
+            'description' => 'Marketplace pagination envelope fixture.',
+        ]);
+        $cheapestProduct = $this->marketplace([
+            'user_id' => $owner->id,
+            'title' => 'Cheapest Product',
+            'price' => '100.00',
+            'location' => 'Vilnius',
+            'category' => (string) $category->id,
+            'condition' => 'new',
+            'status' => '1',
+            'brand' => (string) $brand->id,
+            'currency_id' => $currency->id,
+            'description' => 'Marketplace pagination envelope fixture.',
+        ]);
+        $middleProduct = $this->marketplace([
+            'user_id' => $owner->id,
+            'title' => 'Middle Product',
+            'price' => '200.00',
+            'location' => 'Vilnius',
+            'category' => (string) $category->id,
+            'condition' => 'new',
+            'status' => '1',
+            'brand' => (string) $brand->id,
+            'currency_id' => $currency->id,
+            'description' => 'Marketplace pagination envelope fixture.',
+        ]);
+
+        $response = $this->withToken($this->apiToken)->getJson($this->apiMarketplaceFilterUrl([
+            'sort' => 'price',
+            'direction' => 'asc',
+            'per_page' => 2,
+            'include_pagination' => true,
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure([
+                'marketplaces' => [
+                    [
+                        'id',
+                        'title',
+                        'price',
+                        'category',
+                        'brand',
+                        'currency',
+                        'is_Saved',
+                        'my_product',
+                    ],
+                ],
+                'links' => [
+                    'first',
+                    'prev',
+                    'next',
+                ],
+                'meta' => [
+                    'current_page',
+                    'per_page',
+                    'from',
+                    'to',
+                    'has_more_pages',
+                    'sort',
+                    'direction',
+                ],
+            ]);
+
+        $this->assertSame(
+            [$cheapestProduct->id, $middleProduct->id],
+            array_column($response->json('marketplaces'), 'id')
+        );
+        $this->assertSame(1, $response->json('meta.current_page'));
+        $this->assertSame(2, $response->json('meta.per_page'));
+        $this->assertSame(1, $response->json('meta.from'));
+        $this->assertSame(2, $response->json('meta.to'));
+        $this->assertTrue($response->json('meta.has_more_pages'));
+        $this->assertSame('price', $response->json('meta.sort'));
+        $this->assertSame('asc', $response->json('meta.direction'));
+        $this->assertStringContainsString('per_page=2', $response->json('links.next'));
+        $this->assertStringContainsString('sort=price', $response->json('links.next'));
+        $this->assertStringContainsString('direction=asc', $response->json('links.next'));
+        $this->assertSame('1', $response->headers->get('X-Pagination-Current-Page'));
+        $this->assertSame('2', $response->headers->get('X-Pagination-Per-Page'));
+        $this->assertSame('true', $response->headers->get('X-Pagination-Has-More-Pages'));
+
+        $this->assertNotSame($expensiveProduct->id, $response->json('marketplaces.0.id'));
+    }
+
+    public function test_marketplace_index_rejects_invalid_pagination_and_sorting_inputs(): void
+    {
+        $this->authenticateApiUser();
+
+        $response = $this->withToken($this->apiToken)->getJson(route('api.marketplace.index', [
+            'page' => 0,
+            'per_page' => 101,
+            'sort' => 'password',
+            'direction' => 'sideways',
+            'include_pagination' => 'definitely',
+        ]));
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure([
+                'validationError' => [
+                    'page',
+                    'per_page',
+                    'sort',
+                    'direction',
+                    'include_pagination',
+                ],
+            ]);
     }
 
     public function test_create_marketplace_rejects_invalid_json_body_without_creating_product(): void
