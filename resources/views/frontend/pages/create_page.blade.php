@@ -19,7 +19,7 @@
         <label for="#" >{{ get_phrase('Page Category') }}</label>
         <select name="category" id="category" class="form-control select border-0 bg-secondary" required>
             <option value="">{{ get_phrase('Select Category') }}</option>
-            @foreach (\App\Models\Pagecategory::all() as $category )
+            @foreach ($pageCategories as $category )
                 <option value="{{ $category->id }}">{{ $category->name }}</option>
             @endforeach
         </select>

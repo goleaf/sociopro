@@ -1,7 +1,3 @@
-@php
-    $page = \App\Models\Page::find($page_id);
-	
-@endphp
 <img class="uploaded_place_here image-fluid rounded mb-5" width="100%" src="{{get_page_cover_photo($page->coverphoto,"coverphoto")}}">
 
 <form class="ajaxForm" action="{{route('page.coverphoto',$page->id)}}" method="post" enctype="multipart/form-data">

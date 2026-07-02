@@ -4,17 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Enums\MediaFileType;
 use App\Enums\MembershipRole;
+use App\Http\Requests\Page\StorePageRequest;
+use App\Http\Requests\Page\UpdatePageCoverPhotoRequest;
+use App\Http\Requests\Page\UpdatePageInfoRequest;
+use App\Http\Requests\Page\UpdatePageRequest;
 use App\Models\Albums;
-use App\Models\Media_files;
+use App\Models\MediaFile;
 use App\Models\Page;
-use App\Models\Page_like;
+use App\Models\PageLike;
 use App\Models\Posts;
 use App\Queries\FriendshipsQuery;
 use App\Support\Files\FileUploader;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Validator;
-use Image;
+use Illuminate\Support\Facades\Gate;
 use Session;
 
 class PageController extends Controller
@@ -32,48 +36,51 @@ class PageController extends Controller
 
     public function pages()
     {
-        $pageLiked = [];
-        $likepages = Page_like::where('user_id', auth()->user()->id)->get();
-        foreach ($likepages as $likepage) {
-            $likepageid = $likepage->page_id;
-            array_push($pageLiked, $likepageid);
-        }
-        $page_data['mypages'] = Page::where('user_id', auth()->user()->id)->orderBy('id', 'DESC')->limit('5')->get();
-        $page_data['suggestedpages'] = Page::whereNotIn('id', $pageLiked)->get();
-        $page_data['likedpage'] = Page_like::where('user_id', auth()->user()->id)->orderBy('id', 'DESC')->limit('10')->get();
+        $userId = (int) auth()->id();
+        $likedPageIds = PageLike::query()
+            ->where('user_id', $userId)
+            ->pluck('page_id');
+
+        $page_data['mypages'] = $this->pageCardQuery($userId)
+            ->where('user_id', $userId)
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get();
+        $page_data['suggestedpages'] = $this->pageCardQuery($userId)
+            ->whereNotIn('id', $likedPageIds)
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get();
+        $page_data['likedpage'] = $this->pageCardQuery($userId)
+            ->whereIn('id', $likedPageIds)
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get();
         $page_data['view_path'] = 'frontend.pages.pages';
 
         return view('frontend.index', $page_data);
     }
 
-    public function store(Request $request)
+    public function store(StorePageRequest $request)
     {
-        $rules = [
-            'image' => 'mimes:jpeg,jpg,png,gif|nullable',
-            'name' => 'required|max:255',
-            'category' => 'required',
-        ];
-        $validator = Validator::make($request->only(array_keys($rules)), $rules);
-        if ($validator->fails()) {
-            return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
-        }
+        $validated = $request->validated();
 
         $file_name = null;
-        if ($request->image && ! empty($request->image)) {
-            $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
+        if ($request->hasFile('image')) {
+            $file_name = FileUploader::upload($request->file('image'), 'public/storage/pages/logo', 250);
         }
 
         $page = new Page;
-        $page->user_id = auth()->user()->id;
-        $page->title = $request->name;
-        $page->category_id = $request->category;
-        $page->description = $request->description;
+        $page->user_id = auth()->id();
+        $page->title = $validated['name'];
+        $page->category_id = $validated['category'];
+        $page->description = $validated['description'] ?? null;
         if ($file_name !== null) {
             $page->logo = $file_name;
         }
         $done = $page->save();
         if ($done) {
-            // $pagelike = new Page_like();
+            // $pagelike = new PageLike();
             // $pagelike->page_id = $page->id;
             // $pagelike->user_id = auth()->user()->id;
             // $pagelike->role = 'admin';
@@ -86,37 +93,28 @@ class PageController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdatePageRequest $request, $id)
     {
-        $rules = [
-            'image' => 'mimes:jpeg,jpg,png,gif|nullable',
-            'name' => 'required|max:255',
-            'category' => 'required',
-        ];
-        $validator = Validator::make($request->only(array_keys($rules)), $rules);
-        if ($validator->fails()) {
-            return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
-        }
+        $validated = $request->validated();
+        $page = Page::findOrFail($id);
 
-        $page = Page::find($id);
-        // previous image name
+        Gate::authorize('update', $page);
+
         $imagename = $page->logo;
         $file_name = null;
-        if ($request->image && ! empty($request->image)) {
-            $file_name = FileUploader::upload($request->image, 'public/storage/pages/logo', 250);
+        if ($request->hasFile('image')) {
+            $file_name = FileUploader::upload($request->file('image'), 'public/storage/pages/logo', 250);
         }
 
-        $page->user_id = auth()->user()->id;
-        $page->title = $request->name;
-        $page->category_id = $request->category;
-        $page->description = $request->description;
+        $page->title = $validated['name'];
+        $page->category_id = $validated['category'];
+        $page->description = $validated['description'] ?? null;
         if ($file_name !== null) {
             $page->logo = $file_name;
         }
         $done = $page->save();
         if ($done) {
-            // just put the file name and folder name nothing more :)
-            if (! empty($request->image)) {
+            if ($request->hasFile('image')) {
                 if (File::exists(public_path('storage/pages/logo/'.$imagename))) {
                     File::delete(public_path('storage/pages/logo/'.$imagename));
                 }
@@ -127,20 +125,22 @@ class PageController extends Controller
         return json_encode(['reload' => 1]);
     }
 
-    public function updatecoverphoto(Request $request, $id)
+    public function updatecoverphoto(UpdatePageCoverPhotoRequest $request, $id)
     {
-        $page = Page::find($id);
+        $page = Page::findOrFail($id);
+
+        Gate::authorize('update', $page);
+
         $imagename = $page->coverphoto;
 
-        if ($request->cover_photo && ! empty($request->cover_photo)) {
-            $file_name = FileUploader::upload($request->cover_photo, 'public/storage/pages/coverphoto', 1120);
+        if ($request->hasFile('cover_photo')) {
+            $file_name = FileUploader::upload($request->file('cover_photo'), 'public/storage/pages/coverphoto', 1120);
 
             $page->coverphoto = $file_name;
         }
         $done = $page->save();
         if ($done) {
-            // just put the file name and folder name nothing more :)
-            if (! empty($request->cover_photo)) {
+            if ($request->hasFile('cover_photo')) {
                 if (File::exists(public_path('storage/pages/coverphoto/'.$imagename))) {
                     File::delete(public_path('storage/pages/coverphoto/'.$imagename));
                 }
@@ -151,12 +151,16 @@ class PageController extends Controller
         return json_encode(['reload' => 1]);
     }
 
-    public function updateinfo(Request $request, $id)
+    public function updateinfo(UpdatePageInfoRequest $request, $id)
     {
-        $page = Page::find($id);
-        $page->job = $request->job;
-        $page->lifestyle = $request->lifestyle;
-        $page->location = $request->location;
+        $validated = $request->validated();
+        $page = Page::findOrFail($id);
+
+        Gate::authorize('update', $page);
+
+        $page->job = $validated['job'] ?? null;
+        $page->lifestyle = $validated['lifestyle'] ?? null;
+        $page->location = $validated['location'] ?? null;
         $page->save();
         Session::flash('success_message', get_phrase('Info Updated Successfully'));
 
@@ -177,13 +181,13 @@ class PageController extends Controller
     {
         $friendsid = FriendshipsQuery::acceptedFriendIdsForUser(auth()->user());
 
-        $all_videos = Media_files::where('page_id', $id)
+        $all_videos = MediaFile::where('page_id', $id)
             ->ofType(MediaFileType::Video)
             ->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;
 
-        $all_photos = Media_files::where('page_id', $id)
+        $all_photos = MediaFile::where('page_id', $id)
             ->take(30)->orderBy('id', 'DESC')->get();
         $page_data['all_photos'] = $all_photos;
 
@@ -195,7 +199,7 @@ class PageController extends Controller
             ->orderBy('posts.post_id', 'DESC')->get();
 
         $page_data['posts'] = $posts;
-        $page_data['suggestedpages'] = Page_like::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
+        $page_data['suggestedpages'] = PageLike::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
         $page_data['page'] = Page::find($id);
 
         $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())
@@ -210,14 +214,14 @@ class PageController extends Controller
     {
         $friendsid = FriendshipsQuery::acceptedFriendIdsForUser(auth()->user());
 
-        $all_photos = Media_files::where('page_id', $id)
+        $all_photos = MediaFile::where('page_id', $id)
             ->ofType(MediaFileType::Image)
             ->take(20)->orderBy('id', 'DESC')->get();
 
         $all_albums = Albums::where('page_id', $id)
             ->take(6)->orderBy('id', 'DESC')->get();
 
-        $page_data['all_videos'] = Media_files::where('page_id', $id)
+        $page_data['all_videos'] = MediaFile::where('page_id', $id)
             ->ofType(MediaFileType::Video)
             ->take(20)->orderBy('id', 'DESC')->get();
 
@@ -226,7 +230,7 @@ class PageController extends Controller
         $page_data['page_identifire'] = 'page';
         $page_data['page'] = Page::find($id);
 
-        $page_data['suggestedpages'] = Page_like::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
+        $page_data['suggestedpages'] = PageLike::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
         $page_data['view_path'] = 'frontend.pages.photos';
 
         return view('frontend.index', $page_data);
@@ -236,19 +240,19 @@ class PageController extends Controller
     {
         $friendsid = FriendshipsQuery::acceptedFriendIdsForUser(auth()->user());
 
-        $all_videos = Media_files::where('page_id', $id)
+        $all_videos = MediaFile::where('page_id', $id)
             ->ofType(MediaFileType::Video)
             ->take(20)->orderBy('id', 'DESC')->get();
 
         $page_data['all_videos'] = $all_videos;
 
         $page_data['page'] = Page::find($id);
-        $all_photos = Media_files::where('page_id', $id)
+        $all_photos = MediaFile::where('page_id', $id)
             ->ofType(MediaFileType::Image)
             ->take(20)->orderBy('id', 'DESC')->get();
         $page_data['all_photos'] = $all_photos;
 
-        $page_data['suggestedpages'] = Page_like::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
+        $page_data['suggestedpages'] = PageLike::whereIn('user_id', $friendsid)->where('user_id', '!=', auth()->user()->id)->limit('1')->get();
         $page_data['view_path'] = 'frontend.pages.video';
 
         return view('frontend.index', $page_data);
@@ -256,7 +260,7 @@ class PageController extends Controller
 
     public function load_videos(Request $request)
     {
-        $all_videos = Media_files::where('user_id', $this->user->id)
+        $all_videos = MediaFile::where('user_id', $this->user->id)
             ->ofType(MediaFileType::Video)
             ->skip($request->offset)->take(12)->orderBy('id', 'DESC')->get();
 
@@ -266,13 +270,38 @@ class PageController extends Controller
         return view('frontend.profile.video_single', $page_data);
     }
 
+    private function pageCardQuery(int $userId): Builder
+    {
+        return Page::query()
+            ->select([
+                'id',
+                'user_id',
+                'title',
+                'category_id',
+                'logo',
+                'coverphoto',
+                'description',
+                'job',
+                'lifestyle',
+                'location',
+                'status',
+                'created_at',
+                'updated_at',
+            ])
+            ->withCount('likedByUsers')
+            ->withExists([
+                'likedByUsers as liked_by_current_user' => fn (Builder $query): Builder => $query
+                    ->where('users.id', $userId),
+            ]);
+    }
+
     public function like($id)
     {
         $response = [];
         $userId = auth()->user()->id;
 
-        if (! Page_like::where('page_id', $id)->where('user_id', $userId)->exists()) {
-            $pagelike = new Page_like;
+        if (! PageLike::where('page_id', $id)->where('user_id', $userId)->exists()) {
+            $pagelike = new PageLike;
             $pagelike->page_id = $id;
             $pagelike->user_id = $userId;
             $pagelike->role = MembershipRole::General->value;
@@ -289,7 +318,7 @@ class PageController extends Controller
     {
         $response = [];
         $user_id = auth()->user()->id;
-        $pagelike = Page_like::where('page_id', $id)->where('user_id', $user_id)->first();
+        $pagelike = PageLike::where('page_id', $id)->where('user_id', $user_id)->first();
 
         if ($pagelike) {
             $pagelike->delete();

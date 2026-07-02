@@ -1,27 +1,17 @@
 @if(count($likedpage)>0)
 
 <div class="suggest-wrap row">
-    @foreach ($likedpage as $likepage )
-        @php
-            $pagedata = \App\Models\Page::find($likepage->page_id);
-        @endphp
+    @foreach ($likedpage as $pagedata )
         <div class="col-xl-4 col-lg-4 col-md-3 col-sm-4 col-6 mb-3">
             <div class="card sugg-card liked_card  suggest_p radius-8">
                 <a href="{{ route('single.page',$pagedata->id) }}" class="mb-2 thumbnail-110-106" style="background-image: url('{{ get_page_logo($pagedata->logo, 'logo') }}')"></a>
                <div class="p-8 d-flex flex-column">
                     <h4><a href="{{ route('single.page',$pagedata->id) }}">{{ ellipsis($pagedata->title,17) }}</a></h4>
-                    @php
-                        $likecount = \App\Models\Page_like::where('page_id',$pagedata->id)->count();
-                    @endphp
-                    <span class="small text-muted">{{get_phrase('____ likes', [$likecount])}}</span>
-                    @php
-                    //checking this user data if this user already liker or not
-                        $likecount = \App\Models\Page_like::where('page_id',$likepage->page_id)->where('user_id',auth()->user()->id)->count();
-                    @endphp
-                    @if ($likecount>0)
-                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.dislike',$likepage->page_id) }}')" class="btn common_btn_2"><i class="fa fa-thumbs-up me-1"></i>{{ ('Liked') }}</a>
+                    <span class="small text-muted">{{get_phrase('____ likes', [$pagedata->liked_by_users_count ?? 0])}}</span>
+                    @if ($pagedata->liked_by_current_user)
+                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.dislike',$pagedata->id) }}')" class="btn common_btn_2"><i class="fa fa-thumbs-up me-1"></i>{{ ('Liked') }}</a>
                     @else
-                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.like',$likepage->page_id) }}')" class="btn common_btn"><i class="fa fa-thumbs-up me-1"></i>{{ ('Like') }}</a>
+                        <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.like',$pagedata->id) }}')" class="btn common_btn"><i class="fa fa-thumbs-up me-1"></i>{{ ('Like') }}</a>
                     @endif
                </div>
             </div><!--  Card End -->

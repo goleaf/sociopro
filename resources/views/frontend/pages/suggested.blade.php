@@ -7,14 +7,8 @@
                 <a href="{{ route('single.page',$suggestedpage->id) }}" class="mb-2 thumbnail-110-106" style="background-image: url('{{ get_page_logo($suggestedpage->logo, 'logo') }}')"></a>
                 <div class="p-8 d-flex flex-column">
                     <h4><a href="#">{{ ellipsis($suggestedpage->title,17) }}</a></h4>
-                @php
-                $likecount = \App\Models\Page_like::where('page_id',$suggestedpage->id)->count();
-                @endphp
-                <span class="small text-muted">{{ $likecount }} {{ ('likes') }}</span>
-                @php
-                    $likecount = \App\Models\Page_like::where('page_id',$suggestedpage->id)->where('user_id',auth()->user()->id)->count();
-                @endphp
-                @if ($likecount>0)
+                <span class="small text-muted">{{ $suggestedpage->liked_by_users_count ?? 0 }} {{ ('likes') }}</span>
+                @if ($suggestedpage->liked_by_current_user)
                     <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.dislike',$suggestedpage->id) }}')" class="btn common_btn_2 "><i class="fa fa-thumbs-up me-1"></i>{{ ('Liked') }}</a>
                 @else
                     <a href="javascript:void(0)" onclick="ajaxAction('{{ route('page.like',$suggestedpage->id) }}')" class="btn common_btn"><i class="fa fa-thumbs-up me-1"></i>{{ get_phrase('Like') }}</a>

@@ -1,7 +1,4 @@
 <link rel="stylesheet" href="{{ asset('assets/frontend/css/nice-select.css') }}">
-@php
-    $page = \App\Models\Page::find($page_id);
-@endphp
 <form class="ajaxForm ng_form_entry" action="{{ route('page.update',$page->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="form-group">
@@ -11,7 +8,7 @@
 
     <div class="form-group">
         <label for="#">{{ get_phrase('Page BIO') }}</label>
-        <textarea class="border-0 bg-secondary content" name="description" id="description" rows="5" placeholder="Description">{!! script_checker($page->description, false) !!}</textarea>
+        <textarea class="border-0 bg-secondary content" name="description" id="description" rows="5" placeholder="Description">{{ old('description', $page->description) }}</textarea>
     </div>
     <div>
         <label for="">{{ get_phrase('Previous Profile Photo') }}</label> <br>
@@ -25,7 +22,7 @@
         <label for="#">{{ get_phrase('Page Category') }}</label>
         <select name="category" id="category" class="form-control select border-0 bg-secondary">
             <option value="" selected>{{ get_phrase('Select Category') }}</option>
-            @foreach (\App\Models\Pagecategory::all() as $category )
+            @foreach ($pageCategories as $category )
                 <option value="{{ $category->id }}" {{ $category->id == $page->category_id ? "selected":"" }}>{{ $category->name }}</option>
             @endforeach
         </select>

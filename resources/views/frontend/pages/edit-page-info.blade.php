@@ -1,7 +1,3 @@
-
-@php
-$page = \App\Models\Page::find($page_id);
-@endphp
 <form class="" action="{{ route('page.update.info',$page->id) }}" method="POST" enctype="multipart/form-data">
 @csrf
 <div class="form-group">
