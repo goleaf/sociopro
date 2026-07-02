@@ -80,6 +80,12 @@ class EloquentRelationshipAuditTest extends TestCase
         }
     }
 
+    public function test_blog_category_relationship_does_not_keep_misspelled_alias(): void
+    {
+        $this->assertTrue(method_exists(Blog::class, 'category'));
+        $this->assertFalse(method_exists(Blog::class, 'cagtegory'));
+    }
+
     public function test_many_to_many_relationships_use_explicit_pivot_tables_keys_and_metadata(): void
     {
         foreach ($this->belongsToManyContracts() as $contract) {
@@ -202,7 +208,6 @@ class EloquentRelationshipAuditTest extends TestCase
             ['model' => Badge::class, 'method' => 'getUser', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'batchs.user_id', 'owner' => 'users.id'],
             ['model' => Blog::class, 'method' => 'getUser', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'blogs.user_id', 'owner' => 'users.id'],
             ['model' => Blog::class, 'method' => 'category', 'relation' => BelongsTo::class, 'related' => Blogcategory::class, 'foreign' => 'blogs.category_id', 'owner' => 'blogcategories.id'],
-            ['model' => Blog::class, 'method' => 'cagtegory', 'relation' => BelongsTo::class, 'related' => Blogcategory::class, 'foreign' => 'blogs.category_id', 'owner' => 'blogcategories.id'],
             ['model' => Comments::class, 'method' => 'user', 'relation' => BelongsTo::class, 'related' => User::class, 'foreign' => 'comments.user_id', 'owner' => 'users.id'],
             ['model' => Comments::class, 'method' => 'post', 'relation' => BelongsTo::class, 'related' => Posts::class, 'foreign' => 'comments.id_of_type', 'owner' => 'posts.post_id'],
             ['model' => Comments::class, 'method' => 'parent', 'relation' => BelongsTo::class, 'related' => Comments::class, 'foreign' => 'comments.parent_id', 'owner' => 'comments.comment_id'],

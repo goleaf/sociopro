@@ -9,7 +9,7 @@
             </a>
             <div class="entry-txt p-8">
                 <div class="blog-meta">
-                    <span><a href="{{ route('single.blog',$blog->id) }}">{{ $blog->cagtegory->name }}</a></span>
+                    <span><a href="{{ route('single.blog',$blog->id) }}">{{ $blog->category->name }}</a></span>
                 </div>
                 <h3 class="h6 ellipsis-line-2"><a href="{{ route('single.blog',$blog->id) }}">{{$blog->title}}</a></h3>
                 <div class="d-flex blog-ava">

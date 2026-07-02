@@ -57,6 +57,19 @@ class BlogControllerResponseTest extends TestCase
         );
     }
 
+    public function test_blog_category_select_scope_orders_lookup_options_without_extra_columns(): void
+    {
+        $firstCategory = $this->blogCategory('First category');
+        $secondCategory = $this->blogCategory('Second category');
+
+        $categories = Blogcategory::query()->forSelect()->get();
+        $firstOption = $categories->first();
+
+        $this->assertNotNull($firstOption);
+        $this->assertSame([$firstCategory->id, $secondCategory->id], $categories->pluck('id')->all());
+        $this->assertSame(['id', 'name'], array_keys($firstOption->getAttributes()));
+    }
+
     public function test_store_rejects_missing_blog_title_and_category(): void
     {
         $user = $this->activeGeneralUser();

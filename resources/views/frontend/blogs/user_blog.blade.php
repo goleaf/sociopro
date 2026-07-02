@@ -20,7 +20,7 @@
                         </div>
                         <div class="entry-txt p-8">
                             <div class="blog-meta">
-                                <span><a href="#">{{ $blog->cagtegory->name }}</a></span>
+                                <span><a href="#">{{ $blog->category->name }}</a></span>
                             </div>
                             <h3 class="h6"><a href="{{ route('single.blog',$blog->id) }}">{{$blog->title}}</a></h3>
                             <div class="d-flex justify-content-between blog-ava">

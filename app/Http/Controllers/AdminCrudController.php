@@ -384,7 +384,7 @@ class AdminCrudController extends Controller
     // blog category
     public function view_blog_category()
     {
-        $page_data['all_category'] = Blogcategory::all();
+        $page_data['all_category'] = Blogcategory::query()->ordered()->get();
         $page_data['view_path'] = 'blog_category.index';
 
         return view('backend.index', $page_data);

@@ -9,6 +9,7 @@ use App\Models\Blogcategory;
 use App\Models\Comments;
 use App\Queries\FriendshipsQuery;
 use App\Support\Files\FileUploader;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Image;
@@ -19,8 +20,12 @@ class BlogController extends Controller
 {
     public function index()
     {
-        $page_data['categories'] = Blogcategory::all();
-        $page_data['blogs'] = Blog::orderBy('id', 'DESC')->limit('10')->get();
+        $page_data['categories'] = $this->blogCategoriesForSelect();
+        $page_data['blogs'] = Blog::query()
+            ->with(['category', 'getUser'])
+            ->latest('id')
+            ->limit(10)
+            ->get();
         $page_data['view_path'] = 'frontend.blogs.blogs';
 
         return view('frontend.index', $page_data);
@@ -33,7 +38,11 @@ class BlogController extends Controller
 
     public function myblog()
     {
-        $blogs = Blog::where('user_id', auth()->user()->id)->orderBy('id', 'DESC')->get();
+        $blogs = Blog::query()
+            ->with(['category', 'getUser'])
+            ->where('user_id', auth()->id())
+            ->latest('id')
+            ->get();
         $page_data['blogs'] = $blogs;
         $page_data['view_path'] = 'frontend.blogs.user_blog';
 
@@ -42,7 +51,7 @@ class BlogController extends Controller
 
     public function create()
     {
-        $page_data['blog_category'] = Blogcategory::all();
+        $page_data['blog_category'] = $this->blogCategoriesForSelect();
         $page_data['view_path'] = 'frontend.blogs.create_blog';
 
         return view('frontend.index', $page_data);
@@ -77,7 +86,7 @@ class BlogController extends Controller
 
     public function edit($id)
     {
-        $page_data['blog_category'] = Blogcategory::all();
+        $page_data['blog_category'] = $this->blogCategoriesForSelect();
         $page_data['blog'] = Blog::find($id);
         $page_data['view_path'] = 'frontend.blogs.edit_blog';
 
@@ -146,7 +155,12 @@ class BlogController extends Controller
 
     public function load_blog_by_scrolling(Request $request)
     {
-        $blogs = Blog::orderBy('id', 'DESC')->skip($request->offset)->take(6)->get();
+        $blogs = Blog::query()
+            ->with(['category', 'getUser'])
+            ->latest('id')
+            ->skip($request->offset)
+            ->take(6)
+            ->get();
         $page_data['blogs'] = $blogs;
 
         return view('frontend.blogs.blog-single', $page_data);
@@ -160,7 +174,9 @@ class BlogController extends Controller
             ->twitter()
             ->linkedin()
             ->telegram()->getRawLinks();
-        $blog = Blog::find($id);
+        $blog = Blog::query()
+            ->with('getUser')
+            ->find($id);
         $blog_view_data = json_decode($blog->view);
         if (! in_array(auth()->user()->id, $blog_view_data)) {
             // $blog_view_data == "" ? $blog_view_data = json_encode(array()) : json_encode($blog_view_data);
@@ -173,8 +189,11 @@ class BlogController extends Controller
             ->take(15)->get();
 
         $page_data['blog'] = $blog;
-        $page_data['categories'] = Blogcategory::all();
-        $page_data['recent_posts'] = Blog::orderBy('id', 'DESC')->limit('5')->get();
+        $page_data['categories'] = $this->blogCategoriesForSelect();
+        $page_data['recent_posts'] = Blog::query()
+            ->latest('id')
+            ->limit(5)
+            ->get();
         $page_data['view_path'] = 'frontend.blogs.single_blog';
 
         return view('frontend.index', $page_data);
@@ -188,9 +207,13 @@ class BlogController extends Controller
     // category wise page view
     public function category_blog($category)
     {
-        $page_data['categories'] = Blogcategory::all();
+        $page_data['categories'] = $this->blogCategoriesForSelect();
         $page_data['category_id'] = $category;
-        $page_data['blogs'] = Blog::where('category_id', $category)->get();
+        $page_data['blogs'] = Blog::query()
+            ->with(['category', 'getUser'])
+            ->where('category_id', $category)
+            ->latest('id')
+            ->get();
         $page_data['view_path'] = 'frontend.blogs.category_blog';
 
         return view('frontend.index', $page_data);
@@ -218,5 +241,13 @@ class BlogController extends Controller
 
             return Response($output);
         }
+    }
+
+    /**
+     * @return EloquentCollection<int, Blogcategory>
+     */
+    private function blogCategoriesForSelect(): EloquentCollection
+    {
+        return Blogcategory::query()->forSelect()->get();
     }
 }

@@ -34,11 +34,6 @@ class Blog extends Model
         return $this->belongsTo(Blogcategory::class, 'category_id');
     }
 
-    public function cagtegory(): BelongsTo
-    {
-        return $this->category();
-    }
-
     public function savedByUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'saveforlaters', 'blog_id', 'user_id')
