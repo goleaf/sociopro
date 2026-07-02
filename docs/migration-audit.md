@@ -1,5 +1,25 @@
 # Migration Audit
 
+## 2026-07-02 Update: Safe Date Field Constraint Pass
+
+### Scope
+
+Audited `created_at`, `updated_at`, `deleted_at`, `published_at`, `verified_at`, `paid_at`, `expires_at`, and custom date columns against the legacy dump, model casts, validation rules, date filters, timezone behavior, and current query paths. Full details are in `docs/date-field-audit.md`.
+
+### Safe Fix Applied
+
+Added `database/migrations/2026_07_02_190000_add_safe_legacy_datetime_column_constraints.php`.
+
+The migration safely converts `personal_access_tokens.expires_at` from legacy text storage to a nullable datetime only when existing non-null values match strict datetime formats. Dirty data causes the type change to be skipped instead of failing deployment or coercing values. It also adds guarded non-unique indexes for token expiry, active sponsor date windows, and verified-user lookups.
+
+### Deferred Unsafe Changes
+
+Most legacy `created_at` and `updated_at` normalization remains deferred because the application still mixes real timestamp columns, `varchar(100)` date columns, `CURRENT_TIMESTAMP` defaults, and integer epoch writes. `events.event_date` / `event_time`, `users.date_of_birth`, and payment lifecycle dates also need compatibility tests and a dedicated migration plan before type changes.
+
+### Verification Added
+
+Updated `tests/Feature/MigrationSafetyAuditTest.php` for datetime conversion, rollback, index presence, and dirty-data skipping. Updated `tests/Feature/EloquentCastAuditTest.php` for safe lifecycle date casts and added `tests/Feature/DateFieldAuditTest.php` to guard the audit document.
+
 ## 2026-07-02 Update: Safe Nullable Column Constraint Pass
 
 ### Scope

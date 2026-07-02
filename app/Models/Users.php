@@ -31,6 +31,8 @@ class Users extends Model
     {
         return [
             'date_of_birth' => 'integer',
+            'email_verified_at' => 'datetime:Y-m-d H:i:s',
+            'lastActive' => 'datetime:Y-m-d H:i:s',
         ];
     }
 }

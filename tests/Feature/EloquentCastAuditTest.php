@@ -34,8 +34,10 @@ use App\Models\Saveforlater;
 use App\Models\Share;
 use App\Models\Sponsor;
 use App\Models\Stories;
+use App\Models\User;
 use App\Models\Users;
 use App\Models\Video;
+use Carbon\CarbonInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -220,6 +222,38 @@ class EloquentCastAuditTest extends TestCase
         $this->assertSame(0, $notification->view);
 
         $this->assertSame(709948800, $legacyUser->refresh()->date_of_birth);
+    }
+
+    public function test_core_lifecycle_date_attributes_cast_without_changing_legacy_serialization(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => '2026-07-01 09:15:00',
+            'lastActive' => '2026-07-01 10:30:00',
+        ]);
+
+        $legacyUser = new Users;
+        $legacyUser->forceFill([
+            'email' => 'legacy-date-cast@example.com',
+            'email_verified_at' => '2026-07-01 09:15:00',
+            'lastActive' => '2026-07-01 10:30:00',
+        ])->save();
+
+        $post = new Posts;
+        $post->forceFill([
+            'user_id' => '7',
+            'posted_on' => '2026-07-01 11:45:00',
+        ])->save();
+
+        $this->assertInstanceOf(CarbonInterface::class, $user->refresh()->email_verified_at);
+        $this->assertInstanceOf(CarbonInterface::class, $user->lastActive);
+        $this->assertInstanceOf(CarbonInterface::class, $legacyUser->refresh()->email_verified_at);
+        $this->assertInstanceOf(CarbonInterface::class, $legacyUser->lastActive);
+        $this->assertInstanceOf(CarbonInterface::class, $post->refresh()->posted_on);
+
+        $this->assertSame('2026-07-01 09:15:00', $legacyUser->email_verified_at->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-07-01 10:30:00', $legacyUser->lastActive->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-07-01 11:45:00', $post->posted_on->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-07-01 11:45:00', $post->toArray()['posted_on']);
     }
 
     /**

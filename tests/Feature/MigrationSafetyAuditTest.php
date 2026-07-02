@@ -194,6 +194,61 @@ class MigrationSafetyAuditTest extends TestCase
         ]);
     }
 
+    public function test_safe_legacy_datetime_column_constraints_are_present_and_reversible(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_190000_add_safe_legacy_datetime_column_constraints.php');
+
+        $migration->down();
+        $this->assertColumnsHaveTypeNames($this->expectedLegacyDatetimeColumnTypes());
+        $this->assertIndexesDoNotExist($this->expectedSafeDatetimeIndexes());
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames($this->expectedSafeDatetimeColumnTypes());
+        $this->assertIndexesExist($this->expectedSafeDatetimeIndexes());
+
+        $migration->down();
+        $this->assertColumnsHaveTypeNames($this->expectedLegacyDatetimeColumnTypes());
+        $this->assertIndexesDoNotExist($this->expectedSafeDatetimeIndexes());
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames($this->expectedSafeDatetimeColumnTypes());
+        $this->assertIndexesExist($this->expectedSafeDatetimeIndexes());
+    }
+
+    public function test_safe_legacy_datetime_column_constraints_skip_dirty_datetime_values(): void
+    {
+        $migration = require database_path('migrations/2026_07_02_190000_add_safe_legacy_datetime_column_constraints.php');
+
+        $migration->down();
+
+        DB::table('personal_access_tokens')->insert([
+            'tokenable_type' => 'App\\Models\\User',
+            'tokenable_id' => 999,
+            'name' => 'dirty-expiry',
+            'token' => hash('sha256', 'dirty-expiry'),
+            'abilities' => '["*"]',
+            'expires_at' => 'not-a-date',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames([
+            'personal_access_tokens' => [
+                'expires_at' => ['text', 'varchar'],
+            ],
+        ]);
+
+        DB::table('personal_access_tokens')->where('name', 'dirty-expiry')->delete();
+
+        $migration->up();
+        $this->assertColumnsHaveTypeNames([
+            'personal_access_tokens' => [
+                'expires_at' => ['datetime', 'timestamp'],
+            ],
+        ]);
+    }
+
     /**
      * @return iterable<SplFileInfo>
      */
@@ -666,6 +721,48 @@ class MigrationSafetyAuditTest extends TestCase
             ],
             'sponsors' => [
                 'paid_amount' => ['numeric'],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function expectedLegacyDatetimeColumnTypes(): array
+    {
+        return [
+            'personal_access_tokens' => [
+                'expires_at' => ['text', 'varchar'],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function expectedSafeDatetimeColumnTypes(): array
+    {
+        return [
+            'personal_access_tokens' => [
+                'expires_at' => ['datetime', 'timestamp'],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function expectedSafeDatetimeIndexes(): array
+    {
+        return [
+            'personal_access_tokens' => [
+                'personal_access_tokens_expires_id_idx' => ['expires_at', 'id'],
+            ],
+            'sponsors' => [
+                'sponsors_status_start_end_id_idx' => ['status', 'start_date', 'end_date', 'id'],
+            ],
+            'users' => [
+                'users_email_verified_id_idx' => ['email_verified_at', 'id'],
             ],
         ];
     }

@@ -36,6 +36,7 @@ class Posts extends Model
             'publisher_id' => 'integer',
             'activity_id' => 'integer',
             'report_status' => 'integer',
+            'posted_on' => 'datetime:Y-m-d H:i:s',
         ];
     }
 

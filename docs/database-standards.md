@@ -82,9 +82,11 @@ Use this document together with:
 - Use nullable timestamps only when a row may legitimately exist before timestamps are known.
 - Use `$table->timestamp('published_at')->nullable()` or `$table->dateTime('published_at')->nullable()` for lifecycle moments.
 - Store application timestamps in UTC. Convert for display at the application boundary.
+- Existing legacy rows currently follow the application's `Asia/Dhaka` timezone setting and mixed string/epoch write paths. Do not reinterpret them as UTC without a tested backfill plan.
 - Do not store timestamps as strings in new schema.
 - Do not mix integer epoch, text date, and timestamp columns for the same domain in new schema.
 - Avoid `ON UPDATE CURRENT_TIMESTAMP` unless it is an explicit database-level requirement and covered by tests.
+- For the current legacy date-field status and safe datetime migration, see `docs/date-field-audit.md`.
 
 ## Soft Deletes
 
