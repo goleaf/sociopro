@@ -41,6 +41,7 @@ This audit covers production exposure risks for debug mode, Ignition, Telescope,
   - `SESSION_SECURE_COOKIE=true`
 - Serve only the `public` directory as the web root. Never point a virtual host at the repository root.
 - For Apache, keep `AllowOverride` enabled for the application `public` directory if relying on committed `.htaccess` rules.
+- The committed dotfile deny rule blocks `/.well-known` by default. If ACME HTTP-01 challenges are used, terminate them at the reverse proxy/CDN or add a narrow, reviewed exception for the exact challenge path.
 - For Nginx, Caddy, CDN, or object-storage frontends, add equivalent deny rules for:
   - dotfiles and `.env*`
   - `*.sql`, `*.sqlite`, `*.db`, `*.log`
@@ -61,5 +62,6 @@ git ls-files public
 ## Remaining Risks
 
 - Apache `.htaccess` rules do not protect Nginx/CDN deployments by themselves; production web-server config must mirror the deny list.
+- The Apache dotfile block intentionally protects against public `.env` leaks and also blocks `/.well-known`; certificate challenge handling must be configured at the web-server layer.
 - `public/storage` remains intentionally web-accessible for public media. Continue validating upload types, extensions, sizes, and authorization at the application boundary.
 - The legacy schema still depends on a SQL dump. It is no longer public, but the long-term fix remains replacing the dump with a verified migration baseline.
