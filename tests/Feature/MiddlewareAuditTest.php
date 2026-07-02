@@ -136,8 +136,87 @@ class MiddlewareAuditTest extends TestCase
         $this->assertSame('SAMEORIGIN', $response->headers->get('X-Frame-Options'));
         $this->assertSame('0', $response->headers->get('X-XSS-Protection'));
         $this->assertSame('strict-origin-when-cross-origin', $response->headers->get('Referrer-Policy'));
-        $this->assertSame('camera=(), microphone=(), geolocation=()', $response->headers->get('Permissions-Policy'));
+        $this->assertSame(
+            'camera=(), microphone=(), geolocation=(), payment=(self), fullscreen=(self)',
+            $response->headers->get('Permissions-Policy')
+        );
         $this->assertSame('max-age=31536000; includeSubDomains', $response->headers->get('Strict-Transport-Security'));
+
+        $contentSecurityPolicy = $response->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString("default-src 'self'", $contentSecurityPolicy);
+        $this->assertStringContainsString("frame-ancestors 'self'", $contentSecurityPolicy);
+        $this->assertStringContainsString("object-src 'none'", $contentSecurityPolicy);
+        $this->assertStringContainsString("script-src 'self' 'unsafe-inline' 'unsafe-eval' https:", $contentSecurityPolicy);
+    }
+
+    public function test_hsts_is_only_sent_for_secure_requests(): void
+    {
+        $response = app(SecurityHeaders::class)->handle(
+            Request::create('http://example.test/profile'),
+            fn (): Response => new Response('ok')
+        );
+
+        $this->assertFalse($response->headers->has('Strict-Transport-Security'));
+    }
+
+    public function test_real_web_and_api_responses_receive_security_headers(): void
+    {
+        $this
+            ->get(route('login'))
+            ->assertOk()
+            ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+            ->assertHeader('Content-Security-Policy');
+
+        $this
+            ->postJson(route('api.auth.login'), [])
+            ->assertStatus(422)
+            ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+            ->assertHeader('Content-Security-Policy');
+    }
+
+    public function test_live_video_routes_have_documented_media_permissions_exception(): void
+    {
+        $response = app(SecurityHeaders::class)->handle(
+            Request::create('https://example.test/live/123'),
+            fn (): Response => new Response('ok')
+        );
+
+        $this->assertSame(
+            'camera=(self), microphone=(self), geolocation=(), payment=(self), fullscreen=(self)',
+            $response->headers->get('Permissions-Policy')
+        );
+
+        $contentSecurityPolicy = $response->headers->get('Content-Security-Policy');
+
+        $this->assertStringContainsString("connect-src 'self' https: wss:", $contentSecurityPolicy);
+        $this->assertStringContainsString("media-src 'self' blob: https:", $contentSecurityPolicy);
+        $this->assertStringContainsString("worker-src 'self' blob:", $contentSecurityPolicy);
+    }
+
+    public function test_security_headers_are_configured_and_documented(): void
+    {
+        $this->assertIsArray(config('security_headers.csp.directives'));
+        $this->assertSame(["'self'"], config('security_headers.csp.directives.frame-ancestors'));
+
+        $documentation = File::get(base_path('docs/security-headers.md'));
+
+        foreach ([
+            '/login',
+            '/api/login',
+            '/live/{post_id}',
+            'frame-ancestors',
+            'inline scripts and styles',
+            'payment provider scripts',
+            'Zoom live video',
+            'HSTS is emitted only on HTTPS requests',
+        ] as $expectedText) {
+            $this->assertStringContainsString($expectedText, $documentation);
+        }
     }
 
     /**

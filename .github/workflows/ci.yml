@@ -41,7 +41,10 @@ jobs:
           tools: composer:v2
 
       - name: Validate composer.json
-        run: composer validate --strict
+        run: composer validate --strict --no-interaction
+
+      - name: Audit Composer dependencies
+        run: composer audit --no-interaction
 
       - name: Cache Composer packages
         uses: actions/cache@v4
@@ -65,8 +68,25 @@ jobs:
       - name: Run tests
         run: php artisan test
 
-      - name: Config cache smoke check
-        run: php artisan config:cache && php artisan config:clear
+      - name: Laravel cache smoke checks
+        run: composer quality:cache
+
+      - name: Route registration smoke check
+        run: php artisan route:list --except-vendor
+
+      - name: Fresh migration smoke check
+        run: |
+          tmp_db="$(mktemp)"
+          trap 'rm -f "$tmp_db"' EXIT
+          APP_ENV=testing \
+          APP_DEBUG=false \
+          DB_CONNECTION=sqlite \
+          DB_DATABASE="$tmp_db" \
+          CACHE_DRIVER=array \
+          SESSION_DRIVER=array \
+          QUEUE_CONNECTION=sync \
+          MAIL_MAILER=array \
+          php artisan migrate:fresh --force --no-interaction
 
   frontend:
     name: Frontend build

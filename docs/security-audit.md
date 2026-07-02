@@ -26,7 +26,7 @@ rg security patterns across app, routes, config, resources, database, and tests
 
 | Area | Risk | Fix |
 | --- | --- | --- |
-| Security headers | Missing baseline browser hardening headers | Added global `SecurityHeaders` middleware for `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`, and HTTPS-only HSTS. |
+| Security headers | Missing baseline browser hardening headers | Added configurable global `SecurityHeaders` middleware for `X-Content-Type-Options`, `X-Frame-Options`, `frame-ancestors` CSP, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`, HTTPS-only HSTS, and documented compatibility exceptions. |
 | SSRF | Link previews fetched arbitrary user-influenced URLs server-side | Added `ServerSideUrl` guard for HTTP(S)-only public targets, blocking localhost/private/reserved IPs, disabling redirects, adding timeout, and limiting the response read. |
 | Raw SQL | Unused auth-controller helper contained `DB::unprepared()` and `DB::select('SHOW TABLES')` | Removed the unreferenced helper and unused imports. |
 | API IDOR / route safety | Registered marketplace unsave API route had no active method | Restored `unsave_for_later` with authenticated-user scoping and regression coverage. |

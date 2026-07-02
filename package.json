@@ -13,7 +13,8 @@
         "lint:fix": "eslint \"resources/js/**/*.js\" --fix",
         "format": "prettier --write \"resources/**/*.{js,css}\"",
         "format:check": "prettier --check \"resources/**/*.{js,css}\"",
-        "stylelint": "stylelint \"resources/css/**/*.css\""
+        "stylelint": "stylelint \"resources/css/**/*.css\"",
+        "quality": "npm run lint && npm run stylelint && npm run format:check && npm run production"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.4.0",

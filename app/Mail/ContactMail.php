@@ -10,21 +10,18 @@ class ContactMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $name;
+    public string $name;
 
-    public $email;
-
-    public $subject;
-
-    public $details;
+    public string $email;
 
     /**
-     * @param  string  $name
-     * @param  string  $email
-     * @param  string  $subject
-     * @param  string  $details
+     * @var string
      */
-    public function __construct($name, $email, $subject, $details)
+    public $subject;
+
+    public string $details;
+
+    public function __construct(string $name, string $email, string $subject, string $details)
     {
         $this->name = $name;
         $this->email = $email;
@@ -32,11 +29,12 @@ class ContactMail extends Mailable
         $this->details = $details;
     }
 
-    /**
-     * @return $this
-     */
-    public function build()
+    public function build(): static
     {
-        return $this->from($this->email)->subject($this->subject)->markdown('emails.contact');
+        return $this
+            ->from((string) config('mail.from.address'), (string) config('mail.from.name'))
+            ->replyTo($this->email, $this->name)
+            ->subject($this->subject)
+            ->markdown('emails.contact');
     }
 }

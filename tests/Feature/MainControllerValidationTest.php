@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\ContentStatus;
 use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Enums\Visibility;
@@ -111,25 +110,17 @@ class MainControllerValidationTest extends TestCase
             'user_role' => UserRole::General->value,
         ]);
 
-        $postId = DB::table('posts')->insertGetId([
-            'user_id' => $user->id,
-            'publisher' => 'post',
-            'publisher_id' => $user->id,
-            'post_type' => 'general',
-            'privacy' => Visibility::Public->value,
-            'description' => 'Original video post',
-            'status' => ContentStatus::Active->value,
-            'user_reacts' => json_encode([]),
-            'shared_user' => json_encode([]),
-            'created_at' => time(),
-            'updated_at' => time(),
-        ], 'post_id');
+        $post = Posts::factory()
+            ->forOwner($user)
+            ->create([
+                'description' => 'Original video post',
+            ]);
 
         $mediaFile = null;
         $realFilePath = null;
 
         try {
-            $response = $this->actingAs($user)->post(route('edit_post', $postId), [
+            $response = $this->actingAs($user)->post(route('edit_post', $post->post_id), [
                 'privacy' => Visibility::Public->value,
                 'description' => 'Updated with video upload',
                 'multiple_files' => [
@@ -144,7 +135,7 @@ class MainControllerValidationTest extends TestCase
             $this->assertSame(['reload' => 1], $payload);
 
             $mediaFile = Media_files::query()
-                ->where('post_id', $postId)
+                ->where('post_id', $post->post_id)
                 ->where('file_type', 'video')
                 ->latest('id')
                 ->first();

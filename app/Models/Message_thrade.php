@@ -9,7 +9,14 @@ class Message_thrade extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['*'];
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+        'sender_id',
+        'reciver_id',
+        'chatcenter',
+    ];
 
     /**
      * @return array<string, string>

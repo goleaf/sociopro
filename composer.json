@@ -68,6 +68,15 @@
         "analyse": "@php -r \"if (file_exists('vendor/bin/phpstan')) { passthru('vendor/bin/phpstan analyse --memory-limit=1G', $code); exit($code); } fwrite(STDERR, 'PHPStan is not installed; skipping analyse.'.PHP_EOL);\"",
         "rector:dry": "@php -r \"if (file_exists('vendor/bin/rector')) { passthru('vendor/bin/rector --dry-run', $code); exit($code); } fwrite(STDERR, 'Rector is not installed; skipping rector:dry.'.PHP_EOL);\"",
         "rector": "@php -r \"if (file_exists('vendor/bin/rector')) { passthru('vendor/bin/rector', $code); exit($code); } fwrite(STDERR, 'Rector is not installed; skipping rector.'.PHP_EOL);\"",
+        "quality:cache": [
+            "@php artisan config:cache",
+            "@php artisan config:clear",
+            "@php artisan route:cache",
+            "@php artisan route:clear",
+            "@php artisan view:cache",
+            "@php artisan view:clear",
+            "@php artisan optimize:clear"
+        ],
         "quality": [
             "@pint:test",
             "@analyse",
@@ -76,7 +85,8 @@
         "ci": [
             "@composer validate --strict --no-interaction",
             "@composer audit --no-interaction",
-            "@quality"
+            "@quality",
+            "@quality:cache"
         ]
     },
     "extra": {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ContactSendRequest;
 use App\Mail\ContactMail;
 use App\Models\Currency;
 use App\Models\Language;
@@ -10,8 +11,9 @@ use App\Models\Report;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\Files\FileUploader;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Mail;
+use Illuminate\Support\Facades\Mail;
 
 class SettingController extends Controller
 {
@@ -36,15 +38,23 @@ class SettingController extends Controller
         return view('frontend.settings.contact');
     }
 
-    public function contact_send(Request $request)
+    public function contact_send(ContactSendRequest $request): RedirectResponse
     {
-        $user = User::query()->admins()->first();
-        $name = $request->name;
-        $email = $request->email;
-        $subject = $request->subject;
-        $details = $request->details;
+        $admin = User::query()->admins()->first();
+        if (! $admin instanceof User) {
+            return redirect()->back()->withErrors([
+                'email' => get_phrase('Unable to send contact request right now.'),
+            ]);
+        }
 
-        Mail::to($user->email)->send(new ContactMail($name, $email, $subject, $details));
+        $validated = $request->validated();
+
+        Mail::to($admin->email)->send(new ContactMail(
+            $validated['name'],
+            $validated['email'],
+            $validated['subject'],
+            $validated['details']
+        ));
 
         return redirect()->back();
     }

@@ -23,8 +23,25 @@ A clear description of the bug.
 
 - Laravel / PHP version:
 - Browser / client (if frontend):
-- Affected module (timeline, chat, marketplace, payments, …):
+- Affected module (timeline, chat, marketplace, payments, jobs, admin, API):
+- Route name / endpoint:
+- Queue driver / cache driver if relevant:
+
+## Data and account context
+
+- User role:
+- Owner/non-owner/guest path:
+- Test data required:
 
 ## Logs / screenshots
 
-<!-- Redact any secrets, tokens, cookies, or personal data. -->
+<!-- Redact secrets, tokens, cookies, personal data, payment details, and private media filenames. -->
+
+## Regression test idea
+
+- [ ] Authentication/authorization
+- [ ] Validation
+- [ ] Database assertion
+- [ ] Storage/mail/queue/event fake
+- [ ] API response contract
+- [ ] Blade/frontend rendering

@@ -1,0 +1,33 @@
+# Known Technical Debt
+
+Generated: 2026-07-02
+
+This register tracks remaining risks that should not be silently normalized. Each item needs a focused follow-up with tests and rollback notes.
+
+| Priority | Area | Risk | Reason not fixed now | Recommended next step |
+| --- | --- | --- | --- | --- |
+| P0 | `app/Http/Controllers/ApiController.php` | God controller with inline validation, mixed rendering/API concerns, and high regression risk. | Splitting the full API in one pass would change too many contracts. | Pick one route group, add API contract tests, extract Form Requests/actions/resources, then repeat. |
+| P0 | State-changing GET routes in `routes/web.php` and `routes/custom_routes.php` | CSRF, crawler/prefetch side effects, and accidental destructive actions. | Changing verbs breaks existing Blade/JS callers without route-by-route coverage. | Convert one route family to POST/DELETE with CSRF, update callers, and add method/authorization tests. |
+| P0 | Raw Blade output and rich-text rendering hotspots | Stored or reflected XSS if untrusted content reaches `{!! !!}` output. | Requires sanitizer policy and UI regression tests to avoid breaking existing formatting. | Add XSS payload tests for chat/posts/profile snippets, define sanitizer rules, then replace unsafe output. |
+| P0 | Payment callbacks and payment state transitions | Signature, replay, and idempotency gaps can create incorrect payment state. | Provider-specific behavior needs focused fixtures and test-mode setup. | Inventory each gateway callback, add signed request/idempotency tests, then extract payment transition actions. |
+| P1 | Legacy install SQL baseline | Schema ownership is split between `public/assets/install.sql` and additive migrations. | A baseline migration needs production schema/data comparison before replacing the dump. | Produce schema diff, decide baseline migration strategy, and document rollback for dump removal. |
+| P1 | Upload validation still inline in legacy controllers | Inconsistent validation and harder storage faking for images/videos. | Broad extraction would touch many user-facing flows. | Extract Form Requests for chat, profile, page, group, fundraiser, and admin upload surfaces one at a time. |
+| P1 | Public media storage contract | Private content metadata can still point to public files for legacy playback. | Moving files private would break existing URLs and requires migration/backfill. | Design a private media access layer, migrate one media type, and keep compatibility tests. |
+| P1 | CSP compatibility allowances | Current CSP still permits `'unsafe-inline'`, `'unsafe-eval'`, broad `https:` sources, and live-video exceptions. | Legacy Blade inline handlers, widgets, payment SDKs, and Zoom live video need compatibility. | Move inline scripts/styles into compiled assets, replace broad sources with provider hostnames, and tighten in report-only mode first. |
+| P1 | Full npm dependency audit | Full dev audit currently includes Laravel Mix/Webpack-era vulnerabilities, while runtime audit is expected to be lower risk. | Mix-to-Vite/build-tool migration is a larger asset pipeline change. | Keep `npm audit --omit=dev` in release review and plan a dedicated Mix-to-Vite migration. |
+| P1 | Queue/scheduler production posture | `.env.example` defaults to sync queue and no scheduler tasks are committed. | Real worker/scheduler infrastructure is host-specific. | Document host supervisor/cron setup per environment before enabling async production jobs. |
+| P2 | Admin architecture | Admin screens are legacy controller/views, not Filament resources. | Filament is not installed despite older stack notes. | Either document legacy admin as the supported path or plan a separate Filament installation/migration. |
+| P2 | Test coverage distribution | High-risk flows now have many audit tests, but some modules still rely on broad smoke coverage. | Exhaustive coverage in one prompt would be too large to review safely. | Continue adding focused tests for imports/exports, notifications/mail, soft deletes, cache invalidation, and tenant/account isolation. |
+| P2 | CORS/proxy/cookie production hardening | Defaults are safe for local development but need environment-specific allowlists and HTTPS/proxy settings. | Production host/proxy topology is not represented in this repo. | Set `CORS_ALLOWED_ORIGINS`, HTTPS cookie settings, and trusted proxy handling in deployment documentation for each environment. |
+
+## Verification Notes
+
+- Add a test or explicit documentation entry for every legacy behavior before refactoring it.
+- Keep `composer audit --no-interaction` and `npm run quality` in CI.
+- Treat any failed quality command as release-blocking unless this file records the exact command, failure, risk, and owner-approved next step.
+
+## Known Command Failures
+
+| Command | Summary | Risk | Next step |
+| --- | --- | --- | --- |
+| `npm audit --audit-level=moderate` | Fails with 11 dev-tool vulnerabilities through the Laravel Mix/Webpack chain: `elliptic` via `browserify-sign`/`crypto-browserify`/`node-libs-browser`/`laravel-mix`, and `uuid` via `node-notifier`/`webpack-notifier`/`webpack-dev-server`. npm reports no direct fix available. | Development/build tooling exposure; `npm audit --omit=dev --audit-level=moderate` currently reports 0 runtime vulnerabilities. | Keep runtime audit in release review, restrict build tooling to CI/trusted hosts, and plan the dedicated Mix-to-Vite migration. |

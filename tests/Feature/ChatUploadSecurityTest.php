@@ -137,13 +137,9 @@ class ChatUploadSecurityTest extends TestCase
 
     private function createMessageThread(User $sender, User $receiver): Message_thrade
     {
-        $thread = new Message_thrade;
-        $thread->sender_id = $sender->id;
-        $thread->reciver_id = $receiver->id;
-        $thread->chatcenter = 'chat';
-        $thread->save();
-
-        return $thread;
+        return Message_thrade::factory()
+            ->between($sender, $receiver)
+            ->create();
     }
 
     private function latestChatVideoFor(User $user): Media_files

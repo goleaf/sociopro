@@ -11,34 +11,110 @@ This file summarizes the reviewable senior-quality slice landed for the broad mo
 - Composer: 2.9.5.
 - Node / npm: Node 22.22.3 / npm 10.9.8.
 - Frontend: Laravel Mix / Webpack, not Vite.
-- Database: sqlite local/test default; production-oriented schema still comes from `public/assets/install.sql` plus additive migrations.
+- Database: SQLite local/test default; production-oriented schema still comes from `public/assets/install.sql` plus additive migrations.
 - Tests/tools: PHPUnit 12, Laravel Pint, Larastan/PHPStan, Rector, ESLint, Stylelint, Prettier.
-- CI: GitHub Actions workflow exists at `.github/workflows/ci.yml`.
+- CI: GitHub Actions workflow at `.github/workflows/ci.yml`.
+- Filament: not installed in this checkout.
 
-## Shipped Safe Changes
+## What Was Improved
 
-- Removed the browser-facing generated-image provider surface from routes, controller methods, Blade entry points, admin settings, config, `.env.example`, installer SQL, and regression tests.
-- Fixed post and marketplace image-upload regression coverage around the legacy `public/storage` path contract.
-- Hardened shared uploads against executable extensions and failed writes.
-- Hardened job-application PDF upload/download by storing new files on the private local disk and streaming through `StreamJobApplicationAttachmentAction`.
-- Hardened media file downloads/deletes with ownership/privacy checks and path traversal protection.
-- Hardened `remove_file()` so traversal input cannot delete files outside `public/storage`.
-- Updated current-state docs for CI/tooling, deployment, rollback, backup/restore, performance, and remaining risk.
+- Added production-oriented README guidance for setup, environment, database, storage, queues, scheduler, frontend, quality checks, and troubleshooting.
+- Added first-stop architecture and development workflow docs.
+- Added a dedicated known technical debt register.
+- Expanded deployment, rollback, and backup/restore runbooks.
+- Added configurable HTTP security-header documentation for CSP, HSTS, permissions policy, and compatibility exceptions.
+- Strengthened CI around Composer audit, Laravel cache smoke checks, route registration, fresh migration smoke checks, and frontend quality/build gates.
+- Added issue and PR template checklists for tests, security, deployment, rollback, and sensitive-data handling.
 
-## Remaining High-Risk Work
+## Code Quality Tools Added Or Finalized
 
-| Path / area | Risk | Reason not fixed now | Next step |
-| --- | --- | --- | --- |
-| `app/Http/Controllers/ApiController.php` | God controller, N+1 risk, inline validation, mixed concerns | Splitting it in this same commit would be too large and could break API contracts | Add contract tests for one endpoint group, then extract one domain controller/action/resource at a time. |
-| `resources/views/frontend/chat/*` | Stored-XSS risk where raw HTML is rendered | Needs content-sanitization contract and view tests to avoid breaking existing chat formatting | Add XSS payload tests, define sanitizer rules, then replace unsafe raw output. |
-| `routes/custom_routes.php` state-changing GET routes | CSRF and crawler/prefetch side effects | Changing verbs breaks Blade/JS callers without a route-by-route migration | Convert one route group to POST/DELETE with CSRF and regression tests. |
-| `public/assets/install.sql` schema ownership | Dump-derived schema is hard to roll back | Baseline migration needs production schema/data comparison | Produce schema comparison and data-quality reports before baseline migration work. |
-| Payment callbacks/providers | Signature/idempotency gaps | Provider behavior and test credentials need focused design | Add gateway inventory, then one provider signature/idempotency test slice. |
-| Frontend build | Laravel Mix dev-tool audit exposure | Vite migration affects assets, Blade directives, CI, and deployment | Plan and ship Mix-to-Vite as its own build-tool migration. |
+- Composer scripts now expose:
+  - `composer quality`
+  - `composer quality:cache`
+  - `composer ci`
+- npm scripts now expose `npm run quality`.
+- CI runs Composer validation/audit, Pint, PHPStan/Larastan, PHPUnit, cache smoke checks, route list, migration fresh, ESLint, Stylelint, Prettier check, and Mix production build.
 
-## Release Notes For Reviewers
+## Backend Architecture Changes
 
-- Public API/UI behavior is preserved except for the intentional removal of the generated-image provider surface.
-- New file paths are constrained before streaming/deleting.
-- No secrets or provider tokens are introduced.
-- This slice intentionally documents broader refactors instead of bundling them into a risky mega-change.
+- Contact form submission now uses `ContactSendRequest` validation.
+- Contact mail uses configured sender headers and user-provided email as `replyTo`, reducing spoofed-from mail risk.
+- Contact send safely handles a missing admin recipient instead of throwing.
+- API chat upload normalizes uploaded file arrays and renders the legacy chat partial under the Sanctum-authenticated user.
+
+## Database Changes
+
+- No new schema changes were introduced in this slice.
+- Deployment documentation now requires migration review, fresh migration smoke checks on a throwaway database, backup review, and rollback notes.
+
+## Frontend Changes
+
+- No visual UI redesign was introduced.
+- Frontend build documentation now reflects Laravel Mix / Webpack, not Vite.
+- PR and workflow docs require Blade accessibility and escaped-output review for frontend changes.
+
+## Security Improvements
+
+- Contact form validation prevents malformed payloads before mail is sent.
+- Contact mail no longer sets arbitrary user input as the `From` address.
+- Web/API chat video uploads now route through `FileUploader` instead of direct relative-path `move()` calls.
+- Post update video uploads now route through `FileUploader` while preserving the legacy public filename contract.
+- Security headers are configurable through `config/security_headers.php`, including CSP, HSTS, and route-specific live video exceptions.
+- `.env.example` documents safe placeholders for session, mail, CORS, queue, filesystem, and S3-related keys.
+
+## Performance Improvements
+
+- CI now checks route registration and cacheability.
+- Deployment docs require config, route, and view cache checks.
+- The known debt register keeps high-risk controller/query refactors separate from broad risky rewrites.
+
+## Tests Added
+
+- `tests/Feature/ContactFormTest.php`
+  - validation failure,
+  - missing admin recipient,
+  - configured sender and safe reply-to headers.
+- `tests/Feature/ChatUploadSecurityTest.php`
+  - new web chat video upload storage,
+  - existing web chat thread video upload storage,
+  - API chat video upload storage.
+- `tests/Feature/MainControllerValidationTest.php`
+  - post edit video upload storage regression.
+- `tests/Feature/MiddlewareAuditTest.php`
+  - CSP/security-header emission on real web/API responses,
+  - HSTS HTTPS-only behavior,
+  - live-video route compatibility exception,
+  - security-header documentation coverage.
+
+## CI And Deployment Improvements
+
+- Composer audit is now a CI gate.
+- Laravel cache smoke checks are now repeatable via Composer and CI.
+- Route registration is now smoke-checked in CI.
+- Fresh migrations are smoke-checked against a throwaway SQLite database in CI.
+- Deployment docs include queue restart, scheduler, storage link, permissions, smoke tests, failed jobs, and rollback hooks.
+
+## Remaining Risks
+
+- `ApiController` remains a large legacy controller and needs route-group extraction.
+- Several state-changing web routes still use GET.
+- Some Blade raw-output hotspots still need sanitizer contracts and XSS regression tests.
+- CSP still allows temporary legacy compatibility sources such as `'unsafe-inline'`, `'unsafe-eval'`, and broad HTTPS provider access.
+- Payment callback signature and idempotency coverage remains incomplete.
+- Legacy install SQL remains part of the schema baseline.
+- Full npm dev dependency audit remains tied to Laravel Mix/Webpack-era packages; runtime audit should still be reviewed before release.
+
+See `docs/known-technical-debt.md` for the priority register.
+
+## Recommended Next 10 Refactor Tasks
+
+1. Extract API chat endpoints into a dedicated controller/action layer with Form Requests and API Resources.
+2. Convert one state-changing GET route family to POST/DELETE with CSRF and caller regression tests.
+3. Add XSS payload tests for chat/post/profile Blade rendering, then introduce a sanitizer policy.
+4. Add payment callback signature, replay, and idempotency tests for one provider at a time.
+5. Extract upload Form Requests for chat, profile, page, group, fundraiser, and admin job thumbnails.
+6. Design a private media access layer for non-public attachments before moving any public file contract.
+7. Produce a schema comparison between `public/assets/install.sql`, migrations, and production database structure.
+8. Migrate one legacy admin module from inline controller validation to Form Request + action + policy.
+9. Plan a Mix-to-Vite migration with asset manifest, Blade directive, CI, and rollback coverage.
+10. Add a restore-test automation plan for database plus public/private media artifacts.
