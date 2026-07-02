@@ -168,7 +168,9 @@ class ViewServiceProvider extends ServiceProvider
         View::composer('frontend.live_streaming.index', function ($view): void {
             $zoomConfiguration = get_settings('zoom_configuration', true);
 
-            $view->with('zoom_configuration', is_array($zoomConfiguration) ? $zoomConfiguration : []);
+            $view->with('zoom_configuration', [
+                'api_key' => is_array($zoomConfiguration) ? (string) ($zoomConfiguration['api_key'] ?? '') : '',
+            ]);
         });
 
         View::composer('frontend.main_content.jitsi_streaming', function ($view): void {

@@ -23,6 +23,7 @@ use App\Support\Files\FileUploader;
 use App\Support\Validation\NestedFileValidationErrors;
 use DB;
 use Exception;
+use Firebase\JWT\JWT;
 use Illuminate\Database\Query\JoinClause;
 // For used ZOOM
 use Illuminate\Http\Request;
@@ -661,6 +662,8 @@ class MainController extends Controller
         }
 
         $page_data['post_details'] = $post_details;
+        $page_data['zoom_api_key'] = $this->zoomApiKey();
+        $page_data['zoom_signature'] = $this->zoomSdkSignature($page_data['meeting_details'] ?? [], (int) ($page_data['host'] ?? 0));
 
         return view('frontend.live_streaming.index', $page_data);
     }
@@ -1225,7 +1228,6 @@ class MainController extends Controller
 
     public function imageGenerator()
     {
-        $page_data['hugging_face_auth_key'] = Setting::where('type', 'hugging_face_auth_key')->value('description');
         $page_data['user_info'] = $this->user;
         $page_data['view_path'] = 'frontend.ai_image.image_generator';
 
@@ -1239,20 +1241,25 @@ class MainController extends Controller
         ]);
 
         $prompt = $request->input('prompt');
+        $token = $this->huggingFaceToken();
+
+        if (! $token) {
+            return response()->json(['error' => 'Image generation is not configured'], 503);
+        }
 
         try {
-            // Hugging Face API Call
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer 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',
-            ])->post('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2', [
-                'inputs' => $prompt,
-            ]);
+            $response = Http::timeout(60)
+                ->withToken($token)
+                ->accept('image/png')
+                ->post($this->huggingFaceImageEndpoint(), [
+                    'inputs' => $prompt,
+                ]);
 
             if ($response->failed()) {
-                return response()->json(['error' => 'API request failed'], 500);
+                return response()->json(['error' => 'Image generation request failed'], $this->providerErrorStatus($response->status()));
             }
 
-            $imageData = $response->body(); // Assuming the API returns the image as base64 or URL
+            $imageData = $response->body();
             $imageUrl = $this->saveImage($imageData);
 
             // Save to database
@@ -1261,7 +1268,10 @@ class MainController extends Controller
             //     'image_url' => $imageUrl,
             // ]);
 
-            return response()->json(['image_url' => $imageUrl]);
+            return response()->json([
+                'image_url' => $imageUrl,
+                'image_base64' => base64_encode($imageData),
+            ]);
         } catch (Exception $exception) {
             report($exception);
 
@@ -1280,5 +1290,71 @@ class MainController extends Controller
         file_put_contents($folderPath.'/'.$fileName, $imageData);
 
         return url('public/storage/ai_images/'.$fileName);
+    }
+
+    private function huggingFaceToken(): ?string
+    {
+        $configuredToken = config('services.huggingface.token');
+
+        if (is_string($configuredToken) && $configuredToken !== '') {
+            return $configuredToken;
+        }
+
+        $legacyToken = Setting::where('type', 'hugging_face_auth_key')->value('description');
+
+        return is_string($legacyToken) && $legacyToken !== '' ? $legacyToken : null;
+    }
+
+    private function huggingFaceImageEndpoint(): string
+    {
+        $baseUrl = rtrim((string) config('services.huggingface.base_url', 'https://api-inference.huggingface.co/models'), '/');
+        $model = ltrim((string) config('services.huggingface.image_model', 'stabilityai/stable-diffusion-2'), '/');
+
+        return $baseUrl.'/'.$model;
+    }
+
+    private function providerErrorStatus(int $status): int
+    {
+        return $status >= 400 && $status < 600 ? $status : 502;
+    }
+
+    private function zoomApiKey(): string
+    {
+        $configuration = get_settings('zoom_configuration', true);
+
+        return is_array($configuration) ? (string) ($configuration['api_key'] ?? '') : '';
+    }
+
+    /**
+     * @param  array<string, mixed>  $meetingDetails
+     */
+    private function zoomSdkSignature(array $meetingDetails, int $role): string
+    {
+        $configuration = get_settings('zoom_configuration', true);
+
+        if (! is_array($configuration)) {
+            return '';
+        }
+
+        $apiKey = (string) ($configuration['api_key'] ?? '');
+        $apiSecret = (string) ($configuration['api_secret'] ?? '');
+        $meetingNumber = (string) ($meetingDetails['id'] ?? '');
+
+        if ($apiKey === '' || $apiSecret === '' || $meetingNumber === '') {
+            return '';
+        }
+
+        $issuedAt = time() - 30;
+        $expiresAt = $issuedAt + 7200;
+
+        return JWT::encode([
+            'sdkKey' => $apiKey,
+            'mn' => $meetingNumber,
+            'role' => $role,
+            'iat' => $issuedAt,
+            'exp' => $expiresAt,
+            'appKey' => $apiKey,
+            'tokenExp' => $expiresAt,
+        ], $apiSecret, 'HS256');
     }
 }

@@ -1,7 +1,3 @@
-@php
-    $hugging_face_auth_key =  DB::table('settings')->where('type', 'hugging_face_auth_key')->value('description');
-
-@endphp
 <!-- Modal -->
 <form class="ajaxForm" id="createPostForm" action="{{ route('create_post') }}" method="post" enctype="multipart/form-data">
     @csrf
@@ -248,13 +244,15 @@ $(document).ready(function() {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    const token = "{{ $hugging_face_auth_key }}";
     const form = document.getElementById('text-form');
     const inputText = document.getElementById('input-text');
     const base64Input = document.getElementById('base64-image');
     const outputImage = document.getElementById('generated-image');
     const generateButton = document.getElementById('generate-button');
     const submitButton = document.getElementById('submit-button');
+    const downloadButton = document.getElementById('download-button');
+    const generateImageUrl = "{{ route('ai_image.generate') }}";
+    const csrfToken = document.querySelector('meta[name="csrf_token"], meta[name="csrf-token"]')?.getAttribute('content') || "{{ csrf_token() }}";
 
     // Function to fetch image and convert to Base64
     async function fetchImageWithRetry(text, retries = 3, delay = 5000) {
@@ -263,23 +261,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 outputImage.src = "{{asset('assets/frontend/images/loader.gif')}}";
                 outputImage.classList.remove('hidden');
 
-                const response = await fetch(
-                    'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ inputs: text }),
-                    }
-                );
+                const response = await fetch(generateImageUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: text }),
+                });
 
                 if (response.ok) {
-                    return await response.blob();
+                    return await response.json();
                 } else {
                     const errorDetails = await response.json();
-                    if (!errorDetails.error || !errorDetails.error.includes("currently loading")) {
+                    if (response.status !== 503) {
                         throw new Error(errorDetails.error || response.statusText);
                     }
                 }
@@ -298,20 +294,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const imageBlob = await fetchImageWithRetry(text);
-            const reader = new FileReader();
-            reader.readAsDataURL(imageBlob);
-            reader.onloadend = () => {
-                const base64Image = reader.result; // Base64 string
+            const generatedImage = await fetchImageWithRetry(text);
 
-                // Set image src and hidden input value
-                outputImage.src = base64Image;
-                base64Input.value = base64Image.split(',')[1]; // Only the Base64 part
-                outputImage.classList.remove('hidden');
+            outputImage.src = generatedImage.image_url;
+            base64Input.value = generatedImage.image_base64;
+            outputImage.classList.remove('hidden');
+            downloadButton.href = generatedImage.image_url;
+            downloadButton.classList.remove('hidden');
 
-                // Show the submit button
-                submitButton.classList.remove('hidden');
-            };
+            // Show the submit button
+            submitButton.classList.remove('hidden');
         } catch (error) {
             alert(`An error occurred: ${error.message}`);
         }

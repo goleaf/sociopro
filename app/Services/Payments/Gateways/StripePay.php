@@ -79,8 +79,6 @@ class StripePay
         Stripe::setApiKey($stripeSecretKey);
         header('Content-Type: application/json');
 
-        $YOUR_DOMAIN = 'http://localhost:4242';
-
         $checkout_session = CheckoutSession::create([
             'line_items' => [
                 [

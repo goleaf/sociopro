@@ -53,15 +53,6 @@
                             @endif
                         </div>
 
-                        <!-- <div class="row mt-4">
-                            <div class="col-md-6 pb-2">
-                                <a href="javascript:;" onclick="$('[name=email]').val('admin@example.com'); $('[name=password]').val('12345678');" class="btn btn-outline-primary w-100">Login as Admin</a>
-                            </div>
-                            <div class="col-md-6 pb-2">
-                                <a href="javascript:;" onclick="$('[name=email]').val('karenjrios@example.com'); $('[name=password]').val('12345678');" class="btn btn-outline-primary w-100">Login as General user</a>
-                            </div>
-                        </div> -->
-            
                     </form>
 
                 </div>
@@ -73,4 +64,3 @@
 <!-- Main End -->
 
 @include('auth.layout.footer')
-

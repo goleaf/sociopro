@@ -70,8 +70,8 @@
             ZoomMtg.preLoadWasm();
             ZoomMtg.prepareJssdk();
 
-            var API_KEY = "{{$zoom_configuration['api_key']}}";
-            var API_SECRET = "{{$zoom_configuration['api_secret']}}";
+            var API_KEY = "{{$zoom_api_key}}";
+            var SIGNATURE = "{{$zoom_signature}}";
             var USER_NAME = "{{Auth()->user()->name}}";
             var MEETING_NUMBER = "{{$meeting_details['id']}}";
             var PASSWORD = "{{$meeting_details['password']}}";
@@ -84,7 +84,7 @@
 
             var meetConfig = {
                 apiKey: API_KEY,
-                apiSecret: API_SECRET,
+                signature: SIGNATURE,
                 meetingNumber: MEETING_NUMBER,
                 userName: USER_NAME,
                 passWord: PASSWORD,
@@ -93,13 +93,6 @@
             };
 
 
-
-            var signature = ZoomMtg.generateSignature({
-                meetingNumber: meetConfig.meetingNumber,
-                apiKey: meetConfig.apiKey,
-                apiSecret: meetConfig.apiSecret,
-                role: meetConfig.role
-            });
 
             ZoomMtg.init({
                 leaveUrl: meetConfig.leaveUrl,
@@ -111,7 +104,7 @@
                     ZoomMtg.join({
                         meetingNumber: meetConfig.meetingNumber,
                         userName: meetConfig.userName,
-                        signature: signature,
+                        signature: meetConfig.signature,
                         apiKey: meetConfig.apiKey,
                         passWord: meetConfig.passWord
                     });

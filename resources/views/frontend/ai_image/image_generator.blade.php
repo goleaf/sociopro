@@ -18,11 +18,12 @@
 
 
 <script>
-    const token = "{{ $hugging_face_auth_key }}"
     const form = document.getElementById('text-form');
     const inputText = document.getElementById('input-text');
     const outputImage = document.getElementById('generated-image');
     const downloadButton = document.getElementById('download-button');
+    const generateImageUrl = "{{ route('ai_image.generate') }}";
+    const csrfToken = document.querySelector('meta[name="csrf_token"], meta[name="csrf-token"]')?.getAttribute('content') || "{{ csrf_token() }}";
     
     // Function to fetch image with retry logic
     async function fetchImageWithRetry(text, retries = 3, delay = 5000) {
@@ -31,20 +32,21 @@
                 outputImage.src = "{{asset('assets/frontend/images/loader.gif')}}";
                 outputImage.classList.remove('hidden'); // Ensure the image is visible during loading
             
-                const response = await fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2', {
+                const response = await fetch(generateImageUrl, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ inputs: text }),
+                    body: JSON.stringify({ prompt: text }),
                 });
     
                 if (response.ok) {
-                    return await response.blob(); // Return image blob
+                    return await response.json();
                 } else {
                     const errorDetails = await response.json();
-                    if (!errorDetails.error || !errorDetails.error.includes("currently loading")) {
+                    if (response.status !== 503) {
                         throw new Error(errorDetails.error || response.statusText);
                     }
                 }
@@ -72,8 +74,8 @@
         outputImage.alt = "Generating...";
     
         try {
-            const imageBlob = await fetchImageWithRetry(text); // Fetch image with retry
-            const imageUrl = URL.createObjectURL(imageBlob);
+            const generatedImage = await fetchImageWithRetry(text);
+            const imageUrl = generatedImage.image_url;
     
             // Display the generated image
             outputImage.src = imageUrl;
