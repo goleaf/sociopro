@@ -31,6 +31,14 @@ class SendFriendRequestAction
 
     protected function createFriendship(User $requester, int $accepterId): Friendships
     {
+        $existingFriendship = Friendships::where('accepter', $accepterId)
+            ->where('requester', $requester->id)
+            ->first();
+
+        if ($existingFriendship instanceof Friendships) {
+            return $existingFriendship;
+        }
+
         $friendship = new Friendships;
         $friendship->accepter = $accepterId;
         $friendship->requester = $requester->id;
@@ -42,6 +50,15 @@ class SendFriendRequestAction
 
     protected function createNotification(User $requester, int $accepterId): Notification
     {
+        $existingNotification = Notification::where('sender_user_id', $requester->id)
+            ->where('reciver_user_id', $accepterId)
+            ->where('type', 'profile')
+            ->first();
+
+        if ($existingNotification instanceof Notification) {
+            return $existingNotification;
+        }
+
         $notification = new Notification;
         $notification->sender_user_id = $requester->id;
         $notification->reciver_user_id = $accepterId;

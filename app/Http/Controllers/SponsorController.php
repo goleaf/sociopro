@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sponsor;
 use App\Support\Files\FileUploader;
 use App\Support\Validation\DateTimeRules;
+use DateTimeInterface;
 use Facade\FlareClient\Stacktrace\File;
 use Illuminate\Http\Request;
 use Image;
@@ -113,9 +114,10 @@ class SponsorController extends Controller
     public function ad_status($type, $id)
     {
         $valid = Sponsor::where('id', $id)->value('end_date');
+        $validTimestamp = $valid instanceof DateTimeInterface ? $valid->getTimestamp() : strtotime((string) $valid);
 
         if ($type == 'active') {
-            if (strtotime('now') < $valid) {
+            if ($validTimestamp !== false && time() < $validTimestamp) {
                 $sponsor = Sponsor::find($id);
                 $sponsor->status = 1;
                 $sponsor->save();
@@ -124,7 +126,7 @@ class SponsorController extends Controller
                 flash()->addSuccess('Ad date expired.');
             }
         } else {
-            if (strtotime('now') < $valid) {
+            if ($validTimestamp !== false && time() < $validTimestamp) {
                 $sponsor = Sponsor::find($id);
                 $sponsor->status = 0;
                 $sponsor->save();

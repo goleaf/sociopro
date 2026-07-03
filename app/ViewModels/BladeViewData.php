@@ -44,6 +44,7 @@ use Illuminate\Support\Facades\Schema;
  * @phpstan-type FriendRequestRow array{request: Friendships, user: User, mutual_count: int}
  * @phpstan-type BlockedUserRow array{block: BlockUser, user: User}
  * @phpstan-type InviteRow array{friendship: Friendships, user: User, mutual_count: int, is_following: bool, is_blocked: bool, invite: Invite|null}
+ * @phpstan-type EventGuestRow array{user: User, status: string}
  */
 final class BladeViewData
 {
@@ -549,6 +550,56 @@ final class BladeViewData
             'going' => count(is_array($goingUsers) ? $goingUsers : []) + $invitedFriendGoing,
             'interested' => count(is_array($interestedUsers) ? $interestedUsers : []),
         ];
+    }
+
+    public function event(int|string|null $eventId): ?Event
+    {
+        if (! $eventId) {
+            return null;
+        }
+
+        return $this->remember("event:{$eventId}", fn (): ?Event => Event::query()->find($eventId));
+    }
+
+    /**
+     * @return Collection<int, EventGuestRow>
+     */
+    public function eventGuestRows(?Model $event): Collection
+    {
+        if (! $event) {
+            return collect();
+        }
+
+        return $this->remember("event-guests:{$event->id}", function () use ($event): Collection {
+            $goingUserIds = $this->jsonIdList($event->going_users_id ?? '[]');
+            $interestedUserIds = $this->jsonIdList($event->interested_users_id ?? '[]');
+            $guestUserIds = collect($goingUserIds)
+                ->merge($interestedUserIds)
+                ->unique()
+                ->values();
+
+            if ($guestUserIds->isEmpty()) {
+                return collect();
+            }
+
+            $users = User::query()
+                ->select(['id', 'name', 'photo'])
+                ->whereIn('id', $guestUserIds)
+                ->get()
+                ->keyBy('id');
+
+            return collect($goingUserIds)
+                ->map(fn (int $userId): ?array => $users->has($userId) ? [
+                    'user' => $users->get($userId),
+                    'status' => 'Going',
+                ] : null)
+                ->filter()
+                ->merge(collect($interestedUserIds)->map(fn (int $userId): ?array => $users->has($userId) ? [
+                    'user' => $users->get($userId),
+                    'status' => 'Interested',
+                ] : null)->filter())
+                ->values();
+        });
     }
 
     /**
@@ -1167,6 +1218,20 @@ final class BladeViewData
         $friends = json_decode($viewer->friends ?? '[]', true);
 
         return in_array((string) $userId, array_map('strval', is_array($friends) ? $friends : []), true);
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function jsonIdList(mixed $value): array
+    {
+        $decoded = json_decode((string) $value, true);
+
+        if (! is_array($decoded)) {
+            return [];
+        }
+
+        return array_values(array_map('intval', array_filter($decoded, 'is_numeric')));
     }
 
     private function hasFriendshipRequest(int|string $requesterId, int|string $accepterId): bool

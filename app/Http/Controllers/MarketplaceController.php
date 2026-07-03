@@ -157,7 +157,7 @@ class MarketplaceController extends Controller
         Gate::authorize('delete', $market);
 
         // store image name for delete file operation
-        $imagename = $market->banner;
+        $imagename = $market->image;
 
         $done = $market->delete();
         if ($done) {
@@ -178,7 +178,7 @@ class MarketplaceController extends Controller
         return view('frontend.marketplace.product-single', $page_data);
     }
 
-    public function single_product($id)
+    public function single_product(Request $request, $id)
     {
         $product = Marketplace::with(['getCurrency', 'getUser', 'getCategory', 'getBrand'])->find($id);
 
@@ -190,7 +190,7 @@ class MarketplaceController extends Controller
 
             return view('frontend.index', $page_data);
         } else {
-            if (isset($_GET['shared'])) {
+            if ($request->has('shared')) {
                 $page_data['post'] = '';
 
                 return view('frontend.marketplace.custom_shared_view', $page_data);
@@ -201,17 +201,17 @@ class MarketplaceController extends Controller
     }
 
     // on key up product search
-    public function filter()
+    public function filter(Request $request)
     {
-        $search = $_GET['search'];
+        $search = $request->string('search')->toString();
         // $category =  $_GET['category'];
-        $condition = $_GET['condition'];
-        $min = $_GET['min'];
-        $max = $_GET['max'];
+        $condition = $request->string('condition')->toString();
+        $min = $request->input('min');
+        $max = $request->input('max');
         // $brand =  $_GET['brand'];
-        $location = $_GET['location'];
+        $location = $request->string('location')->toString();
 
-        $query = Marketplace::where('status', 1);
+        $query = Marketplace::query()->where('status', 1);
 
         if (isset($search) && ! empty($search)) {
             $query->where(function ($query) use ($search) {
@@ -318,20 +318,20 @@ class MarketplaceController extends Controller
         }
     }
 
-    public function single_product_ifrane($id)
+    public function single_product_ifrane(Request $request, $id)
     {
         $product = Marketplace::with(['getCurrency', 'getUser', 'getCategory', 'getBrand'])->find($id);
         $page_data['product'] = $product;
         $page_data['product_image'] = MediaFile::where('product_id', $id)->ofType(MediaFileType::Image)->get();
 
         if ($product) {
-            if (isset($_GET['shared'])) {
+            if ($request->has('shared')) {
                 return view('frontend.marketplace.single_product_iframe', $page_data);
             } else {
                 return redirect()->route('single.product', $id);
             }
         } else {
-            if (isset($_GET['shared'])) {
+            if ($request->has('shared')) {
                 $page_data['post'] = '';
 
                 return view('frontend.main_content.custom_shared_view', $page_data);

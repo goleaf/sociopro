@@ -1,344 +1,331 @@
 <?php
 
-// import facade
-
 use App\Models\GroupMember;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Illuminate\Support\Facades\File;
 
-if (! function_exists('get_user_info')) {
-    function get_user_info($user_id = '')
+if (! function_exists('api_helper_user_columns')) {
+    /**
+     * @return list<string>
+     */
+    function api_helper_user_columns(): array
     {
-        $user_data = DB::table('users')->where('id', $user_id)->first();
+        return [
+            'id',
+            'user_role',
+            'username',
+            'email',
+            'name',
+            'nickname',
+            'friends',
+            'followers',
+            'gender',
+            'studied_at',
+            'address',
+            'profession',
+            'job',
+            'marital_status',
+            'phone',
+            'date_of_birth',
+            'about',
+            'save_post',
+            'photo',
+            'cover_photo',
+            'status',
+            'lastActive',
+            'timezone',
+            'email_verified_at',
+            'created_at',
+            'updated_at',
+            'profile_status',
+        ];
+    }
+}
 
-        return $user_data;
+if (! function_exists('api_helper_remote_url')) {
+    function api_helper_remote_url(mixed $fileName): ?string
+    {
+        $fileName = (string) $fileName;
+
+        return str_contains($fileName, 'https://') ? $fileName : null;
+    }
+}
+
+if (! function_exists('api_helper_folder')) {
+    function api_helper_folder(mixed $folderName): string
+    {
+        $folderName = trim((string) $folderName, '/');
+
+        return $folderName === '' ? '' : $folderName.'/';
+    }
+}
+
+if (! function_exists('api_helper_existing_file_url')) {
+    function api_helper_existing_file_url(string $relativePath, string $defaultRelativePath, bool $requireFile = true): string
+    {
+        $path = base_path($relativePath);
+        $exists = File::exists($path) && (! $requireFile || File::isFile($path));
+
+        return url($exists ? $relativePath : $defaultRelativePath);
+    }
+}
+
+if (! function_exists('api_helper_friends_list')) {
+    /**
+     * @return list<mixed>
+     */
+    function api_helper_friends_list(mixed $friends): array
+    {
+        $decoded = json_decode((string) $friends, true);
+
+        return is_array($decoded) ? array_values($decoded) : [];
+    }
+}
+
+if (! function_exists('get_user_info')) {
+    function get_user_info($user_id = ''): ?User
+    {
+        return User::query()
+            ->select(api_helper_user_columns())
+            ->whereKey($user_id)
+            ->first();
     }
 }
 
 if (! function_exists('get_user_images')) {
-    function get_user_images($file_name_or_user_id = '', $optimized = '')
+    function get_user_images($file_name_or_user_id = '', $optimized = ''): string
     {
-        $optimized = $optimized.'/';
-        if ($file_name_or_user_id == '') {
-            $file_name_or_user_id = 'default.png';
-        }
+        $fileName = $file_name_or_user_id === '' ? 'default.png' : (string) $file_name_or_user_id;
+
         if (is_numeric($file_name_or_user_id)) {
-            $user_id = $file_name_or_user_id;
-            $file_name = '';
-        } else {
-            $user_id = '';
-            $file_name = $file_name_or_user_id;
+            $fileName = (string) User::query()
+                ->whereKey($file_name_or_user_id)
+                ->value('photo');
         }
 
-        if ($user_id > 0) {
-            $user_id = $file_name_or_user_id;
-            $file_name = DB::table('users')->where('id', $user_id)->value('photo');
-
-            // this file comes from another online link as like amazon s3 server
-            if (str_contains($file_name, 'https://')) {
-                return $file_name;
-            }
-
-            if (File::exists('public/storage/userimage/'.$optimized.$file_name) && is_file('public/storage/userimage/'.$optimized.$file_name)) {
-                return url('public/storage/userimage/'.$optimized.$file_name);
-            } else {
-                return url('public/storage/userimage/default.png');
-            }
-        } elseif (File::exists('public/storage/userimage/'.$optimized.$file_name) && is_file('public/storage/userimage/'.$optimized.$file_name)) {
-            return url('public/storage/userimage/'.$optimized.$file_name);
-        } elseif (str_contains($file_name, 'https://')) {
-            // this file comes from another online link as like amazon s3 server
-            return $file_name;
-        } else {
-            return url('public/storage/userimage/default.png');
+        $remoteUrl = api_helper_remote_url($fileName);
+        if ($remoteUrl !== null) {
+            return $remoteUrl;
         }
+
+        return api_helper_existing_file_url(
+            'public/storage/userimage/'.api_helper_folder($optimized).$fileName,
+            'public/storage/userimage/default.png'
+        );
     }
 }
 
 if (! function_exists('get_cover_photos')) {
-    function get_cover_photos($file_name_or_user_id = '', $optimized = '')
+    function get_cover_photos($file_name_or_user_id = '', $optimized = ''): string
     {
-        $optimized = $optimized.'/';
-        if ($file_name_or_user_id == '') {
-            $file_name_or_user_id = Auth()->user()->cover_photo;
+        if ($file_name_or_user_id === '') {
+            $file_name_or_user_id = auth()->user()?->cover_photo ?? '';
         }
+
+        $fileName = (string) $file_name_or_user_id;
+
         if (is_numeric($file_name_or_user_id)) {
-            $user_id = $file_name_or_user_id;
-            $file_name = '';
-        } else {
-            $user_id = '';
-            $file_name = $file_name_or_user_id;
+            $fileName = (string) User::query()
+                ->whereKey($file_name_or_user_id)
+                ->value('cover_photo');
         }
 
-        if ($user_id > 0) {
-            $user_id = $file_name_or_user_id;
-            $file_name = DB::table('users')->where('id', $user_id)->value('cover_photo');
-
-            // this file comes from another online link as like amazon s3 server
-            if (str_contains($file_name, 'https://')) {
-                return $file_name;
-            }
-
-            if (File::exists('public/storage/cover_photo/'.$optimized.$file_name) && is_file('public/storage/cover_photo/'.$optimized.$file_name)) {
-                return url('public/storage/cover_photo/'.$optimized.$file_name);
-            } else {
-                return url('public/storage/cover_photo/default.jpg');
-            }
-        } elseif (File::exists('public/storage/cover_photo/'.$optimized.$file_name) && is_file('public/storage/cover_photo/'.$optimized.$file_name)) {
-            return url('public/storage/cover_photo/'.$optimized.$file_name);
-        } elseif (str_contains($file_name, 'https://')) {
-            // this file comes from another online link as like amazon s3 server
-            return $file_name;
-        } else {
-            return url('public/storage/cover_photo/default.jpg');
+        $remoteUrl = api_helper_remote_url($fileName);
+        if ($remoteUrl !== null) {
+            return $remoteUrl;
         }
+
+        return api_helper_existing_file_url(
+            'public/storage/cover_photo/'.api_helper_folder($optimized).$fileName,
+            'public/storage/cover_photo/default.jpg'
+        );
     }
 }
 
 if (! function_exists('get_post_images')) {
-    function get_post_images($file_name = '', $optimized = '')
+    function get_post_images($file_name = '', $optimized = ''): string
     {
-        // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        $remoteUrl = api_helper_remote_url($file_name);
+        if ($remoteUrl !== null) {
+            return $remoteUrl;
         }
 
-        $optimized = $optimized.'/';
-        if (File::exists('public/storage/post/images/'.$optimized.$file_name) && is_file('public/storage/post/images/'.$optimized.$file_name)) {
-            return url('public/storage/post/images/'.$optimized.$file_name);
-        } else {
-            return url('public/storage/post/images/default.png');
-        }
+        return api_helper_existing_file_url(
+            'public/storage/post/images/'.api_helper_folder($optimized).(string) $file_name,
+            'public/storage/post/images/default.png'
+        );
     }
 }
+
 if (! function_exists('get_post_videos')) {
-    function get_post_videos($file_name = '', $optimized = '')
+    function get_post_videos($file_name = '', $optimized = ''): string
     {
-        // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        $remoteUrl = api_helper_remote_url($file_name);
+        if ($remoteUrl !== null) {
+            return $remoteUrl;
         }
 
-        if ($optimized != '') {
-            $optimized = $optimized.'/';
-        }
-        if (File::exists('public/storage/post/videos/'.$optimized.$file_name)) {
-            return url('public/storage/post/videos/'.$optimized.$file_name);
-        } else {
-            return url('public/storage/post/videos/default.png');
-        }
+        return api_helper_existing_file_url(
+            'public/storage/post/videos/'.api_helper_folder($optimized).(string) $file_name,
+            'public/storage/post/videos/default.png',
+            false
+        );
     }
 }
+
 if (! function_exists('get_story_images')) {
-    function get_story_images($file_name = '', $optimized = '')
+    function get_story_images($file_name = '', $optimized = ''): string
     {
-        // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        $remoteUrl = api_helper_remote_url($file_name);
+        if ($remoteUrl !== null) {
+            return $remoteUrl;
         }
 
-        $optimized = $optimized.'/';
-        if (File::exists('public/storage/story/images/'.$optimized.$file_name) && is_file('public/storage/story/images/'.$optimized.$file_name)) {
-            return url('public/storage/story/images/'.$optimized.$file_name);
-        } else {
-            return url('public/storage/story/images/default.jpg');
-        }
+        return api_helper_existing_file_url(
+            'public/storage/story/images/'.api_helper_folder($optimized).(string) $file_name,
+            'public/storage/story/images/default.jpg'
+        );
     }
 }
+
 if (! function_exists('get_story_videos')) {
-    function get_story_videos($file_name = '', $optimized = '')
+    function get_story_videos($file_name = '', $optimized = ''): string
     {
-        // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        $remoteUrl = api_helper_remote_url($file_name);
+        if ($remoteUrl !== null) {
+            return $remoteUrl;
         }
 
-        if ($optimized != '') {
-            $optimized = $optimized.'/';
-        }
-        if (File::exists('public/storage/story/videos/'.$optimized.$file_name)) {
-            return url('public/storage/story/videos/'.$optimized.$file_name);
-        } else {
-            return url('public/storage/story/videos/default.jpg');
-        }
+        return api_helper_existing_file_url(
+            'public/storage/story/videos/'.api_helper_folder($optimized).(string) $file_name,
+            'public/storage/story/videos/default.jpg',
+            false
+        );
     }
 }
-// get page logo
+
 if (! function_exists('get_group_logos')) {
-    function get_group_logos($file_name = '', $foldername = '')
+    function get_group_logos($file_name = '', $foldername = ''): string
     {
-        // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        $remoteUrl = api_helper_remote_url($file_name);
+        if ($remoteUrl !== null) {
+            return $remoteUrl;
         }
 
-        $foldername = $foldername.'/';
+        $folder = api_helper_folder($foldername);
 
-        // if (!empty($file_name) && !empty($foldername)) {
-        if ($file_name != '' && $foldername != '') {
-            return url('public/storage/groups/'.$foldername.$file_name);
-        } else {
-            return url('public/storage/groups/'.$foldername.'default/default.jpg');
+        if ($file_name !== '') {
+            return url('public/storage/groups/'.$folder.(string) $file_name);
         }
-        // }
-        //  else {
-        //     return url('public/storage/groups/' . $foldername . 'default/default.jpg');
-        // }
+
+        return url('public/storage/groups/'.$folder.'default/default.jpg');
     }
 }
 
-// get group cover photo
 if (! function_exists('get_group_cover_photos')) {
-    function get_group_cover_photos($file_name = '', $foldername = '')
+    function get_group_cover_photos($file_name = '', $foldername = ''): string
     {
-        // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        $remoteUrl = api_helper_remote_url($file_name);
+        if ($remoteUrl !== null) {
+            return $remoteUrl;
         }
 
-        $foldername = $foldername.'/';
+        $folder = api_helper_folder($foldername);
 
-        if (! empty($file_name)) {
-            // if (File::exists('public/storage/groups/' . $foldername . $file_name)) {
-            return url('public/storage/groups/'.$foldername.$file_name);
-            // } else {
-            //     return url('public/storage/groups/' . $foldername . 'default/default.jpg');
-            // }
-        } else {
-            return url('public/storage/groups/'.$foldername.'default/default.jpg');
+        if ($file_name !== '') {
+            return url('public/storage/groups/'.$folder.(string) $file_name);
         }
+
+        return url('public/storage/groups/'.$folder.'default/default.jpg');
     }
 }
-// get all assets photo
+
 if (! function_exists('get_all_assets_photos')) {
-    function get_all_assets_photos($file_name = '', $foldername = '', $main_foldername = '')
+    function get_all_assets_photos($file_name = '', $foldername = '', $main_foldername = ''): string
     {
-        // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        $remoteUrl = api_helper_remote_url($file_name);
+        if ($remoteUrl !== null) {
+            return $remoteUrl;
         }
 
-        $foldername = $foldername.'/';
-        $main_foldername = $main_foldername.'/';
+        $folder = api_helper_folder($foldername);
+        $mainFolder = api_helper_folder($main_foldername);
 
-        if (! empty($file_name)) {
-            // if (File::exists('public/storage/groups/' . $foldername . $file_name)) {
-            return url('public/assets/frontend/'.$main_foldername.$foldername.$file_name);
-            // } else {
-            //     return url('public/storage/groups/' . $foldername . 'default/default.jpg');
-            // }
-        } else {
-            return url('public/assets/frontend/'.$main_foldername.$foldername.'default/default.jpg');
+        if ($file_name !== '') {
+            return url('public/assets/frontend/'.$mainFolder.$folder.(string) $file_name);
         }
+
+        return url('public/assets/frontend/'.$mainFolder.$folder.'default/default.jpg');
     }
 }
-// get assets photo
+
 if (! function_exists('get_group_event_photos')) {
-    function get_group_event_photos($file_name = '', $foldername = '', $main_foldername = '')
+    function get_group_event_photos($file_name = '', $foldername = '', $main_foldername = ''): string
     {
-        // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        $remoteUrl = api_helper_remote_url($file_name);
+        if ($remoteUrl !== null) {
+            return $remoteUrl;
         }
 
-        $foldername = $foldername.'/';
-        $main_foldername = $main_foldername.'/';
+        $folder = api_helper_folder($foldername);
+        $mainFolder = api_helper_folder($main_foldername);
 
-        if (! empty($file_name)) {
-            // if (File::exists('public/storage/groups/' . $foldername . $file_name)) {
-            return url('public/storage/'.$main_foldername.$foldername.$file_name);
-            // } else {
-            //     return url('public/storage/groups/' . $foldername . 'default/default.jpg');
-            // }
-        } else {
-            return url('public/storage/'.$main_foldername.$foldername.'default/default.jpg');
+        if ($file_name !== '') {
+            return url('public/storage/'.$mainFolder.$folder.(string) $file_name);
         }
+
+        return url('public/storage/'.$mainFolder.$folder.'default/default.jpg');
     }
 }
-// get one folders file
+
 if (! function_exists('get_one_folder_files')) {
-    function get_one_folder_files($file_name = '', $foldername = '')
+    function get_one_folder_files($file_name = '', $foldername = ''): string
     {
-        // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        $remoteUrl = api_helper_remote_url($file_name);
+        if ($remoteUrl !== null) {
+            return $remoteUrl;
         }
 
-        $foldername = $foldername.'/';
+        $folder = api_helper_folder($foldername);
 
-        if (! empty($file_name)) {
-            // if (File::exists('public/storage/groups/' . $foldername . $file_name)) {
-            return url('public/storage/'.$foldername.$file_name);
-            // } else {
-            //     return url('public/storage/groups/' . $foldername . 'default/default.jpg');
-            // }
-        } else {
-            return url('public/storage/'.$foldername.'default/default.jpg');
+        if ($file_name !== '') {
+            return url('public/storage/'.$folder.(string) $file_name);
         }
+
+        return url('public/storage/'.$folder.'default/default.jpg');
     }
 }
 
-// for group
 if (! function_exists('members_by_group_id')) {
-    function members_by_group_id($group_id = '')
+    /**
+     * @return list<array{id: mixed, user_id: mixed, group_id: mixed, name: string|null, photo: string, countfriends: int, matching_friends_count: int}>
+     */
+    function members_by_group_id($group_id = ''): array
     {
-        // Assuming you have the appropriate model for the group members table
-        // Replace 'GroupMember' with your actual model name
-        $group_members = GroupMember::where('group_id', $group_id)->get();
+        return GroupMember::query()
+            ->select(['id', 'user_id', 'group_id'])
+            ->with(['user' => fn ($query) => $query->select(['id', 'name', 'photo', 'friends'])])
+            ->where('group_id', $group_id)
+            ->get()
+            ->filter(fn (GroupMember $member): bool => $member->user !== null)
+            ->map(function (GroupMember $member): array {
+                $user = $member->user;
+                $friendsList = api_helper_friends_list($user->friends);
+                $matchingFriendsCount = collect($friendsList)
+                    ->filter(fn ($friendId): bool => (string) $friendId === (string) $member->user_id)
+                    ->count();
 
-        $response = [];
-
-        // Check if any members were found
-        if ($group_members->count() > 0) {
-            // Iterate through the group members
-            foreach ($group_members as $member) {
-                $user = DB::table('users')->where('id', $member->user_id)->first();
-
-                // Parse friends list JSON string
-                $friendsList = json_decode($user->friends, true);
-                $countfriends = count($friendsList);
-
-                $matchingFriendsCount = 0;
-                foreach ($friendsList as $friendId) {
-                    // Check if the friend ID matches the member's user ID
-                    if ($friendId == $member->user_id) {
-                        $matchingFriendsCount++;
-                    }
-                }
-
-                // // Prepare an array to store friend details
-                // $friends = [];
-                // // Iterate through the friends list
-                // foreach ($friendsList as $friendId => $friendCount) {
-                //     // Fetch details of each friend
-                //     $friend = DB::table('users')->where('id', $friendId)->first();
-                //     if ($friend) {
-                //         $friends[] = [
-                //             'id' => $friend->id,
-                //             'name' => $friend->name,
-                //             'photo' => get_user_images($friend->id),
-                //             // Add other friend details as needed
-                //         ];
-                //     }
-                // }
-
-                // Add each member's ID and friend details to the response array
-                $response[] = [
+                return [
                     'id' => $member->id,
                     'user_id' => $member->user_id,
                     'group_id' => $member->group_id,
                     'name' => $user->name,
-                    'photo' => get_user_images($user->id),
-                    'countfriends' => $countfriends,
+                    'photo' => get_user_images($user->photo),
+                    'countfriends' => count($friendsList),
                     'matching_friends_count' => $matchingFriendsCount,
-                    // 'is_accepted' => $member->is_accepted,
-                    // 'role' => $member->role,
-                    // 'created_at' => $member->created_at,
-                    // 'updated_at' => $member->updated_at,
                 ];
-            }
-        }
-
-        return $response;
+            })
+            ->values()
+            ->all();
     }
 }

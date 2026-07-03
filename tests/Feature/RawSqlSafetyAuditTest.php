@@ -82,10 +82,16 @@ class RawSqlSafetyAuditTest extends TestCase
     private function withoutComments(string $contents): string
     {
         $tokens = token_get_all($contents);
+        $output = '';
 
-        return collect($tokens)
-            ->reject(fn ($token): bool => is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true))
-            ->map(fn ($token): string => is_array($token) ? $token[1] : $token)
-            ->implode('');
+        foreach ($tokens as $token) {
+            if (is_array($token) && in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+
+            $output .= is_array($token) ? $token[1] : $token;
+        }
+
+        return $output;
     }
 }

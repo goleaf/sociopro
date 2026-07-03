@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Jobs\StreamJobApplicationAttachmentAction;
 use App\Enums\MembershipRole;
+use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Models\AccountActiveRequest;
 use App\Models\Badge;
@@ -23,6 +24,7 @@ use App\Models\Page;
 use App\Models\PageCategory;
 use App\Models\PageLike;
 use App\Models\PaymentGateway;
+use App\Models\PaymentHistoryEntry;
 use App\Models\Posts;
 use App\Models\Setting;
 use App\Models\Sponsor;
@@ -30,7 +32,6 @@ use App\Models\User;
 use App\Queries\Jobs\JobApplicationExportQuery;
 use App\Support\Files\FileUploader;
 use App\Support\Validation\DateTimeRules;
-use DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -168,7 +169,7 @@ class AdminCrudController extends Controller
     {
         $year = (int) $request->query('year', date('Y'));
 
-        $page_data['all_category'] = PageCategory::all();
+        $page_data['all_category'] = PageCategory::query()->orderBy('name')->get();
         $page_data['year'] = $year;
         $page_data['dashboardCounts'] = [
             'users' => User::query()->nonAdmins()->count(),
@@ -195,7 +196,7 @@ class AdminCrudController extends Controller
     // page category
     public function view_category()
     {
-        $page_data['all_category'] = PageCategory::all();
+        $page_data['all_category'] = PageCategory::query()->orderBy('name')->get();
         $page_data['view_path'] = 'page_category.index';
 
         return view('backend.index', $page_data);
@@ -225,7 +226,7 @@ class AdminCrudController extends Controller
 
     public function edit_category($id)
     {
-        $page_data['pagecategory'] = PageCategory::find($id);
+        $page_data['pagecategory'] = PageCategory::findOrFail($id);
         $page_data['view_path'] = 'page_category.edit';
 
         return view('backend.index', $page_data);
@@ -248,7 +249,7 @@ class AdminCrudController extends Controller
 
     public function delete_category($id)
     {
-        $category = PageCategory::find($id);
+        $category = PageCategory::findOrFail($id);
         $category->delete();
         flash()->addSuccess('Page Category has been Deleted successfully!');
 
@@ -258,7 +259,7 @@ class AdminCrudController extends Controller
     // product category
     public function view_product_category()
     {
-        $page_data['all_category'] = Category::all();
+        $page_data['all_category'] = Category::query()->orderBy('name')->get();
         $page_data['view_path'] = 'product_category.index';
 
         return view('backend.index', $page_data);
@@ -288,7 +289,7 @@ class AdminCrudController extends Controller
 
     public function edit_product_category($id)
     {
-        $page_data['productcategory'] = Category::find($id);
+        $page_data['productcategory'] = Category::findOrFail($id);
         $page_data['view_path'] = 'product_category.edit';
 
         return view('backend.index', $page_data);
@@ -311,7 +312,7 @@ class AdminCrudController extends Controller
 
     public function delete_product_category($id)
     {
-        $category = Category::find($id);
+        $category = Category::findOrFail($id);
         $category->delete();
         flash()->addSuccess('Product Category has been Deleted successfully!');
 
@@ -321,7 +322,7 @@ class AdminCrudController extends Controller
     // product brand
     public function view_brand_category()
     {
-        $page_data['brand'] = Brand::all();
+        $page_data['brand'] = Brand::query()->orderBy('name')->get();
         $page_data['view_path'] = 'brand.index';
 
         return view('backend.index', $page_data);
@@ -351,7 +352,7 @@ class AdminCrudController extends Controller
 
     public function edit_brand_category($id)
     {
-        $page_data['brand'] = Brand::find($id);
+        $page_data['brand'] = Brand::findOrFail($id);
         $page_data['view_path'] = 'brand.edit';
 
         return view('backend.index', $page_data);
@@ -374,7 +375,7 @@ class AdminCrudController extends Controller
 
     public function delete_brand_category($id)
     {
-        $brand = Brand::find($id);
+        $brand = Brand::findOrFail($id);
         $brand->delete();
         flash()->addSuccess('Product Brand has been Deleted successfully!');
 
@@ -414,7 +415,7 @@ class AdminCrudController extends Controller
 
     public function edit_blog_category($id)
     {
-        $page_data['blogcategories'] = BlogCategory::find($id);
+        $page_data['blogcategories'] = BlogCategory::findOrFail($id);
         $page_data['view_path'] = 'blog_category.edit';
 
         return view('backend.index', $page_data);
@@ -437,7 +438,7 @@ class AdminCrudController extends Controller
 
     public function delete_blog_category($id)
     {
-        $blogcategories = BlogCategory::find($id);
+        $blogcategories = BlogCategory::findOrFail($id);
         $blogcategories->delete();
         flash()->addSuccess('Blog Category Brand has been Deleted successfully!');
 
@@ -472,9 +473,10 @@ class AdminCrudController extends Controller
 
             Setting::where('type', 'purchase_code')->update($data);
             session()->flash('success', get_phrase('Purchase code has been updated'));
-            echo 1;
+
+            return response('1');
         } else {
-            return view('admin.setting.save_purchase_code');
+            return view('backend.admin.setting.save_purchase_code');
         }
     }
 
@@ -482,7 +484,10 @@ class AdminCrudController extends Controller
     public function groups()
     {
         $page_data['view_path'] = 'group.list';
-        $page_data['groups'] = Group::all();
+        $page_data['groups'] = Group::query()
+            ->with('getUser')
+            ->orderByDesc('id')
+            ->get();
 
         return view('backend.index', $page_data);
     }
@@ -551,7 +556,7 @@ class AdminCrudController extends Controller
 
     public function group_edit($id)
     {
-        $page_data['group_details'] = Group::find($id);
+        $page_data['group_details'] = Group::findOrFail($id);
         $page_data['view_path'] = 'group.edit';
 
         return view('backend.index', $page_data);
@@ -570,7 +575,7 @@ class AdminCrudController extends Controller
             $logo_file_name = null;
         }
 
-        $group = Group::find($id);
+        $group = Group::findOrFail($id);
         $group->title = $request->title;
         $group->subtitle = $request->subtitle;
         $group->status = $request->status;
@@ -588,23 +593,27 @@ class AdminCrudController extends Controller
         return redirect()->route('admin.group');
     }
 
-    public function pages()
+    public function pages(Request $request)
     {
-        if (isset($_GET['delete']) && $_GET['delete'] == 'yes' && isset($_GET['id'])) {
-            Page::find($_GET['id'])->delete();
+        if ($request->query('delete') === 'yes' && $request->filled('id')) {
+            Page::findOrFail($request->integer('id'))->delete();
             flash()->addSuccess('Page deleted successfully');
 
             return redirect()->back();
         }
 
         $page_data['view_path'] = 'page.list';
-        $page_data['pages'] = Page::get();
+        $page_data['pages'] = Page::query()
+            ->with('getUser')
+            ->orderByDesc('id')
+            ->get();
 
         return view('backend.index', $page_data);
     }
 
     public function page_create()
     {
+        $page_data['pageCategories'] = PageCategory::query()->orderBy('name')->get(['id', 'name']);
         $page_data['view_path'] = 'page.create';
 
         return view('backend.index', $page_data);
@@ -612,7 +621,8 @@ class AdminCrudController extends Controller
 
     public function page_edit($id = '')
     {
-        $page_data['page_details'] = Page::find($id);
+        $page_data['page_details'] = Page::findOrFail($id);
+        $page_data['pageCategories'] = PageCategory::query()->orderBy('name')->get(['id', 'name']);
         $page_data['view_path'] = 'page.edit';
 
         return view('backend.index', $page_data);
@@ -698,7 +708,7 @@ class AdminCrudController extends Controller
             $coverphoto_file_name = null;
         }
 
-        $page = Page::find($id);
+        $page = Page::findOrFail($id);
         $page->user_id = auth()->user()->id;
         $page->title = $request->title;
         $page->category_id = $request->category;
@@ -718,23 +728,27 @@ class AdminCrudController extends Controller
         return redirect()->route('admin.page');
     }
 
-    public function blogs()
+    public function blogs(Request $request)
     {
-        if (isset($_GET['delete']) && $_GET['delete'] == 'yes' && isset($_GET['id'])) {
-            Blog::find($_GET['id'])->delete();
+        if ($request->query('delete') === 'yes' && $request->filled('id')) {
+            Blog::findOrFail($request->integer('id'))->delete();
             flash()->addSuccess('Blog deleted successfully');
 
             return redirect()->back();
         }
 
         $page_data['view_path'] = 'blog.list';
-        $page_data['blogs'] = Blog::get();
+        $page_data['blogs'] = Blog::query()
+            ->with('getUser')
+            ->orderByDesc('id')
+            ->get();
 
         return view('backend.index', $page_data);
     }
 
     public function blog_create()
     {
+        $page_data['blogCategories'] = BlogCategory::query()->forSelect()->get();
         $page_data['view_path'] = 'blog.create';
 
         return view('backend.index', $page_data);
@@ -742,7 +756,8 @@ class AdminCrudController extends Controller
 
     public function blog_edit($id = '')
     {
-        $page_data['blog_details'] = Blog::find($id)->first();
+        $page_data['blog_details'] = Blog::findOrFail($id);
+        $page_data['blogCategories'] = BlogCategory::query()->forSelect()->get();
         $page_data['view_path'] = 'blog.edit';
 
         return view('backend.index', $page_data);
@@ -788,7 +803,8 @@ class AdminCrudController extends Controller
         }
         $data['view'] = json_encode([]);
 
-        DB::Table('blogs')->insert($data);
+        $blog = new Blog;
+        $blog->forceFill($data)->save();
         flash()->addSuccess('Blog created successfully');
 
         return redirect()->route('admin.blog');
@@ -813,7 +829,7 @@ class AdminCrudController extends Controller
             FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
         }
 
-        $blog = Blog::find($id);
+        $blog = Blog::findOrFail($id);
 
         // $blog->user_id = Auth()->user()->id;
         // store image name for delete file operation
@@ -850,7 +866,7 @@ class AdminCrudController extends Controller
     // Badge Start
     public function Badge()
     {
-        $page_data['badges'] = Badge::get();
+        $page_data['badges'] = Badge::query()->with('getUser')->orderByDesc('id')->get();
         $page_data['badge_price'] = Setting::where('type', 'badge_price')->value('description');
         $page_data['view_path'] = 'badge.badge-history';
 
@@ -859,7 +875,7 @@ class AdminCrudController extends Controller
 
     public function delete_badge_history($id)
     {
-        $badge = Badge::find($id);
+        $badge = Badge::findOrFail($id);
         $badge->delete();
         flash()->addSuccess('Badge  has been Deleted successfully!');
 
@@ -879,7 +895,7 @@ class AdminCrudController extends Controller
     //  Category View
     public function view_job_category()
     {
-        $page_data['all_category'] = JobCategory::all();
+        $page_data['all_category'] = JobCategory::query()->orderBy('name')->get();
         $page_data['view_path'] = 'jobs.job_category';
 
         return view('backend.index', $page_data);
@@ -909,7 +925,7 @@ class AdminCrudController extends Controller
 
     public function edit_job_category($id)
     {
-        $page_data['jobcategories'] = JobCategory::find($id);
+        $page_data['jobcategories'] = JobCategory::findOrFail($id);
         $page_data['view_path'] = 'jobs.edit_category';
 
         return view('backend.index', $page_data);
@@ -932,7 +948,7 @@ class AdminCrudController extends Controller
 
     public function delete_job_category($id)
     {
-        $jobcategories = JobCategory::find($id);
+        $jobcategories = JobCategory::findOrFail($id);
         $jobcategories->delete();
         flash()->addSuccess('Job Category  has been Deleted successfully!');
 
@@ -942,7 +958,7 @@ class AdminCrudController extends Controller
     // Job Create
     public function jobs()
     {
-        $page_data['jobs'] = Job::where('status', '1')->orderBy('id', 'DESC')->get();
+        $page_data['jobs'] = Job::query()->where('status', '1')->orderByDesc('id')->get();
         $page_data['view_path'] = 'jobs.job_list';
 
         return view('backend.index', $page_data);
@@ -950,6 +966,7 @@ class AdminCrudController extends Controller
 
     public function job_create()
     {
+        $page_data['jobCategories'] = JobCategory::query()->orderBy('name')->get(['id', 'name']);
         $page_data['view_path'] = 'jobs.job_create';
 
         return view('backend.index', $page_data);
@@ -992,7 +1009,7 @@ class AdminCrudController extends Controller
         if ($file_name !== null) {
             $data['thumbnail'] = $file_name;
         }
-        DB::Table('jobs')->insert($data);
+        Job::query()->create($data);
         flash()->addSuccess('Jobs created successfully');
 
         return redirect()->route('admin.job');
@@ -1000,7 +1017,8 @@ class AdminCrudController extends Controller
 
     public function job_edit($id = '')
     {
-        $page_data['job_details'] = Job::find($id);
+        $page_data['job_details'] = Job::findOrFail($id);
+        $page_data['jobCategories'] = JobCategory::query()->orderBy('name')->get(['id', 'name']);
         $page_data['view_path'] = 'jobs.job_edit';
 
         return view('backend.index', $page_data);
@@ -1033,7 +1051,7 @@ class AdminCrudController extends Controller
             $new_thumbnail = $request->old_image;
         }
 
-        $job = Job::find($id);
+        $job = Job::findOrFail($id);
 
         // store image name for delete file operation
         $job->thumbnail = $new_thumbnail;
@@ -1061,12 +1079,15 @@ class AdminCrudController extends Controller
 
     public function delete_job($id)
     {
-        $job = Job::find($id);
-        $job_history = DB::table('payment_histories')->where('item_id', $job->id)->delete();
+        $job = Job::findOrFail($id);
+        PaymentHistoryEntry::query()
+            ->where('item_type', 'job')
+            ->where('item_id', $job->id)
+            ->delete();
         $job_wishlist = JobWishlist::where('job_id', $job->id)->delete();
         $job_apply = JobApply::where('job_id', $job->id)->delete();
-        $thumbnailPathName = 'public/storage/job/thumbnail/'.$job->thumbnail;
-        if (file_exists($thumbnailPathName)) {
+        $thumbnailPathName = $job->thumbnail ? public_path('storage/job/thumbnail/'.$job->thumbnail) : null;
+        if ($thumbnailPathName !== null && is_file($thumbnailPathName)) {
             unlink($thumbnailPathName);
         }
         $job->delete();
@@ -1077,7 +1098,7 @@ class AdminCrudController extends Controller
 
     public function pending_job()
     {
-        $page_data['pending_job'] = Job::where('status', '0')->orderBy('id', 'DESC')->get();
+        $page_data['pending_job'] = Job::query()->where('status', '0')->orderByDesc('id')->get();
         $page_data['view_path'] = 'jobs.pending_job';
 
         return view('backend.index', $page_data);
@@ -1095,7 +1116,7 @@ class AdminCrudController extends Controller
 
     public function applyListDelete($id)
     {
-        $job = JobApply::find($id);
+        $job = JobApply::findOrFail($id);
         $thumbnailPathName = 'public/storage/job/cv/'.$job->attachment;
         if (file_exists($thumbnailPathName)) {
             unlink($thumbnailPathName);
@@ -1120,7 +1141,10 @@ class AdminCrudController extends Controller
 
     public function jobPaymentHistory()
     {
-        $page_data['job_history'] = DB::table('payment_histories')->where('item_type', 'job')->get();
+        $page_data['job_history'] = PaymentHistoryEntry::query()
+            ->where('item_type', 'job')
+            ->orderByDesc('id')
+            ->get();
         $page_data['view_path'] = 'jobs.job_payment_history';
 
         return view('backend.index', $page_data);
@@ -1128,8 +1152,7 @@ class AdminCrudController extends Controller
 
     public function jobDeleteHistory($id)
     {
-        $paymentHistory = DB::table('payment_histories')->where('id', $id)->delete();
-        // $paymentHistory->delete();
+        PaymentHistoryEntry::findOrFail($id)->delete();
         flash()->addSuccess('Job Payment History has been Deleted successfully!');
 
         return redirect()->back();
@@ -1486,16 +1509,19 @@ class AdminCrudController extends Controller
         return view('backend.index', $page_data);
     }
 
-    public function acActiveReqApp($id, $user_id)
+    public function acActiveReqApp($id = null, $user_id = null)
     {
+        if ($id === null || $user_id === null) {
+            return redirect()->route('admin.users.accountActiveReq');
+        }
+
         // Retrieve both the account request and user in one go
         $accountRequest = AccountActiveRequest::find($id);
         $user = User::find($user_id);
 
         if ($accountRequest && $user) {
-            // Update user's status and approve the account request in one line each
-            $user->update(['status' => 1]);
-            $accountRequest->delete(); // Remove the request after approval
+            $user->forceFill(['status' => UserAccountStatus::Active->value])->save();
+            $accountRequest->delete();
             flash()->addSuccess('Account enable request successfully approved');
         } else {
             flash()->addError('Account enable request or user not found');
@@ -1506,7 +1532,7 @@ class AdminCrudController extends Controller
 
     public function acActiveReDlt($id)
     {
-        $accountRequest = AccountActiveRequest::find($id);
+        $accountRequest = AccountActiveRequest::findOrFail($id);
         $accountRequest->delete();
         flash()->addSuccess('Account enable request delete successfully');
 

@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Actions\Friends\AcceptFriendRequestAction;
+use App\Actions\Notifications\RespondToInvitationNotificationAction;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\NotificationCollection;
-use App\Models\Event;
 use App\Models\Friendships;
-use App\Models\Invite;
 use App\Models\Notification;
 use App\Models\User;
 use App\Support\Api\ApiErrorResponse;
@@ -42,6 +41,7 @@ class NotificationController extends Controller
                 ->simplePaginate($perPage, ['*'], 'new_page');
             $older_notification = Notification::with(self::RELATIONS)
                 ->where('reciver_user_id', $user_id)
+                ->where('status', '1')
                 ->where('created_at', '<', $date)
                 ->orderBy('id', 'DESC')
                 ->simplePaginate($perPage, ['*'], 'older_page');
@@ -97,27 +97,23 @@ class NotificationController extends Controller
         return $response;
     }
 
-    public function accept_group_notification(Request $request, $id, $group_id)
+    public function accept_group_notification(Request $request, RespondToInvitationNotificationAction $respondToInvitation, $id, $group_id)
     {
         $token = $request->bearerToken();
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            Invite::where('invite_sender_id', $id)->where('invite_reciver_id', $user_id)->where('group_id', $group_id)->update(['is_accepted' => '1']);
-            Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->update(['status' => '1', 'view' => '1']);
+            $user = auth('sanctum')->user();
+            if (! $user instanceof User) {
+                return $this->legacyAuthenticationError();
+            }
 
-            $notify = new Notification;
-            $notify->sender_user_id = $user_id;
-            $notify->reciver_user_id = $id;
-            $notify->type = 'group_invitation_accept';
-            $save = $notify->save();
-            if ($save) {
-                $response['success'] = true;
-                $response['message'] = 'Group request accept';
-            } else {
+            if (! $respondToInvitation->acceptGroup($user, (int) $id, (int) $group_id)) {
                 return ApiErrorResponse::notFound('not found request', Response::HTTP_OK);
             }
+
+            $response['success'] = true;
+            $response['message'] = 'Group request accept';
         } else {
             return $this->legacyAuthenticationError();
         }
@@ -125,15 +121,20 @@ class NotificationController extends Controller
         return $response;
     }
 
-    public function decline_group_notification(Request $request, $id, $group_id)
+    public function decline_group_notification(Request $request, RespondToInvitationNotificationAction $respondToInvitation, $id, $group_id)
     {
         $token = $request->bearerToken();
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            Invite::where('invite_sender_id', $id)->where('invite_reciver_id', $user_id)->where('group_id', $group_id)->delete();
-            Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->delete();
+            $user = auth('sanctum')->user();
+            if (! $user instanceof User) {
+                return $this->legacyAuthenticationError();
+            }
+
+            if (! $respondToInvitation->declineGroup($user, (int) $id, (int) $group_id)) {
+                return ApiErrorResponse::notFound('not found request', Response::HTTP_OK);
+            }
 
             $response['success'] = true;
             $response['message'] = 'group notification decline';
@@ -144,36 +145,23 @@ class NotificationController extends Controller
         return $response;
     }
 
-    public function accept_event_notification(Request $request, $id, $event_id)
+    public function accept_event_notification(Request $request, RespondToInvitationNotificationAction $respondToInvitation, $id, $event_id)
     {
         $token = $request->bearerToken();
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            $is_updated = Invite::where('invite_sender_id', $id)->where('invite_reciver_id', $user_id)->where('event_id', $event_id)->update(['is_accepted' => '1']);
-            Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->update(['status' => '1', 'view' => '1']);
-
-            if ($is_updated == '1') {
-                $going_users_id = Event::where('id', $event_id)->value('going_users_id');
-                $going_users_id = json_decode($going_users_id);
-                array_push($going_users_id, (int) $id);
-                $going_users_id = json_encode($going_users_id);
-
-                Event::where('id', $event_id)->update(['going_users_id' => $going_users_id]);
+            $user = auth('sanctum')->user();
+            if (! $user instanceof User) {
+                return $this->legacyAuthenticationError();
             }
 
-            $notify = new Notification;
-            $notify->sender_user_id = $user_id;
-            $notify->reciver_user_id = $id;
-            $notify->type = 'event_invitation_accept';
-            $save = $notify->save();
-            if ($save) {
-                $response['success'] = true;
-                $response['message'] = 'event invite request accept';
-            } else {
+            if (! $respondToInvitation->acceptEvent($user, (int) $id, (int) $event_id)) {
                 return ApiErrorResponse::notFound('not request found ', Response::HTTP_OK);
             }
+
+            $response['success'] = true;
+            $response['message'] = 'event invite request accept';
         } else {
             return $this->legacyAuthenticationError();
         }
@@ -181,21 +169,23 @@ class NotificationController extends Controller
         return $response;
     }
 
-    public function decline_event_notification(Request $request, $id, $event_id)
+    public function decline_event_notification(Request $request, RespondToInvitationNotificationAction $respondToInvitation, $id, $event_id)
     {
         $token = $request->bearerToken();
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            Invite::where('invite_sender_id', $id)->where('invite_reciver_id', $user_id)->where('event_id', $event_id)->delete();
-            $notify = Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->delete();
-            if ($notify) {
-                $response['success'] = true;
-                $response['message'] = 'event request decline';
-            } else {
+            $user = auth('sanctum')->user();
+            if (! $user instanceof User) {
+                return $this->legacyAuthenticationError();
+            }
+
+            if (! $respondToInvitation->declineEvent($user, (int) $id, (int) $event_id)) {
                 return ApiErrorResponse::notFound('not found request', Response::HTTP_OK);
             }
+
+            $response['success'] = true;
+            $response['message'] = 'event request decline';
         } else {
             return $this->legacyAuthenticationError();
         }
@@ -236,21 +226,23 @@ class NotificationController extends Controller
         return $response;
     }
 
-    public function accept_fundraiser_notification(Request $request, $id, $fundraiser_id)
+    public function accept_fundraiser_notification(Request $request, RespondToInvitationNotificationAction $respondToInvitation, $id, $fundraiser_id)
     {
         $token = $request->bearerToken();
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            Invite::where('invite_sender_id', $id)->where('invite_reciver_id', $user_id)->where('fundraiser_id', $fundraiser_id)->update(['is_accepted' => '1']);
-            Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->update(['status' => '1', 'view' => '1']);
+            $user = auth('sanctum')->user();
+            if (! $user instanceof User) {
+                return $this->legacyAuthenticationError();
+            }
 
-            $notify = new Notification;
-            $notify->sender_user_id = $user_id;
-            $notify->reciver_user_id = $id;
-            $notify->type = 'fundraiser_request_accept';
-            $notify->save();
+            if (! $respondToInvitation->acceptFundraiser($user, (int) $id, (int) $fundraiser_id)) {
+                return ApiErrorResponse::notFound('not found request', Response::HTTP_OK);
+            }
+
+            $response['success'] = true;
+            $response['message'] = 'fundraiser request accept';
         } else {
             return $this->legacyAuthenticationError();
         }
@@ -258,15 +250,23 @@ class NotificationController extends Controller
         return $response;
     }
 
-    public function decline_fundraiser_notification(Request $request, $id, $fundraiser_id)
+    public function decline_fundraiser_notification(Request $request, RespondToInvitationNotificationAction $respondToInvitation, $id, $fundraiser_id)
     {
         $token = $request->bearerToken();
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            Invite::where('invite_sender_id', $id)->where('invite_reciver_id', $user_id)->where('fundraiser_id', $fundraiser_id)->delete();
-            Notification::where('sender_user_id', $id)->where('reciver_user_id', $user_id)->delete();
+            $user = auth('sanctum')->user();
+            if (! $user instanceof User) {
+                return $this->legacyAuthenticationError();
+            }
+
+            if (! $respondToInvitation->declineFundraiser($user, (int) $id, (int) $fundraiser_id)) {
+                return ApiErrorResponse::notFound('not found request', Response::HTTP_OK);
+            }
+
+            $response['success'] = true;
+            $response['message'] = 'fundraiser request decline';
         } else {
             return $this->legacyAuthenticationError();
         }

@@ -4,6 +4,7 @@ namespace Tests;
 
 use App\Actions\Install\ImportInstallSqlDump;
 use Facebook\WebDriver\Chrome\ChromeOptions;
+use Facebook\WebDriver\Exception\Internal\WebDriverCurlException;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Illuminate\Support\Collection;
@@ -97,11 +98,24 @@ abstract class DuskTestCase extends BaseTestCase
             ]);
         })->all());
 
-        return RemoteWebDriver::create(
-            $_ENV['DUSK_DRIVER_URL'] ?? env('DUSK_DRIVER_URL') ?? 'http://localhost:9515',
-            DesiredCapabilities::chrome()->setCapability(
-                ChromeOptions::CAPABILITY, $options
-            )
+        $driverUrl = $_ENV['DUSK_DRIVER_URL'] ?? env('DUSK_DRIVER_URL') ?? 'http://localhost:9515';
+        $capabilities = DesiredCapabilities::chrome()->setCapability(
+            ChromeOptions::CAPABILITY,
+            $options
         );
+
+        try {
+            return RemoteWebDriver::create($driverUrl, $capabilities);
+        } catch (WebDriverCurlException $exception) {
+            if (static::runningInSail()) {
+                throw $exception;
+            }
+
+            static::stopChromeDriver();
+            static::startChromeDriver(['--port=9515']);
+            usleep(500000);
+
+            return RemoteWebDriver::create($driverUrl, $capabilities);
+        }
     }
 }

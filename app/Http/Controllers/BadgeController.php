@@ -38,7 +38,7 @@ class BadgeController extends Controller
         $payment_details = [
             'items' => [
                 [
-                    'id' => $id,
+                    'id' => (int) $id,
                     'title' => $title,
                     'subtitle' => $description,
                     'price' => $badge_pay,
@@ -60,7 +60,7 @@ class BadgeController extends Controller
             'coupon' => null,
             'payable_amount' => $badge_pay,
             'cancel_url' => route('badge'),
-            'success_url' => route('payment.success', ''),
+            'success_url' => url('/payment/success'),
         ];
         session(['payment_details' => $payment_details]);
 

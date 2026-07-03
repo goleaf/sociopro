@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Posts;
 use App\Queries\FriendshipsQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class MemoriesController extends Controller
@@ -21,17 +22,9 @@ class MemoriesController extends Controller
 
     public function memories()
     {
-        $memories_by_post = Posts::join('users', 'posts.user_id', '=', 'users.id')
-            ->select('posts.*', 'users.name', 'users.photo', 'users.friends')
-            ->whereDay('posts.posted_on', date('d', time()))
-            ->whereMonth('posts.posted_on', date('m', time()))
-            ->whereYear('posts.posted_on', '!=', date('Y', time()))
-            ->where('posts.user_id', auth()->user()->id)
-            ->active()
-            ->notPrivate()
-            ->notReported()
-            ->where('posts.publisher', ['post', 'video_and_shorts'])
-            ->orderBy('posts.post_id', 'desc')->take(5)->get();
+        $memories_by_post = $this->memoriesQuery()
+            ->take(5)
+            ->get();
 
         $page_data['posts'] = $memories_by_post;
 
@@ -45,17 +38,7 @@ class MemoriesController extends Controller
 
     public function load_memories(Request $request)
     {
-        $memories_by_post = Posts::join('users', 'posts.user_id', '=', 'users.id')
-            ->select('posts.*', 'users.name', 'users.photo', 'users.friends')
-            ->whereDay('posts.posted_on', date('d', time()))
-            ->whereMonth('posts.posted_on', date('m', time()))
-            ->whereYear('posts.posted_on', '!=', date('Y', time()))
-            ->where('posts.user_id', auth()->user()->id)
-            ->active()
-            ->notPrivate()
-            ->notReported()
-            ->where('posts.publisher', ['post', 'video_and_shorts'])
-            ->orderBy('posts.post_id', 'desc')
+        $memories_by_post = $this->memoriesQuery()
             ->skip($request->offset)->take(3)->get();
 
         $page_data['friendships'] = FriendshipsQuery::importantForUser(auth()->user())->get();
@@ -66,5 +49,21 @@ class MemoriesController extends Controller
         $page_data['type'] = 'user_post';
 
         return view('frontend.main_content.posts', $page_data);
+    }
+
+    private function memoriesQuery(): Builder
+    {
+        return Posts::query()
+            ->join('users', 'posts.user_id', '=', 'users.id')
+            ->select('posts.*', 'users.name', 'users.photo', 'users.friends')
+            ->whereDay('posts.posted_on', date('d', time()))
+            ->whereMonth('posts.posted_on', date('m', time()))
+            ->whereYear('posts.posted_on', '!=', date('Y', time()))
+            ->where('posts.user_id', auth()->user()->id)
+            ->active()
+            ->notPrivate()
+            ->notReported()
+            ->whereIn('posts.publisher', ['post', 'video_and_shorts'])
+            ->orderBy('posts.post_id', 'desc');
     }
 }

@@ -2,14 +2,47 @@
 
 // import facade
 
+use App\Models\Addon;
+use App\Models\Albums;
+use App\Models\Language;
+use App\Models\MediaFile;
+use App\Models\Setting;
+use App\Models\User;
 use App\Support\Security\ServerSideUrl;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+
+if (! function_exists('common_helper_optimized_folder')) {
+    function common_helper_optimized_folder($optimized = ''): string
+    {
+        $optimized = trim((string) $optimized, '/');
+
+        return $optimized === '' ? '' : $optimized.'/';
+    }
+}
+
+if (! function_exists('common_helper_remote_url')) {
+    function common_helper_remote_url($file_name = ''): ?string
+    {
+        return is_string($file_name) && str_contains($file_name, 'https://') ? $file_name : null;
+    }
+}
+
+if (! function_exists('common_helper_create_language_phrase')) {
+    function common_helper_create_language_phrase(string $language, string $phrase): void
+    {
+        $translation = new Language;
+        $translation->forceFill([
+            'name' => strtolower($language),
+            'phrase' => $phrase,
+            'translated' => $phrase,
+        ])->save();
+    }
+}
 
 if (! function_exists('addon_status')) {
     function addon_status($unique_identifier = '')
     {
-        $result = DB::table('addons')->where('unique_identifier', $unique_identifier)->value('status');
+        $result = Addon::query()->where('unique_identifier', $unique_identifier)->value('status');
 
         return $result;
     }
@@ -88,7 +121,7 @@ if (! function_exists('remove_file')) {
 if (! function_exists('get_user_image')) {
     function get_user_image($file_name_or_user_id = '', $optimized = '')
     {
-        $optimized = $optimized.'/';
+        $optimized = common_helper_optimized_folder($optimized);
         if ($file_name_or_user_id == '') {
             $file_name_or_user_id = 'default.png';
         }
@@ -102,11 +135,11 @@ if (! function_exists('get_user_image')) {
 
         if ($user_id > 0) {
             $user_id = $file_name_or_user_id;
-            $file_name = DB::table('users')->where('id', $user_id)->value('photo');
+            $file_name = User::query()->whereKey($user_id)->value('photo');
 
             // this file comes from another online link as like amazon s3 server
-            if (str_contains($file_name, 'https://')) {
-                return $file_name;
+            if ($remoteUrl = common_helper_remote_url($file_name)) {
+                return $remoteUrl;
             }
 
             if (File::exists('public/storage/userimage/'.$optimized.$file_name) && is_file('public/storage/userimage/'.$optimized.$file_name)) {
@@ -116,9 +149,9 @@ if (! function_exists('get_user_image')) {
             }
         } elseif (File::exists('public/storage/userimage/'.$optimized.$file_name) && is_file('public/storage/userimage/'.$optimized.$file_name)) {
             return asset('storage/userimage/'.$optimized.$file_name);
-        } elseif (str_contains($file_name, 'https://')) {
+        } elseif ($remoteUrl = common_helper_remote_url($file_name)) {
             // this file comes from another online link as like amazon s3 server
-            return $file_name;
+            return $remoteUrl;
         } else {
             return asset('storage/userimage/default.png');
         }
@@ -128,9 +161,9 @@ if (! function_exists('get_user_image')) {
 if (! function_exists('get_cover_photo')) {
     function get_cover_photo($file_name_or_user_id = '', $optimized = '')
     {
-        $optimized = $optimized.'/';
+        $optimized = common_helper_optimized_folder($optimized);
         if ($file_name_or_user_id == '') {
-            $file_name_or_user_id = Auth()->user()->photo;
+            $file_name_or_user_id = Auth()->user()?->cover_photo ?: 'default.jpg';
         }
         if (is_numeric($file_name_or_user_id)) {
             $user_id = $file_name_or_user_id;
@@ -142,11 +175,11 @@ if (! function_exists('get_cover_photo')) {
 
         if ($user_id > 0) {
             $user_id = $file_name_or_user_id;
-            $file_name = DB::table('users')->where('id', $user_id)->value('photo');
+            $file_name = User::query()->whereKey($user_id)->value('cover_photo');
 
             // this file comes from another online link as like amazon s3 server
-            if (str_contains($file_name, 'https://')) {
-                return $file_name;
+            if ($remoteUrl = common_helper_remote_url($file_name)) {
+                return $remoteUrl;
             }
 
             if (File::exists('public/storage/cover_photo/'.$optimized.$file_name) && is_file('public/storage/cover_photo/'.$optimized.$file_name)) {
@@ -156,9 +189,9 @@ if (! function_exists('get_cover_photo')) {
             }
         } elseif (File::exists('public/storage/cover_photo/'.$optimized.$file_name) && is_file('public/storage/cover_photo/'.$optimized.$file_name)) {
             return asset('storage/cover_photo/'.$optimized.$file_name);
-        } elseif (str_contains($file_name, 'https://')) {
+        } elseif ($remoteUrl = common_helper_remote_url($file_name)) {
             // this file comes from another online link as like amazon s3 server
-            return $file_name;
+            return $remoteUrl;
         } else {
             return asset('storage/cover_photo/default.jpg');
         }
@@ -168,19 +201,19 @@ if (! function_exists('get_cover_photo')) {
 if (! function_exists('get_album_thumbnail')) {
     function get_album_thumbnail($id = '', $optimized = '')
     {
-        $optimized = $optimized.'/';
-        $file_name = DB::table('albums')->where('id', $id)->value('thumbnail');
+        $optimized = common_helper_optimized_folder($optimized);
+        $file_name = Albums::query()->whereKey($id)->value('thumbnail');
 
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
         if (! empty($file_name) && File::exists('public/storage/thumbnails/album/'.$optimized.$file_name)) {
             return asset('storage/thumbnails/album/'.$optimized.$file_name);
         }
 
-        $file_name = DB::table('media_files')->where('album_id', $id)->orderBy('id', 'DESC')->value('file_name');
+        $file_name = MediaFile::query()->where('album_id', $id)->latest('id')->value('file_name');
         if (! empty($file_name) && File::exists('public/storage/post/images/'.$optimized.$file_name)) {
             return asset('storage/post/images/'.$optimized.$file_name);
         } else {
@@ -193,11 +226,11 @@ if (! function_exists('get_post_image')) {
     function get_post_image($file_name = '', $optimized = '')
     {
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
-        $optimized = $optimized.'/';
+        $optimized = common_helper_optimized_folder($optimized);
         if (File::exists('public/storage/post/images/'.$optimized.$file_name) && is_file('public/storage/post/images/'.$optimized.$file_name)) {
             return asset('storage/post/images/'.$optimized.$file_name);
         } else {
@@ -210,13 +243,11 @@ if (! function_exists('get_post_video')) {
     function get_post_video($file_name = '', $optimized = '')
     {
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
-        if ($optimized != '') {
-            $optimized = $optimized.'/';
-        }
+        $optimized = common_helper_optimized_folder($optimized);
         if (File::exists('public/storage/post/videos/'.$optimized.$file_name)) {
             return asset('storage/post/videos/'.$optimized.$file_name);
         } else {
@@ -228,7 +259,7 @@ if (! function_exists('get_post_video')) {
 if (! function_exists('get_all_language')) {
     function get_all_language()
     {
-        return DB::table('languages')->select('name')->distinct()->get();
+        return Language::query()->select('name')->distinct()->get();
     }
 }
 
@@ -241,22 +272,35 @@ if (! function_exists('get_phrase')) {
             $active_language = get_settings('system_language');
             Session(['active_language' => get_settings('system_language')]);
         }
-        $query = DB::table('languages')->where('name', $active_language)->where('phrase', $phrase);
-        if ($query->count() > 0) {
-            $tValue = $query->value('translated');
+        $translated = Language::query()
+            ->where('name', $active_language)
+            ->where('phrase', $phrase)
+            ->value('translated');
+        if ($translated !== null) {
+            $tValue = $translated;
         } else {
             $tValue = $phrase;
             $all_language = get_all_language();
 
             if ($all_language->count() > 0) {
+                $existingLanguages = Language::query()
+                    ->where('phrase', $phrase)
+                    ->pluck('name')
+                    ->map(fn ($language) => strtolower((string) $language))
+                    ->all();
+
                 foreach ($all_language as $language) {
-                    if (! DB::table('languages')->where('name', $language->name)->where('phrase', $phrase)->exists()) {
-                        DB::table('languages')->insert(['name' => strtolower($language->name), 'phrase' => $phrase, 'translated' => $phrase]);
+                    if (! in_array(strtolower((string) $language->name), $existingLanguages, true)) {
+                        common_helper_create_language_phrase((string) $language->name, (string) $phrase);
                     }
                 }
             } else {
-                DB::table('languages')->insert(['name' => 'english', 'phrase' => $phrase, 'translated' => $phrase]);
+                common_helper_create_language_phrase('english', (string) $phrase);
             }
+        }
+
+        if (! is_array($value_replace)) {
+            $value_replace = [$value_replace];
         }
 
         if (count($value_replace) > 0) {
@@ -293,7 +337,7 @@ if (! function_exists('is_image')) {
             return false;
         }
 
-        $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
+        $file_extension = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
         if ($file_extension == 'jpg' || $file_extension == 'png' || $file_extension == 'jpeg' || $file_extension == 'gif') {
             return true;
         } else {
@@ -388,6 +432,8 @@ if (! function_exists('slugify')) {
 if (! function_exists('get_video_extension')) {
     function get_video_extension($url)
     {
+        $url = strtolower((string) $url);
+
         if (strpos($url, '.mp4') > 0) {
             return 'mp4';
         } elseif (strpos($url, '.webm') > 0) {
@@ -429,7 +475,7 @@ if (! function_exists('random')) {
 if (! function_exists('get_settings')) {
     function get_settings($type = '', $return_type = '')
     {
-        $value = DB::table('settings')->where('type', $type)->value('description');
+        $value = Setting::query()->where('type', $type)->value('description');
         if ($return_type === true) {
             return json_decode($value, true);
         } elseif ($return_type === 'decode') {
@@ -460,11 +506,18 @@ if (! function_exists('uploadTo')) {
 if (! function_exists('removeFile')) {
     function removeFile($foldername = '', $imagename = '')
     {
-        if (File::exists(public_path('public/storage/'.$foldername.'/coverphoto/'.$imagename))) {
-            File::delete(public_path('public/storage/'.$foldername.'/coverphoto/'.$imagename));
+        $foldername = trim(str_replace('\\', '/', (string) $foldername), '/');
+        $imagename = basename(str_replace('\\', '/', (string) $imagename));
+
+        if ($foldername === '' || $imagename === '' || str_contains($foldername, '..') || $imagename === '.' || $imagename === '..') {
+            return;
         }
-        if (File::exists(public_path('public/storage/'.$foldername.'/thumbnail/'.$imagename))) {
-            File::delete(public_path('public/storage/'.$foldername.'/thumbnail/'.$imagename));
+
+        if (File::exists(public_path('storage/'.$foldername.'/coverphoto/'.$imagename))) {
+            File::delete(public_path('storage/'.$foldername.'/coverphoto/'.$imagename));
+        }
+        if (File::exists(public_path('storage/'.$foldername.'/thumbnail/'.$imagename))) {
+            File::delete(public_path('storage/'.$foldername.'/thumbnail/'.$imagename));
         }
     }
 }
@@ -508,8 +561,8 @@ if (! function_exists('get_product_image')) {
     function get_product_image($file_name = '', $foldername = '')
     {
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
         $foldername = $foldername.'/';
@@ -531,8 +584,8 @@ if (! function_exists('get_sponsor_image')) {
     function get_sponsor_image($file_name = '', $foldername = '')
     {
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
         $foldername = $foldername.'/';
@@ -554,8 +607,8 @@ if (! function_exists('get_blog_image')) {
     function get_blog_image($file_name = '', $foldername = '')
     {
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
         $foldername = $foldername.'/';
@@ -576,8 +629,8 @@ if (! function_exists('get_job_image')) {
     function get_job_image($file_name = '', $foldername = '')
     {
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
         $foldername = $foldername.'/';
@@ -599,8 +652,8 @@ if (! function_exists('get_page_logo')) {
     function get_page_logo($file_name = '', $foldername = '')
     {
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
         $foldername = $foldername.'/';
@@ -622,8 +675,8 @@ if (! function_exists('get_page_cover_photo')) {
     function get_page_cover_photo($file_name = '', $foldername = '')
     {
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
         $foldername = $foldername.'/';
@@ -645,8 +698,8 @@ if (! function_exists('get_group_logo')) {
     function get_group_logo($file_name = '', $foldername = '')
     {
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
         $foldername = $foldername.'/';
@@ -668,8 +721,8 @@ if (! function_exists('get_group_cover_photo')) {
     function get_group_cover_photo($file_name = '', $foldername = '')
     {
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
         $foldername = $foldername.'/';
@@ -691,8 +744,8 @@ if (! function_exists('get_system_logo_favicon')) {
     function get_system_logo_favicon($file_name = '', $foldername = '')
     {
         // this file comes from another online link as like amazon s3 server
-        if (str_contains($file_name, 'https://')) {
-            return $file_name;
+        if ($remoteUrl = common_helper_remote_url($file_name)) {
+            return $remoteUrl;
         }
 
         $foldername = $foldername.'/';
@@ -722,7 +775,7 @@ if (! function_exists('set_config')) {
 }
 
 // get meta details
-if (! function_exists('get_meta_details')) {
+if (! function_exists('get_url_contents')) {
     function get_url_contents($pageUrl)
     {
         $safeUrl = ServerSideUrl::forConfiguredHttpFetch((string) $pageUrl);

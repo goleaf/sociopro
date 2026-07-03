@@ -2312,7 +2312,7 @@ class ApiController extends Controller
         return $response;
     }
 
-    public function create_profile_photo_post($image, $file_name)
+    private function create_profile_photo_post($image, $file_name)
     {
         FileUploader::upload($image, 'public/storage/post/images/'.$file_name, 800);
 

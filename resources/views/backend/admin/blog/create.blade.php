@@ -40,7 +40,7 @@
                       <label for="blog_category" class="form-label eForm-label">{{ get_phrase('Select a category') }}</label>
                       <select name="category" class="form-select eForm-control select2" required>
                         <option>{{get_phrase('Select a category')}}</option>
-                        @foreach(DB::table('blogcategories')->get() as $category)
+                        @foreach($blogCategories as $category)
                           <option value="{{$category->id}}">{{ $category->name }}</option>
                         @endforeach
                       </select>
@@ -72,6 +72,5 @@
     @include('backend.footer')
     <!-- End Footer -->
   </div>
-
 
 

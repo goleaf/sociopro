@@ -104,6 +104,27 @@ class FriendRequestWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_send_friend_request_is_idempotent_for_pending_pair(): void
+    {
+        $requester = $this->activeUser();
+        $accepter = $this->activeUser();
+
+        app(SendFriendRequestAction::class)->handle($requester, $accepter->id);
+        app(SendFriendRequestAction::class)->handle($requester, $accepter->id);
+
+        $this->assertSame(1, Friendships::where('requester', $requester->id)
+            ->where('accepter', $accepter->id)
+            ->where('is_accepted', 0)
+            ->count());
+        $this->assertSame(1, Notification::where('sender_user_id', $requester->id)
+            ->where('reciver_user_id', $accepter->id)
+            ->where('type', 'profile')
+            ->count());
+        $this->assertSame(1, Follower::where('user_id', $requester->id)
+            ->where('follow_id', $accepter->id)
+            ->count());
+    }
+
     public function test_accept_friend_request_rolls_back_all_writes_when_acceptance_notification_fails(): void
     {
         $requester = $this->activeUser();
@@ -174,6 +195,52 @@ class FriendRequestWorkflowTest extends TestCase
             'user_id' => $accepter->id,
             'follow_id' => $requester->id,
         ]);
+    }
+
+    public function test_profile_accept_without_pending_friendship_does_not_create_side_effects(): void
+    {
+        $requester = $this->activeUser();
+        $accepter = $this->activeUser();
+
+        $accepted = app(AcceptFriendRequestAction::class)->acceptFromProfile($accepter, $requester->id);
+
+        $this->assertFalse($accepted);
+        $this->assertDatabaseMissing('friendships', [
+            'requester' => $requester->id,
+            'accepter' => $accepter->id,
+        ]);
+        $this->assertDatabaseMissing('followers', [
+            'user_id' => $accepter->id,
+            'follow_id' => $requester->id,
+        ]);
+        $this->assertDatabaseMissing('notifications', [
+            'sender_user_id' => $accepter->id,
+            'reciver_user_id' => $requester->id,
+            'type' => 'friend_request_accept',
+        ]);
+        $this->assertSame([], $this->friendIds($requester));
+        $this->assertSame([], $this->friendIds($accepter));
+    }
+
+    public function test_profile_accept_friend_request_is_idempotent(): void
+    {
+        $requester = $this->activeUser();
+        $accepter = $this->activeUser();
+
+        $this->pendingFriendRequest($requester, $accepter);
+
+        $firstAccept = app(AcceptFriendRequestAction::class)->acceptFromProfile($accepter, $requester->id);
+        $secondAccept = app(AcceptFriendRequestAction::class)->acceptFromProfile($accepter, $requester->id);
+
+        $this->assertTrue($firstAccept);
+        $this->assertFalse($secondAccept);
+        $this->assertSame(1, Follower::where('user_id', $accepter->id)->where('follow_id', $requester->id)->count());
+        $this->assertSame(1, Notification::where('sender_user_id', $accepter->id)
+            ->where('reciver_user_id', $requester->id)
+            ->where('type', 'friend_request_accept')
+            ->count());
+        $this->assertSame([$accepter->id], $this->friendIds($requester));
+        $this->assertSame([$requester->id], $this->friendIds($accepter));
     }
 
     public function test_notification_accept_friend_request_preserves_response_and_writes_related_records(): void

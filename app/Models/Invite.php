@@ -23,6 +23,7 @@ class Invite extends Model
             'event_id' => 'integer',
             'page_id' => 'integer',
             'group_id' => 'integer',
+            'fundraiser_id' => 'integer',
             'post_id' => 'integer',
         ];
     }

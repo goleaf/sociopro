@@ -740,7 +740,7 @@ class MainController extends Controller
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')->first();
 
-        $comments = DB::table('comments')
+        $comments = Comments::query()
             ->join('users', 'comments.user_id', '=', 'users.id')
             ->where('comments.is_type', $request->type)
             ->where('comments.id_of_type', $request->post_id)
@@ -793,10 +793,12 @@ class MainController extends Controller
             ->join('users', 'posts.user_id', '=', 'users.id')
             ->select('posts.*', 'users.name', 'users.photo', 'users.friends', 'posts.created_at as created_at')->first();
 
-        $comments = DB::table('comments')
+        $comments = Comments::query()
             ->join('users', 'comments.user_id', '=', 'users.id')
             ->where('comments.is_type', $form_data['type'])
-            ->where('comments.comment_id', $comment_id)->get();
+            ->where('comments.comment_id', $comment_id)
+            ->select('comments.*', 'users.name', 'users.photo')
+            ->get();
 
         $page_data['post'] = $post;
         $page_data['type'] = $form_data['type'];
@@ -888,13 +890,13 @@ class MainController extends Controller
         return json_encode(['reload' => 1]);
     }
 
-    public function comment_delete()
+    public function comment_delete(Request $request)
     {
         $response = [];
-        $comment_id = $_GET['comment_id'];
+        $comment_id = $request->query('comment_id');
         $done = Comments::where('comment_id', $comment_id)->delete();
         if ($done) {
-            $response = ['alertMessage' => get_phrase('Comment Deleted Successfully'), 'fadeOutElem' => '#comment_'.$_GET['comment_id']];
+            $response = ['alertMessage' => get_phrase('Comment Deleted Successfully'), 'fadeOutElem' => '#comment_'.$comment_id];
         }
 
         return json_encode($response);
@@ -975,12 +977,13 @@ class MainController extends Controller
 
     // post delete
 
-    public function post_delete()
+    public function post_delete(Request $request)
     {
         $response = [];
-        $done = Posts::where('post_id', $_GET['post_id'])->delete();
+        $post_id = $request->query('post_id');
+        $done = Posts::where('post_id', $post_id)->delete();
         if ($done) {
-            $response = ['alertMessage' => get_phrase('Post Deleted Successfully'), 'fadeOutElem' => '#postIdentification'.$_GET['post_id']];
+            $response = ['alertMessage' => get_phrase('Post Deleted Successfully'), 'fadeOutElem' => '#postIdentification'.$post_id];
         }
 
         return json_encode($response);
@@ -1080,7 +1083,8 @@ class MainController extends Controller
 
     public function save_user_settings(Request $request)
     {
-        $settings = $request->only(self::USER_PAYMENT_SETTING_FIELDS);
+        $settings = array_fill_keys(self::USER_PAYMENT_SETTING_FIELDS, '');
+        $settings = array_replace($settings, $request->only(self::USER_PAYMENT_SETTING_FIELDS));
         $settings['stripe_live'] = $request->stripe_live != null;
         $settings['paypal_live'] = $request->paypal_live != null;
         $settings['flutterwave_live'] = $request->flutterwave_live != null;

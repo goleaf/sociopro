@@ -251,12 +251,14 @@
                                     @if($accountActivationRequest->status == 'pending')
                                         <button class="btn common_btn w-100 mb-4">{{ get_phrase('Account Active Request Pending') }}</button>
                                     @else
-                                        <form action="{{ route('frontend.account_enble_req', ['user' => $user_info->id]) }}">
+                                        <form method="POST" action="{{ route('frontend.account_enble_req', ['user' => $user_info->id]) }}">
+                                            @csrf
                                             <button type="submit" class="btn common_btn w-100 mb-4">{{ get_phrase('Account Active Request') }}</button>
                                         </form>
                                     @endif
                                 @else
-                                    <form action="{{ route('frontend.account_enble_req', ['user' => $user_info->id]) }}">
+                                    <form method="POST" action="{{ route('frontend.account_enble_req', ['user' => $user_info->id]) }}">
+                                        @csrf
                                         <button type="submit" class="btn common_btn w-100">{{ get_phrase('Request Account Activation') }}</button>
                                     </form>
                                 @endif

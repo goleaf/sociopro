@@ -46,6 +46,7 @@ class PageController extends Controller
             ->limit(5)
             ->get();
         $page_data['suggestedpages'] = $pageCards->forViewer($userId)
+            ->where('user_id', '!=', $userId)
             ->whereNotIn('id', $likedPageIds)
             ->orderByDesc('id')
             ->limit(10)

@@ -24,7 +24,7 @@
 							<textarea class="form-control text-13px" id="phrase{{$phrase->id}}">{{$phrase->translated}}</textarea>
 							<button class="input-group-text btn btn-light text-13px" id="btn{{$phrase->id}}" onclick="updatePhrase('{{$phrase->id}}')">{{get_phrase('Update')}}</button>
 						</div>
-						@if(strpos($phrase->phrase, '____') == true)
+						@if(str_contains((string) $phrase->phrase, '____'))
 							<span class="text-10px badge bg-danger">{{get_phrase("Don't remove ____")}}</span>
 						@endif
 					</div>
@@ -37,7 +37,7 @@
 <script type="text/javascript">
 	function updatePhrase(id){
 		$('#btn'+id).html('{{get_phrase("Updating")}}...');
-		let url = "{{route('admin.languages.update.phrase', '')}}/"+id;
+		let url = @js(route('admin.languages.update.phrase', ['id' => '__phrase_id__'])).replace('__phrase_id__', id);
 		let translatedVal = $('#phrase'+id).val();
 		let csrfToken = "{{ csrf_token() }}";
 		$.ajax({

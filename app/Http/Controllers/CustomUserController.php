@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Friends\SendFriendRequestAction;
 use App\Enums\MediaFileType;
+use App\Enums\UserAccountStatus;
 use App\Enums\Visibility;
 use App\Models\Albums;
 use App\Models\Follower;
@@ -274,9 +275,11 @@ class CustomUserController extends Controller
 
     public function account_status($id)
     {
-        $user = User::find($id);
-        $user->status = 0;
-        $user->update();
+        $user = Auth::user();
+        abort_unless($user instanceof User && (int) $user->id === (int) $id, 403);
+
+        $user->status = UserAccountStatus::Disabled->value;
+        $user->save();
 
         Auth::logout();
 

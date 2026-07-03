@@ -102,12 +102,14 @@
 
 <script src="https://checkout.flutterwave.com/v3.js"></script>
 <script type="text/javascript">
+    const paymentGatewayUrlTemplate = @json(route('payment.show_payment_gateway_by_ajax', ['identifier' => '__identifier__']));
+
     function showPaymentGatewayByAjax(identifier) {
         $('#showPaymentGatewayByAjax').html(
             '<div class="w-100 text-center my-5"><div class="spinner-border" style="width: 3.5rem; height: 3.5rem;" role="status"><span class="visually-hidden"></span></div></div>'
         );
         $.ajax({
-            url: "{{ route('payment.show_payment_gateway_by_ajax', '') }}/" + identifier,
+            url: paymentGatewayUrlTemplate.replace('__identifier__', encodeURIComponent(identifier)),
             success(response) {
                 $('#showPaymentGatewayByAjax').html(response);
             }

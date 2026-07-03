@@ -69,7 +69,9 @@ class BuildBadgePageDataAction
     private function hasActiveBadge(User $user, CarbonInterface $currentDate): bool
     {
         $badge = Badge::query()
+            ->select(['id', 'user_id', 'status', 'start_date', 'end_date'])
             ->where('user_id', $user->id)
+            ->where('status', 1)
             ->whereDate('start_date', '<=', $currentDate)
             ->whereDate('end_date', '>=', $currentDate)
             ->first();

@@ -210,13 +210,14 @@
             url: form.attr('action'),
             data: formData,
             success: function(response) {
-                // Clear the input field
+                distributeServerResponse(response);
+
                 $('#ChatmessageField').val('');
-                // Optionally, you can also reset the Emoji area if you’re using emojioneArea:
-                $("#ChatmessageField").emojioneArea().data("emojioneArea").setText('');
-                
-                // Append the new message to the message body
-                $('#message_body').append(response.message); // Assuming `response.message` contains the new message HTML
+
+                var emojiArea = $("#ChatmessageField").data("emojioneArea");
+                if (emojiArea) {
+                    emojiArea.setText('');
+                }
                 
                 setTimeout(() => {
                     var elem = document.getElementById('messageShowDiv');

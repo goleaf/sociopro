@@ -538,6 +538,7 @@ CREATE TABLE `invites` (
   `event_id` int(11) DEFAULT NULL,
   `page_id` int(11) DEFAULT NULL,
   `group_id` int(11) DEFAULT NULL,
+  `fundraiser_id` int(11) DEFAULT NULL,
   `post_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -1335,6 +1336,7 @@ CREATE TABLE `notifications` (
   `event_id` int(11) DEFAULT NULL,
   `page_id` int(11) DEFAULT NULL,
   `group_id` int(11) DEFAULT NULL,
+  `fundraiser_id` int(11) DEFAULT NULL,
   `status` int(11) DEFAULT '0',
   `view` int(11) DEFAULT '0',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1454,7 +1456,10 @@ CREATE TABLE `payment_histories` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `identifier` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-  `transaction_keys` longtext COLLATE utf8_unicode_ci
+  `transaction_keys` longtext COLLATE utf8_unicode_ci,
+  `order_id` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `transaction_id` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `status` tinyint(3) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1953,7 +1958,8 @@ ALTER TABLE `payment_gateways`
 -- Indexes for table `payment_histories`
 --
 ALTER TABLE `payment_histories`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `payment_histories_order_id_idx` (`order_id`);
 
 --
 -- Indexes for table `personal_access_tokens`

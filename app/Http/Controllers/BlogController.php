@@ -221,9 +221,9 @@ class BlogController extends Controller
 
     // blog search
 
-    public function search()
+    public function search(Request $request)
     {
-        $search = $_GET['search'];
+        $search = (string) $request->query('search', '');
         $output = '';
         $posts = Blog::where('title', 'LIKE', '%'.$search.'%')->get();
         if ($posts) {
@@ -231,7 +231,7 @@ class BlogController extends Controller
                 $output .= '<div class="post-entry d-flex">'.
                 '<div class="post-thumb"><img class="img-fluid rounded" src=" '.get_blog_image($post->thumbnail, 'thumbnail').' " alt="Recent Post"> </div>'.
                 '<div class="post-txt ms-2">'.
-                '<h3><a href="'.route('single.blog', $post->id).'"> '.$post->title.'</a></h3>'.
+                '<h3><a href="'.route('single.blog', $post->id).'"> '.e($post->title).'</a></h3>'.
                 '<div class="post-meta">'.
                 '<span class="date-meta"><a href="#">'.$post->created_at->format('d-M-Y').'</a></span>'.
                 '</div>'.

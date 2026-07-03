@@ -199,7 +199,9 @@ class GroupController extends Controller
     public function rjoin($id)
     {
         $response = [];
-        $group_member = GroupMember::where('group_id', $id)->delete();
+        GroupMember::where('group_id', $id)
+            ->where('user_id', auth()->id())
+            ->delete();
         Session::flash('success_message', get_phrase('Group Joining Canceled'));
         $response = ['reload' => 1];
 

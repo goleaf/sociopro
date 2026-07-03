@@ -46,7 +46,7 @@ Route::middleware('auth')
     ->controller(AccountStatusController::class)
     ->group(function () {
         Route::get('/account-disable', 'disabled')->name('disable_view');
-        Route::get('/account-enble-req/{user}', 'requestEnable')->name('account_enble_req');
+        Route::post('/account-enble-req/{user}', 'requestEnable')->name('account_enble_req');
     });
 
 // Modal controllers group routing

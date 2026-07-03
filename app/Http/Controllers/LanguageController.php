@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Language;
-use DB;
 use Illuminate\Http\Request;
 
 class LanguageController extends Controller
@@ -30,7 +29,9 @@ class LanguageController extends Controller
 
     public function language_update(Request $request, $language)
     {
-        DB::table('languages')->where('name', $language)->update(['name' => strtolower($request->language)]);
+        Language::query()
+            ->where('name', $language)
+            ->update(['name' => strtolower((string) $request->language)]);
         flash()->addSuccess('Language Updated  Successfully');
 
         return redirect()->route('admin.language.settings');
@@ -46,18 +47,19 @@ class LanguageController extends Controller
 
     public function update_phrase(Request $request, $id)
     {
-        $row = Language::where('id', $id)->first();
-        $phrase = $row->phrase;
-        if (strpos($row->phrase, '____') == true && strpos($request->translated, '____') == true) {
-            DB::table('languages')->where('id', $id)->update(['translated' => $request->translated]);
+        $row = Language::query()->findOrFail($id);
+        $translated = $request->input('translated');
+        $phraseRequiresPlaceholder = str_contains((string) $row->phrase, '____');
+        $translationHasPlaceholder = str_contains((string) $translated, '____');
+
+        if (! $phraseRequiresPlaceholder || $translationHasPlaceholder) {
+            Language::query()
+                ->whereKey($row->id)
+                ->update(['translated' => $translated]);
 
             return true;
-        } elseif (strpos($row->phrase, '____') == false) {
-            DB::table('languages')->where('id', $id)->update(['translated' => $request->translated]);
-
-            return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 }

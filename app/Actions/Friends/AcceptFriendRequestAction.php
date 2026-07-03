@@ -57,13 +57,13 @@ class AcceptFriendRequestAction
                 $markInboundNotificationWhenMissing,
                 $createAcceptanceNotificationWhenMissing
             ): bool {
-                if ($ensureFollower) {
-                    $this->createFollowerIfMissing($accepter, $requesterId);
-                }
-
                 $accepted = $this->markFriendshipAccepted($accepter, $requesterId);
 
                 if ($accepted) {
+                    if ($ensureFollower) {
+                        $this->createFollowerIfMissing($accepter, $requesterId);
+                    }
+
                     $this->appendFriendId((int) $accepter->id, $requesterId);
                     $this->appendFriendId($requesterId, (int) $accepter->id);
                 }
@@ -107,6 +107,7 @@ class AcceptFriendRequestAction
     {
         return Friendships::where('accepter', $accepter->id)
             ->where('requester', $requesterId)
+            ->where('is_accepted', '!=', 1)
             ->update(['is_accepted' => '1']) === 1;
     }
 
@@ -130,14 +131,28 @@ class AcceptFriendRequestAction
 
     protected function appendFriendId(int $userId, int $friendId): void
     {
-        $friends = json_decode((string) User::where('id', $userId)->value('friends'));
+        $friends = json_decode((string) User::where('id', $userId)->value('friends'), true);
 
-        if (is_array($friends)) {
-            $friends[] = $friendId;
-        } else {
-            $friends = [$friendId];
+        if (! is_array($friends)) {
+            $friends = [];
         }
 
-        User::where('id', $userId)->update(['friends' => json_encode($friends)]);
+        $friendIds = [];
+        foreach ($friends as $existingFriendId) {
+            if (! is_numeric($existingFriendId)) {
+                continue;
+            }
+
+            $existingFriendId = (int) $existingFriendId;
+            if (! in_array($existingFriendId, $friendIds, true)) {
+                $friendIds[] = $existingFriendId;
+            }
+        }
+
+        if (! in_array($friendId, $friendIds, true)) {
+            $friendIds[] = $friendId;
+        }
+
+        User::where('id', $userId)->update(['friends' => json_encode($friendIds)]);
     }
 }

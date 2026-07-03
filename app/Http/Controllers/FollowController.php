@@ -28,7 +28,9 @@ class FollowController extends Controller
     public function unfollow($id)
     {
         $response = [];
-        $follwer = Follower::where('follow_id', $id)->delete();
+        Follower::where('follow_id', $id)
+            ->where('user_id', auth()->id())
+            ->delete();
 
         Session::flash('success_message', get_phrase('Removed from followed list'));
         $response = ['reload' => 1];

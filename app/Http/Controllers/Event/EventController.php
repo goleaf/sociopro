@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Event;
 
 use App\Enums\ContentStatus;
 use App\Enums\PostType;
+use App\Enums\UserRole;
 use App\Enums\Visibility;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
@@ -152,9 +153,9 @@ class EventController extends Controller
             });
             $img->save(uploadTo('event/coverphoto').$file_name);
         }
-        $event = Event::find($id);
+        $event = Event::findOrFail($id);
+        $this->authorizeEventManagement($event);
 
-        $event->user_id = Auth::user()->id;
         // store image name for delete file operation
         $imagename = $event->banner;
 
@@ -179,16 +180,17 @@ class EventController extends Controller
 
     // delete event
 
-    public function event_delete()
+    public function event_delete(Request $request)
     {
         $response = [];
-        $event = Event::find($_GET['event_id']);
+        $event = Event::findOrFail($request->integer('event_id'));
+        $this->authorizeEventManagement($event);
         // store image name for delete file operation
         $imagename = $event->banner;
 
         $done = $event->delete();
         if ($done) {
-            $response = ['alertMessage' => get_phrase('Event Deleted Successfully'), 'fadeOutElem' => '#event-'.$_GET['event_id']];
+            $response = ['alertMessage' => get_phrase('Event Deleted Successfully'), 'fadeOutElem' => '#event-'.$event->id];
             // just put the file name and folder name nothing more :)
             removeFile('event', $imagename);
         }
@@ -281,12 +283,7 @@ class EventController extends Controller
         $going_user_id = auth()->user()->id;
         $event_id = $id;
         $event = Event::find($event_id);
-        $event_going_user = json_decode($event->going_users_id, true);
-        $this_user_key = array_search(auth()->user()->id, $event_going_user);
-        array_splice($event_going_user, $this_user_key);
-        $event_going_user = json_encode($event_going_user);
-
-        $event->going_users_id = $event_going_user;
+        $event->going_users_id = $this->removeEventUserId($event->going_users_id, $going_user_id);
         $event->save();
         $response = ['alertMessage' => get_phrase('Cancle to Event Going'), 'showElem' => "#goingId$event_id", 'hideElem' => "#notGoingId$event_id"];
 
@@ -330,12 +327,7 @@ class EventController extends Controller
         $going_user_id = auth()->user()->id;
         $event_id = $id;
         $event = Event::find($event_id);
-        $event_going_user = json_decode($event->interested_users_id, true);
-        $this_user_key = array_search(auth()->user()->id, $event_going_user);
-        array_splice($event_going_user, $this_user_key);
-        $event_going_user = json_encode($event_going_user);
-
-        $event->interested_users_id = $event_going_user;
+        $event->interested_users_id = $this->removeEventUserId($event->interested_users_id, $going_user_id);
         $event->save();
         $response = ['alertMessage' => get_phrase('Not Interested to Event'), 'showElem' => "#interestedId$event_id", 'hideElem' => "#notInterestedId$event_id"];
 
@@ -351,17 +343,8 @@ class EventController extends Controller
         $event_id = $id;
         $event = Event::find($event_id);
 
-        $event_going_user = json_decode($event->interested_users_id, true);
-        $this_user_key = array_search(auth()->user()->id, $event_going_user);
-        array_splice($event_going_user, $this_user_key);
-        $event_going_user = json_encode($event_going_user);
-        $event->interested_users_id = $event_going_user;
-
-        $event_going_user = json_decode($event->going_users_id, true);
-        $this_user_key = array_search(auth()->user()->id, $event_going_user);
-        array_splice($event_going_user, $this_user_key);
-        $event_going_user = json_encode($event_going_user);
-        $event->going_users_id = $event_going_user;
+        $event->interested_users_id = $this->removeEventUserId($event->interested_users_id, $going_user_id);
+        $event->going_users_id = $this->removeEventUserId($event->going_users_id, $going_user_id);
 
         $event->save();
 
@@ -375,9 +358,16 @@ class EventController extends Controller
     // invite to friend
     public function event_invite($invited_friend_id, $requester_id, $event_id)
     {
+        $requesterId = (int) $requester_id;
+        $authenticatedUserId = (int) auth()->id();
+
+        abort_unless($requesterId === $authenticatedUserId, 403);
+
+        Event::findOrFail($event_id);
+
         $invite = new Invite;
         $invite->invite_reciver_id = $invited_friend_id;
-        $invite->invite_sender_id = $requester_id;
+        $invite->invite_sender_id = $authenticatedUserId;
         $invite->event_id = $event_id;
         $done = $invite->save();
         if ($done) {
@@ -406,9 +396,11 @@ class EventController extends Controller
     }
 
     //    share event
-    public function shareevent()
+    public function shareevent(Request $request)
     {
-        $id = $_GET['event_id'];
+        $id = $request->integer('event_id');
+        Event::findOrFail($id);
+
         $url = url('/').'/event/'.$id;
 
         $response = [];
@@ -459,5 +451,27 @@ class EventController extends Controller
         Session::flash('success_message', get_phrase('Event Invited Done Successfully'));
 
         return json_encode(['reload' => 1]);
+    }
+
+    private function authorizeEventManagement(Event $event): void
+    {
+        $user = auth()->user();
+
+        abort_unless($user instanceof User, 403);
+        abort_unless((int) $event->user_id === (int) $user->id || $user->user_role === UserRole::Admin->value, 403);
+    }
+
+    private function removeEventUserId(?string $encodedUserIds, int $userId): string
+    {
+        $userIds = json_decode($encodedUserIds ?: '[]', true);
+
+        if (! is_array($userIds)) {
+            $userIds = [];
+        }
+
+        return json_encode(array_values(array_filter(
+            $userIds,
+            fn ($storedUserId): bool => (int) $storedUserId !== $userId
+        )));
     }
 }

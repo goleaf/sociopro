@@ -77,18 +77,13 @@
               </thead>
               <tbody>
                @foreach($badges as $key => $badge)
-               
-               @php 
-                $user_info = App\Models\User::where('id', $badge->user_id)->first();
-               @endphp
-
                     <tr>
                         <th scope="row">
                              <p class="row-number">{{++$key}}</p>
                         </th>
                         <td>
                             <div class="dAdmin_info_name min-w-100px">
-                                <a href="" class="text-dark" target="_blank">{{$user_info->name}} @if($user_info->user_role == \App\Enums\UserRole::Admin->value){{get_phrase('(Admin)')}}@endif</a>
+                                <a href="" class="text-dark" target="_blank">{{$badge->getUser?->name}} @if($badge->getUser?->user_role == \App\Enums\UserRole::Admin->value){{get_phrase('(Admin)')}}@endif</a>
                             </div>
                         </td>
                         <td>
