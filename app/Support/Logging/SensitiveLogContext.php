@@ -4,7 +4,9 @@ namespace App\Support\Logging;
 
 use BackedEnum;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Enumerable;
 use SplFileInfo;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
 use Throwable;
@@ -15,8 +17,6 @@ class SensitiveLogContext
     private const REDACTED = '[redacted]';
 
     private const PERSONAL_DATA_REDACTED = '[personal-data-redacted]';
-
-    private const PAYMENT_DATA_REDACTED = '[payment-data-redacted]';
 
     private const FILE_CONTENT_REDACTED = '[file-content-redacted]';
 
@@ -43,6 +43,10 @@ class SensitiveLogContext
             return self::sanitizeMessage($value);
         }
 
+        if ($value instanceof Enumerable) {
+            return self::sanitize($value->all(), $depth + 1);
+        }
+
         if ($value instanceof Throwable) {
             return self::exceptionSummary($value);
         }
@@ -56,7 +60,7 @@ class SensitiveLogContext
         }
 
         if (is_object($value)) {
-            return '[object:'.str_replace('\\', '.', $value::class).']';
+            return self::objectSummary($value);
         }
 
         if (is_resource($value)) {
@@ -117,7 +121,7 @@ class SensitiveLogContext
         }
 
         if (self::isPaymentDataKey($normalizedKey)) {
-            return self::PAYMENT_DATA_REDACTED;
+            return self::REDACTED;
         }
 
         return self::sanitize($value, $depth + 1);
@@ -125,7 +129,10 @@ class SensitiveLogContext
 
     private static function normalizeKey(int|string $key): string
     {
-        return strtolower((string) preg_replace('/[^a-z0-9]+/i', '_', (string) $key));
+        $key = (string) preg_replace('/([A-Z]+)([A-Z][a-z])/', '$1_$2', (string) $key);
+        $key = (string) preg_replace('/([a-z0-9])([A-Z])/', '$1_$2', $key);
+
+        return strtolower((string) preg_replace('/[^a-z0-9]+/i', '_', $key));
     }
 
     private static function isSensitiveKey(string $key): bool
@@ -239,6 +246,30 @@ class SensitiveLogContext
             'size' => $file->getSize(),
             'error' => $file->getError(),
         ];
+    }
+
+    /**
+     * @return array{class: string, id?: int|string}
+     */
+    private static function objectSummary(object $value): array
+    {
+        $summary = [
+            'class' => $value::class,
+        ];
+
+        $id = null;
+
+        if ($value instanceof Model) {
+            $id = $value->getKey();
+        } elseif (isset($value->id) && (is_int($value->id) || is_string($value->id))) {
+            $id = $value->id;
+        }
+
+        if (is_int($id) || is_string($id)) {
+            $summary['id'] = $id;
+        }
+
+        return $summary;
     }
 
     /**

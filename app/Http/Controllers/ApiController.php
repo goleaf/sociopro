@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Posts\DeletePostAction;
+use App\Actions\Posts\DeletePostMediaFileAction;
+use App\Actions\Posts\StorePostAction;
+use App\Actions\Posts\UpdatePostAction;
 use App\Enums\ApiTokenAbility;
 use App\Enums\MediaFileType;
 use App\Enums\MembershipRole;
@@ -11,6 +15,10 @@ use App\Http\Requests\Api\Marketplace\DestroyMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\FilterMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\StoreMarketplaceRequest;
 use App\Http\Requests\Api\Marketplace\UpdateMarketplaceRequest;
+use App\Http\Requests\Api\Posts\DestroyPostMediaFileRequest;
+use App\Http\Requests\Api\Posts\DestroyPostRequest;
+use App\Http\Requests\Api\Posts\StorePostRequest;
+use App\Http\Requests\Api\Posts\UpdatePostRequest;
 use App\Http\Resources\Api\MarketplaceCollection;
 use App\Models\AlbumImage;
 use App\Models\Albums;
@@ -34,7 +42,6 @@ use App\Models\Job;
 use App\Models\JobApply;
 use App\Models\JobCategory;
 use App\Models\JobWishlist;
-use App\Models\LiveStreaming;
 use App\Models\Marketplace;
 use App\Models\MediaFile;
 use App\Models\MessageThread;
@@ -86,7 +93,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 require 'vendor/autoload.php'; // Include Composer's autoloader
 
-use Session; // Import Carbon for date comparisons
+// Import Carbon for date comparisons
 
 class ApiController extends Controller
 {
@@ -1413,306 +1420,45 @@ class ApiController extends Controller
         return $response;
     }
 
-    public function create_post(Request $request)
+    public function create_post(StorePostRequest $request, StorePostAction $storePost)
     {
         $token = $request->bearerToken();
         $response = [];
-        $data = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
+            $user = $request->user('sanctum');
 
-            // $rules = array('privacy' => ['required', Rule::in(['private', 'public', 'friends'])]);
-            // if ($validator->fails()) {
-            //     return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
-            // }
-
-            if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                // Data validation
-
-                $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
-                // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
-                $validator = Validator::make($request->only(['multiple_files']), $rules);
-                if ($validator->fails()) {
-                    $validation_errors = $validator->getMessageBag()->toArray();
-                    foreach ($validation_errors as $key => $validation_error) {
-                        $fileIndex = explode('.', $key);
-                        if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
-                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
-                        }
-                        unset($validation_errors['multiple_files.'.$fileIndex[1]]);
-                    }
-
-                    return response()->json(['validationError' => $validation_errors]);
-                }
-            }
-
-            $data['user_id'] = $user_id;
-            $data['privacy'] = $request->privacy;
-            // $data['privacy'] = 'public';
-
-            if (isset($request->publisher) && ! empty($request->publisher)) {
-                $data['publisher'] = $request->publisher;
-            } else {
-                $data['publisher'] = 'post';
-            }
-
-            if (isset($request->event_id) && ! empty($request->event_id)) {
-                $data['publisher_id'] = $request->event_id;
-            } elseif (isset($request->page_id) && ! empty($request->page_id)) {
-                $data['publisher_id'] = $request->page_id;
-            } elseif (isset($request->group_id) && ! empty($request->group_id)) {
-                $data['publisher_id'] = $request->group_id;
-            } else {
-                $data['publisher_id'] = $user_id;
-            }
-            // post type
-            if (isset($request->post_type) && ! empty($request->post_type)) {
-                $data['post_type'] = $request->post_type;
-            } else {
-                $data['post_type'] = 'general';
-            }
-
-            if (isset($request->tagged_users_id) && is_array($request->tagged_users_id)) {
-                $tagged_users = $request->tagged_users_id;
-            } else {
-                $tagged_users = [];
-            }
-            $data['tagged_user_ids'] = json_encode($tagged_users);
-
-            if (isset($request->feeling_and_activity_id) && ! empty($request->feeling_and_activity_id)) {
-                $data['activity_id'] = $request->feeling_and_activity_id;
-            } else {
-                $data['activity_id'] = 0;
-            }
-
-            if (isset($request->address) && ! empty($request->address)) {
-                $data['location'] = $request->address;
-            } else {
-                $data['location'] = '';
-            }
-
-            if (isset($request->description) && ! empty($request->description)) {
-                $data['description'] = $request->description;
-            } else {
-                $data['description'] = '';
-            }
-
-            if (isset($request->address) && ! empty($request->address)) {
-                $data['location'] = $request->address;
-            }
-            // else {
-            //     $data['location'] = '';
-            // }
-
-            // Mobile App View Image
-            $mobile_app_image = FileUploader::upload($request->mobile_app_image, 'public/storage/post/images/');
-            $data['mobile_app_image'] = $mobile_app_image;
-
-            $data['status'] = 'active';
-            $data['user_reacts'] = json_encode([]);
-            $data['shared_user'] = json_encode([]);
-            $data['created_at'] = time();
-            $data['updated_at'] = $data['created_at'];
-
-            $post_id = Posts::insertGetId($data);
-            if ($post_id >= 0) {
-                $response['status'] = 200;
-                $response['message'] = 'Your post successfully publidhed';
-            }
-
-            // add media files
-            if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                // Data validation
-                // $response['message'] = 'check image for upload';
-                $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:500000'];
-                $validator = Validator::make($request->only(['multiple_files']), $rules);
-                if ($validator->fails()) {
-                    $validation_errors = $validator->getMessageBag()->toArray();
-                    foreach ($validation_errors as $key => $validation_error) {
-                        $fileIndex = explode('.', $key);
-                        if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
-                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
-                        }
-                        unset($validation_errors['multiple_files.'.$fileIndex[1]]);
-                    }
-
-                    return response()->json(['validationError' => $validation_errors]);
-                }
-
-                foreach ($request->multiple_files as $key => $media_file) {
-                    $file_name = random(40);
-                    $file_extention = strtolower($media_file->getClientOriginalExtension());
-                    if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                        FileUploader::upload($media_file, 'public/storage/post/videos/'.$file_name.'.'.$file_extention);
-                        $file_type = 'video';
-                    } else {
-                        FileUploader::upload($media_file, 'public/storage/post/images/'.$file_name.'.'.$file_extention, 1000, null, 300);
-                        $file_type = 'image';
-                    }
-                    $file_name = $file_name.'.'.$file_extention;
-                    //    return [$file_name];
-                    $media_file_data = ['user_id' => auth('sanctum')->user()->id, 'post_id' => $post_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy];
-
-                    if (isset($request->page_id) && ! empty($request->page_id)) {
-                        $media_file_data['page_id'] = $request->page_id;
-                    } elseif (isset($request->group_id) && ! empty($request->group_id)) {
-                        $media_file_data['group_id'] = $request->group_id;
-                    } else {
-                    }
-                    $media_file_data['created_at'] = time();
-                    $media_file_data['updated_at'] = $media_file_data['created_at'];
-                    MediaFile::create($media_file_data);
-                }
-            }
-
-            if ($data['post_type'] == 'live_streaming') {
-                // Live streaming
-                $live['publisher'] = $data['publisher'];
-                $live['publisher_id'] = $post_id;
-                $live['user_id'] = $user_id;
-                $liveStreamingUrl = route('go.live', $post_id);
-                $live['details'] = json_encode(['link' => $liveStreamingUrl, 'status' => true]);
-                $live['created_at'] = date('Y-m-d H:i:s', time());
-                $live['updated_at'] = $live['created_at'];
-
-                LiveStreaming::insert($live);
-                $response = ['open_new_tab' => $liveStreamingUrl, 'reload' => 0, 'status' => 1, 'function' => 0, 'messageShowOn' => '[name=about]', 'message' => get_phrase('Post has been added to your timeline')];
-            } else {
-                // Ajax flush message
-                // Session::flash('success_message', get_phrase('Your post has been published'));
-                // $response = array('reload' => 1);
-            }
-
-            return $response;
+            return $user instanceof User ? $storePost->handle($user, $request) : $response;
         }
 
         // Data validation
     }
 
-    public function edit_post($id, Request $request)
+    public function edit_post(UpdatePostRequest $request, UpdatePostAction $updatePost, $id)
     {
         $token = $request->bearerToken();
         $response = [];
-        $data = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            // $posts = Posts::where('id', $id)->first();
-
-            // $rules = array('privacy' => ['required', Rule::in(['private', 'public', 'friends'])]);
-            // if ($validator->fails()) {
-            //     return json_encode(array('validationError' => $validator->getMessageBag()->toArray()));
-            // }
-
-            if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                // Data validation
-
-                $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
-                // $rules = array('multiple_files.*' => 'mimes:mp4,mov,wmv,avi,WEBM,mkv|max:20048');
-                $validator = Validator::make($request->only(['multiple_files']), $rules);
-                if ($validator->fails()) {
-                    $validation_errors = $validator->getMessageBag()->toArray();
-                    foreach ($validation_errors as $key => $validation_error) {
-                        $fileIndex = explode('.', $key);
-                        if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
-                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
-                        }
-                        unset($validation_errors['multiple_files.'.$fileIndex[1]]);
-                    }
-
-                    return response()->json(['validationError' => $validation_errors]);
-                }
-            }
-
-            $data['privacy'] = $request->privacy;
-
-            if (isset($request->tagged_users_id) && is_array($request->tagged_users_id)) {
-                $tagged_users = $request->tagged_users_id;
-                $data['tagged_user_ids'] = json_encode($tagged_users);
-            }
-
-            if (isset($request->feeling_and_activity_id) && ! empty($request->feeling_and_activity_id)) {
-                $data['activity_id'] = $request->feeling_and_activity_id;
-            }
-
-            if (isset($request->description) && ! empty($request->description)) {
-                $data['description'] = $request->description;
-            }
-
-            // Mobile Preview Upload Image
-            $mobile_app_image = FileUploader::upload($request->mobile_app_image, 'public/storage/post/images/');
-            $data['mobile_app_image'] = $mobile_app_image;
-
-            $data['updated_at'] = time();
-
-            Posts::where('post_id', $id)->update($data);
-
-            // add media files
-            if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                // Data validation
-
-                $rules = ['multiple_files.*' => 'mimes:jpeg,png,jpg,gif,svg,mp4,mov,wmv,avi,webm|max:20480'];
-                $validator = Validator::make($request->only(['multiple_files']), $rules);
-                if ($validator->fails()) {
-                    $validation_errors = $validator->getMessageBag()->toArray();
-                    foreach ($validation_errors as $key => $validation_error) {
-                        $fileIndex = explode('.', $key);
-                        if (array_key_exists('multiple_files.'.$fileIndex[1], $validation_errors)) {
-                            $validation_errors['multiple_files'] = $validation_errors['multiple_files.'.$fileIndex[1]];
-                        }
-                        unset($validation_errors['multiple_files.'.$fileIndex[1]]);
-                    }
-
-                    return response()->json(['validationError' => $validation_errors]);
-                }
-
-                foreach ($request->multiple_files as $key => $media_file) {
-                    $file_name = random(40);
-                    $file_extention = strtolower($media_file->getClientOriginalExtension());
-                    if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                        FileUploader::upload($media_file, 'public/storage/post/videos/'.$file_name.'.'.$file_extention);
-                        $file_type = 'video';
-                    } else {
-                        FileUploader::upload($media_file, 'public/storage/post/images/'.$file_name.'.'.$file_extention, 1000, null, 300);
-                        $file_type = 'image';
-                    }
-                    $file_name = $file_name.'.'.$file_extention;
-
-                    $media_file_data = ['user_id' => $user_id, 'post_id' => $id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => $request->privacy];
-
-                    if (isset($request->page_id) && ! empty($request->page_id)) {
-                        $media_file_data['page_id'] = $request->page_id;
-                    } elseif (isset($request->group_id) && ! empty($request->group_id)) {
-                        $media_file_data['group_id'] = $request->group_id;
-                    } else {
-                    }
-                    $media_file_data['created_at'] = time();
-                    $media_file_data['updated_at'] = $media_file_data['created_at'];
-                    MediaFile::create($media_file_data);
-                }
-            }
-            $response['status'] = 200;
-            $response['message'] = 'Your post successfully updated';
-
-            // Ajax flush message
+            $post = Posts::query()->find($id);
+            $user = $request->user('sanctum');
+            $response = $post instanceof Posts && $user instanceof User
+                ? $updatePost->handle($post, $user, $request)
+                : ['status' => 200, 'message' => 'Your post successfully updated'];
         }
 
         return $response;
     }
 
-    public function delete_post($id, Request $request)
+    public function delete_post(DestroyPostRequest $request, DeletePostAction $deletePost, $id)
     {
         $token = $request->bearerToken();
         $response = [];
         $data = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            $done = Posts::where('post_id', $id)->delete();
-            if ($done) {
-                $response = ['alertMessage' => get_phrase('Post Deleted Successfully'), 'fadeOutElem' => '#postIdentification'.$id];
-            }
+            $post = Posts::query()->find($id);
+            $response = $post instanceof Posts ? $deletePost->handle($post) : [];
         }
 
         return $response;
@@ -1772,19 +1518,15 @@ class ApiController extends Controller
         return $response;
     }
 
-    public function delete_media_file($id, Request $request)
+    public function delete_media_file(DestroyPostMediaFileRequest $request, DeletePostMediaFileAction $deletePostMediaFile, $id)
     {
         $token = $request->bearerToken();
         $response = [];
-        $data = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            $media_file = MediaFile::where('id', $id)->where('user_id', $user_id);
-            if ($media_file->count() > 0) {
-                remove_file('public/storage/post/images/'.$media_file->first()->file_name);
-                MediaFile::find($id)->delete();
-                $response = ['alertMessage' => get_phrase('Image deleted successfully'), 'fadeOutElem' => '#previous-uploaded-img-'.$id];
+            $mediaFile = MediaFile::query()->find($id);
+            if ($mediaFile instanceof MediaFile) {
+                $response = $deletePostMediaFile->handle($mediaFile);
             } else {
                 $response = ['alertMessage' => get_phrase('Image not found')];
             }
