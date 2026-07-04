@@ -19,6 +19,49 @@ The PHP models currently expose canonical aliases such as `receiver_id`,
 `message_thread_id`, and `chat_center`, but those aliases still write to the
 legacy database columns above.
 
+## Internal Refactor Seams
+
+The first behavior-preserving internal cleanup introduced named model constants
+for the legacy chat storage contract. New internal chat code should reference
+the constants instead of repeating raw column strings:
+
+- `MessageThread::TABLE`
+- `MessageThread::SENDER_ID_COLUMN`
+- `MessageThread::LEGACY_RECEIVER_ID_COLUMN`
+- `MessageThread::LEGACY_CHAT_CENTER_COLUMN`
+- `Chat::LEGACY_MESSAGE_THREAD_ID_COLUMN`
+- `Chat::SENDER_ID_COLUMN`
+- `Chat::LEGACY_RECEIVER_ID_COLUMN`
+- `Chat::LEGACY_CHAT_CENTER_COLUMN`
+- `Chat::READ_STATUS_COLUMN`
+
+The models now expose relationship and scope seams for refactors while keeping
+legacy persistence unchanged:
+
+- `MessageThread::sender()`, `receiver()`, and `messages()`
+- `Chat::messageThread()`, `sender()`, `receiver()`, and `mediaFiles()`
+- `MessageThread::betweenUsers(...)` with legacy-compatible
+  `betweenParticipants(...)` retained
+- `Chat::forThread(...)` and `betweenUsers(...)` with legacy-compatible
+  `forMessageThread(...)` and `betweenParticipants(...)` retained
+
+The web chat save path now delegates thread and message persistence to focused
+actions:
+
+- `App\Actions\Chat\FindOrCreateMessageThreadAction`
+- `App\Actions\Chat\StoreChatMessageAction`
+
+`App\Http\Requests\Chat\StoreChatMessageRequest` accepts current legacy chat
+inputs, including `reciver_id`, but intentionally does not tighten attachment
+extension handling yet. Attachment upload behavior remains in
+`ChatController` until a separate transaction/validation cleanup can preserve
+client compatibility.
+
+`Chat` still uses guarded assignment. The current safe seam is
+`StoreChatMessageAction`, which writes explicit legacy attributes. Converting
+`Chat` to a narrow `$fillable` contract should happen after all legacy chat
+write paths are routed through focused actions and covered by tests.
+
 ## Web Routes Covered
 
 - `GET /chat/inbox/{receiver}/{product?}` named `chat`
@@ -147,14 +190,18 @@ Use an expand-and-contract migration/refactor plan instead of a blind rename:
 - `reciver_id` -> `receiver_id`
 - `reciver` -> `receiver`
 - `chatcenter` -> `chat_center`
-- `msg_thrade` -> `message_thread`
+- legacy `msg_thrade` terminology -> `message_thread`
+
+The current checkout already uses `{message_thread}` for the API message route
+parameter, but legacy mobile/API payload keys and typo storage names still need
+an explicit compatibility plan before they are removed.
 
 Recommended sequence:
 
 1. Keep the characterization tests green.
-2. Add additive canonical columns or compatibility views/accessors where needed.
+2. Add a compatibility migration for canonical columns where needed.
 3. Backfill canonical fields from legacy fields.
-4. Update write paths to dual-write temporarily.
-5. Update read paths to prefer canonical names with legacy fallback.
-6. Migrate routes and public API keys with compatibility aliases where required.
+4. Update write paths to write both old and new columns temporarily.
+5. Migrate reads to prefer canonical names with legacy fallback.
+6. Deprecate old API parameter names and payload keys with compatibility aliases.
 7. Remove legacy names only after production data and clients are verified.

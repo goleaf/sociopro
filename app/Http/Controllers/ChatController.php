@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Chat\FindOrCreateMessageThreadAction;
+use App\Actions\Chat\StoreChatMessageAction;
+use App\Http\Requests\Chat\StoreChatMessageRequest;
 use App\Models\Chat;
 use App\Models\Marketplace;
 use App\Models\MediaFile;
@@ -14,22 +17,27 @@ use Illuminate\Support\Facades\Validator;
 
 class ChatController extends Controller
 {
-    public function chat($receiver = null, $product = null)
+    private const CHAT_VIDEO_EXTENSIONS = ['avi', 'mp4', 'webm', 'mov', 'wmv', 'mkv'];
+
+    private const CHAT_UPLOAD_MIME_RULE = 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi';
+
+    public function chat(Request $request, $receiver = null, $product = null)
     {
         if ($product !== null) {
             $this->authorizeMarketplaceProductChat((int) $receiver, (int) $product);
         }
 
-        $userId = auth()->user()->id;
+        $user = $request->user();
+        $userId = (int) $user->id;
         $receiverId = (int) $receiver;
-        $messageThread = MessageThread::betweenParticipants($receiverId, $userId)->first();
+        $messageThread = MessageThread::betweenUsers($receiverId, $userId)->first();
 
-        $receiverData = User::find($receiver);
+        $receiverData = User::find($receiverId);
         if (! empty($messageThread)) {
-            Chat::forMessageThread($messageThread->id)
+            Chat::forThread($messageThread->id)
                 ->unreadForReceiver($receiverId)
                 ->update(['read_status' => '1']);
-            $message = Chat::forMessageThread($messageThread->id)->orderBy('id', 'DESC')->limit('20')->get();
+            $message = Chat::forThread($messageThread->id)->latest('id')->limit(20)->get();
         } else {
             $message = [];
         }
@@ -49,155 +57,67 @@ class ChatController extends Controller
         ]);
     }
 
-    public function chat_save(Request $request)
-    {
+    public function chat_save(
+        StoreChatMessageRequest $request,
+        FindOrCreateMessageThreadAction $findOrCreateMessageThread,
+        StoreChatMessageAction $storeChatMessage
+    ) {
         $receiverId = $this->receiverIdFromRequest($request);
-        $userId = auth()->user()->id;
+        $user = $request->user();
 
         if ($request->filled('product_id')) {
             $this->authorizeMarketplaceProductChat($receiverId, $request->integer('product_id'));
         }
 
-        $firstMessageThread = MessageThread::betweenParticipants($receiverId, $userId)->first();
-        $messageThreadCount = MessageThread::betweenParticipants($receiverId, $userId)->count();
+        $receiver = User::findOrFail($receiverId);
+        $messageThread = $findOrCreateMessageThread->execute($user, $receiver, $request->input('messagecenter'));
+        $chat = $storeChatMessage->execute(
+            sender: $user,
+            receiver: $receiver,
+            messageThread: $messageThread,
+            message: $request->input('message'),
+            chatCenter: $request->input('messagecenter'),
+            thumbsup: $request->input('thumbsup'),
+            file: '1',
+        );
 
-        if ($messageThreadCount <= 0) {
-            $messageThread = new MessageThread;
-            $messageThread->sender_id = $userId;
-            $messageThread->receiver_id = $receiverId;
-            $messageThread->chat_center = $request->messagecenter;
-            $done = $messageThread->save();
-            if ($done) {
-                $chat = new Chat;
-                $chat->receiver_id = $receiverId;
-                $chat->sender_id = $userId;
-                $chat->chat_center = $request->messagecenter;
-                $chat->message = $request->message;
-                $chat->message_thread_id = $messageThread->id;
-                $chat->thumbsup = $request->thumbsup;
-                $chat->file = '1';
-                $chat->save();
-                $last_chat_id = $chat->id;
-
-                if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                    // Data validation
-                    $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
-                    $validator = Validator::make($request->multiple_files, $rules);
-                    if ($validator->fails()) {
-                        return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
-                    }
-
-                    foreach ($request->multiple_files as $key => $media_file) {
-                        $file_name = random(40);
-                        $file_extention = strtolower($media_file->getClientOriginalExtension());
-                        if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                            FileUploader::upload($media_file, 'public/storage/chat/videos/'.$file_name.'.'.$file_extention);
-                            $file_type = 'video';
-                        } else {
-                            FileUploader::upload($media_file, 'public/storage/chat/images/'.$file_name, 1000, null, 300);
-                            $file_type = 'image';
-                        }
-                        // $file_name = $file_name.'.'.$file_extention;
-
-                        $media_file_data = ['user_id' => auth()->user()->id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public'];
-                        $media_file_data['created_at'] = time();
-                        $media_file_data['updated_at'] = $media_file_data['created_at'];
-                        MediaFile::create($media_file_data);
-                    }
-                }
-                $page_data['message'] = Chat::forMessageThread($messageThread->id)->orderBy('id', 'DESC')->limit('1')->get();
-                $message = view('frontend.chat.single-message', $page_data)->render();
-                $url = route('chat', $receiverId);
-                if (isset($request->product_id) && ! empty($request->product_id)) {
-                    $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox', 'replaceUrl' => '#message_body', 'url' => $url];
-                } else {
-                    $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox'];
-                }
-
-                return json_encode($response);
-            }
-        } else {
-            $chat = new Chat;
-            $chat->receiver_id = $receiverId;
-            $chat->sender_id = $userId;
-            $chat->chat_center = $request->messagecenter;
-            $chat->message = $request->message;
-            $chat->message_thread_id = $firstMessageThread->id;
-            $chat->thumbsup = $request->thumbsup;
-            $chat->file = '1';
-            $chat->save();
-            $last_chat_id = $chat->id;
-
-            if (is_array($request->multiple_files) && $request->multiple_files[0] != null) {
-                // Data validation
-                $rules = ['multiple_files' => 'mimes:jpeg,jpg,png,gif,jfif,mp4,mov,wmv,mkv,webm,avi'];
-                $validator = Validator::make($request->multiple_files, $rules);
-                if ($validator->fails()) {
-                    return json_encode(['validationError' => $validator->getMessageBag()->toArray()]);
-                }
-
-                foreach ($request->multiple_files as $key => $media_file) {
-                    $file_name = random(40);
-                    $file_extention = strtolower($media_file->getClientOriginalExtension());
-                    if ($file_extention == 'avi' || $file_extention == 'mp4' || $file_extention == 'webm' || $file_extention == 'mov' || $file_extention == 'wmv' || $file_extention == 'mkv') {
-                        FileUploader::upload($media_file, 'public/storage/chat/videos/'.$file_name.'.'.$file_extention);
-                        $file_type = 'video';
-                    } else {
-                        FileUploader::upload($media_file, 'public/storage/chat/images/'.$file_name, 1000, null, 300);
-                        $file_type = 'image';
-                    }
-                    // $file_name = $file_name.'.'.$file_extention;
-
-                    $media_file_data = ['user_id' => auth()->user()->id, 'chat_id' => $last_chat_id, 'file_name' => $file_name, 'file_type' => $file_type, 'privacy' => 'public'];
-
-                    $media_file_data['chat_id'] = $chat->id;
-                    $media_file_data['created_at'] = time();
-                    $media_file_data['updated_at'] = $media_file_data['created_at'];
-                    MediaFile::create($media_file_data);
-                }
-            }
-            $page_data['message'] = Chat::forMessageThread($firstMessageThread->id)->orderBy('id', 'DESC')->limit('1')->get();
-            $message = view('frontend.chat.single-message', $page_data)->render();
-            $url = route('chat', $receiverId);
-            if (isset($request->product_id) && ! empty($request->product_id)) {
-                $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox', 'replaceUrl' => '#message_body', 'url' => $url];
-            } else {
-                $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox'];
-            }
-
-            return json_encode($response);
+        $validationError = $this->storeChatAttachments($request, $chat, $user);
+        if ($validationError !== null) {
+            return json_encode($validationError);
         }
+
+        return $this->chatSaveResponse($messageThread, $receiverId, $request->filled('product_id'));
     }
 
-    public function remove_chat($id)
+    public function remove_chat(Request $request, $id)
     {
-        $chat = Chat::findOrFail($id);
+        $chatMessage = Chat::findOrFail($id);
 
-        abort_unless($chat->isParticipant((int) auth()->id()), 403);
+        abort_unless($chatMessage->isParticipant((int) $request->user()->id), 403);
 
-        $chat->delete();
+        $chatMessage->delete();
 
         return redirect()->back();
     }
 
     public function react_chat(Request $request)
     {
-        $form_data = $request->only([
+        $formData = $request->only([
             'requestType',
             'messageId',
             'react',
         ]);
-        if ($form_data['requestType'] == 'update') {
-            $chat = Chat::findOrFail($form_data['messageId']);
+        if ($formData['requestType'] == 'update') {
+            $chat = Chat::findOrFail($formData['messageId']);
 
-            abort_unless($chat->isParticipant((int) auth()->id()), 403);
+            abort_unless($chat->isParticipant((int) $request->user()->id), 403);
 
-            $chat->react = $form_data['react'];
+            $chat->react = $formData['react'];
             $chat->save();
 
             $page_data['message'] = $chat;
             $message = view('frontend.chat.chat_react', $page_data)->render();
-            $response = ['elemSelector' => '#ShowReactId_'.$form_data['messageId'], 'content' => $message];
+            $response = ['elemSelector' => '#ShowReactId_'.$formData['messageId'], 'content' => $message];
 
             return json_encode($response);
         }
@@ -207,14 +127,16 @@ class ChatController extends Controller
     {
         $messageThreadsUserId = [];
         $search = (string) $request->query('search', '');
+        $currentUser = $request->user();
+        $currentUserId = (int) $currentUser->id;
         $view_btn_text = 'View Profile';
         $output = '';
 
-        $myMessageThreads = MessageThread::forParticipant(auth()->user()->id)->get();
+        $myMessageThreads = MessageThread::forParticipant($currentUserId)->get();
         foreach ($myMessageThreads as $myMessageThread) {
-            if ($myMessageThread->sender_id == auth()->user()->id) {
+            if ($myMessageThread->sender_id == $currentUserId) {
                 array_push($messageThreadsUserId, $myMessageThread->receiver_id);
-            } elseif ($myMessageThread->receiver_id == auth()->user()->id) {
+            } elseif ($myMessageThread->receiver_id == $currentUserId) {
                 array_push($messageThreadsUserId, $myMessageThread->sender_id);
             }
         }
@@ -222,7 +144,7 @@ class ChatController extends Controller
         $users = User::whereIn('id', $messageThreadsUserId)->where('name', 'like', '%'.$search.'%')->get();
 
         foreach ($users as $key => $user) {
-            $lastMsg = Chat::betweenParticipants(auth()->user()->id, $user->id)->limit(1)->orderBy('id', 'desc')->first();
+            $lastMsg = Chat::betweenUsers($currentUserId, $user->id)->limit(1)->orderBy('id', 'desc')->first();
 
             $output .= view('frontend.chat.search-contact', [
                 'chatUrl' => route('chat', $user->id),
@@ -240,12 +162,13 @@ class ChatController extends Controller
     public function chat_load(Request $request)
     {
         $id = $request->integer('id');
-        $messageThread = MessageThread::betweenParticipants(auth()->user()->id, (int) $id)->first();
-        $page_data['message'] = Chat::forMessageThread($messageThread->id)
-            ->unreadForReceiver(auth()->user()->id)
+        $user = $request->user();
+        $messageThread = MessageThread::betweenUsers((int) $user->id, (int) $id)->first();
+        $page_data['message'] = Chat::forThread($messageThread->id)
+            ->unreadForReceiver((int) $user->id)
             ->get();
         $message = view('frontend.chat.single-message', $page_data)->render();
-        $this->markUnreadMessagesReadForAuthenticatedUser((int) $id);
+        $this->markUnreadMessagesReadForUser($user, (int) $id);
         $response = ['appendElement' => '#message_body', 'content' => $message];
 
         return json_encode($response);
@@ -256,7 +179,7 @@ class ChatController extends Controller
         $receiverId = $request->integer('id');
 
         if ($receiverId > 0) {
-            $this->markUnreadMessagesReadForAuthenticatedUser($receiverId);
+            $this->markUnreadMessagesReadForUser($request->user(), $receiverId);
         }
 
         return response('');
@@ -267,10 +190,66 @@ class ChatController extends Controller
         return $request->integer('receiver_id') ?: $request->integer('reciver_id');
     }
 
-    private function markUnreadMessagesReadForAuthenticatedUser(int $receiverId): int
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function storeChatAttachments(Request $request, Chat $chat, User $user): ?array
     {
-        $userId = (int) auth()->id();
-        $messageThread = MessageThread::betweenParticipants($userId, $receiverId)
+        $files = $request->multiple_files;
+
+        if (! is_array($files) || ($files[0] ?? null) === null) {
+            return null;
+        }
+
+        $validator = Validator::make($files, ['multiple_files' => self::CHAT_UPLOAD_MIME_RULE]);
+        if ($validator->fails()) {
+            return ['validationError' => $validator->getMessageBag()->toArray()];
+        }
+
+        foreach ($files as $mediaFile) {
+            $fileName = random(40);
+            $fileExtension = strtolower($mediaFile->getClientOriginalExtension());
+            if (in_array($fileExtension, self::CHAT_VIDEO_EXTENSIONS, true)) {
+                FileUploader::upload($mediaFile, 'public/storage/chat/videos/'.$fileName.'.'.$fileExtension);
+                $fileType = 'video';
+            } else {
+                FileUploader::upload($mediaFile, 'public/storage/chat/images/'.$fileName, 1000, null, 300);
+                $fileType = 'image';
+            }
+
+            $mediaFileData = [
+                'user_id' => $user->id,
+                'chat_id' => $chat->id,
+                'file_name' => $fileName,
+                'file_type' => $fileType,
+                'privacy' => 'public',
+            ];
+            $mediaFileData['created_at'] = time();
+            $mediaFileData['updated_at'] = $mediaFileData['created_at'];
+            MediaFile::create($mediaFileData);
+        }
+
+        return null;
+    }
+
+    private function chatSaveResponse(MessageThread $messageThread, int $receiverId, bool $hasProduct)
+    {
+        $page_data['message'] = Chat::forThread($messageThread->id)->latest('id')->limit(1)->get();
+        $message = view('frontend.chat.single-message', $page_data)->render();
+        $url = route('chat', $receiverId);
+        if ($hasProduct) {
+            $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox', 'replaceUrl' => '#message_body', 'url' => $url];
+        } else {
+            $response = ['appendElement' => '#message_body', 'content' => $message, 'clickTo' => '#messageResetBox'];
+        }
+
+        return json_encode($response);
+    }
+
+    private function markUnreadMessagesReadForUser(User $user, int $receiverId): int
+    {
+        $userId = (int) $user->id;
+        $messageThread = MessageThread::betweenUsers($userId, $receiverId)
             ->select(['id'])
             ->first();
 
@@ -278,7 +257,7 @@ class ChatController extends Controller
             return 0;
         }
 
-        return Chat::forMessageThread($messageThread->id)
+        return Chat::forThread($messageThread->id)
             ->unreadForReceiver($userId)
             ->update(['read_status' => '1']);
     }
