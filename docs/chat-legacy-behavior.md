@@ -132,6 +132,9 @@ array on success.
   coverage before broadening the search UI.
 - Web chat upload validation has no explicit file-size limit in the current
   controller path.
+- Web chat executable uploads currently reach `FileUploader`, throw a 500, and
+  leave the `message_thrades`/`chats` rows created while no `media_files` row is
+  created.
 - API chat upload validation rejects invalid extensions before creating media
   rows, but the chat row is created before validation completes.
 

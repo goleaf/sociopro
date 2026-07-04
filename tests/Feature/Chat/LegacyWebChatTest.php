@@ -16,6 +16,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 class LegacyWebChatTest extends TestCase
@@ -216,6 +217,37 @@ class LegacyWebChatTest extends TestCase
 
         $this->assertNotEmpty(Storage::disk('public')->allFiles('chat/images'));
         Storage::disk('public')->assertExists('chat/videos/'.$videoMedia->file_name.'.mp4');
+    }
+
+    public function test_web_chat_invalid_executable_upload_currently_throws_after_creating_chat_without_media(): void
+    {
+        $this->disableS3Uploads();
+        Storage::fake('public');
+
+        $sender = $this->activeUser();
+        $receiver = $this->activeUser();
+
+        $this->withoutExceptionHandling();
+
+        try {
+            $this->actingAs($sender)->post(route('chat.save'), [
+                'reciver_id' => $receiver->id,
+                'message' => 'Invalid attachment',
+                'messagecenter' => 'chat',
+                'thumbsup' => 0,
+                'multiple_files' => [
+                    UploadedFile::fake()->create('payload.php', 1, 'application/x-php'),
+                ],
+            ]);
+
+            $this->fail('Expected executable chat upload to reach FileUploader and throw.');
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame('Executable uploads are not allowed.', $exception->getMessage());
+        }
+
+        $this->assertSame(1, MessageThread::query()->count());
+        $this->assertSame(0, MediaFile::query()->count());
+        $this->assertSame(1, Chat::query()->count());
     }
 
     public function test_web_chat_read_route_marks_only_auth_users_unread_messages(): void
