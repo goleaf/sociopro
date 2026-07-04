@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserAccountStatus;
+use App\Enums\UserRole;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Currency;
@@ -19,6 +21,8 @@ class LocalDemoSeeder extends Seeder
         if (! app()->environment(['local', 'testing'])) {
             throw new RuntimeException('Local demo seeder may only run in local or testing environments.');
         }
+
+        $this->localAdminUser();
 
         $user = $this->demoUser();
         $category = $this->demoCategory();
@@ -61,6 +65,33 @@ class LocalDemoSeeder extends Seeder
             'email' => 'local-demo@example.test',
             'username' => 'local-demo-user',
             'password' => Hash::make(Str::password(32)),
+        ]);
+        $user->save();
+
+        return $user;
+    }
+
+    private function localAdminUser(): ?User
+    {
+        $email = trim((string) config('local.admin.email', ''));
+        $password = (string) config('local.admin.password', '');
+
+        if ($email === '' || $password === '') {
+            return null;
+        }
+
+        $username = trim((string) config('local.admin.username', 'admin')) ?: 'admin';
+        $user = User::query()->where('email', $email)->first() ?? new User;
+
+        $user->forceFill([
+            'name' => 'Local Admin',
+            'email' => $email,
+            'username' => $username,
+            'nickname' => $username,
+            'password' => Hash::make($password),
+            'user_role' => UserRole::Admin->value,
+            'status' => UserAccountStatus::Active->value,
+            'email_verified_at' => $user->email_verified_at ?? now(),
         ]);
         $user->save();
 

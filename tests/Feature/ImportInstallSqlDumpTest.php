@@ -3,11 +3,15 @@
 namespace Tests\Feature;
 
 use App\Actions\Install\ImportInstallSqlDump;
+use App\Enums\UserAccountStatus;
+use App\Enums\UserRole;
 use App\Jobs\ImportInstallSqlDumpJob;
+use App\Models\User;
 use Illuminate\Database\SQLiteConnection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use PDO;
 use RuntimeException;
@@ -304,6 +308,31 @@ SQL);
         $this->assertSame($firstCounts, $this->demoCounts());
         $this->assertSame(1, DB::table('users')->where('email', 'local-demo@example.test')->count());
         $this->assertSame(1, DB::table('marketplaces')->where('title', 'Local demo marketplace product')->count());
+    }
+
+    public function test_local_demo_seeder_creates_configured_local_admin_user(): void
+    {
+        $this->assertTrue(class_exists('Database\\Seeders\\LocalDemoSeeder'));
+
+        $this->seed();
+
+        Config::set('local.admin.email', 'configured-admin@example.test');
+        Config::set('local.admin.username', 'configured-admin');
+        Config::set('local.admin.password', 'local-admin-password');
+
+        app('Database\\Seeders\\LocalDemoSeeder')->run();
+        app('Database\\Seeders\\LocalDemoSeeder')->run();
+
+        $admin = User::query()->where('email', 'configured-admin@example.test')->first();
+
+        $this->assertInstanceOf(User::class, $admin);
+        $this->assertSame('Local Admin', $admin->name);
+        $this->assertSame('configured-admin', $admin->username);
+        $this->assertSame(UserRole::Admin->value, $admin->user_role);
+        $this->assertSame(UserAccountStatus::Active->value, (int) $admin->status);
+        $this->assertNotNull($admin->email_verified_at);
+        $this->assertTrue(Hash::check('local-admin-password', $admin->password));
+        $this->assertSame(1, User::query()->where('email', 'configured-admin@example.test')->count());
     }
 
     /**

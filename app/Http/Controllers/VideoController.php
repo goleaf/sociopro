@@ -156,13 +156,18 @@ class VideoController extends Controller
     public function video_delete()
     {
         $response = [];
-        $video = Video::find($_GET['video_id']);
+        $videoId = request()->query('video_id');
+        abort_if($videoId === null || $videoId === '', 404);
+
+        $video = Video::findOrFail($videoId);
+        abort_unless((int) $video->user_id === (int) auth()->id(), 403);
+
         // store image name for delete file operation
         $file = $video->file;
 
         $done = $video->delete();
         if ($done) {
-            $response = ['alertMessage' => get_phrase('Video Deleted Successfully'), 'fadeOutElem' => '#video-'.$_GET['video_id']];
+            $response = ['alertMessage' => get_phrase('Video Deleted Successfully'), 'fadeOutElem' => '#video-'.$video->id];
             // just put the file name and folder name nothing more :)
             removeFile('video', $file);
         }
