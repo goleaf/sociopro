@@ -18,23 +18,45 @@
                         <form action="{{ route('register') }}" method="POST">
                             @csrf
                             <div class="form-group form-name">
-                                <label for="#">{{get_phrase('Full Name')}}</label>
-                                <input type="text" name="name" value="{{ old('name') }}" placeholder="{{get_phrase('Your full name')}}">
+                                <label for="register-name">{{get_phrase('Full Name')}}</label>
+                                <input id="register-name" type="text" name="name" value="{{ old('name') }}" placeholder="{{get_phrase('Your full name')}}">
                             </div>
                             <p class="text-danger">{{ $errors->first('name') }}</p>
                             <div class="form-group form-email">
-                                <label for="#">{{get_phrase('Email')}}</label>
-                                <input type="email" name="email" value="{{ old('email') }}" placeholder="{{get_phrase('Enter your email address')}}">
+                                <label for="register-email">{{get_phrase('Email')}}</label>
+                                <input id="register-email" type="email" name="email" value="{{ old('email') }}" placeholder="{{get_phrase('Enter your email address')}}">
                             </div>
                             <p class="text-danger">{{ $errors->first('email') }}</p>
-                            <div class="form-group form-pass">
-                                <label for="#">{{get_phrase('Password')}}</label>
-                                <input type="password" name="password" placeholder="{{get_phrase('Your password')}}">
+                            <div class="form-group form-pass password-toggle-field">
+                                <label for="register-password">{{get_phrase('Password')}}</label>
+                                <input id="register-password" type="password" name="password" placeholder="{{get_phrase('Your password')}}" autocomplete="new-password">
+                                <button
+                                    type="button"
+                                    class="password-toggle-button"
+                                    data-password-toggle-target="register-password"
+                                    data-show-label="{{ get_phrase('Show password') }}"
+                                    data-hide-label="{{ get_phrase('Hide password') }}"
+                                    aria-label="{{ get_phrase('Show password') }}"
+                                    aria-pressed="false"
+                                >
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                </button>
                             </div>
 
-                            <div class="form-group form-pass">
-                                <label for="#">{{get_phrase('Confirm Password')}}</label>
-                                <input type="password" name="password_confirmation" placeholder="{{get_phrase('Confirm password')}}">
+                            <div class="form-group form-pass password-toggle-field">
+                                <label for="register-password-confirmation">{{get_phrase('Confirm Password')}}</label>
+                                <input id="register-password-confirmation" type="password" name="password_confirmation" placeholder="{{get_phrase('Confirm password')}}" autocomplete="new-password">
+                                <button
+                                    type="button"
+                                    class="password-toggle-button"
+                                    data-password-toggle-target="register-password-confirmation"
+                                    data-show-label="{{ get_phrase('Show password') }}"
+                                    data-hide-label="{{ get_phrase('Hide password') }}"
+                                    aria-label="{{ get_phrase('Show password') }}"
+                                    aria-pressed="false"
+                                >
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                </button>
                             </div>
                             <p class="text-danger">{{ $errors->first('password') }}</p>
                             <input type="hidden" name="timezone" id="timezone" value="">

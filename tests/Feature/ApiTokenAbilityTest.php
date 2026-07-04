@@ -118,11 +118,8 @@ class ApiTokenAbilityTest extends TestCase
             ]));
 
         $response
-            ->assertOk()
-            ->assertJson([
-                'success' => false,
-                'message' => 'Unauthorized access',
-            ]);
+            ->assertUnauthorized()
+            ->assertJson($this->legacyUnauthorizedPayload());
 
         $this->assertSame('Original expired product', $product->refresh()->title);
     }
@@ -141,11 +138,8 @@ class ApiTokenAbilityTest extends TestCase
             ]));
 
         $response
-            ->assertOk()
-            ->assertJson([
-                'success' => false,
-                'message' => 'Unauthorized access',
-            ]);
+            ->assertUnauthorized()
+            ->assertJson($this->legacyUnauthorizedPayload());
 
         $this->assertSame('Original revoked product', $product->refresh()->title);
     }
@@ -162,11 +156,8 @@ class ApiTokenAbilityTest extends TestCase
             ]));
 
         $response
-            ->assertOk()
-            ->assertJson([
-                'success' => false,
-                'message' => 'Unauthorized access',
-            ]);
+            ->assertUnauthorized()
+            ->assertJson($this->legacyUnauthorizedPayload());
 
         $this->assertSame('Original web session product', $product->refresh()->title);
     }
@@ -262,5 +253,23 @@ class ApiTokenAbilityTest extends TestCase
     private function currency(): Currency
     {
         return Currency::factory()->euro()->create();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function legacyUnauthorizedPayload(): array
+    {
+        return [
+            'success' => false,
+            'message' => 'Unauthorized access',
+            'error' => [
+                'code' => 'AUTHENTICATION_ERROR',
+                'category' => 'authentication',
+                'message' => 'Unauthorized access',
+                'http_status' => 401,
+                'details' => [],
+            ],
+        ];
     }
 }

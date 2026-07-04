@@ -170,6 +170,11 @@ class UserController extends Controller
         return redirect()->route('payment');
     }
 
+    public function payment_success(string $identifier, Request $request)
+    {
+        return app(PaymentController::class)->payment_success($identifier, $request);
+    }
+
     private function userAdOrFail(int|string $id): Sponsor
     {
         $ad = Sponsor::query()

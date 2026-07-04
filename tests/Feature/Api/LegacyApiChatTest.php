@@ -27,7 +27,7 @@ class LegacyApiChatTest extends TestCase
         $this->createChat($thread, $receiver, $sender, 'API latest chat message');
 
         $this->getJson(route('api.chat.index'))
-            ->assertOk()
+            ->assertUnauthorized()
             ->assertJsonPath('success', false)
             ->assertJsonPath('error.code', 'AUTHENTICATION_ERROR');
 

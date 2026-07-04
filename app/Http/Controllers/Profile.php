@@ -18,7 +18,6 @@ use App\Queries\FriendshipsQuery;
 use App\Support\Files\FileUploader;
 use App\Support\Validation\DateTimeRules;
 use App\ViewModels\ProfileFollowList;
-use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
@@ -163,8 +162,13 @@ class Profile extends Controller
         if ($action_type == 'form') {
             return view('frontend.profile.album_create_form');
         } elseif ($action_type == 'delete') {
-            DB::table('albums')->where('id', $request->album_id)->delete();
-            DB::table('media_files')->where('album_id', $request->album_id)->delete();
+            $album = Albums::query()->find($request->album_id);
+
+            abort_unless($album instanceof Albums, 404);
+            abort_unless((int) $album->user_id === (int) $this->user->id, 403);
+
+            MediaFile::query()->where('album_id', $album->id)->delete();
+            $album->delete();
 
             $response = ['alertMessage' => get_phrase('Album deleted successfully'), 'hideElem' => '#photoAlbum'.$request->album_id];
 
@@ -248,6 +252,15 @@ class Profile extends Controller
         $page_data['user_info'] = $this->user;
 
         return view('frontend.profile.video_single', $page_data);
+    }
+
+    public function load_photo_and_videos(Request $request)
+    {
+        if ($request->query('type') === 'videos') {
+            return $this->load_videos($request);
+        }
+
+        return $this->load_photos($request);
     }
 
     public function load_my_friends(Request $request)

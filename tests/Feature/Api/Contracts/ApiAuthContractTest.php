@@ -39,15 +39,15 @@ class ApiAuthContractTest extends ApiContractTestCase
             ]);
     }
 
-    public function test_protected_endpoints_reject_missing_and_invalid_bearer_tokens_with_legacy_payload(): void
+    public function test_protected_endpoints_reject_missing_and_invalid_bearer_tokens_with_unauthorized_status(): void
     {
         $this->getJson(route('api.me.profile.show'))
-            ->assertOk()
+            ->assertUnauthorized()
             ->assertJson($this->legacyAuthenticationPayload());
 
         $this->withToken('invalid-token')
             ->getJson(route('api.me.profile.show'))
-            ->assertOk()
+            ->assertUnauthorized()
             ->assertJson($this->legacyAuthenticationPayload());
     }
 
@@ -129,6 +129,50 @@ class ApiAuthContractTest extends ApiContractTestCase
             ])
             ->assertJsonPath('message', 'Login successful')
             ->assertJsonPath('user_id', $user->id);
+    }
+
+    public function test_update_password_with_valid_token_returns_legacy_success_payload(): void
+    {
+        $user = $this->activeApiUser([
+            'password' => Hash::make('old-password'),
+        ]);
+
+        $this
+            ->withHeaders($this->apiHeaders($user))
+            ->postJson(route('api.password.update'), [
+                'current_password' => 'old-password',
+                'new_password' => 'new-password',
+                'confirm_password' => 'new-password',
+            ])
+            ->assertOk()
+            ->assertJson([
+                'status' => 'success',
+                'message' => 'Password Changed Successfully',
+            ]);
+
+        $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
+    }
+
+    public function test_update_password_with_wrong_current_password_returns_legacy_failure_payload(): void
+    {
+        $user = $this->activeApiUser([
+            'password' => Hash::make('old-password'),
+        ]);
+
+        $this
+            ->withHeaders($this->apiHeaders($user))
+            ->postJson(route('api.password.update'), [
+                'current_password' => 'wrong-password',
+                'new_password' => 'new-password',
+                'confirm_password' => 'new-password',
+            ])
+            ->assertOk()
+            ->assertJson([
+                'status' => 'failed',
+                'message' => 'Current Password is Invalid',
+            ]);
+
+        $this->assertTrue(Hash::check('old-password', $user->refresh()->password));
     }
 
     public function test_signup_validation_failure_returns_current_validation_shape(): void

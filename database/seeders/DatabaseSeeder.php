@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Actions\Install\ImportInstallSqlDump;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
@@ -13,12 +13,12 @@ class DatabaseSeeder extends Seeder
      *
      * Local/demo rows live in LocalDemoSeeder and are intentionally opt-in.
      */
-    public function run(ImportInstallSqlDump $importInstallSqlDump): void
+    public function run(): void
     {
-        if (Schema::hasTable('settings')) {
+        if (Schema::hasTable('settings') && DB::table('settings')->exists()) {
             return;
         }
 
-        $importInstallSqlDump->handle((string) config('install.schema_dump_path'));
+        $this->call(LegacyInstallSchemaSeeder::class);
     }
 }

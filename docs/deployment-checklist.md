@@ -2,7 +2,7 @@
 
 Generated: 2026-07-02
 
-Use this checklist for production or production-like releases of the current Laravel 13 / Laravel Mix application.
+Use this checklist for production or production-like releases of the current Laravel 13 / Vite application.
 
 ## Current Stack
 
@@ -10,7 +10,7 @@ Use this checklist for production or production-like releases of the current Lar
 - Laravel: `13.18.0`.
 - Composer: 2.9.5.
 - Node / npm: Node 22.22.3 / npm 10.9.8.
-- Frontend build: Laravel Mix / Webpack, not Vite.
+- Frontend build: Vite with SCSS.
 - Database: SQLite for local/CI; production-like baseline still comes from `database/schema/install.sql` plus additive migrations. The dump must remain outside the public web root.
 - CI: `.github/workflows/ci.yml` runs Composer validation/audit, Pint, PHPStan/Larastan, tests, cache smoke checks, migration smoke checks, npm lint/style/format, and production asset build.
 
@@ -47,7 +47,7 @@ Build frontend assets in CI/release packaging or on the host:
 
 ```bash
 npm ci
-npm run production
+npm run build
 ```
 
 ## Quality Gate

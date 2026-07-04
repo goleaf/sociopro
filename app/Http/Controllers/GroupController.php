@@ -439,4 +439,9 @@ class GroupController extends Controller
 
         return view('frontend.index', $page_data);
     }
+
+    public function album_details_page_list($album_id, $id)
+    {
+        return $this->album_details_list($id, $album_id);
+    }
 }

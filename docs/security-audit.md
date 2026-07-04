@@ -42,8 +42,8 @@ rg security patterns across app, routes, config, resources, database, and tests
 | Ecosystem | Result | Notes |
 | --- | --- | --- |
 | Composer | No security vulnerability advisories found | `composer audit --no-interaction` passed. |
-| npm runtime dependencies | No vulnerabilities found | `npm audit --omit=dev --audit-level=moderate` passed. |
-| npm full tree | 11 low/moderate findings | Findings are through legacy Laravel Mix development tooling (`elliptic`, `uuid` via `laravel-mix` dependency chain). npm reports no fix available. Treat as a build-tool modernization task, not a runtime blocker. |
+| npm runtime dependencies | No vulnerabilities found | 2026-07-04 `npm audit --omit=dev --audit-level=moderate` passed. |
+| npm full tree | No vulnerabilities found | 2026-07-04 `npm audit --audit-level=moderate` passed after the Vite/SCSS migration and removal of the unused `codex` npm package. |
 
 ## Findings Deferred
 
@@ -55,7 +55,6 @@ rg security patterns across app, routes, config, resources, database, and tests
 | Payment callback verification | High | Payment routes are rate-limited but provider signature verification needs gateway-specific behavior and tests. | Add signed callback verification per gateway starting with the active production provider. |
 | Legacy API error status compatibility | Medium | Some validation/auth failures intentionally return HTTP 200 for mobile compatibility. | Preserve legacy responses until a versioned API migration exists. |
 | Link-preview DNS rebinding residual risk | Medium | The SSRF guard blocks obvious internal targets but still uses PHP stream resolution after validation. | Move previews to a queued fetcher with a filtering HTTP client or network egress controls. |
-| npm dev-tool vulnerabilities | Medium | npm reports no fix available in the Laravel Mix chain. | Plan frontend build migration away from Laravel Mix/Webpack notifier dependencies or isolate builds in CI. |
 
 ## Category Notes
 

@@ -202,7 +202,7 @@ class ApiControllerSurfaceTest extends TestCase
         }
     }
 
-    public function test_listed_protected_route_handlers_reject_missing_bearer_tokens_with_legacy_json(): void
+    public function test_listed_protected_route_handlers_reject_missing_bearer_tokens_with_unauthorized_json(): void
     {
         $this->withoutMiddleware(ThrottleRequests::class);
 
@@ -217,7 +217,7 @@ class ApiControllerSurfaceTest extends TestCase
             };
 
             $response
-                ->assertOk()
+                ->assertUnauthorized()
                 ->assertJson([
                     'success' => false,
                     'message' => 'Unauthorized access',
@@ -228,6 +228,37 @@ class ApiControllerSurfaceTest extends TestCase
                 (string) $response->headers->get('content-type'),
                 "{$method} must return JSON when the bearer token is missing."
             );
+        }
+    }
+
+    public function test_hardened_api_actions_defer_authentication_to_middleware(): void
+    {
+        $controller = new ReflectionClass(ApiController::class);
+
+        foreach ([
+            'update_password',
+            'friends',
+            'add_friend',
+            'unfriend',
+            'friend_request',
+            'unfollow',
+            'edit_post',
+            'delete_post',
+            'save_post_report',
+            'post_media_file',
+            'delete_media_file',
+            'profile',
+            'other_profile',
+            'comment_delete',
+            'page_delete',
+            'update_blogs',
+            'blog_delete',
+            'job_delete',
+        ] as $method) {
+            $source = $this->methodSource($controller, $method);
+
+            $this->assertStringNotContainsString('bearerToken(', $source, "{$method} should not inspect bearer tokens directly.");
+            $this->assertStringNotContainsString("auth('sanctum')", $source, "{$method} should use the authenticated request user.");
         }
     }
 
@@ -257,5 +288,18 @@ class ApiControllerSurfaceTest extends TestCase
             "{$routeName} must point to ApiController::{$method}."
         );
         $this->assertContains($verb, $route->methods(), "{$routeName} must support {$verb}.");
+    }
+
+    private function methodSource(ReflectionClass $controller, string $method): string
+    {
+        $reflection = $controller->getMethod($method);
+        $fileName = $reflection->getFileName();
+
+        $this->assertIsString($fileName);
+
+        $lines = file($fileName);
+        $this->assertIsArray($lines);
+
+        return implode('', array_slice($lines, $reflection->getStartLine() - 1, $reflection->getEndLine() - $reflection->getStartLine() + 1));
     }
 }

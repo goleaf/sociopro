@@ -350,10 +350,9 @@ Tasks:
 - [ ] Add labels, error descriptions, fieldsets, landmarks, table headers, and
   focus states page by page.
 - [ ] Move inline JS into `resources/js` modules.
-- [ ] Keep Laravel Mix stable until a dedicated Vite migration is planned and
-  tested.
-- [ ] Plan Mix-to-Vite as a separate asset-only migration with build and visual
-  checks.
+- [ ] Keep Vite entrypoints stable during unrelated frontend cleanup.
+- [ ] Move legacy public assets into Vite-managed modules through separate
+  asset-only slices with build and visual checks.
 
 Acceptance:
 

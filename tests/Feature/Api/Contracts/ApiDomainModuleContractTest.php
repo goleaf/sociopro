@@ -409,7 +409,7 @@ class ApiDomainModuleContractTest extends ApiContractTestCase
             ['POST', route('api.fundraisers.invitations.store', [1, 999999])],
         ] as [$method, $url]) {
             $this->json($method, $url)
-                ->assertOk()
+                ->assertUnauthorized()
                 ->assertJson($this->legacyAuthenticationPayload());
         }
     }

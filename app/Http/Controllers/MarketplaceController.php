@@ -213,14 +213,14 @@ class MarketplaceController extends Controller
 
         $query = Marketplace::query()->where('status', 1);
 
-        if (isset($search) && ! empty($search)) {
+        if ($search !== '') {
             $query->where(function ($query) use ($search) {
                 $query->where('title', 'like', '%'.$search.'%')
                     ->orWhere('description', 'like', '%'.$search.'%');
             });
         }
 
-        if (isset($condition) && ! empty($condition)) {
+        if ($condition !== '') {
             $query->where('condition', $condition);
         }
 
@@ -240,7 +240,7 @@ class MarketplaceController extends Controller
         //     $query->where('brand', $brand);
         // }
 
-        if (isset($location) && ! empty($location)) {
+        if ($location !== '') {
             $query->where('location', 'like', '%'.$location.'%');
         }
 

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Actions\Friends\SendFriendRequestAction;
 use App\Enums\MediaFileType;
-use App\Enums\UserAccountStatus;
 use App\Enums\Visibility;
 use App\Models\Albums;
 use App\Models\Follower;
@@ -157,7 +156,9 @@ class CustomUserController extends Controller
             ->where('reciver_user_id', auth()->user()->id)
             ->delete();
 
-        $follwer = Follower::where('follow_id', $id)->delete();
+        $follwer = Follower::where('follow_id', $id)
+            ->where('user_id', auth()->id())
+            ->delete();
         // Provide feedback to the user
         Session::flash('success_message', get_phrase('Removed from friend list'));
 
@@ -278,8 +279,7 @@ class CustomUserController extends Controller
         $user = Auth::user();
         abort_unless($user instanceof User && (int) $user->id === (int) $id, 403);
 
-        $user->status = UserAccountStatus::Disabled->value;
-        $user->save();
+        $user->deactivateAccount();
 
         Auth::logout();
 

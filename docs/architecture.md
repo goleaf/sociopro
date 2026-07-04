@@ -9,7 +9,7 @@ This document describes the current checkout, not the desired end state.
 - Laravel `13.18.0` with PHP requirement `^8.3`.
 - Blade server-rendered frontend.
 - Laravel Sanctum API authentication.
-- Laravel Mix / Webpack frontend build.
+- Vite / SCSS frontend build.
 - PHPUnit, Pint, Larastan/PHPStan, Rector, ESLint, Stylelint, and Prettier are installed.
 - SQLite is used for local/CI tests. Production-like schema history still depends on `database/schema/install.sql` plus additive migrations.
 - No Filament dependency or `app/Filament` panel is present in this checkout.
@@ -68,8 +68,8 @@ This document describes the current checkout, not the desired end state.
 ## Frontend Structure
 
 - Blade templates live under `resources/views`.
-- JavaScript lives under `resources/js`; CSS lives under `resources/css`.
-- Assets are built with Laravel Mix. Do not use Vite helpers unless Vite is introduced in a dedicated migration.
+- JavaScript lives under `resources/js`; SCSS lives under `resources/scss`.
+- First-party compiled assets are built with Vite and loaded from Blade through `@vite`.
 - Blade should receive preloaded data from controllers/view models; do not add queries or business decisions inside templates.
 - Escape output by default. Any raw output must have an explicit sanitizer contract and tests.
 

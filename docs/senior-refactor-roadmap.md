@@ -190,8 +190,8 @@ Work items:
   - components
   - utilities
   - pages
-- Keep Laravel Mix stable until a dedicated Vite migration is scheduled; do not mix asset systems casually.
-- When moving to Vite, update entrypoints, Blade directives, env usage, source maps, and deployment docs in one isolated PR.
+- Keep Vite entrypoints stable during unrelated frontend cleanup; do not mix asset-system changes with behavior refactors casually.
+- When changing the asset pipeline, update entrypoints, Blade directives, env usage, source maps, and deployment docs in one isolated PR.
 
 Exit criteria:
 
@@ -304,4 +304,4 @@ Exit criteria:
 7. Add factories for `Posts`, `Comments`, `Group`, `Event`, and `MediaFile`.
 8. Add API contract tests for the most-used `ApiController` feed endpoints.
 9. Add a production-like MySQL migration rehearsal job or documented local command.
-10. Plan the Mix-to-Vite migration as a separate asset-only project after frontend tests are stable.
+10. Move legacy public frontend assets into Vite-managed modules as separate asset-only slices after frontend tests are stable.

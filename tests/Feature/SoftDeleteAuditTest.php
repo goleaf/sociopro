@@ -132,7 +132,7 @@ class SoftDeleteAuditTest extends TestCase
      */
     private function schemaSourceFiles(): array
     {
-        $files = [base_path('database/schema/install.sql')];
+        $files = [];
 
         foreach (File::files(database_path('migrations')) as $file) {
             if ($file->getExtension() !== 'php') {

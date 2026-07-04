@@ -2,7 +2,6 @@
 
 namespace Tests;
 
-use App\Actions\Install\ImportInstallSqlDump;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Exception\Internal\WebDriverCurlException;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
@@ -68,13 +67,8 @@ abstract class DuskTestCase extends BaseTestCase
             DB::purge('sqlite');
             DB::reconnect('sqlite');
 
-            app(ImportInstallSqlDump::class)->handle(
-                (string) config('install.schema_dump_path'),
-                batchSize: 100
-            );
+            Artisan::call('migrate:fresh', ['--force' => true, '--seed' => true]);
         }
-
-        Artisan::call('migrate', ['--force' => true]);
 
         self::$duskDatabasePrepared = true;
     }
@@ -98,7 +92,7 @@ abstract class DuskTestCase extends BaseTestCase
             ]);
         })->all());
 
-        $driverUrl = $_ENV['DUSK_DRIVER_URL'] ?? env('DUSK_DRIVER_URL') ?? 'http://localhost:9515';
+        $driverUrl = $_ENV['DUSK_DRIVER_URL'] ?? $_SERVER['DUSK_DRIVER_URL'] ?? 'http://localhost:9515';
         $capabilities = DesiredCapabilities::chrome()->setCapability(
             ChromeOptions::CAPABILITY,
             $options

@@ -40,6 +40,11 @@ class Updater extends Controller
         return view('backend.index', $page_data);
     }
 
+    public function addon_form()
+    {
+        return view('backend.admin.addons.install_form');
+    }
+
     public function addon_status($status, $id)
     {
         if ($status == 'activate') {

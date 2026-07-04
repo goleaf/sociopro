@@ -26,4 +26,9 @@ class PagePolicy
     {
         return (int) $user->id === (int) $page->user_id;
     }
+
+    public function delete(User $user, Page $page): bool
+    {
+        return (int) $user->id === (int) $page->user_id;
+    }
 }

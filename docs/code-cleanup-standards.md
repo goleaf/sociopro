@@ -20,7 +20,7 @@ The following micro-cleanup rules apply to all new and touched code. Existing le
 | 64, 65, 66 | Status fields require enum/constants, validation, defaults, transition rules, tests, and centralized transition actions. | Replace scattered direct status assignment only inside feature-specific refactors with regression coverage. |
 | 67, 68, 69, 70, 71 | Do not query in loops, prefer primary-key helpers, scope ownership in queries, cache `$request->user()`, and pass users into services/actions. | Blade and helper hotspots are documented for gradual controller/ViewModel cleanup. |
 | 72, 73, 74, 75, 76, 77, 78 | Tests, factories, and seeders must be deterministic, valid by default, use states, avoid hardcoded production IDs, and never contain real personal data. | New tests must use factories and fakes; legacy seeders should be made idempotent when touched. |
-| 79, 80, 81, 82, 83, 84, 85, 86 | Comments, formatting, huge methods, huge Blade files, huge SCSS files, huge JS files, and ad hoc assets must be cleaned in focused slices. | Pint is the PHP formatting authority. Frontend files follow the current Mix/Webpack pipeline until a tested asset migration exists. |
+| 79, 80, 81, 82, 83, 84, 85, 86 | Comments, formatting, huge methods, huge Blade files, huge SCSS files, huge JS files, and ad hoc assets must be cleaned in focused slices. | Pint is the PHP formatting authority. First-party frontend files follow the current Vite/SCSS pipeline. |
 | 87, 88, 89, 90, 91 | Uploaded files belong on Laravel disks, must not use user input as stored filenames, must store disk/path, require download authorization, and need deletion policy tests. | Public-upload compatibility cleanup needs storage regression tests before moving paths. |
 | 92, 93, 94, 95, 96, 97, 98, 99, 100 | Slow mail/external work belongs in jobs after commit; jobs use small payloads, retries/backoff/timeouts, idempotency, and failure plans; notifications need tests; events are facts that already happened. | Add queue, notification, and event coverage before changing existing synchronous workflows. |
 
@@ -194,7 +194,7 @@ Http::timeout(config('services.example.timeout'))->post(config('services.example
 - Use named routes instead of hardcoded URLs.
 - Move repeated markup into components or partials when the duplication is stable.
 - Prefer CSS classes over inline styles.
-- Avoid inline JavaScript for new work; keep feature JavaScript in `resources/js` for the current Mix/Webpack pipeline.
+- Avoid inline JavaScript for new work; keep feature JavaScript in `resources/js` for the current Vite pipeline.
 - Do not commit `console.log`, `debugger`, `dd()`, `dump()`, `var_dump()`, `print_r()`, `die()`, or `exit()`.
 - Split very large Blade, SCSS, and JavaScript files into focused components, page modules, feature modules, or utilities.
 - Do not connect random scripts and styles from individual Blade views. Use the project's configured asset pipeline and page-specific entries only when the project already has that convention.

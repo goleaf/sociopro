@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Account\ActivateUserAccountAction;
 use App\Actions\Jobs\StreamJobApplicationAttachmentAction;
 use App\Enums\MembershipRole;
-use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use App\Models\AccountActiveRequest;
 use App\Models\Badge;
@@ -54,7 +54,7 @@ class AdminCrudController extends Controller
 
     private const DATATABLE_MAX_LENGTH = 100;
 
-    public function __construct()
+    public function __construct(private readonly ActivateUserAccountAction $activateUserAccount)
     {
         // Don't remove it
         session(['admin_login' => 1]);
@@ -1520,7 +1520,7 @@ class AdminCrudController extends Controller
         $user = User::find($user_id);
 
         if ($accountRequest && $user) {
-            $user->forceFill(['status' => UserAccountStatus::Active->value])->save();
+            $this->activateUserAccount->handle($user);
             $accountRequest->delete();
             flash()->addSuccess('Account enable request successfully approved');
         } else {

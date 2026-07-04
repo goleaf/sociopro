@@ -1,6 +1,6 @@
 # Sociopro
 
-Sociopro is a legacy Laravel social application with a server-rendered Blade frontend, a legacy unversioned Sanctum-protected API, admin screens built with controllers/views, public media upload flows, marketplace/job/payment modules, and a Laravel Mix/Webpack asset pipeline.
+Sociopro is a legacy Laravel social application with a server-rendered Blade frontend, a legacy unversioned Sanctum-protected API, admin screens built with controllers/views, public media upload flows, marketplace/job/payment modules, and a Vite/SCSS asset pipeline.
 
 The current checkout is being hardened incrementally. Preserve public routes and response contracts unless a bug or security issue is proven with tests.
 
@@ -98,11 +98,11 @@ This checkout currently has queued import jobs and no committed Horizon setup. D
 
 ## Frontend Build
 
-The project uses Laravel Mix / Webpack, not Vite.
+The project uses Vite with SCSS and JavaScript entrypoints.
 
 ```bash
-npm run development
-npm run production
+npm run dev
+npm run build
 ```
 
 Frontend checks:
@@ -154,7 +154,7 @@ composer quality
 - If public uploads do not resolve, run `php artisan storage:link` and verify the web server can read `public/storage`.
 - If mail is not sent locally, use `MAIL_MAILER=log` or `MAIL_MAILER=array` for tests.
 - If queue jobs do not run in production, confirm `QUEUE_CONNECTION`, worker supervisor config, `php artisan queue:failed`, and `php artisan queue:restart`.
-- If frontend assets are missing, run `npm ci && npm run production` and verify the generated Mix manifest is deployed.
+- If frontend assets are missing, run `npm ci && npm run build` and verify `public/build/manifest.json` is deployed.
 - If `composer audit` or `npm audit` fails, record the package, exploitability, runtime/dev scope, and safe upgrade path in `docs/known-technical-debt.md`.
 
 ## Production Runbooks

@@ -18,6 +18,18 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_login_password_field_has_visibility_toggle(): void
+    {
+        $response = $this->get(route('login'));
+
+        $response
+            ->assertStatus(200)
+            ->assertSee('id="login-password"', false)
+            ->assertSee('data-password-toggle-target="login-password"', false)
+            ->assertSee("passwordToggleInput.type = isHidden ? 'text' : 'password';", false)
+            ->assertSee('fas fa-eye', false);
+    }
+
     public function test_users_can_authenticate_using_the_login_screen()
     {
         $user = User::factory()->create();

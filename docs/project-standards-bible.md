@@ -22,12 +22,12 @@ Use it together with:
 - Laravel Pint: `1.29.3`
 - Node: `v22.22.3`
 - npm: `10.9.8`
-- Frontend build tool: Laravel Mix / Webpack
-- JavaScript/CSS stack: Alpine, Axios, Tailwind CSS 3, PostCSS, Laravel Mix, Webpack
+- Frontend build tool: Vite
+- JavaScript/SCSS stack: Alpine, Axios, Tailwind CSS 3, PostCSS, Sass, Vite
 - Present tooling: Pint, PHPUnit, Larastan/PHPStan, Rector, ESLint, Stylelint, Prettier
-- Not currently installed: Vite
+- Not currently installed: Laravel Mix / Webpack as first-party build tooling
 
-Do not treat a tool as available until the repository files prove it. Vite standards in this document are target standards for a planned build-tool migration, not permission to silently add Vite inside unrelated work.
+Do not treat a tool as available until the repository files prove it. The current first-party asset pipeline is Vite with `resources/scss/app.scss` and `resources/js/app.js`.
 
 ## Language Used in This Document
 
@@ -267,17 +267,18 @@ Do not treat a tool as available until the repository files prove it. Vite stand
 
 ## Vite Standards
 
-This project currently uses Laravel Mix / Webpack. These Vite standards apply only when a dedicated Vite migration is approved.
+This project uses Laravel Vite for first-party compiled assets.
 
-- Add Vite in its own build-tool migration commit.
-- Do not mix a Vite migration with unrelated backend refactors.
+- Do not reintroduce Laravel Mix/Webpack.
+- Do not mix asset-pipeline migrations with unrelated backend refactors.
 - Use explicit frontend entrypoints.
 - Treat `import.meta.env` values as build-time/client-visible values.
 - Only variables intentionally safe for browser exposure may use the `VITE_` prefix.
+- Do not use old `MIX_*` browser environment names.
 - Never put API secrets, payment keys, database credentials, private tokens, or server-only values in `VITE_*` variables.
 - Keep server-side secrets behind Laravel routes, controllers, jobs, or services.
-- Verify production assets with the configured build command after migration.
-- Update deployment docs, CI, cache-busting assumptions, and Blade asset directives when migrating from Mix.
+- Verify production assets with `npm run build`.
+- Update deployment docs, CI, cache-busting assumptions, and Blade asset directives when asset entrypoints change.
 
 ## API Standards
 
@@ -438,8 +439,7 @@ PHP code changes:
 
 Frontend changes:
 
-- Current Mix project: `npm run production`
-- Future Vite project: configured Vite build command
+- Frontend build: `npm run build`
 
 Config or deployment changes:
 

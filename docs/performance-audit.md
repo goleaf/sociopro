@@ -8,7 +8,7 @@ This is the current performance handoff for the senior-upgrade slice. It records
 
 - Laravel 13.18.0 with Eloquent as the preferred query layer.
 - PHPUnit tests use sqlite `:memory:`; this does not reproduce production MySQL query plans.
-- Frontend build is Laravel Mix / Webpack.
+- Frontend build is Vite with SCSS.
 - Marketplace API list/filter endpoints use `simplePaginate`.
 - Upload processing still resizes images synchronously in HTTP requests.
 
@@ -28,7 +28,7 @@ This is the current performance handoff for the senior-upgrade slice. It records
 | Blade chat/feed views | Queries and raw rendering can repeat per row | Page cards were fixed; move the next high-traffic partial to controller/view-model data and add a query-count regression test. |
 | Image processing | Resizing runs synchronously in request/response cycle | Introduce an idempotent media-processing job after upload contracts are fully covered. |
 | Legacy helper calls | Global helpers hide storage, settings, and HTTP costs | Replace one helper call path at a time with a typed service and tests. |
-| Laravel Mix/Webpack | Full dev-tool audit noise and older build chain | Plan Mix-to-Vite as a dedicated build-tool migration with visual/build checks. |
+| Legacy public frontend assets | Global scripts/styles outside Vite are harder to audit, split, and optimize | Inventory one high-traffic page at a time, then move first-party behavior into Vite-managed modules with visual/build checks. |
 
 ## Measurement Plan
 
@@ -40,7 +40,7 @@ This is the current performance handoff for the senior-upgrade slice. It records
 ## Not Fixed In This Slice
 
 - No broad `ApiController` split.
-- No Vite migration.
+- No broad legacy public asset retirement.
 - No queue worker/process manager configuration.
 - No destructive schema changes.
 - No cache layer added, because invalidation rules need domain-specific tests first.

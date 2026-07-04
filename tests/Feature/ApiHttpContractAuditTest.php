@@ -25,13 +25,13 @@ class ApiHttpContractAuditTest extends TestCase
         $this->assertApiResponseContract($response);
     }
 
-    public function test_protected_api_authentication_failure_without_json_accept_header_returns_legacy_json_without_redirect(): void
+    public function test_protected_api_authentication_failure_without_json_accept_header_returns_unauthorized_json_without_redirect(): void
     {
         $response = $this->withHeaders(['Accept' => 'text/html'])
             ->get(route('api.marketplace.index'));
 
         $response
-            ->assertOk()
+            ->assertUnauthorized()
             ->assertJson([
                 'success' => false,
                 'message' => 'Unauthorized access',

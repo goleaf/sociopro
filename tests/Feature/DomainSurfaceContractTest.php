@@ -229,7 +229,9 @@ class DomainSurfaceContractTest extends TestCase
         $this->assertTrue($pagePolicy->before($admin, 'update'));
         $this->assertTrue($pagePolicy->create($owner));
         $this->assertTrue($pagePolicy->update($owner, $page));
+        $this->assertTrue($pagePolicy->delete($owner, $page));
         $this->assertFalse($pagePolicy->update($otherUser, $page));
+        $this->assertFalse($pagePolicy->delete($otherUser, $page));
     }
 
     public function test_query_objects_filter_rows_and_preload_card_contracts(): void

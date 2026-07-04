@@ -32,6 +32,8 @@ class Comments extends Model
             'parent_id' => 'integer',
             'user_id' => 'integer',
             'id_of_type' => 'integer',
+            'created_at' => 'datetime:Y-m-d H:i:s',
+            'updated_at' => 'datetime:Y-m-d H:i:s',
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Enums\UserAccountStatus;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
@@ -123,6 +124,47 @@ class EmailVerificationTest extends TestCase
         Event::assertDispatched(Verified::class);
         $this->assertTrue($user->fresh()->hasVerifiedEmail());
         $response->assertRedirect(route('timeline', [], false).'?verified=1');
+    }
+
+    public function test_email_verification_activates_legacy_disabled_registration_account(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => null,
+            'status' => UserAccountStatus::Disabled->value,
+        ]);
+
+        Event::fake();
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->email)]
+        );
+
+        $response = $this->actingAs($user)->get($verificationUrl);
+
+        Event::assertDispatched(Verified::class);
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+        $this->assertSame(UserAccountStatus::Active->value, (int) $user->fresh()->status);
+        $response->assertRedirect(route('timeline', [], false).'?verified=1');
+    }
+
+    public function test_email_verification_does_not_reactivate_already_verified_disabled_account(): void
+    {
+        $user = User::factory()->create([
+            'email_verified_at' => now(),
+            'status' => UserAccountStatus::Disabled->value,
+        ]);
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->email)]
+        );
+
+        $this->actingAs($user)->get($verificationUrl);
+
+        $this->assertSame(UserAccountStatus::Disabled->value, (int) $user->fresh()->status);
     }
 
     public function test_email_is_not_verified_with_invalid_hash(): void

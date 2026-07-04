@@ -54,8 +54,8 @@ class InstallWizardTest extends TestCase
 
     public function test_install_post_steps_reject_unexpected_http_methods(): void
     {
-        $this->put(route('install.step3'))->assertStatus(405);
-        $this->put(route('install.finalizing'))->assertStatus(405);
+        $this->putJson(route('install.step3'))->assertStatus(405);
+        $this->putJson(route('install.finalizing'))->assertStatus(405);
     }
 
     public function test_database_step_displays_validation_errors(): void

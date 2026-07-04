@@ -21,6 +21,8 @@ class Blog extends Model
         return [
             'user_id' => 'integer',
             'category_id' => 'integer',
+            'created_at' => 'datetime:Y-m-d H:i:s',
+            'updated_at' => 'datetime:Y-m-d H:i:s',
         ];
     }
 

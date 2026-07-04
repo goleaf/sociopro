@@ -23,7 +23,7 @@ class ApiNotificationChatContractTest extends ApiContractTestCase
             ['GET', route('api.notifications.count')],
         ] as [$method, $url]) {
             $this->json($method, $url)
-                ->assertOk()
+                ->assertUnauthorized()
                 ->assertJson($this->legacyAuthenticationPayload());
         }
     }
@@ -143,7 +143,7 @@ class ApiNotificationChatContractTest extends ApiContractTestCase
             ['POST', route('api.chat.reactions.store')],
         ] as [$method, $url]) {
             $this->json($method, $url)
-                ->assertOk()
+                ->assertUnauthorized()
                 ->assertJson($this->legacyAuthenticationPayload());
         }
     }

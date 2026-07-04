@@ -9,7 +9,7 @@ This project still has legacy schema risk because the canonical install schema i
 - Database: full schema/data dump or point-in-time recovery snapshot.
 - Uploaded files: `public/storage` and `storage/app`.
 - Environment/config: production `.env` values in the host secret manager, not git.
-- Built assets: previous release artifact or reproducible `npm ci && npm run production` output.
+- Built assets: previous release artifact or reproducible `npm ci && npm run build` output.
 - Operational records: deploy commit, migration batch, queue worker version, scheduler version, PHP/Node/npm versions, and Composer/package lock hashes.
 
 ## Database Backup

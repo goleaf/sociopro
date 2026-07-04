@@ -6,7 +6,7 @@ These instructions apply to the entire repository. Follow them for every code, t
 
 - This is a legacy Laravel social application with known refactor and security debt.
 - Current detected baseline: PHP `^8.3`, Laravel `13.18.0`, Laravel Sanctum `4.3.2`, PHPUnit `12.5.30`, Laravel Pint `1.29.3`, Node `v22.22.3`, npm `10.9.8`.
-- Frontend build is Laravel Mix / Webpack. Do not assume Vite is installed until `vite.config.*` and package files prove it.
+- Frontend build is Vite with SCSS entrypoints. Do not reintroduce Laravel Mix/Webpack.
 - Installed quality tools include PHPUnit, Pint, Larastan/PHPStan, Rector, ESLint, Stylelint, and Prettier. Verify dependency files before changing versions or invoking optional tools.
 - Canonical project docs: `docs/project-standards-bible.md`, `docs/coding-standards.md`, `docs/code-quality-standards.md`, `docs/local-quality-commands.md`, `docs/refactor-audit.md`, `docs/refactor-checklist.md`, `docs/enterprise-refactor-rulebook.md`, and `docs/refactor-roadmap-unreal.md`.
 
@@ -15,7 +15,7 @@ These instructions apply to the entire repository. Follow them for every code, t
 Before changing files, agents must inspect the live checkout:
 
 - Run or inspect `git status --short --branch`.
-- Read `composer.json`, `composer.lock`, `package.json`, lock files, `webpack.mix.js`, `vite.config.*` if present, `phpunit.xml`, `pint.json`, and relevant config files.
+- Read `composer.json`, `composer.lock`, `package.json`, lock files, `vite.config.*`, `postcss.config.*`, `phpunit.xml`, `pint.json`, and relevant config files.
 - Detect Laravel, PHP, PHPUnit, Pint, Node, npm, build tool, database drivers, queue/cache drivers, and installed static-analysis/linting tools from repository files, not memory.
 - Inspect relevant routes, controllers, Form Requests, policies, models, migrations, jobs, services/actions, Blade views, tests, and docs before editing.
 - Treat older audit docs as context, not proof of current state. Current checkout evidence wins.
@@ -108,7 +108,7 @@ Run these when relevant:
 composer quality
 npm run quality
 composer validate --strict
-npm run production
+npm run build
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache

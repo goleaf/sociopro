@@ -58,7 +58,7 @@ class RegisteredUserController extends Controller
             'friends' => json_encode([]),
             'followers' => json_encode([]),
             'password' => Hash::make($validated['password']),
-            'status' => UserAccountStatus::Disabled->value,
+            'status' => UserAccountStatus::Active->value,
             'lastActive' => Carbon::now(),
             'created_at' => time(),
         ])->save();

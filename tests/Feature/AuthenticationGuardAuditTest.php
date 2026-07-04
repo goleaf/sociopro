@@ -82,7 +82,7 @@ class AuthenticationGuardAuditTest extends TestCase
     {
         $this->withToken('not-a-valid-sanctum-token')
             ->getJson(route('api.marketplace.index'))
-            ->assertOk()
+            ->assertUnauthorized()
             ->assertJson($this->legacyUnauthorizedPayload());
     }
 
@@ -98,7 +98,7 @@ class AuthenticationGuardAuditTest extends TestCase
                 'X-XSRF-TOKEN' => 'csrf-token',
             ])
             ->getJson(route('api.marketplace.index'))
-            ->assertOk()
+            ->assertUnauthorized()
             ->assertJson($this->legacyUnauthorizedPayload());
     }
 
@@ -109,7 +109,7 @@ class AuthenticationGuardAuditTest extends TestCase
         $this->actingAs($user)
             ->withToken('not-a-real-personal-access-token')
             ->getJson(route('api.marketplace.index'))
-            ->assertOk()
+            ->assertUnauthorized()
             ->assertJson($this->legacyUnauthorizedPayload());
     }
 
@@ -120,7 +120,7 @@ class AuthenticationGuardAuditTest extends TestCase
 
         $this->withToken($expiredToken)
             ->getJson(route('api.marketplace.index'))
-            ->assertOk()
+            ->assertUnauthorized()
             ->assertJson($this->legacyUnauthorizedPayload());
 
         $revokedUser = $this->activeUser();
@@ -129,7 +129,7 @@ class AuthenticationGuardAuditTest extends TestCase
 
         $this->withToken($revokedToken->plainTextToken)
             ->getJson(route('api.marketplace.index'))
-            ->assertOk()
+            ->assertUnauthorized()
             ->assertJson($this->legacyUnauthorizedPayload());
     }
 
@@ -193,7 +193,7 @@ class AuthenticationGuardAuditTest extends TestCase
 
         $this->withToken($currentToken->plainTextToken)
             ->getJson(route('api.marketplace.index'))
-            ->assertOk()
+            ->assertUnauthorized()
             ->assertJson($this->legacyUnauthorizedPayload());
 
         $this->withToken($otherToken->plainTextToken)

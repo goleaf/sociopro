@@ -27,13 +27,24 @@
             
                        
                         <div class="form-group form-email">
-                            <label for="#">{{get_phrase('Email')}}</label>
-                            <input type="email" name="email" value="{{ old('email') }}" placeholder="{{get_phrase('Enter your email address')}}">
+                            <label for="login-email">{{get_phrase('Email')}}</label>
+                            <input id="login-email" type="email" name="email" value="{{ old('email') }}" placeholder="{{get_phrase('Enter your email address')}}">
                         </div>
                         <p class="text-danger">{{ $errors->first('email') }}</p>
-                        <div class="form-group form-pass">
-                            <label for="#">{{get_phrase('Password')}}</label>
-                            <input type="password" name="password" placeholder="{{get_phrase('Your password')}}">
+                        <div class="form-group form-pass password-toggle-field">
+                            <label for="login-password">{{get_phrase('Password')}}</label>
+                            <input id="login-password" type="password" name="password" placeholder="{{get_phrase('Your password')}}" autocomplete="current-password">
+                            <button
+                                type="button"
+                                class="password-toggle-button"
+                                data-password-toggle-target="login-password"
+                                data-show-label="{{ get_phrase('Show password') }}"
+                                data-hide-label="{{ get_phrase('Hide password') }}"
+                                aria-label="{{ get_phrase('Show password') }}"
+                                aria-pressed="false"
+                            >
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                            </button>
                         </div>
             
                         <!-- Remember Me -->

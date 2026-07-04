@@ -17,11 +17,11 @@ Use one prompt at a time. Replace placeholders such as `{feature}`, `{module}`, 
 - PHP requirement: `^8.3`
 - PHPUnit: `12.5.30`
 - Formatter: Laravel Pint `1.29.3`
-- Frontend build tool: Laravel Mix / Webpack, not Vite yet
-- JavaScript dependencies: Alpine, Axios, Tailwind 3, Laravel Mix, Webpack
+- Frontend build tool: Vite with SCSS
+- JavaScript dependencies: Alpine, Axios, Tailwind 3, Vite, Sass
 - Optional tools not currently installed: Larastan/PHPStan, Rector, ESLint, Stylelint, Prettier
 
-Do not assume Vite, Larastan, Rector, ESLint, Stylelint, or Prettier exist in this project until the dependency files prove they do.
+Do not assume optional tools exist in this project until the dependency files prove they do.
 
 ## Verified Reference Map
 
@@ -43,7 +43,7 @@ Use official or primary sources first:
 - OWASP Mass Assignment: https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html
 - MDN accessible semantic HTML: https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Accessibility/HTML
 - WCAG 2.2: https://www.w3.org/TR/WCAG22/
-- Vite env and modes, for future Vite migration only: https://vite.dev/guide/env-and-mode
+- Vite env and modes: https://vite.dev/guide/env-and-mode
 - Sass `@use` and `@forward`: https://sass-lang.com/documentation/at-rules/use/ and https://sass-lang.com/documentation/at-rules/forward/
 - Sass `@import` deprecation: https://sass-lang.com/documentation/breaking-changes/import/
 - ESLint rules: https://eslint.org/docs/latest/use/configure/rules
@@ -56,7 +56,7 @@ Use official or primary sources first:
 
 Every refactor must preserve existing behavior unless the prompt explicitly says to fix a bug. Every changed behavior must be covered by tests. No hidden breaking changes. No unreviewed package upgrades. No real secrets in code. No debug statements. No uncontrolled mass assignment. No raw SQL string concatenation. No `env()` outside config files.
 
-Before changing code, detect the actual installed versions from `composer.json`, `composer.lock`, `package.json`, `package-lock.json`, `webpack.mix.js`, `vite.config.*`, and existing config files. Apply modern rules only when they match the installed stack or when the task explicitly includes a migration.
+Before changing code, detect the actual installed versions from `composer.json`, `composer.lock`, `package.json`, `package-lock.json`, `vite.config.*`, `postcss.config.*`, and existing config files. Apply modern rules only when they match the installed stack or when the task explicitly includes a migration.
 
 Every change should be small enough to review. Prefer one behavior-preserving refactor slice per commit. Do not combine broad formatting, package upgrades, behavior changes, and documentation updates unless the user explicitly asks for a single combined commit.
 
@@ -86,7 +86,7 @@ For PHP application changes:
 
 For frontend/build changes:
 
-- `npm run production`
+- `npm run build`
 - Use `npm audit` only when the task includes dependency/security review or when package files change.
 
 For config/deployment-sensitive changes:
@@ -447,22 +447,22 @@ Audit {css_or_scss_file} for inaccessible focus states, low contrast risk, fixed
 Audit JavaScript entrypoints for {feature}. Identify global pollution, inline scripts, duplicated DOM logic, unused code, unsafe HTML injection, missing event cleanup, dependency bloat, and build-tool assumptions. Do not change code yet.
 ```
 
-52. **Laravel Mix safe cleanup**
+52. **Vite asset cleanup**
 
 ```text
-Refactor Laravel Mix/Webpack assets for {feature} without migrating build tools. Preserve current npm scripts and generated public paths. Run npm run production and verify the compiled assets still match the app expectations.
+Refactor Vite/SCSS assets for {feature} without changing backend behavior. Preserve current npm scripts and Blade `@vite` entrypoints. Run `npm run build` and verify the compiled assets still match the app expectations.
 ```
 
-53. **Vite migration plan**
+53. **Asset-pipeline migration audit**
 
 ```text
-Create a Vite migration plan for this Laravel app. First confirm the project currently uses Laravel Mix. Do not migrate yet. Inventory entrypoints, public assets, Blade asset references, env variable usage, production build output, cache busting, and rollback steps.
+Audit the current Vite asset pipeline for this Laravel app. Inventory entrypoints, public legacy assets, Blade asset references, env variable usage, production build output, cache busting, and rollback steps. Do not add another build tool.
 ```
 
 54. **Frontend env safety**
 
 ```text
-Audit frontend environment usage for {feature}. Treat Vite import.meta.env variables as public/build-time values and Laravel Mix environment exposure as browser-visible if bundled. Move secrets server-side and document allowed public env keys.
+Audit frontend environment usage for {feature}. Treat Vite `import.meta.env` variables as public/build-time values. Move secrets server-side and document allowed public env keys.
 ```
 
 55. **ESLint/Prettier introduction plan**
@@ -570,7 +570,7 @@ Audit npm dependencies for vulnerabilities, abandoned packages, legacy build con
 71. **CI pipeline plan**
 
 ```text
-Design a CI pipeline for this Laravel app. Include composer install, npm ci, Pint, php artisan test, composer validate, composer audit, npm run production, optional npm audit, config cache, route cache, view cache, and artifact strategy. Do not add CI files until approved.
+Design a CI pipeline for this Laravel app. Include composer install, npm ci, Pint, php artisan test, composer validate, composer audit, npm run build, optional npm audit, config cache, route cache, view cache, and artifact strategy. Do not add CI files until approved.
 ```
 
 72. **CI implementation**

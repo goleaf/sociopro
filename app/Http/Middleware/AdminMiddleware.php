@@ -2,8 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\UserAccountStatus;
-use App\Enums\UserRole;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -22,8 +20,7 @@ class AdminMiddleware
             return redirect()->route('login');
         }
 
-        $isActiveAdmin = $user->user_role === UserRole::Admin->value
-            && (int) $user->status === UserAccountStatus::Active->value;
+        $isActiveAdmin = $user->isAdmin() && $user->hasActiveAccount();
 
         if ($isActiveAdmin) {
             return $next($request);
@@ -33,7 +30,7 @@ class AdminMiddleware
             abort(403);
         }
 
-        if ($user->user_role === UserRole::Admin->value) {
+        if ($user->isAdmin()) {
             return redirect()->route('frontend.disable_view');
         }
 

@@ -10,12 +10,12 @@ This roadmap converts the audit, checklist, coding standards, and enterprise rul
 - PHP requirement: `^8.3`
 - PHPUnit: `12.5.30`
 - Formatter: Laravel Pint `1.29.3`
-- Frontend build: Laravel Mix / Webpack
-- Current JavaScript/CSS stack: Alpine, Axios, Tailwind 3, PostCSS, Laravel Mix, Webpack
+- Frontend build: Vite with SCSS
+- Current JavaScript/SCSS stack: Alpine, Axios, Tailwind 3, PostCSS, Sass, Vite
 - Installed quality tools: Larastan/PHPStan, Rector, ESLint, Stylelint, Prettier
-- Not currently installed: Vite
+- Not currently installed: Laravel Mix / Webpack as first-party build tooling
 
-Do not treat optional tools as available until repository files prove they exist. Keep future Vite adoption in a dedicated build-tool phase and do not combine it with behavior refactors.
+Do not treat optional tools as available until repository files prove they exist. Keep future asset-pipeline changes dedicated and do not combine them with behavior refactors.
 
 ## Roadmap Rules
 
@@ -299,29 +299,28 @@ Do not treat optional tools as available until repository files prove they exist
 
 - View rendering tests for changed pages.
 - Manual accessibility spot checks for keyboard navigation and focus visibility.
-- `npm run production` when assets change.
+- `npm run build` when assets change.
 
 **Exit Criteria**
 
 - Changed Blade views do not query or perform business logic.
 - Accessibility is improved or unchanged with evidence.
 
-## Phase 12: Vite Migration
+## Phase 12: Legacy Asset Modernization
 
-**Goal:** Move from Laravel Mix/Webpack to Vite safely and separately from UI refactors.
+**Goal:** Move remaining first-party behavior out of legacy public theme/vendor assets and into Vite-managed modules safely.
 
 **Tasks**
 
-- [ ] Inventory current Mix entrypoints, generated assets, public files, Blade asset references, and `mix()` usage.
-- [ ] Add Vite in a dedicated branch/commit with compatibility notes.
-- [ ] Migrate one entrypoint at a time.
+- [ ] Inventory current Vite entrypoints, generated assets, public files, Blade asset references, and legacy public asset usage.
+- [ ] Migrate one legacy public asset path at a time.
 - [ ] Treat frontend environment variables as public/build-time values.
 - [ ] Update deployment build scripts and cache-busting docs.
-- [ ] Keep rollback to Mix possible until production verification succeeds.
+- [ ] Keep rollback notes for each retired public asset path until production verification succeeds.
 
 **Verification**
 
-- `npm run build` or configured Vite production build after migration.
+- `npm run build`.
 - Browser smoke tests for homepage, auth, timeline, profile, payment pages, admin pages.
 
 **Exit Criteria**
@@ -344,7 +343,7 @@ Do not treat optional tools as available until repository files prove they exist
 
 **Verification**
 
-- `npm run production`
+- `npm run build`
 - Stylelint after it is installed and configured.
 - Visual smoke checks for changed screens.
 
@@ -368,7 +367,7 @@ Do not treat optional tools as available until repository files prove they exist
 
 **Verification**
 
-- `npm run production`
+- `npm run build`
 - ESLint/Prettier only after installation.
 - Feature tests or browser smoke checks for changed interactions.
 
@@ -490,7 +489,7 @@ Do not treat optional tools as available until repository files prove they exist
 - `php artisan config:cache`
 - `php artisan route:cache`
 - `php artisan view:cache`
-- `npm run production`
+- `npm run build`
 - Manual smoke checklist in staging.
 
 **Exit Criteria**
@@ -506,7 +505,7 @@ Do not treat optional tools as available until repository files prove they exist
 - [ ] Update `docs/refactor-audit.md` after major risk reductions.
 - [ ] Update `docs/refactor-checklist.md` when tasks are completed or superseded.
 - [ ] Keep `docs/coding-standards.md` aligned with installed tools.
-- [ ] Add ADRs for Vite migration, queue driver choice, CI gates, auth strategy, schema strategy, and static-analysis adoption.
+- [ ] Add ADRs for legacy asset modernization, queue driver choice, CI gates, auth strategy, schema strategy, and static-analysis adoption.
 - [ ] Document known legacy exceptions and planned removal phase.
 
 **Verification**
@@ -552,7 +551,7 @@ Do not treat optional tools as available until repository files prove they exist
 8. Remove Blade queries and browser-exposed secrets.
 9. Add database indexes and transactions with measured evidence.
 10. Introduce static analysis and frontend linting tools.
-11. Plan and execute Vite migration.
+11. Modernize legacy public assets behind the Vite pipeline.
 12. Move slow external side effects to queues/jobs.
 13. Add CI gates and deployment runbooks.
 14. Repeat audit/checklist updates after each completed phase.

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Posts;
 
+use App\Enums\UserRole;
 use App\Models\Posts;
 use App\Models\User;
 use App\Support\Files\FileUploader;
@@ -12,7 +13,7 @@ class UpdatePostAction
     public function __construct(private readonly StorePostMediaFilesAction $storePostMediaFiles) {}
 
     /**
-     * @return array{status: int, message: string}
+     * @return array{status: int, message: string}|array{}
      */
     public function handle(Posts $post, User $user, Request $request): array
     {
@@ -20,7 +21,7 @@ class UpdatePostAction
         $data = [
             'privacy' => $request->privacy,
             'mobile_app_image' => FileUploader::upload($request->mobile_app_image, 'public/storage/post/images/'),
-            'updated_at' => time(),
+            'updated_at' => now()->toDateTimeString(),
         ];
 
         if (isset($request->tagged_users_id) && is_array($request->tagged_users_id)) {
@@ -35,9 +36,16 @@ class UpdatePostAction
             $data['description'] = $request->description;
         }
 
-        Posts::query()
-            ->whereKey($postId)
-            ->update($data);
+        $query = Posts::query()->whereKey($postId);
+        if ($user->user_role !== UserRole::Admin->value) {
+            $query->forUser($user->id);
+        }
+
+        $updated = $query->update($data);
+
+        if ($updated < 1) {
+            return [];
+        }
 
         $this->storePostMediaFiles->handle($postId, $user, $request);
 

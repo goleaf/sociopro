@@ -38,8 +38,8 @@ class StorePostAction
                 'publisher_id' => $postId,
                 'user_id' => $user->id,
                 'details' => json_encode(['link' => $liveStreamingUrl, 'status' => true]),
-                'created_at' => date('Y-m-d H:i:s', time()),
-                'updated_at' => date('Y-m-d H:i:s', time()),
+                'created_at' => now()->toDateTimeString(),
+                'updated_at' => now()->toDateTimeString(),
             ]);
 
             return [
@@ -60,7 +60,7 @@ class StorePostAction
      */
     private function postData(User $user, Request $request): array
     {
-        $createdAt = time();
+        $createdAt = now()->toDateTimeString();
 
         return [
             'user_id' => $user->id,

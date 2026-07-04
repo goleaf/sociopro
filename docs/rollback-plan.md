@@ -89,7 +89,7 @@ php artisan queue:failed
 
 ```bash
 npm ci
-npm run production
+npm run build
 ```
 
 - Clear CDN/proxy caches only for changed asset paths.

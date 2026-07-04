@@ -19,10 +19,10 @@ Use this with:
 - PHP requirement: `^8.3`
 - Test runner: PHPUnit `12.5.30`
 - Formatter: Laravel Pint `1.29.3`
-- Frontend build: Laravel Mix / Webpack
-- Frontend source entrypoints: `resources/js/app.js`, `resources/js/bootstrap.js`, `resources/css/app.css`
-- Compiled frontend outputs currently present: `public/js/app.js`, `public/js/share.js`, `public/css/app.css`
-- Vite assets: none detected; there is no `vite.config.*`
+- Frontend build: Vite with SCSS
+- Frontend source entrypoints: `resources/js/app.js`, `resources/js/bootstrap.js`, `resources/scss/app.scss`
+- Compiled frontend outputs: Vite writes generated assets to ignored `public/build`; `public/js/share.js` remains a standalone legacy script.
+- Vite config: `vite.config.js`
 - Database source: local SQLite database plus legacy installer dump at `database/schema/install.sql`
 - Current Laravel migration status: `2026_07_01_150000_add_safe_legacy_lookup_indexes` is run
 
@@ -296,31 +296,28 @@ View composers:
 
 Current build tool:
 
-- Laravel Mix / Webpack via `webpack.mix.js`.
+- Vite via `vite.config.js`.
 
 Source entrypoints:
 
 - JavaScript: `resources/js/app.js`
 - Bootstrap/Axios setup: `resources/js/bootstrap.js`
-- CSS: `resources/css/app.css`
+- SCSS: `resources/scss/app.scss`
 
 Build output targets:
 
-- JavaScript: `public/js`
-- CSS: `public/css`
+- Vite manifest and hashed assets: `public/build`
 
 Package scripts:
 
-- `npm run development` -> `mix`
-- `npm run watch` -> `mix watch`
-- `npm run hot` -> `mix watch --hot`
-- `npm run production` -> `mix --production`
+- `npm run dev` -> `vite`
+- `npm run watch` -> `npm run dev`
+- `npm run hot` -> `npm run dev`
+- `npm run build` -> `vite build`
 
-Vite:
+Blade asset loading:
 
-- No `vite.config.*` exists.
-- No Vite entrypoint directives were detected in the build config.
-- Future Vite migration should be treated as a dedicated build-tool migration.
+- App and guest layouts load `resources/scss/app.scss` and `resources/js/app.js` through `@vite`.
 
 Public asset/storage directories:
 

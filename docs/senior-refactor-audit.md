@@ -14,14 +14,14 @@ This audit reflects the live checkout, not older project memories or historical 
 | PHP | `composer.json` requires `^8.3`; local runtime is PHP `8.5.7` |
 | Composer | Composer `2.9.5` |
 | Node / npm | Node `v22.22.3`, npm `10.9.8` |
-| Frontend build | Laravel Mix `6.x` / Webpack `5.x` via `webpack.mix.js`; no `vite.config.*` detected |
-| Frontend assets | Tailwind CSS, Alpine.js, Axios, SweetAlert2, Moment Timezone; resource entrypoints are `resources/js/app.js` and `resources/css/app.css` |
+| Frontend build | Vite via `vite.config.js` |
+| Frontend assets | Tailwind CSS, Alpine.js, Axios, SweetAlert2, Moment Timezone; first-party resource entrypoints are `resources/js/app.js` and `resources/scss/app.scss` |
 | Admin UI | Filament is not installed in this checkout; admin screens are legacy controllers and Blade views |
 | Database | `.env.example` and PHPUnit use SQLite; legacy schema is imported from `database/schema/install.sql`; production assumptions still look MySQL-compatible |
 | Schema history | 11 additive migrations plus a 2,318-line legacy install dump |
 | Test framework | PHPUnit `12.x`; no Pest detected |
 | Quality tools | Laravel Pint, PHPStan/Larastan, Rector, ESLint, Stylelint, Prettier, npm audit |
-| CI | GitHub Actions at `.github/workflows/ci.yml` for Composer validation/audit, Pint, PHPStan, tests, cache smoke checks, route list, migration fresh, npm quality, and Mix production build |
+| CI | GitHub Actions at `.github/workflows/ci.yml` for Composer validation/audit, Pint, PHPStan, tests, cache smoke checks, route list, migration fresh, npm quality, and frontend production build |
 | Route surface | 503 app routes, 0 unnamed routes, 0 route closures, 77 GET routes with state-changing-looking names/URIs |
 | Code size signals | 43 controllers; largest are `ApiController` 7,534 lines, `AdminCrudController` 1,515, `MainController` 1,235 |
 | Tests | 82 top-level test files were detected, with additional nested tests under Feature/Unit subdirectories |
@@ -144,15 +144,15 @@ The project is a hybrid legacy Laravel application:
 
 | ID | Issue | Severity | Risk | Exact files involved | Why it matters | Safest first fix | Tests needed before refactor? | Change now? |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| FE-01 | Laravel Mix/Webpack is legacy stack | Medium | Deployment, maintainability | `webpack.mix.js`, `package.json`, `resources/js/app.js`, `resources/css/app.css` | Mix works but the Laravel ecosystem has moved to Vite; docs already reference Vite concepts. | Plan a separate Mix-to-Vite migration with asset manifest tests and visual smoke checks. | Yes | Document only |
+| FE-01 | Legacy public assets remain outside Vite | Medium | Deployment, maintainability | `public/assets/**`, `public/js/share.js`, `package.json`, `resources/js/app.js`, `resources/scss/app.scss` | First-party assets now build through Vite, but large legacy public theme/vendor assets still need route-by-route ownership and visual coverage. | Move proven first-party behavior into Vite-managed modules one route at a time, with build and visual smoke checks. | Yes | Document only |
 | FE-02 | Blade semantics/accessibility are inconsistent | High | Frontend, accessibility | `resources/views/frontend/**`, `resources/views/backend/**`, forms/modals/nav partials | Legacy markup has many anchor-as-button patterns, inline handlers, missing form semantics, and likely heading/order issues. | Page-by-page accessibility refactor after behavior tests; preserve CSS hooks. | Yes for critical forms | Document only |
 | FE-03 | Queries in views | High | Performance, maintainability | Same Blade files listed in CQ-04 | Data access in views blocks frontend cleanup and creates N+1s. | Move all query data to controllers/ViewModels first. | Yes | Document only |
 | FE-04 | Raw HTML/rich text rendering | High | Security | Files listed in SEC-04 | Stored XSS risk for rich content. | Define sanitizer and test malicious payloads. | Yes | Focused security phase |
 | FE-05 | Duplicated Blade markup | Medium | Maintainability | post modals, search views, admin CRUD forms, event/group/page views | Duplicated forms and UI fragments make accessibility fixes inconsistent. | Extract anonymous components with clear props and slots. | Rendering tests recommended | Document only |
-| FE-06 | SCSS/CSS architecture is not modular | Medium | Frontend | `resources/css/app.css`, `public/assets/**` | Modern entrypoint is tiny while legacy public assets are large and global; design tokens are not consistently centralized. | Introduce tokens/utilities in resources CSS/SCSS, then retire proven-unused legacy assets. | Visual/build tests | Document only |
+| FE-06 | SCSS/CSS architecture is not modular | Medium | Frontend | `resources/scss/app.scss`, `public/assets/**` | The Vite SCSS entrypoint is tiny while legacy public assets are large and global; design tokens are not consistently centralized. | Introduce tokens/utilities in resources SCSS, then retire proven-unused legacy assets. | Visual/build tests | Document only |
 | FE-07 | JavaScript global/inline behavior | Medium | Security, accessibility | Blade `onclick`/`javascript:void(0)` usage, `public/assets/**`, `resources/js/app.js` | Inline handlers and legacy global scripts make keyboard/accessibility/security fixes harder. | Move page behavior to ES modules and delegated listeners; add CSRF-aware fetch helper. | Yes | Document only |
 | FE-08 | Unsafe DOM injection needs continued audit | Medium | Security | legacy public JS assets, dynamic Blade snippets | Vendor/legacy scripts contain `innerHTML`/DOM writes; user-data paths must be distinguished from static template writes. | Audit only first-party dynamic paths; avoid mass-editing minified/vendor files. | Yes | Document only |
-| FE-09 | Oversized/legacy frontend bundle risk | Medium | Performance | `public/assets/**`, `package-lock.json`, Mix output | Large committed assets and old dependencies can slow load/build and increase audit noise. | Measure bundle, remove duplicates only with route/page evidence. | Build and visual checks | Document only |
+| FE-09 | Oversized/legacy frontend bundle risk | Medium | Performance | `public/assets/**`, `package-lock.json`, Vite output | Large committed public assets and old dependencies can slow load/build and increase audit noise. | Measure bundle, remove duplicates only with route/page evidence. | Build and visual checks | Document only |
 
 ## 7. Testing Gaps
 

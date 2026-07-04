@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Http\Requests\Blog\StoreBlogRequest;
 use App\Http\Requests\Blog\UpdateBlogRequest;
 use App\Models\Blog;
 use App\Models\BlogCategory;
 use App\Models\Comments;
+use App\Models\User;
 use App\Queries\FriendshipsQuery;
 use App\Support\Files\FileUploader;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Image;
 use Jorenvh\Share\Share as ShareService;
 use Session;
@@ -88,6 +91,9 @@ class BlogController extends Controller
     {
         $page_data['blog_category'] = $this->blogCategoriesForSelect();
         $page_data['blog'] = Blog::find($id);
+        if ($page_data['blog'] instanceof Blog) {
+            $this->authorizeBlogManagement($page_data['blog'], 'update');
+        }
         $page_data['view_path'] = 'frontend.blogs.edit_blog';
 
         return view('frontend.index', $page_data);
@@ -104,13 +110,11 @@ class BlogController extends Controller
             FileUploader::upload($image, 'public/storage/blog/coverphoto/'.$file_name, 900);
         }
 
-        $blog = Blog::find($id);
+        $blog = $this->blogForManagement((int) $id, 'update');
 
-        $blog->user_id = Auth::user()->id;
         // store image name for delete file operation
         $imagename = $blog->thumbnail;
 
-        $blog->user_id = Auth::user()->id;
         $blog->title = $validated['title'];
         $blog->category_id = $validated['category'];
         $blog->tag = json_encode($request->tagValues());
@@ -134,7 +138,8 @@ class BlogController extends Controller
     {
         $response = [];
         $blogId = $request->query('blog_id');
-        $blog = Blog::find($blogId);
+        $blog = $this->blogForManagement((int) $blogId, 'delete');
+
         // store image name for delete file operation
         $imagename = $blog->thumbnail;
 
@@ -151,6 +156,36 @@ class BlogController extends Controller
     public function delete()
     {
         return $this->destroy(request());
+    }
+
+    private function authorizeBlogManagement(Blog $blog, string $ability): void
+    {
+        $user = Auth::user();
+
+        abort_unless($user instanceof User, 403);
+        abort_unless(Gate::forUser($user)->allows($ability, $blog), 403);
+    }
+
+    private function blogForManagement(int $blogId, string $ability): Blog
+    {
+        $candidate = Blog::query()->find($blogId);
+
+        abort_unless($candidate instanceof Blog, 404);
+        $this->authorizeBlogManagement($candidate, $ability);
+
+        $user = Auth::user();
+        abort_unless($user instanceof User, 403);
+
+        $query = Blog::query()->whereKey($candidate->getKey());
+        if ($user->user_role !== UserRole::Admin->value) {
+            $query->where('user_id', $user->id);
+        }
+
+        $blog = $query->first();
+
+        abort_unless($blog instanceof Blog, 403);
+
+        return $blog;
     }
 
     public function load_blog_by_scrolling(Request $request)

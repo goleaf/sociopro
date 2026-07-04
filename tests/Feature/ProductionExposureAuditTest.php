@@ -86,17 +86,10 @@ class ProductionExposureAuditTest extends TestCase
         $this->assertSame([], $offenders, 'Remove public .env files, backups, dumps, logs, phpinfo endpoints, and OS metadata.');
     }
 
-    public function test_legacy_install_dump_is_configured_outside_public_web_root(): void
+    public function test_legacy_install_dump_is_not_part_of_install_bootstrap(): void
     {
-        $configuredPath = (string) config('install.schema_dump_path');
-        $realDumpPath = realpath($configuredPath);
-        $realPublicPath = realpath(public_path());
-
-        $this->assertFileExists($configuredPath);
-        $this->assertIsString($realDumpPath);
-        $this->assertIsString($realPublicPath);
-        $this->assertStringStartsWith(realpath(database_path()).DIRECTORY_SEPARATOR, $realDumpPath);
-        $this->assertFalse(str_starts_with($realDumpPath, $realPublicPath.DIRECTORY_SEPARATOR));
+        $this->assertNull(config('install.schema_dump_path'));
+        $this->assertFileDoesNotExist(base_path('database/schema/install.sql'));
     }
 
     public function test_apache_rules_block_sensitive_public_files_and_executable_uploads(): void

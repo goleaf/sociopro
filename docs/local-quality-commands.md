@@ -2,7 +2,7 @@
 
 Generated: 2026-07-02
 
-Use these commands after installing Composer and npm dependencies. The project uses Laravel Mix/Webpack, not Vite.
+Use these commands after installing Composer and npm dependencies. The project uses Vite with an SCSS entrypoint.
 
 ## Setup
 
@@ -44,13 +44,13 @@ npm run stylelint
 npm run format:check
 npm run format
 npm run audit:prod
-npm run production
+npm run build
 npm run quality
 ```
 
 - `npm run audit:prod` audits production Node dependencies only.
-- `npm run production` builds Laravel Mix assets.
-- If a production build changes tracked files under `public/css`, `public/js`, or `public/mix-manifest.json`, review the diff before staging.
+- `npm run build` builds Vite assets into `public/build`.
+- `public/build` is generated output and is ignored by git.
 
 ## Full Local Gates
 
@@ -80,4 +80,4 @@ Never run destructive migration checks against production or shared staging data
 - Formatting failure: run `composer format`, inspect the diff, and commit only intended formatting changes.
 - Static-analysis failure: fix the actual type, relation, nullable, or PHPDoc issue. Do not create a baseline unless a dedicated cleanup plan documents why.
 - Test failure: reproduce with the focused test, fix behavior or document the legacy failure in `docs/quality-known-failures.md`.
-- Frontend build failure: run `npm ci`, then `npm run lint`, `npm run stylelint`, `npm run format:check`, and `npm run production` separately to identify the failing gate.
+- Frontend build failure: run `npm ci`, then `npm run lint`, `npm run stylelint`, `npm run format:check`, and `npm run build` separately to identify the failing gate.

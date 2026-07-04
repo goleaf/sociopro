@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserAccountStatus;
 use App\Enums\UserRole;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
@@ -72,6 +73,35 @@ class User extends Authenticatable implements MustVerifyEmail
     public function scopeNonAdmins(Builder $query): Builder
     {
         return $query->where('user_role', '!=', UserRole::Admin->value);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->user_role === UserRole::Admin->value;
+    }
+
+    public function isGeneralUser(): bool
+    {
+        return $this->user_role === UserRole::General->value;
+    }
+
+    public function hasActiveAccount(): bool
+    {
+        return (int) $this->status === UserAccountStatus::Active->value;
+    }
+
+    public function activateAccount(): void
+    {
+        $this->forceFill([
+            'status' => UserAccountStatus::Active->value,
+        ])->save();
+    }
+
+    public function deactivateAccount(): void
+    {
+        $this->forceFill([
+            'status' => UserAccountStatus::Disabled->value,
+        ])->save();
     }
 
     public function isOnline(): bool

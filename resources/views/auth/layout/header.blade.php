@@ -21,6 +21,39 @@
     <link rel="stylesheet" href="{{ asset('assets/frontend/css/style.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/frontend/css/own.css') }}">
 
+    <style>
+        .password-toggle-field input {
+            padding-right: 46px;
+        }
+
+        .password-toggle-button {
+            align-items: center;
+            background: transparent;
+            border: 0;
+            color: #949494;
+            display: inline-flex;
+            height: 40px;
+            justify-content: center;
+            padding: 0;
+            position: absolute;
+            right: 8px;
+            top: 72%;
+            transform: translateY(-50%);
+            width: 40px;
+            z-index: 2;
+        }
+
+        .password-toggle-button:hover,
+        .password-toggle-button:focus-visible {
+            color: #5a2ff9;
+        }
+
+        .password-toggle-button:focus-visible {
+            outline: 2px solid #5a2ff9;
+            outline-offset: 2px;
+        }
+    </style>
+
    
 </head>
 

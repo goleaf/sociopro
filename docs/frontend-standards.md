@@ -2,7 +2,7 @@
 
 Generated: 2026-07-02
 
-This project uses Laravel Blade for server-rendered frontend views and Laravel Mix/Webpack for compiled assets. Preserve existing public UI behavior unless a change fixes a tested accessibility, security, or performance issue.
+This project uses Laravel Blade for server-rendered frontend views and Vite/SCSS for first-party compiled assets. Preserve existing public UI behavior unless a change fixes a tested accessibility, security, or performance issue.
 
 ## Blade Rules
 
@@ -24,7 +24,7 @@ This project uses Laravel Blade for server-rendered frontend views and Laravel M
 
 ## CSS Rules
 
-- The compiled app entry is `resources/css/app.css`, processed through PostCSS, Tailwind, and Autoprefixer.
+- The compiled app style entry is `resources/scss/app.scss`, processed through Vite, PostCSS, Tailwind, Sass, and Autoprefixer.
 - New shared styles should be organized by intent: tokens, base, layout, components, utilities, and page-specific rules.
 - Prefer CSS custom properties for reusable colors, spacing, shadows, borders, and z-index values.
 - Avoid ID selectors for styling, deep nesting, and new `!important` rules.
@@ -56,5 +56,5 @@ Do not reintroduce `PageLike::where`, `Posts::where`, `DB::table`, or `App\Model
 
 - Many legacy views still use inline handlers and `href="javascript:void(0)"`.
 - Several rich-text views still render trusted HTML through `{!! !!}` and need sanitizer-specific tests.
-- Frontend assets are still on Laravel Mix/Webpack; a Vite migration should be planned separately with visual regression checks.
+- Legacy global theme/vendor assets under `public/assets/frontend` remain outside the Vite module pipeline.
 - Legacy global scripts under `public/assets/frontend` are outside the compiled module pipeline.

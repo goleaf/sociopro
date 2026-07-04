@@ -1,23 +1,24 @@
 # Assets And Vite
 
-Generated: 2026-07-02
+Generated: 2026-07-04
 
-Despite older upgrade prompts mentioning Vite, this checkout currently uses Laravel Mix/Webpack. No `vite.config.*` file is present.
+This checkout now uses Laravel Vite for first-party compiled assets. Do not reintroduce Laravel Mix/Webpack.
 
 ## Detected Asset Pipeline
 
 - JavaScript entry: `resources/js/app.js`
-- CSS entry: `resources/css/app.css`
-- Build config: `webpack.mix.js`
-- Output paths: `public/js` and `public/css`
+- SCSS entry: `resources/scss/app.scss`
+- Build config: `vite.config.js`
+- PostCSS config: `postcss.config.cjs`
+- Blade loading: `@vite(['resources/scss/app.scss', 'resources/js/app.js'])`
+- Build output: `public/build` with Vite's manifest.
 - Package manager scripts are defined in `package.json`.
 
 ## Commands
 
 ```bash
-npm run development
+npm run dev
 npm run watch
-npm run production
 npm run build
 npm run lint
 npm run stylelint
@@ -25,27 +26,22 @@ npm run format:check
 npm run quality
 ```
 
-`npm run quality` runs ESLint, Stylelint, Prettier check, and the production Mix build.
+`npm run quality` runs ESLint, Stylelint, Prettier check, the production dependency audit, and the Vite production build.
 
 ## Environment Rules
 
 - Do not expose secrets in frontend assets.
-- Treat any future `VITE_*` variable as public browser-readable configuration.
+- Treat every `VITE_*` variable as public browser-readable configuration.
 - Runtime secrets must remain server-side in `.env` and be accessed through Laravel `config()` only.
-- If Vite is introduced later, update Blade asset references from Mix to `@vite` in the same tested migration.
+- Do not use old `MIX_*` frontend environment names.
 
 ## Dependency Rules
 
-- Do not rewrite the asset stack during unrelated frontend cleanup.
+- Keep `vite`, `laravel-vite-plugin`, and `sass` as the build-tool dependencies.
+- Do not add `laravel-mix` or `webpack`.
 - Remove dependencies only after confirming no import, global script, Blade, or public asset usage remains.
-- Safe dependency updates should be minor/patch level and include a lockfile update plus `npm run quality`.
+- Safe dependency updates should include a lockfile update plus `npm run quality`.
 
-## Future Vite Migration Notes
+## Legacy Public Assets
 
-A Mix-to-Vite migration should be a dedicated change with:
-
-- Inventory of every asset included from Blade and `public/assets/frontend`.
-- Visual smoke tests for authenticated pages, profile/page timelines, modals, media uploads, payments, and admin screens.
-- Replacement of `mix()` or static compiled references where applicable.
-- Explicit source map policy for production.
-- Release rollback notes that keep old Mix-built assets available until the new build is verified.
+The application still has large legacy theme/vendor assets under `public/assets/**` and the standalone `public/js/share.js`. They are not part of the first-party Vite bundle. Retire them only with route/page evidence, visual smoke checks, and rollback notes.

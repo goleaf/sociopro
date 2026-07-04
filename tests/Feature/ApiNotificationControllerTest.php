@@ -40,7 +40,7 @@ class ApiNotificationControllerTest extends TestCase
     public function test_notifications_endpoint_rejects_missing_bearer_token(): void
     {
         $this->getJson(route('api.notifications.index'))
-            ->assertOk()
+            ->assertUnauthorized()
             ->assertJson($this->legacyAuthenticationPayload());
     }
 
@@ -58,7 +58,7 @@ class ApiNotificationControllerTest extends TestCase
             ['postJson', route('api.notifications.fundraisers.decline', [1, 40])],
         ] as [$method, $url]) {
             $this->{$method}($url)
-                ->assertOk()
+                ->assertUnauthorized()
                 ->assertJson($this->legacyAuthenticationPayload());
         }
     }

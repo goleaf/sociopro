@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Comments\DeleteCommentAction;
 use App\Actions\Posts\DeletePostAction;
 use App\Actions\Posts\DeletePostMediaFileAction;
 use App\Actions\Posts\StorePostAction;
@@ -51,6 +52,7 @@ use App\Models\PageCategory;
 use App\Models\PageLike;
 use App\Models\PaidContentCreator;
 use App\Models\PaidContentPackages;
+use App\Models\PaymentHistoryEntry;
 use App\Models\Posts;
 use App\Models\Report;
 use App\Models\SavedProduct;
@@ -285,50 +287,44 @@ class ApiController extends Controller
     // Update password
     public function update_password(Request $request)
     {
-        $token = $request->bearerToken();
         $response = [];
+        $auth = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $auth = auth('sanctum')->user();
+        if (! $auth instanceof User) {
+            return ApiErrorResponse::authentication();
+        }
 
-            // The passwords matches
-            if (! Hash::check($request->get('current_password'), $auth->password)) {
-                $response['status'] = 'failed';
-                $response['message'] = 'Current Password is Invalid';
-
-                return $response;
-            }
-
-            // Current password and new password same
-            if (strcmp($request->get('current_password'), $request->new_password) == 0) {
-                $response['status'] = 'failed';
-                $response['message'] = 'New Password cannot be same as your current password.';
-
-                return $response;
-            }
-
-            // Current password and new password same
-            if (strcmp($request->get('confirm_password'), $request->new_password) != 0) {
-                $response['status'] = 'failed';
-                $response['message'] = 'New Password is not same as your confirm password.';
-
-                return $response;
-            }
-
-            $user = User::find($auth->id);
-            $user->password = Hash::make($request->new_password);
-            $user->save();
-
-            $response['status'] = 'success';
-            $response['message'] = 'Password Changed Successfully';
-
-            return $response;
-        } else {
+        // The passwords matches
+        if (! Hash::check($request->get('current_password'), $auth->password)) {
             $response['status'] = 'failed';
-            $response['message'] = 'Please login first';
+            $response['message'] = 'Current Password is Invalid';
 
             return $response;
         }
+
+        // Current password and new password same
+        if (strcmp($request->get('current_password'), $request->new_password) == 0) {
+            $response['status'] = 'failed';
+            $response['message'] = 'New Password cannot be same as your current password.';
+
+            return $response;
+        }
+
+        // Current password and new password same
+        if (strcmp($request->get('confirm_password'), $request->new_password) != 0) {
+            $response['status'] = 'failed';
+            $response['message'] = 'New Password is not same as your confirm password.';
+
+            return $response;
+        }
+
+        $auth->password = Hash::make($request->new_password);
+        $auth->save();
+
+        $response['status'] = 'success';
+        $response['message'] = 'Password Changed Successfully';
+
+        return $response;
     }
 
     public function user(Request $request)
@@ -472,36 +468,23 @@ class ApiController extends Controller
         // }
         // return $data;
     }
-    // public function getPostReactions(Request $request, $postId)
-    // {
 
-    //     $token = $request->bearerToken();
-    //     $response = array();
-    //     $data = array();
+    public function userdata(): JsonResponse
+    {
+        return response()->json([]);
+    }
 
-    //     if (isset($token) && $token != '') {
-    //         $user_id = auth('sanctum')->user()->id;
-    //         // Retrieve the post from the database
-    //         $post = Posts::findOrFail($postId);
+    public function getPostReactions(Request $request, $postId): JsonResponse
+    {
+        $user = $request->user('sanctum');
+        $post = Posts::query()->findOrFail($postId);
+        $reactions = json_decode((string) $post->user_reacts, true) ?: [];
 
-    //         // Retrieve the reactions for the post
-    //         $reactions = json_decode($post->user_reacts, true);
-
-    //         // Check if the user is logged in
-    //         // $userId = Auth::id();
-
-    //         // Check if the user has reacted to the post
-    //         $userReaction = null;
-    //         if ($user_id && isset($reactions[$user_id])) {
-    //             $userReaction = $reactions[$user_id];
-    //         }
-    //     }
-
-    //     return response()->json([
-    //         'reactions' => $reactions,
-    //         'user_reaction' => $userReaction
-    //     ]);
-    // }
+        return response()->json([
+            'reactions' => $reactions,
+            'user_reaction' => $user instanceof User ? ($reactions[$user->id] ?? null) : null,
+        ]);
+    }
 
     public function timeline(Request $request)
     {
@@ -1200,169 +1183,163 @@ class ApiController extends Controller
 
     public function friends(Request $request)
     {
-        $token = $request->bearerToken();
         $response = [];
-        // $data = array();
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-
-            $friendships = FriendshipsQuery::importantForUser($user_id)->get();
-            // $user = User::where('id', $user_id)->first();
-
-            $response['friendsList'] = [];
-            // $friend_list = User::whereIn('id', $friend)->get();
-            foreach ($friendships as $key => $friend) {
-                $profile_id = $friend->requester == $user_id ? $friend->accepter : $friend->requester;
-                $user = User::find($profile_id);
-
-                $followers = Follower::where('user_id', $user_id)->get();
-                $response['friendsList'][$key]['follow'] = 'Follow';
-                foreach ($followers as $follo) {
-                    if ($follo->follow_id == $profile_id) {
-                        $response['friendsList'][$key]['follow'] = 'Unfollow';
-                    }
-                }
-
-                // $user = User::where('id', $friend->id)->first();
-                $response['friendsList'][$key]['friend_id'] = $user->id;
-                $response['friendsList'][$key]['name'] = $user->name;
-                $response['friendsList'][$key]['photo'] = get_user_images($user->id, 'optimized');
-                $response['friendsList'][$key]['cover_photo'] = get_cover_photos($user->id, 'optimized');
-            }
-
-            // $response['status'] = 'success';
-            // $response['error_reason'] = 'None';
-            return response($response, 200);
-        } else {
-            // $response['status'] = 'failed';
-            // $response['error_reason'] = 'Unauthorized login';
-            return response()->json(['error' => 'Unauthorized'], 401);
+        if (! $user instanceof User) {
+            return ApiErrorResponse::authentication();
         }
 
-        // return $response;
+        // $data = array();
+        $user_id = $user->id;
+
+        $friendships = FriendshipsQuery::importantForUser($user_id)->get();
+        // $user = User::where('id', $user_id)->first();
+
+        $response['friendsList'] = [];
+        // $friend_list = User::whereIn('id', $friend)->get();
+        foreach ($friendships as $key => $friend) {
+            $profile_id = $friend->requester == $user_id ? $friend->accepter : $friend->requester;
+            $friendUser = User::find($profile_id);
+
+            $followers = Follower::where('user_id', $user_id)->get();
+            $response['friendsList'][$key]['follow'] = 'Follow';
+            foreach ($followers as $follo) {
+                if ($follo->follow_id == $profile_id) {
+                    $response['friendsList'][$key]['follow'] = 'Unfollow';
+                }
+            }
+
+            // $user = User::where('id', $friend->id)->first();
+            $response['friendsList'][$key]['friend_id'] = $friendUser->id;
+            $response['friendsList'][$key]['name'] = $friendUser->name;
+            $response['friendsList'][$key]['photo'] = get_user_images($friendUser->id, 'optimized');
+            $response['friendsList'][$key]['cover_photo'] = get_cover_photos($friendUser->id, 'optimized');
+        }
+
+        // $response['status'] = 'success';
+        // $response['error_reason'] = 'None';
+        return response($response, 200);
     }
 
     public function add_friend(Request $request, $id)
     {
-        $token = $request->bearerToken();
         $response = [];
-        // $data = array();
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-
-            $friendship = new Friendships;
-            $friendship->accepter = $id;
-            $friendship->requester = $user_id;
-            $friendship->is_accepted = '0';
-            $friendship->save();
-
-            $notify = new Notification;
-            $notify->sender_user_id = $user_id;
-            $notify->reciver_user_id = $id;
-            $notify->type = 'profile';
-            $notify->save();
-
-            $response['status'] = true;
-            $response['message'] = 'send friend request Successfully';
-        } else {
-            $response['status'] = false;
-            $response['message'] = 'unauthorised access';
+        if (! $user instanceof User) {
+            return ApiErrorResponse::authentication();
         }
+
+        // $data = array();
+        $user_id = $user->id;
+
+        $friendship = new Friendships;
+        $friendship->accepter = $id;
+        $friendship->requester = $user_id;
+        $friendship->is_accepted = '0';
+        $friendship->save();
+
+        $notify = new Notification;
+        $notify->sender_user_id = $user_id;
+        $notify->reciver_user_id = $id;
+        $notify->type = 'profile';
+        $notify->save();
+
+        $response['status'] = true;
+        $response['message'] = 'send friend request Successfully';
 
         return $response;
     }
 
     public function unfriend(Request $request, $id)
     {
-        $token = $request->bearerToken();
         $response = [];
-        // $data = array();
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-
-            Friendships::where(function ($query) use ($id, $user_id) {
-                $query->where('accepter', $id)->where('requester', $user_id);
-            })->orWhere(function ($query) use ($id, $user_id) {
-                $query->where('requester', $id)->where('accepter', $user_id);
-            })->delete();
-
-            // remove my id from this user table
-            $unfriended_user_friends = User::where('id', $id)->value('friends');
-            $unfriended_user_friends = json_decode($unfriended_user_friends, true);
-            if (is_array($unfriended_user_friends)) {
-                $array_key = array_search($user_id, $unfriended_user_friends, true);
-                unset($unfriended_user_friends[$array_key]);
-            } else {
-                $unfriended_user_friends = [];
-            }
-            $unfriended_user_friends = json_encode($unfriended_user_friends);
-            User::where('id', $id)->update(['friends' => $unfriended_user_friends]);
-
-            // remove user id from my user friend list
-            $unfriended_user_friends = User::where('id', $user_id)->value('friends');
-            $unfriended_user_friends = json_decode($unfriended_user_friends, true);
-            if (is_array($unfriended_user_friends)) {
-                $array_key = array_search($id, $unfriended_user_friends, true);
-                unset($unfriended_user_friends[$array_key]);
-            } else {
-                $unfriended_user_friends = [];
-            }
-            $unfriended_user_friends = json_encode($unfriended_user_friends);
-            User::where('id', $user_id)->update(['friends' => $unfriended_user_friends]);
-
-            $notify = Notification::where('sender_user_id', $user_id)->where('reciver_user_id', $id)->delete();
-
-            $response['status'] = true;
-            $response['message'] = 'unfriend Successfully';
-        } else {
-            $response['status'] = false;
-            $response['message'] = 'unauthorised access';
+        if (! $user instanceof User) {
+            return ApiErrorResponse::authentication();
         }
+
+        // $data = array();
+        $user_id = $user->id;
+
+        Friendships::where(function ($query) use ($id, $user_id) {
+            $query->where('accepter', $id)->where('requester', $user_id);
+        })->orWhere(function ($query) use ($id, $user_id) {
+            $query->where('requester', $id)->where('accepter', $user_id);
+        })->delete();
+
+        // remove my id from this user table
+        $unfriended_user_friends = User::where('id', $id)->value('friends');
+        $unfriended_user_friends = json_decode($unfriended_user_friends, true);
+        if (is_array($unfriended_user_friends)) {
+            $array_key = array_search($user_id, $unfriended_user_friends, true);
+            unset($unfriended_user_friends[$array_key]);
+        } else {
+            $unfriended_user_friends = [];
+        }
+        $unfriended_user_friends = json_encode($unfriended_user_friends);
+        User::where('id', $id)->update(['friends' => $unfriended_user_friends]);
+
+        // remove user id from my user friend list
+        $unfriended_user_friends = User::where('id', $user_id)->value('friends');
+        $unfriended_user_friends = json_decode($unfriended_user_friends, true);
+        if (is_array($unfriended_user_friends)) {
+            $array_key = array_search($id, $unfriended_user_friends, true);
+            unset($unfriended_user_friends[$array_key]);
+        } else {
+            $unfriended_user_friends = [];
+        }
+        $unfriended_user_friends = json_encode($unfriended_user_friends);
+        User::where('id', $user_id)->update(['friends' => $unfriended_user_friends]);
+
+        $notify = Notification::where('sender_user_id', $user_id)->where('reciver_user_id', $id)->delete();
+
+        $response['status'] = true;
+        $response['message'] = 'unfriend Successfully';
 
         return $response;
     }
 
     public function friend_request(Request $request)
     {
-        $token = $request->bearerToken();
         $response = [];
-        // $data = array();
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            // $friendships = Friendships::where(function ($query) use ($id) {
-            //     $query->where('accepter', $id)
-            //         ->orWhere('requester', $id);
-            // })
-            //     ->where('is_accepted', 1)
-            //     ->orderBy('friendships.importance', 'desc')
-            //     ->get();
-
-            $friend_requests = Friendships::where('accepter', $user_id)
-                ->where('is_accepted', '!=', 1)
-                ->orderByDesc('id')
-                ->get();
-            $response['friendsList'] = [];
-            foreach ($friend_requests as $key => $friend) {
-                $profile_id = $friend->requester == $user_id ? $friend->accepter : $friend->requester;
-                $user = User::find($profile_id);
-
-                // $user = User::where('id', $friend->id)->first();
-                $response['friendsList'][$key]['friend_id'] = $user->id;
-                $response['friendsList'][$key]['name'] = $user->name;
-                $response['friendsList'][$key]['photo'] = get_user_images($user->id);
-                $response['friendsList'][$key]['cover_photo'] = get_cover_photos($user->id);
-            }
-
-            // $page_data['friendships'] = $friendships;
-            // $page_data['friend_requests'] = $friend_requests;
-        } else {
-            $response['status'] = false;
-            $response['message'] = 'unauthorised access';
+        if (! $user instanceof User) {
+            return ApiErrorResponse::authentication();
         }
+
+        // $data = array();
+        $user_id = $user->id;
+
+        // $friendships = Friendships::where(function ($query) use ($id) {
+        //     $query->where('accepter', $id)
+        //         ->orWhere('requester', $id);
+        // })
+        //     ->where('is_accepted', 1)
+        //     ->orderBy('friendships.importance', 'desc')
+        //     ->get();
+
+        $friend_requests = Friendships::where('accepter', $user_id)
+            ->where('is_accepted', '!=', 1)
+            ->orderByDesc('id')
+            ->get();
+        $response['friendsList'] = [];
+        foreach ($friend_requests as $key => $friend) {
+            $profile_id = $friend->requester == $user_id ? $friend->accepter : $friend->requester;
+            $requestUser = User::find($profile_id);
+
+            // $user = User::where('id', $friend->id)->first();
+            $response['friendsList'][$key]['friend_id'] = $requestUser->id;
+            $response['friendsList'][$key]['name'] = $requestUser->name;
+            $response['friendsList'][$key]['photo'] = get_user_images($requestUser->id);
+            $response['friendsList'][$key]['cover_photo'] = get_cover_photos($requestUser->id);
+        }
+
+        // $page_data['friendships'] = $friendships;
+        // $page_data['friend_requests'] = $friend_requests;
 
         // $response = $page_data;
         return $response;
@@ -1370,12 +1347,11 @@ class ApiController extends Controller
 
     public function follow(Request $request, $id)
     {
-        $token = $request->bearerToken();
         $response = [];
-        // $data = array();
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
+        if ($user instanceof User) {
+            $user_id = $user->id;
 
             $follow = true;
             if (! Follower::where('follow_id', $id)->where('user_id', $user_id)->exists()) {
@@ -1399,14 +1375,15 @@ class ApiController extends Controller
 
     public function unfollow(Request $request, $id)
     {
-        $token = $request->bearerToken();
         $response = [];
-        // $data = array();
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
+        if ($user instanceof User) {
+            $user_id = $user->id;
 
-            $follwer = Follower::where('follow_id', $id)->delete();
+            $follwer = Follower::where('follow_id', $id)
+                ->where('user_id', $user_id)
+                ->delete();
 
             if ($follwer) {
                 $response['status'] = true;
@@ -1422,66 +1399,47 @@ class ApiController extends Controller
 
     public function create_post(StorePostRequest $request, StorePostAction $storePost)
     {
-        $token = $request->bearerToken();
-        $response = [];
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user = $request->user('sanctum');
-
-            return $user instanceof User ? $storePost->handle($user, $request) : $response;
-        }
-
-        // Data validation
+        return $user instanceof User ? $storePost->handle($user, $request) : [];
     }
 
     public function edit_post(UpdatePostRequest $request, UpdatePostAction $updatePost, $id)
     {
-        $token = $request->bearerToken();
-        $response = [];
+        $post = Posts::query()->find($id);
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $post = Posts::query()->find($id);
-            $user = $request->user('sanctum');
-            $response = $post instanceof Posts && $user instanceof User
-                ? $updatePost->handle($post, $user, $request)
-                : ['status' => 200, 'message' => 'Your post successfully updated'];
-        }
-
-        return $response;
+        return $post instanceof Posts && $user instanceof User
+            ? $updatePost->handle($post, $user, $request)
+            : ['status' => 200, 'message' => 'Your post successfully updated'];
     }
 
     public function delete_post(DestroyPostRequest $request, DeletePostAction $deletePost, $id)
     {
-        $token = $request->bearerToken();
-        $response = [];
-        $data = [];
+        $post = Posts::query()->find($id);
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $post = Posts::query()->find($id);
-            $response = $post instanceof Posts ? $deletePost->handle($post) : [];
-        }
-
-        return $response;
+        return $post instanceof Posts ? $deletePost->handle($post, $user instanceof User ? $user : null) : [];
     }
 
     public function save_post_report(Request $request)
     {
-        $token = $request->bearerToken();
         $response = [];
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
+        if (! $user instanceof User) {
+            return ApiErrorResponse::authentication();
+        }
 
-            $report = new Report;
-            $report->user_id = $user_id;
-            $report->post_id = $request->post_id;
-            $report->report = $request->report;
-            $done = $report->save();
-            if ($done) {
-                $response = ['alertMessage' => 'Post Report saved Successfully'];
-            } else {
-                $response = ['alertMessage' => 'Something is error'];
-            }
+        $report = new Report;
+        $report->user_id = $user->id;
+        $report->post_id = $request->post_id;
+        $report->report = $request->report;
+        $done = $report->save();
+        if ($done) {
+            $response = ['alertMessage' => 'Post Report saved Successfully'];
+        } else {
+            $response = ['alertMessage' => 'Something is error'];
         }
 
         return $response;
@@ -1489,28 +1447,30 @@ class ApiController extends Controller
 
     public function post_media_file($id, Request $request)
     {
-        $token = $request->bearerToken();
+        $user = $request->user('sanctum');
+
+        if (! $user instanceof User) {
+            return ApiErrorResponse::authentication();
+        }
+
         $response = [];
         $postImages = []; // Initialize an array to store post images
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            $mediaFiles = MediaFile::where('post_id', $id)->get();
+        $mediaFiles = MediaFile::where('post_id', $id)->get();
 
-            // Loop through the media files and add them to the postImages array
-            foreach ($mediaFiles as $media) {
-                $mediaData = [];
-                if ($media->file_type == 'image') {
-                    $mediaData['id'] = $media->id;
-                    $mediaData['file_type'] = 'image';
-                    $mediaData['file_url'] = get_post_images($media->file_name, 'optimized');
-                } else {
-                    $mediaData['id'] = $media->id;
-                    $mediaData['file_type'] = 'video';
-                    $mediaData['file_url'] = get_post_videos($media->file_name);
-                }
-                $postImages[] = $mediaData; // Add media data to the postImages array
+        // Loop through the media files and add them to the postImages array
+        foreach ($mediaFiles as $media) {
+            $mediaData = [];
+            if ($media->file_type == 'image') {
+                $mediaData['id'] = $media->id;
+                $mediaData['file_type'] = 'image';
+                $mediaData['file_url'] = get_post_images($media->file_name, 'optimized');
+            } else {
+                $mediaData['id'] = $media->id;
+                $mediaData['file_type'] = 'video';
+                $mediaData['file_url'] = get_post_videos($media->file_name);
             }
+            $postImages[] = $mediaData; // Add media data to the postImages array
         }
 
         $response = $postImages;
@@ -1520,16 +1480,19 @@ class ApiController extends Controller
 
     public function delete_media_file(DestroyPostMediaFileRequest $request, DeletePostMediaFileAction $deletePostMediaFile, $id)
     {
-        $token = $request->bearerToken();
+        $user = $request->user('sanctum');
+
+        if (! $user instanceof User) {
+            return ApiErrorResponse::authentication();
+        }
+
         $response = [];
 
-        if (isset($token) && $token != '') {
-            $mediaFile = MediaFile::query()->find($id);
-            if ($mediaFile instanceof MediaFile) {
-                $response = $deletePostMediaFile->handle($mediaFile);
-            } else {
-                $response = ['alertMessage' => get_phrase('Image not found')];
-            }
+        $mediaFile = MediaFile::query()->find($id);
+        if ($mediaFile instanceof MediaFile) {
+            $response = $deletePostMediaFile->handle($mediaFile);
+        } else {
+            $response = ['alertMessage' => get_phrase('Image not found')];
         }
 
         return $response;
@@ -1537,425 +1500,423 @@ class ApiController extends Controller
 
     public function profile(Request $request)
     {
-        $token = $request->bearerToken();
         $response = [];
         $data = [];
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            // $user_id = 4;
-            $user = User::where('id', $user_id)->first();
-
-            $followers = Follower::where('user_id', $user_id)->count();
-            // User Profile Information
-            $response['id'] = $user->id;
-            $response['user_role'] = $user->user_role;
-            $response['username'] = $user->username;
-            $response['email'] = $user->email;
-            $response['name'] = $user->name;
-            $response['nickname'] = $user->nickname;
-            $response['friend'] = $user->friends;
-            $response['followers'] = $followers;
-            $response['gender'] = $user->gender;
-            $response['studied_at'] = $user->studied_at;
-            $response['address'] = $user->address;
-            $response['profession'] = $user->profession;
-            $response['job'] = $user->job;
-            $response['marital_status'] = $user->marital_status;
-            $response['phone'] = $user->phone;
-            $response['date_of_birth'] = date('Y-m-d', $user->date_of_birth);
-            $response['about'] = $user->about;
-            $response['photo'] = get_user_images($user->id, 'optimized');
-            $response['cover_photo'] = get_cover_photos($user->id, 'optimized');
-            $response['status'] = $user->status;
-            $response['lastActive'] = $user->lastActive;
-            $response['timezone'] = $user->timezone;
-            $response['email_verified_at'] = $user->email_verified_at;
-            $response['created_at'] = date_create($user->created_at)->format('l,j F Y');
-            $response['updated_at'] = $user->updated_at;
-
-            // Fetch Posts by the User
-            $posts = Posts::orderBy('post_id', 'desc')->where('user_id', $user->id)->where('posts.publisher', 'post')->get();
-            $response['posts'] = [];
-            foreach ($posts as $key1 => $post) {
-                $response['posts'][$key1]['post_id'] = $post->post_id;
-                $response['posts'][$key1]['user_id'] = $post->user_id;
-                $response['posts'][$key1]['name'] = $user->name;
-                $response['posts'][$key1]['photo'] = get_user_images($user->id, 'optimized');
-                $response['posts'][$key1]['publisher'] = $post->publisher;
-                $response['posts'][$key1]['publisherId'] = $post->publisher_id;
-                $response['posts'][$key1]['location'] = $post->location != null ? $post->location : '';
-                $response['posts'][$key1]['description'] = $post->description;
-                $response['posts'][$key1]['post_type'] = $post->post_type;
-                $response['posts'][$key1]['privacy'] = $post->privacy;
-                $userReacts = json_decode($post->user_reacts, true);
-                // $response['posts'][$key1]['userReacts'] = $userReacts;
-                if (isset($userReacts[$user_id])) {
-                    $response['posts'][$key1]['userReaction'] = $userReacts[$user_id];
-                } else {
-                    // Handle the case where the user reaction is not set
-                    $response['posts'][$key1]['userReaction'] = null; // Or any default value
-                }
-
-                // $userReaction = null;
-                // if ($user_id && isset($userReacts[$user_id])) {
-                //     $userReaction = $userReacts[$user_id];
-
-                // }
-                // $response['posts'][$key1]['userReaction'] = $userReaction;
-
-                // Initialize counters
-                $likeCount = 0;
-                $loveCount = 0;
-                $sadCount = 0;
-                $hahaCount = 0;
-                $angryCount = 0;
-
-                // Count occurrences of reactions
-                foreach ($userReacts as $react) {
-                    switch ($react) {
-                        case 'like':
-                            $likeCount++;
-                            break;
-                        case 'love':
-                            $loveCount++;
-                            break;
-                        case 'sad':
-                            $sadCount++;
-                            break;
-                        case 'haha':
-                            $hahaCount++;
-                            break;
-                        case 'angry':
-                            $angryCount++;
-                            break;
-                        default:
-                            // Do nothing or handle unexpected reactions
-                            break;
-                    }
-                }
-                // Calculate the total reactions
-                $totalReacts = $likeCount + $loveCount + $sadCount + $hahaCount + $angryCount;
-                $response['posts'][$key1]['reaction_counts'] = [
-                    'like' => $likeCount,
-                    'love' => $loveCount,
-                    'sad' => $sadCount,
-                    'haha' => $hahaCount,
-                    'angry' => $angryCount,
-                    'total' => $totalReacts, // Include total reactions count
-                ];
-
-                $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
-                $response['posts'][$key1]['comments_count'] = $commentsCount;
-
-                // Media section of posts
-                // $media = MediaFile::where('post_id', $post->post_id)->first();
-                // $response['posts'][$key1]['post_image'] = (!empty($media->file_name)) ? get_post_images($media->file_name) : '';
-
-                $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
-
-                // Initialize an array to store post images
-
-                $response['posts'][$key1]['post_images'] = [];
-                $response['posts'][$key1]['fileType'] = 'text';
-                // Loop through the media files and add them to the postImages array
-                foreach ($mediaFiles as $media) {
-                    if ($media->file_type == 'image') {
-                        $response['posts'][$key1]['post_images'][] = get_post_images($media->file_name, 'optimized');
-                    } else {
-                        $response['posts'][$key1]['post_images'][] = get_post_videos($media->file_name);
-                    }
-                    $response['posts'][$key1]['fileType'] = $media->file_type;
-                }
-                $response['posts'][$key1]['thumbnail'] = $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : '';
-
-                $createdDate = Carbon::createFromTimestamp(strtotime($post->posted_on));
-                $daysDifference = $createdDate->diffInDays(Carbon::now());
-                if ($daysDifference < 7) {
-                    // Show "time ago" format
-                    $response['posts'][$key1]['created_at'] = $createdDate->diffForHumans();
-                } else {
-                    // Show the exact date and time
-                    $response['posts'][$key1]['created_at'] = $createdDate->toDayDateTimeString();
-                    // Example format: 'Mon, Jan 1, 2024 12:00 AM'
-                }
-
-                // $response['posts'][$key1]['created_at'] = date('M d \a\t H:i A', strtotime($post->created_at));
-
-                $followers = Follower::where('user_id', $user_id)->get();
-                $response['posts'][$key1]['follow'] = 'Follow';
-                foreach ($followers as $follo) {
-                    if ($follo->follow_id == $post->user_id) {
-                        $response['posts'][$key1]['follow'] = 'Unfollow';
-                    }
-                }
-
-                $taggedUserIds = json_decode($post->tagged_user_ids, true);
-                $taggedUsers = User::whereIn('id', $taggedUserIds)->get(['id', 'name']);
-                $response['posts'][$key1]['taggedUserList'] = [];
-                foreach ($taggedUsers as $key2 => $tags) {
-                    $response['posts'][$key1]['taggedUserList'][$key2]['id'] = $tags->id;
-                    $response['posts'][$key1]['taggedUserList'][$key2]['name'] = $tags->name;
-                }
-            }
-
-            $friendships = FriendshipsQuery::importantForUser($user_id)->get();
-            // $user = User::where('id', $user_id)->first();
-
-            $response['friends'] = [];
-
-            // $friend_list = User::whereIn('id', $friend)->get();
-            foreach ($friendships as $key => $friend) {
-                $profile_id = $friend->requester == $user_id ? $friend->accepter : $friend->requester;
-                $user = User::find($profile_id);
-
-                $followers = Follower::where('user_id', $user_id)->get();
-                $response['friends'][$key]['follow'] = 'Follow';
-                foreach ($followers as $follo) {
-                    if ($follo->follow_id == $profile_id) {
-                        $response['friends'][$key]['follow'] = 'Unfollow';
-                    }
-                }
-                // $user = User::where('id', $friend->id)->first();
-                $response['friends'][$key]['friend_id'] = $user->id;
-                $response['friends'][$key]['name'] = $user->name;
-                $response['friends'][$key]['photo'] = get_user_images($user->id, 'optimized');
-                $response['friends'][$key]['cover_photo'] = get_cover_photos($user->id, 'optimized');
-            }
-
-            return response($response, 200);
-        } else {
-            // Handle invalid or missing token
-            return response()->json(['error' => 'Unauthorized'], 401);
+        if (! $user instanceof User) {
+            return ApiErrorResponse::authentication();
         }
+
+        $user_id = $user->id;
+        // $user_id = 4;
+        $user = User::where('id', $user_id)->first();
+
+        $followers = Follower::where('user_id', $user_id)->count();
+        // User Profile Information
+        $response['id'] = $user->id;
+        $response['user_role'] = $user->user_role;
+        $response['username'] = $user->username;
+        $response['email'] = $user->email;
+        $response['name'] = $user->name;
+        $response['nickname'] = $user->nickname;
+        $response['friend'] = $user->friends;
+        $response['followers'] = $followers;
+        $response['gender'] = $user->gender;
+        $response['studied_at'] = $user->studied_at;
+        $response['address'] = $user->address;
+        $response['profession'] = $user->profession;
+        $response['job'] = $user->job;
+        $response['marital_status'] = $user->marital_status;
+        $response['phone'] = $user->phone;
+        $response['date_of_birth'] = date('Y-m-d', $user->date_of_birth);
+        $response['about'] = $user->about;
+        $response['photo'] = get_user_images($user->id, 'optimized');
+        $response['cover_photo'] = get_cover_photos($user->id, 'optimized');
+        $response['status'] = $user->status;
+        $response['lastActive'] = $user->lastActive;
+        $response['timezone'] = $user->timezone;
+        $response['email_verified_at'] = $user->email_verified_at;
+        $response['created_at'] = date_create($user->created_at)->format('l,j F Y');
+        $response['updated_at'] = $user->updated_at;
+
+        // Fetch Posts by the User
+        $posts = Posts::orderBy('post_id', 'desc')->where('user_id', $user->id)->where('posts.publisher', 'post')->get();
+        $response['posts'] = [];
+        foreach ($posts as $key1 => $post) {
+            $response['posts'][$key1]['post_id'] = $post->post_id;
+            $response['posts'][$key1]['user_id'] = $post->user_id;
+            $response['posts'][$key1]['name'] = $user->name;
+            $response['posts'][$key1]['photo'] = get_user_images($user->id, 'optimized');
+            $response['posts'][$key1]['publisher'] = $post->publisher;
+            $response['posts'][$key1]['publisherId'] = $post->publisher_id;
+            $response['posts'][$key1]['location'] = $post->location != null ? $post->location : '';
+            $response['posts'][$key1]['description'] = $post->description;
+            $response['posts'][$key1]['post_type'] = $post->post_type;
+            $response['posts'][$key1]['privacy'] = $post->privacy;
+            $userReacts = json_decode($post->user_reacts, true);
+            // $response['posts'][$key1]['userReacts'] = $userReacts;
+            if (isset($userReacts[$user_id])) {
+                $response['posts'][$key1]['userReaction'] = $userReacts[$user_id];
+            } else {
+                // Handle the case where the user reaction is not set
+                $response['posts'][$key1]['userReaction'] = null; // Or any default value
+            }
+
+            // $userReaction = null;
+            // if ($user_id && isset($userReacts[$user_id])) {
+            //     $userReaction = $userReacts[$user_id];
+
+            // }
+            // $response['posts'][$key1]['userReaction'] = $userReaction;
+
+            // Initialize counters
+            $likeCount = 0;
+            $loveCount = 0;
+            $sadCount = 0;
+            $hahaCount = 0;
+            $angryCount = 0;
+
+            // Count occurrences of reactions
+            foreach ($userReacts as $react) {
+                switch ($react) {
+                    case 'like':
+                        $likeCount++;
+                        break;
+                    case 'love':
+                        $loveCount++;
+                        break;
+                    case 'sad':
+                        $sadCount++;
+                        break;
+                    case 'haha':
+                        $hahaCount++;
+                        break;
+                    case 'angry':
+                        $angryCount++;
+                        break;
+                    default:
+                        // Do nothing or handle unexpected reactions
+                        break;
+                }
+            }
+            // Calculate the total reactions
+            $totalReacts = $likeCount + $loveCount + $sadCount + $hahaCount + $angryCount;
+            $response['posts'][$key1]['reaction_counts'] = [
+                'like' => $likeCount,
+                'love' => $loveCount,
+                'sad' => $sadCount,
+                'haha' => $hahaCount,
+                'angry' => $angryCount,
+                'total' => $totalReacts, // Include total reactions count
+            ];
+
+            $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
+            $response['posts'][$key1]['comments_count'] = $commentsCount;
+
+            // Media section of posts
+            // $media = MediaFile::where('post_id', $post->post_id)->first();
+            // $response['posts'][$key1]['post_image'] = (!empty($media->file_name)) ? get_post_images($media->file_name) : '';
+
+            $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
+
+            // Initialize an array to store post images
+
+            $response['posts'][$key1]['post_images'] = [];
+            $response['posts'][$key1]['fileType'] = 'text';
+            // Loop through the media files and add them to the postImages array
+            foreach ($mediaFiles as $media) {
+                if ($media->file_type == 'image') {
+                    $response['posts'][$key1]['post_images'][] = get_post_images($media->file_name, 'optimized');
+                } else {
+                    $response['posts'][$key1]['post_images'][] = get_post_videos($media->file_name);
+                }
+                $response['posts'][$key1]['fileType'] = $media->file_type;
+            }
+            $response['posts'][$key1]['thumbnail'] = $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : '';
+
+            $createdDate = Carbon::createFromTimestamp(strtotime($post->posted_on));
+            $daysDifference = $createdDate->diffInDays(Carbon::now());
+            if ($daysDifference < 7) {
+                // Show "time ago" format
+                $response['posts'][$key1]['created_at'] = $createdDate->diffForHumans();
+            } else {
+                // Show the exact date and time
+                $response['posts'][$key1]['created_at'] = $createdDate->toDayDateTimeString();
+                // Example format: 'Mon, Jan 1, 2024 12:00 AM'
+            }
+
+            // $response['posts'][$key1]['created_at'] = date('M d \a\t H:i A', strtotime($post->created_at));
+
+            $followers = Follower::where('user_id', $user_id)->get();
+            $response['posts'][$key1]['follow'] = 'Follow';
+            foreach ($followers as $follo) {
+                if ($follo->follow_id == $post->user_id) {
+                    $response['posts'][$key1]['follow'] = 'Unfollow';
+                }
+            }
+
+            $taggedUserIds = json_decode($post->tagged_user_ids, true);
+            $taggedUsers = User::whereIn('id', $taggedUserIds)->get(['id', 'name']);
+            $response['posts'][$key1]['taggedUserList'] = [];
+            foreach ($taggedUsers as $key2 => $tags) {
+                $response['posts'][$key1]['taggedUserList'][$key2]['id'] = $tags->id;
+                $response['posts'][$key1]['taggedUserList'][$key2]['name'] = $tags->name;
+            }
+        }
+
+        $friendships = FriendshipsQuery::importantForUser($user_id)->get();
+        // $user = User::where('id', $user_id)->first();
+
+        $response['friends'] = [];
+
+        // $friend_list = User::whereIn('id', $friend)->get();
+        foreach ($friendships as $key => $friend) {
+            $profile_id = $friend->requester == $user_id ? $friend->accepter : $friend->requester;
+            $user = User::find($profile_id);
+
+            $followers = Follower::where('user_id', $user_id)->get();
+            $response['friends'][$key]['follow'] = 'Follow';
+            foreach ($followers as $follo) {
+                if ($follo->follow_id == $profile_id) {
+                    $response['friends'][$key]['follow'] = 'Unfollow';
+                }
+            }
+            // $user = User::where('id', $friend->id)->first();
+            $response['friends'][$key]['friend_id'] = $user->id;
+            $response['friends'][$key]['name'] = $user->name;
+            $response['friends'][$key]['photo'] = get_user_images($user->id, 'optimized');
+            $response['friends'][$key]['cover_photo'] = get_cover_photos($user->id, 'optimized');
+        }
+
+        return response($response, 200);
     }
 
     public function other_profile(Request $request, $id)
     {
-        $token = $request->bearerToken();
         $response = [];
         $data = [];
+        $viewer = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $my_id = auth('sanctum')->user()->id;
-            $user_id = $id;
-            $user = User::where('id', $user_id)->first();
-
-            $is_chat = 'not_chat'; // Initialize profile ID as 0
-            $msgthread_id = 0; // Initialize profile ID as 0
-
-            $chats = MessageThread::betweenParticipants($my_id, (int) $user_id)->get();
-
-            foreach ($chats as $chat) {
-                if ($chat->receiver_id == $my_id || $chat->sender_id == $my_id) {
-                    $is_chat = 'chat';
-                    $msgthread_id = $chat->id;
-                    break;
-                }
-            }
-
-            $frnd_id = 0;
-            $requested = 'Add Friend';
-            $req = Friendships::whereIn('accepter', [$my_id, $user_id])
-                ->WhereIn('requester', [$my_id, $user_id])
-                ->get();
-            foreach ($req as $chat) {
-                if ($chat->accepter == $my_id || $chat->requester == $my_id) {
-                    // Set the profile ID to the matching user ID
-                    $is_chat = 'chat';
-                    $frnd_id = $chat->id;
-                    $requested = $chat->is_accepted == 0 ? ($chat->requester == $my_id ? 'Requested' : 'Confirm') : 'Friend';
-
-                    // Break the loop once a match is found
-                    break;
-                }
-            }
-            $followers = Follower::where('user_id', $my_id)->get();
-            $follow = 'Follow';
-            foreach ($followers as $follo) {
-                if ($follo->follow_id == $user_id) {
-                    $follow = 'Unfollow';
-                }
-                // else{
-                //     $follow = 'Unfollow';
-                // }
-            }
-
-            $followers = Follower::where('user_id', $user_id)->count();
-            // User Profile Information
-            $response['id'] = $user->id;
-            $response['thrade'] = $msgthread_id;
-            // $response['frnd'] = $frnd_id;
-            $response['requested'] = $requested;
-            $response['follow'] = $follow;
-            $response['username'] = $user->username;
-            $response['name'] = $user->name;
-            $response['nickname'] = $user->nickname;
-            $response['followers'] = $followers;
-            $response['gender'] = $user->gender;
-            $response['studied_at'] = $user->studied_at;
-            $response['profession'] = $user->profession;
-            $response['job'] = $user->job;
-            $response['marital_status'] = $user->marital_status;
-            $response['about'] = $user->about;
-            $response['photo'] = get_user_images($user->id, 'optimized');
-            $response['cover_photo'] = get_cover_photos($user->id, 'optimized');
-            $response['created_at'] = date_create($user->created_at)->format('l,j F Y');
-
-            // Fetch Posts by the User
-            $posts = Posts::orderBy('post_id', 'desc')->where('user_id', $user->id)->where('posts.publisher', 'post')->get();
-            $response['posts'] = [];
-            foreach ($posts as $key1 => $post) {
-                $response['posts'][$key1]['post_id'] = $post->post_id;
-                $response['posts'][$key1]['user_id'] = $post->user_id;
-                $response['posts'][$key1]['name'] = $user->name;
-                $response['posts'][$key1]['photo'] = get_user_images($user->id, 'optimized');
-                $response['posts'][$key1]['publisher'] = $post->publisher;
-                $response['posts'][$key1]['publisherId'] = $post->publisher_id;
-                $response['posts'][$key1]['location'] = $post->location != null ? $post->location : '';
-                $response['posts'][$key1]['description'] = $post->description;
-                $response['posts'][$key1]['post_type'] = $post->post_type;
-                $response['posts'][$key1]['privacy'] = $post->privacy;
-                $userReacts = json_decode($post->user_reacts, true);
-                // $response['posts'][$key1]['userReacts'] = $userReacts;
-                if (isset($userReacts[$user_id])) {
-                    $response['posts'][$key1]['userReaction'] = $userReacts[$user_id];
-                } else {
-                    // Handle the case where the user reaction is not set
-                    $response['posts'][$key1]['userReaction'] = null; // Or any default value
-                }
-
-                // $userReaction = null;
-                // if ($user_id && isset($userReacts[$user_id])) {
-                //     $userReaction = $userReacts[$user_id];
-
-                // }
-                // $response['posts'][$key1]['userReaction'] = $userReaction;
-
-                // Initialize counters
-                $likeCount = 0;
-                $loveCount = 0;
-                $sadCount = 0;
-                $hahaCount = 0;
-                $angryCount = 0;
-
-                // Count occurrences of reactions
-                foreach ($userReacts as $react) {
-                    switch ($react) {
-                        case 'like':
-                            $likeCount++;
-                            break;
-                        case 'love':
-                            $loveCount++;
-                            break;
-                        case 'sad':
-                            $sadCount++;
-                            break;
-                        case 'haha':
-                            $hahaCount++;
-                            break;
-                        case 'angry':
-                            $angryCount++;
-                            break;
-                        default:
-                            // Do nothing or handle unexpected reactions
-                            break;
-                    }
-                }
-                // Calculate the total reactions
-                $totalReacts = $likeCount + $loveCount + $sadCount + $hahaCount + $angryCount;
-                $response['posts'][$key1]['reaction_counts'] = [
-                    'like' => $likeCount,
-                    'love' => $loveCount,
-                    'sad' => $sadCount,
-                    'haha' => $hahaCount,
-                    'angry' => $angryCount,
-                    'total' => $totalReacts, // Include total reactions count
-                ];
-
-                $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
-                $response['posts'][$key1]['comments_count'] = $commentsCount;
-
-                // Media section of posts
-                // $media = MediaFile::where('post_id', $post->post_id)->first();
-                // $response['posts'][$key1]['post_image'] = (!empty($media->file_name)) ? get_post_images($media->file_name) : '';
-
-                $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
-
-                // Initialize an array to store post images
-
-                $response['posts'][$key1]['post_images'] = [];
-                $response['posts'][$key1]['fileType'] = 'text';
-                // Loop through the media files and add them to the postImages array
-                foreach ($mediaFiles as $media) {
-                    if ($media->file_type == 'image') {
-                        $response['posts'][$key1]['post_images'][] = get_post_images($media->file_name, 'optimized');
-                    } else {
-                        $response['posts'][$key1]['post_images'][] = get_post_videos($media->file_name);
-                    }
-                    $response['posts'][$key1]['fileType'] = $media->file_type;
-                }
-                $response['posts'][$key1]['thumbnail'] = $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : '';
-
-                // $response['posts'][$key1]['created_at'] = date('M d \a\t H:i A', strtotime($post->created_at));
-                $createdDate = Carbon::createFromTimestamp(strtotime($post->posted_on));
-                $daysDifference = $createdDate->diffInDays(Carbon::now());
-                if ($daysDifference < 7) {
-                    // Show "time ago" format
-                    $response['posts'][$key1]['created_at'] = $createdDate->diffForHumans();
-                } else {
-                    // Show the exact date and time
-                    $response['posts'][$key1]['created_at'] = $createdDate->toDayDateTimeString();
-                    // Example format: 'Mon, Jan 1, 2024 12:00 AM'
-                }
-
-                $followers = Follower::where('user_id', $my_id)->get();
-                $response['posts'][$key1]['follow'] = 'Follow';
-                foreach ($followers as $follo) {
-                    if ($follo->follow_id == $post->user_id) {
-                        $response['posts'][$key1]['follow'] = 'Unfollow';
-                    }
-                }
-
-                $taggedUserIds = json_decode($post->tagged_user_ids, true);
-                $taggedUsers = User::whereIn('id', $taggedUserIds)->get(['id', 'name']);
-                $response['posts'][$key1]['taggedUserList'] = [];
-                foreach ($taggedUsers as $key2 => $tags) {
-                    $response['posts'][$key1]['taggedUserList'][$key2]['id'] = $tags->id;
-                    $response['posts'][$key1]['taggedUserList'][$key2]['name'] = $tags->name;
-                }
-            }
-
-            $friendships = FriendshipsQuery::importantForUser($user_id)->get();
-            // $user = User::where('id', $user_id)->first();
-
-            $response['friends'] = [];
-
-            // $friend_list = User::whereIn('id', $friend)->get();
-            foreach ($friendships as $key => $friend) {
-                $profile_id = $friend->requester == $user_id ? $friend->accepter : $friend->requester;
-                $user = User::find($profile_id);
-
-                $followers = Follower::where('user_id', $my_id)->get();
-                $response['friends'][$key]['follow'] = 'Follow';
-                foreach ($followers as $follo) {
-                    if ($follo->follow_id == $profile_id) {
-                        $response['friends'][$key]['follow'] = 'Unfollow';
-                    }
-                }
-
-                // $user = User::where('id', $friend->id)->first();
-                $response['friends'][$key]['friend_id'] = $user->id;
-                $response['friends'][$key]['name'] = $user->name;
-                $response['friends'][$key]['photo'] = get_user_images($user->id, 'optimized');
-                $response['friends'][$key]['cover_photo'] = get_cover_photos($user->id, 'optimized');
-            }
-
-            return response($response, 200);
-        } else {
-            // Handle invalid or missing token
-            return response()->json(['error' => 'Unauthorized'], 401);
+        if (! $viewer instanceof User) {
+            return ApiErrorResponse::authentication();
         }
+
+        $my_id = $viewer->id;
+        $user_id = $id;
+        $user = User::where('id', $user_id)->first();
+
+        $is_chat = 'not_chat'; // Initialize profile ID as 0
+        $msgthread_id = 0; // Initialize profile ID as 0
+
+        $chats = MessageThread::betweenParticipants($my_id, (int) $user_id)->get();
+
+        foreach ($chats as $chat) {
+            if ($chat->receiver_id == $my_id || $chat->sender_id == $my_id) {
+                $is_chat = 'chat';
+                $msgthread_id = $chat->id;
+                break;
+            }
+        }
+
+        $frnd_id = 0;
+        $requested = 'Add Friend';
+        $req = Friendships::whereIn('accepter', [$my_id, $user_id])
+            ->WhereIn('requester', [$my_id, $user_id])
+            ->get();
+        foreach ($req as $chat) {
+            if ($chat->accepter == $my_id || $chat->requester == $my_id) {
+                // Set the profile ID to the matching user ID
+                $is_chat = 'chat';
+                $frnd_id = $chat->id;
+                $requested = $chat->is_accepted == 0 ? ($chat->requester == $my_id ? 'Requested' : 'Confirm') : 'Friend';
+
+                // Break the loop once a match is found
+                break;
+            }
+        }
+        $followers = Follower::where('user_id', $my_id)->get();
+        $follow = 'Follow';
+        foreach ($followers as $follo) {
+            if ($follo->follow_id == $user_id) {
+                $follow = 'Unfollow';
+            }
+            // else{
+            //     $follow = 'Unfollow';
+            // }
+        }
+
+        $followers = Follower::where('user_id', $user_id)->count();
+        // User Profile Information
+        $response['id'] = $user->id;
+        $response['thrade'] = $msgthread_id;
+        // $response['frnd'] = $frnd_id;
+        $response['requested'] = $requested;
+        $response['follow'] = $follow;
+        $response['username'] = $user->username;
+        $response['name'] = $user->name;
+        $response['nickname'] = $user->nickname;
+        $response['followers'] = $followers;
+        $response['gender'] = $user->gender;
+        $response['studied_at'] = $user->studied_at;
+        $response['profession'] = $user->profession;
+        $response['job'] = $user->job;
+        $response['marital_status'] = $user->marital_status;
+        $response['about'] = $user->about;
+        $response['photo'] = get_user_images($user->id, 'optimized');
+        $response['cover_photo'] = get_cover_photos($user->id, 'optimized');
+        $response['created_at'] = date_create($user->created_at)->format('l,j F Y');
+
+        // Fetch Posts by the User
+        $posts = Posts::orderBy('post_id', 'desc')->where('user_id', $user->id)->where('posts.publisher', 'post')->get();
+        $response['posts'] = [];
+        foreach ($posts as $key1 => $post) {
+            $response['posts'][$key1]['post_id'] = $post->post_id;
+            $response['posts'][$key1]['user_id'] = $post->user_id;
+            $response['posts'][$key1]['name'] = $user->name;
+            $response['posts'][$key1]['photo'] = get_user_images($user->id, 'optimized');
+            $response['posts'][$key1]['publisher'] = $post->publisher;
+            $response['posts'][$key1]['publisherId'] = $post->publisher_id;
+            $response['posts'][$key1]['location'] = $post->location != null ? $post->location : '';
+            $response['posts'][$key1]['description'] = $post->description;
+            $response['posts'][$key1]['post_type'] = $post->post_type;
+            $response['posts'][$key1]['privacy'] = $post->privacy;
+            $userReacts = json_decode($post->user_reacts, true);
+            // $response['posts'][$key1]['userReacts'] = $userReacts;
+            if (isset($userReacts[$user_id])) {
+                $response['posts'][$key1]['userReaction'] = $userReacts[$user_id];
+            } else {
+                // Handle the case where the user reaction is not set
+                $response['posts'][$key1]['userReaction'] = null; // Or any default value
+            }
+
+            // $userReaction = null;
+            // if ($user_id && isset($userReacts[$user_id])) {
+            //     $userReaction = $userReacts[$user_id];
+
+            // }
+            // $response['posts'][$key1]['userReaction'] = $userReaction;
+
+            // Initialize counters
+            $likeCount = 0;
+            $loveCount = 0;
+            $sadCount = 0;
+            $hahaCount = 0;
+            $angryCount = 0;
+
+            // Count occurrences of reactions
+            foreach ($userReacts as $react) {
+                switch ($react) {
+                    case 'like':
+                        $likeCount++;
+                        break;
+                    case 'love':
+                        $loveCount++;
+                        break;
+                    case 'sad':
+                        $sadCount++;
+                        break;
+                    case 'haha':
+                        $hahaCount++;
+                        break;
+                    case 'angry':
+                        $angryCount++;
+                        break;
+                    default:
+                        // Do nothing or handle unexpected reactions
+                        break;
+                }
+            }
+            // Calculate the total reactions
+            $totalReacts = $likeCount + $loveCount + $sadCount + $hahaCount + $angryCount;
+            $response['posts'][$key1]['reaction_counts'] = [
+                'like' => $likeCount,
+                'love' => $loveCount,
+                'sad' => $sadCount,
+                'haha' => $hahaCount,
+                'angry' => $angryCount,
+                'total' => $totalReacts, // Include total reactions count
+            ];
+
+            $commentsCount = Comments::where('id_of_type', $post->post_id)->count();
+            $response['posts'][$key1]['comments_count'] = $commentsCount;
+
+            // Media section of posts
+            // $media = MediaFile::where('post_id', $post->post_id)->first();
+            // $response['posts'][$key1]['post_image'] = (!empty($media->file_name)) ? get_post_images($media->file_name) : '';
+
+            $mediaFiles = MediaFile::where('post_id', $post->post_id)->get();
+
+            // Initialize an array to store post images
+
+            $response['posts'][$key1]['post_images'] = [];
+            $response['posts'][$key1]['fileType'] = 'text';
+            // Loop through the media files and add them to the postImages array
+            foreach ($mediaFiles as $media) {
+                if ($media->file_type == 'image') {
+                    $response['posts'][$key1]['post_images'][] = get_post_images($media->file_name, 'optimized');
+                } else {
+                    $response['posts'][$key1]['post_images'][] = get_post_videos($media->file_name);
+                }
+                $response['posts'][$key1]['fileType'] = $media->file_type;
+            }
+            $response['posts'][$key1]['thumbnail'] = $post->mobile_app_image != null ? get_post_images($post->mobile_app_image) : '';
+
+            // $response['posts'][$key1]['created_at'] = date('M d \a\t H:i A', strtotime($post->created_at));
+            $createdDate = Carbon::createFromTimestamp(strtotime($post->posted_on));
+            $daysDifference = $createdDate->diffInDays(Carbon::now());
+            if ($daysDifference < 7) {
+                // Show "time ago" format
+                $response['posts'][$key1]['created_at'] = $createdDate->diffForHumans();
+            } else {
+                // Show the exact date and time
+                $response['posts'][$key1]['created_at'] = $createdDate->toDayDateTimeString();
+                // Example format: 'Mon, Jan 1, 2024 12:00 AM'
+            }
+
+            $followers = Follower::where('user_id', $my_id)->get();
+            $response['posts'][$key1]['follow'] = 'Follow';
+            foreach ($followers as $follo) {
+                if ($follo->follow_id == $post->user_id) {
+                    $response['posts'][$key1]['follow'] = 'Unfollow';
+                }
+            }
+
+            $taggedUserIds = json_decode($post->tagged_user_ids, true);
+            $taggedUsers = User::whereIn('id', $taggedUserIds)->get(['id', 'name']);
+            $response['posts'][$key1]['taggedUserList'] = [];
+            foreach ($taggedUsers as $key2 => $tags) {
+                $response['posts'][$key1]['taggedUserList'][$key2]['id'] = $tags->id;
+                $response['posts'][$key1]['taggedUserList'][$key2]['name'] = $tags->name;
+            }
+        }
+
+        $friendships = FriendshipsQuery::importantForUser($user_id)->get();
+        // $user = User::where('id', $user_id)->first();
+
+        $response['friends'] = [];
+
+        // $friend_list = User::whereIn('id', $friend)->get();
+        foreach ($friendships as $key => $friend) {
+            $profile_id = $friend->requester == $user_id ? $friend->accepter : $friend->requester;
+            $user = User::find($profile_id);
+
+            $followers = Follower::where('user_id', $my_id)->get();
+            $response['friends'][$key]['follow'] = 'Follow';
+            foreach ($followers as $follo) {
+                if ($follo->follow_id == $profile_id) {
+                    $response['friends'][$key]['follow'] = 'Unfollow';
+                }
+            }
+
+            // $user = User::where('id', $friend->id)->first();
+            $response['friends'][$key]['friend_id'] = $user->id;
+            $response['friends'][$key]['name'] = $user->name;
+            $response['friends'][$key]['photo'] = get_user_images($user->id, 'optimized');
+            $response['friends'][$key]['cover_photo'] = get_cover_photos($user->id, 'optimized');
+        }
+
+        return response($response, 200);
     }
 
     public function edit_profile(Request $request)
@@ -2173,6 +2134,31 @@ class ApiController extends Controller
         }
 
         return response()->json($response);
+    }
+
+    public function profile_videos(Request $request): JsonResponse
+    {
+        $user = $request->user('sanctum');
+        if (! $user instanceof User) {
+            return response()->json([]);
+        }
+
+        $videos = MediaFile::query()
+            ->where('user_id', $user->id)
+            ->ofType(MediaFileType::Video)
+            ->whereNull('story_id')
+            ->whereNull('page_id')
+            ->whereNull('album_id')
+            ->whereNull('product_id')
+            ->whereNull('chat_id')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (MediaFile $video): array => [
+                'post_id' => $video->post_id,
+                'video' => get_post_videos($video->file_name),
+            ]);
+
+        return response()->json($videos);
     }
 
     public function other_profile_photos(Request $request, $id)
@@ -2458,52 +2444,29 @@ class ApiController extends Controller
         return $response;
     }
 
-    // public function comment_reaction(Request $request)
-    // {
-    //     $token = $request->bearerToken();
-    //     $response = array();
+    public function comment_reaction(Request $request): JsonResponse
+    {
+        $user = $request->user('sanctum');
+        if (! $user instanceof User) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
 
-    //     if (isset($token) && $token != '') {
-    //         try {
-    //             $comment_id = $request->comment_id; // Get the post_id from the request
-    //             $user_id = auth('sanctum')->user()->id; // Get the current authenticated user's id
-    //             $reactionValue = $request->react; // Get the reaction value from the request
+        $comment = Comments::query()->where('comment_id', $request->comment_id)->first();
+        if (! $comment instanceof Comments) {
+            return response()->json(['error' => 'Comment not found'], 404);
+        }
 
-    //             // Retrieve the post from the database
-    //             $comment = Comments::where('comment_id', $comment_id)->first();
+        $userReacts = json_decode((string) $comment->user_reacts, true) ?: [];
+        if ($request->react === 'none') {
+            unset($userReacts[$user->id]);
+        } else {
+            $userReacts[$user->id] = $request->react;
+        }
 
-    //             // Check if the post exists
-    //             if ($comment) {
-    //                 // Ensure user_reacts is initialized properly
-    //                 $userReacts = json_decode($comment->user_reacts, true);
+        $comment->update(['user_reacts' => json_encode($userReacts)]);
 
-    //                 // Remove the user's reaction if the reaction is "none"
-    //                 if ($reactionValue === "none") {
-    //                     unset($userReacts[$user_id]);
-    //                 } else {
-    //                     // Update the user's reaction
-    //                     $userReacts[$user_id] = $reactionValue;
-    //                 }
-
-    //                 // Update the user_reacts column in the database
-    //                 $comment->update(['user_reacts' => json_encode($userReacts)]);
-
-    //                 // Return the updated array
-    //                 $response = $userReacts;
-    //                 return response()->json($response, 200);
-    //             } else {
-    //                 // Handle the case where the post does not exist
-    //                 return response()->json(['error' => 'Comment not found'], 404);
-    //             }
-    //         } catch (\Exception $e) {
-    //             // Handle database errors
-    //             return response()->json(['error' => $e->getMessage()], 500);
-    //         }
-    //     } else {
-    //         // Handle invalid or missing token
-    //         return response()->json(['error' => 'Unauthorized'], 401);
-    //     }
-    // }
+        return response()->json($userReacts);
+    }
 
     // public function get_comment(Request $request)
     // {
@@ -2711,21 +2674,23 @@ class ApiController extends Controller
         return response()->json($response); // Return as JSON response
     }
 
-    public function comment_delete(Request $request, $comment_id)
+    public function comment_delete(Request $request, DeleteCommentAction $deleteComment, $comment_id)
     {
-        $token = $request->bearerToken();
-        $response = [];
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-
-            $done = Comments::where('comment_id', $comment_id)->delete();
-            if ($done) {
-                $response = ['alertMessage' => get_phrase('Comment Deleted Successfully'), 'fadeOutElem' => '#comment_'.$comment_id];
-            }
+        if (! $user instanceof User) {
+            return [];
         }
 
-        return $response;
+        $comment = Comments::query()->find($comment_id);
+
+        if (! $comment instanceof Comments) {
+            return [];
+        }
+
+        Gate::forUser($user)->authorize('delete', $comment);
+
+        return $deleteComment->handle($comment, $user);
     }
 
     public function groups(Request $request)
@@ -3085,6 +3050,26 @@ class ApiController extends Controller
         } else {
             $response['success'] = false;
             $response['message'] = 'Invalid token.';
+        }
+
+        return $response;
+    }
+
+    public function groups_join_remove(Request $request, $id)
+    {
+        $response = [];
+        $user = $request->user('sanctum');
+
+        if ($user instanceof User) {
+            $deleted = GroupMember::query()
+                ->where('group_id', $id)
+                ->where('user_id', $user->id)
+                ->delete();
+
+            $response['success'] = $deleted > 0;
+            $response['message'] = $deleted > 0
+                ? 'Group Joining Canceled'
+                : 'does not find out';
         }
 
         return $response;
@@ -3612,53 +3597,52 @@ class ApiController extends Controller
 
     public function page_delete(Request $request, $id)
     {
-        $token = $request->bearerToken();
         $response = [];
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            // Check if the page exists
-            $page = Page::find($id);
-            if (! $page) {
-                $response['success'] = false;
-                $response['message'] = 'Page not found';
+        abort_unless($user instanceof User, 401);
 
-                return response()->json($response);
-            }
+        // Check if the page exists
+        $page = Page::find($id);
+        if (! $page) {
+            $response['success'] = false;
+            $response['message'] = 'Page not found';
 
-            // Attempt to delete the page likes associated with the page
-            $pagelike_remove = PageLike::where('page_id', $id)->delete();
+            return response()->json($response);
+        }
 
-            // Determine if there were associated likes and delete the page accordingly
-            if ($pagelike_remove !== false) {
-                $page_delete = $page->delete();
+        abort_unless(Gate::forUser($user)->allows('delete', $page), 403);
 
-                // Check if the page was deleted successfully
-                if ($page_delete) {
-                    // Delete associated files (cover photo and logo) only if page deletion is successful
-                    $imagename = $page->coverphoto;
-                    $logoname = $page->logo;
+        // Attempt to delete the page likes associated with the page
+        $pagelike_remove = PageLike::where('page_id', $id)->delete();
 
-                    if ($imagename && File::exists(public_path('storage/pages/coverphoto/'.$imagename))) {
-                        File::delete(public_path('storage/pages/coverphoto/'.$imagename));
-                    }
+        // Determine if there were associated likes and delete the page accordingly
+        if ($pagelike_remove !== false) {
+            $page_delete = $page->delete();
 
-                    if ($logoname && File::exists(public_path('storage/pages/logo/'.$logoname))) {
-                        File::delete(public_path('storage/pages/logo/'.$logoname));
-                    }
+            // Check if the page was deleted successfully
+            if ($page_delete) {
+                // Delete associated files (cover photo and logo) only if page deletion is successful
+                $imagename = $page->coverphoto;
+                $logoname = $page->logo;
 
-                    $response['success'] = true;
-                    $response['message'] = 'Page and associated likes deleted successfully';
-                } else {
-                    $response['success'] = false;
-                    $response['message'] = 'Failed to delete the page';
+                if ($imagename && File::exists(public_path('storage/pages/coverphoto/'.$imagename))) {
+                    File::delete(public_path('storage/pages/coverphoto/'.$imagename));
                 }
+
+                if ($logoname && File::exists(public_path('storage/pages/logo/'.$logoname))) {
+                    File::delete(public_path('storage/pages/logo/'.$logoname));
+                }
+
+                $response['success'] = true;
+                $response['message'] = 'Page and associated likes deleted successfully';
             } else {
                 $response['success'] = false;
-                $response['message'] = 'Failed to delete associated page likes';
+                $response['message'] = 'Failed to delete the page';
             }
         } else {
             $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            $response['message'] = 'Failed to delete associated page likes';
         }
 
         return response()->json($response);
@@ -3695,27 +3679,28 @@ class ApiController extends Controller
         // return json_encode($response);
         return response()->json($response);
     }
-    // public function page_dislike(Request $request, $id)
-    // {
-    //     $token = $request->bearerToken();
-    //     $response = array();
 
-    //     if (isset($token) && $token != '') {
-    //         $pagelike_remove = PageLike::where('page_id', $id)->delete();
-    //         if ($pagelike_remove) {
-    //             $response['success'] = true;
-    //             $response['message'] = 'Page disliked successfully';
-    //         } else {
-    //             $response['success'] = false;
-    //             $response['message'] = 'Failed to dislike the page';
-    //         }
+    public function page_dislike(Request $request, $id): JsonResponse
+    {
+        $user = $request->user('sanctum');
+        if (! $user instanceof User) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access',
+            ]);
+        }
 
-    //     } else {
-    //         $response['success'] = false;
-    //         $response['message'] = 'Unauthorized access';
-    //     }
-    //     return response()->json($response);
-    // }
+        $deleted = PageLike::query()
+            ->where('page_id', $id)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        return response()->json([
+            'success' => $deleted > 0,
+            'message' => $deleted > 0 ? 'Page disliked successfully' : 'Failed to dislike the page',
+        ]);
+    }
+
     public function pages_create(Request $request)
     {
         $token = $request->bearerToken();
@@ -5786,7 +5771,11 @@ class ApiController extends Controller
         $response = [];
 
         if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
+            $user = $request->user('sanctum');
+            if (! $user instanceof User) {
+                return response()->json($response);
+            }
+
             $request->validate([
                 'title' => 'required|max:255',
                 'category' => 'required',
@@ -5799,7 +5788,7 @@ class ApiController extends Controller
             }
 
             $blog = new Blog;
-            $blog->user_id = $user_id;
+            $blog->user_id = $user->id;
             $blog->title = $request->title;
             $blog->category_id = $request->category;
 
@@ -5836,61 +5825,58 @@ class ApiController extends Controller
 
     public function update_blogs(Request $request, $id)
     {
-        $token = $request->bearerToken();
         $response = [];
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            $request->validate([
-                'title' => 'required|max:255',
-                'category' => 'required',
-            ]);
+        abort_unless($user instanceof User, 401);
 
-            $file_name = null;
-            if ($request->image && ! empty($request->image)) {
-                $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
-                FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
+        $request->validate([
+            'title' => 'required|max:255',
+            'category' => 'required',
+        ]);
+
+        $file_name = null;
+        if ($request->image && ! empty($request->image)) {
+            $file_name = FileUploader::upload($request->image, 'public/storage/blog/thumbnail', 370);
+            FileUploader::upload($request->image, 'public/storage/blog/coverphoto/'.$file_name, 900);
+        }
+
+        $blog = Blog::query()->find($id);
+
+        abort_unless($blog instanceof Blog, 404);
+
+        abort_unless(Gate::forUser($user)->allows('update', $blog), 403);
+
+        $blogQuery = Blog::query()->whereKey($blog->getKey());
+        if ($user->user_role !== UserRole::Admin->value) {
+            $blogQuery->where('user_id', $user->id);
+        }
+
+        $blog = $blogQuery->first();
+        abort_unless($blog instanceof Blog, 403);
+
+        // store image name for delete file operation
+        $imagename = $blog->thumbnail;
+
+        $blog->title = $request->title;
+        $blog->category_id = $request->category;
+        $blog->tag = json_encode(array_filter(explode(',', $request->tag)));
+        $blog->description = $request->description;
+        if ($file_name !== null) {
+            $blog->thumbnail = $file_name;
+        }
+        $done = $blog->save();
+        if ($done) {
+            // just put the file name and folder name nothing more :)
+            if (! empty($request->image)) {
+                removeFile('blog', $imagename);
             }
 
-            $blog = Blog::find($id);
-
-            $blog->user_id = $user_id;
-            // store image name for delete file operation
-            $imagename = $blog->thumbnail;
-
-            $blog->user_id = $user_id;
-            $blog->title = $request->title;
-            $blog->category_id = $request->category;
-            // $tags = json_decode($request->tag, true);
-            // $tag_array = array();
-
-            // if (is_array($tags)) {
-            //     foreach ($tags as $key => $tag) {
-            //         $tag_array[$key] = $tag['value'];
-            //     }
-            // }
-            // $blog->tag = json_encode($tag_array);
-            $blog->tag = json_encode(array_filter(explode(',', $request->tag)));
-            $blog->description = $request->description;
-            if ($file_name !== null) {
-                $blog->thumbnail = $file_name;
-            }
-            $done = $blog->save();
-            if ($done) {
-                // just put the file name and folder name nothing more :)
-                if (! empty($request->image)) {
-                    removeFile('blog', $imagename);
-                }
-
-                $response['success'] = true;
-                $response['message'] = 'update successfully';
-            } else {
-                $response['success'] = false;
-                $response['message'] = 'Failed to update';
-            }
+            $response['success'] = true;
+            $response['message'] = 'update successfully';
         } else {
             $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            $response['message'] = 'Failed to update';
         }
 
         return $response;
@@ -5932,30 +5918,38 @@ class ApiController extends Controller
 
     public function blog_delete(Request $request, $id)
     {
-        $token = $request->bearerToken();
         $response = [];
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
+        abort_unless($user instanceof User, 401);
 
-            $blog = Blog::find($id);
-            // store image name for delete file operation
-            $imagename = $blog->thumbnail;
+        $blog = Blog::query()->find($id);
 
-            $done = $blog->delete();
-            if ($done) {
-                // just put the file name and folder name nothing more :)
-                removeFile('blog', $imagename);
+        abort_unless($blog instanceof Blog, 404);
 
-                $response['success'] = true;
-                $response['message'] = 'blog deleted successfully';
-            } else {
-                $response['success'] = false;
-                $response['message'] = 'blog not found';
-            }
+        abort_unless(Gate::forUser($user)->allows('delete', $blog), 403);
+
+        $blogQuery = Blog::query()->whereKey($blog->getKey());
+        if ($user->user_role !== UserRole::Admin->value) {
+            $blogQuery->where('user_id', $user->id);
+        }
+
+        $blog = $blogQuery->first();
+        abort_unless($blog instanceof Blog, 403);
+
+        // store image name for delete file operation
+        $imagename = $blog->thumbnail;
+
+        $done = $blog->delete();
+        if ($done) {
+            // just put the file name and folder name nothing more :)
+            removeFile('blog', $imagename);
+
+            $response['success'] = true;
+            $response['message'] = 'blog deleted successfully';
         } else {
             $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            $response['message'] = 'blog not found';
         }
 
         return $response;
@@ -6266,35 +6260,41 @@ class ApiController extends Controller
 
     public function job_delete(Request $request, $id)
     {
-        $token = $request->bearerToken();
         $response = [];
+        $user = $request->user('sanctum');
 
-        if (isset($token) && $token != '') {
-            $user_id = auth('sanctum')->user()->id;
-            $job = Job::find($id);
-            // $imagename = $job->thumbnail;
-            $job_history = DB::table('payment_histories')->where('item_id', $job->id)->delete();
-            $job_wishlist = JobWishlist::where('job_id', $job->id)->delete();
-            $job_apply = JobApply::where('job_id', $job->id)->delete();
+        abort_unless($user instanceof User, 401);
 
-            // $thumbnailPathName = public_path('storage/job/thumbnail/') . $job->thumbnail;
+        $job = Job::find($id);
 
-            // if (file_exists($thumbnailPathName)) {
-            //     unlink($thumbnailPathName);
-            // }
+        if (! $job instanceof Job) {
+            $response['success'] = false;
+            $response['message'] = 'Job not found';
 
-            $done = $job->delete();
+            return $response;
+        }
 
-            if ($done) {
-                $response['success'] = true;
-                $response['message'] = 'Job Deleted Successfully';
-            } else {
-                $response['success'] = false;
-                $response['message'] = 'Job not Deleted Successfully';
-            }
+        abort_unless((int) $job->user_id === (int) $user->id, 403);
+
+        // $imagename = $job->thumbnail;
+        $job_history = PaymentHistoryEntry::query()->where('item_id', $job->id)->delete();
+        $job_wishlist = JobWishlist::where('job_id', $job->id)->delete();
+        $job_apply = JobApply::where('job_id', $job->id)->delete();
+
+        // $thumbnailPathName = public_path('storage/job/thumbnail/') . $job->thumbnail;
+
+        // if (file_exists($thumbnailPathName)) {
+        //     unlink($thumbnailPathName);
+        // }
+
+        $done = $job->delete();
+
+        if ($done) {
+            $response['success'] = true;
+            $response['message'] = 'Job Deleted Successfully';
         } else {
             $response['success'] = false;
-            $response['message'] = 'Unauthorized access';
+            $response['message'] = 'Job not Deleted Successfully';
         }
 
         return $response;
@@ -6328,6 +6328,21 @@ class ApiController extends Controller
         }
 
         return $response;
+    }
+
+    public function job_wishlist(Request $request): JsonResponse
+    {
+        $user = $request->user('sanctum');
+        if (! $user instanceof User) {
+            return response()->json([]);
+        }
+
+        $wishlist = JobWishlist::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json($wishlist);
     }
 
     public function JobApply(Request $request, $id)

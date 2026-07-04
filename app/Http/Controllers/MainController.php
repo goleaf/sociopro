@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Comments\DeleteCommentAction;
+use App\Actions\Posts\DeletePostAction;
 use App\Enums\ContentStatus;
 use App\Enums\PostType;
 use App\Enums\Visibility;
@@ -25,6 +27,7 @@ use Firebase\JWT\JWT;
 use Illuminate\Database\Query\JoinClause;
 // For used ZOOM
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -890,16 +893,19 @@ class MainController extends Controller
         return json_encode(['reload' => 1]);
     }
 
-    public function comment_delete(Request $request)
+    public function comment_delete(Request $request, DeleteCommentAction $deleteComment)
     {
         $response = [];
         $comment_id = $request->query('comment_id');
-        $done = Comments::where('comment_id', $comment_id)->delete();
-        if ($done) {
-            $response = ['alertMessage' => get_phrase('Comment Deleted Successfully'), 'fadeOutElem' => '#comment_'.$comment_id];
+        $comment = Comments::query()->find($comment_id);
+
+        if (! $comment instanceof Comments) {
+            return json_encode($response);
         }
 
-        return json_encode($response);
+        Gate::authorize('delete', $comment);
+
+        return json_encode($deleteComment->handle($comment, $request->user()));
     }
 
     public function share_group(Request $request)
@@ -977,16 +983,19 @@ class MainController extends Controller
 
     // post delete
 
-    public function post_delete(Request $request)
+    public function post_delete(Request $request, DeletePostAction $deletePost)
     {
         $response = [];
         $post_id = $request->query('post_id');
-        $done = Posts::where('post_id', $post_id)->delete();
-        if ($done) {
-            $response = ['alertMessage' => get_phrase('Post Deleted Successfully'), 'fadeOutElem' => '#postIdentification'.$post_id];
+        $post = Posts::query()->find($post_id);
+
+        if (! $post instanceof Posts) {
+            return json_encode($response);
         }
 
-        return json_encode($response);
+        Gate::authorize('delete', $post);
+
+        return json_encode($deletePost->handle($post, $request->user()));
     }
 
     public function custom_shared_post_view($id)

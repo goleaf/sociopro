@@ -3,14 +3,14 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | Legacy Install Schema Dump
+    | Install Bootstrap Defaults
     |--------------------------------------------------------------------------
     |
-    | The legacy installer imports this dump when creating the baseline schema.
-    | Keep the default outside the public web root so web servers cannot expose
-    | the dump as a static asset.
+    | Installer bootstrap now runs through Laravel migrations and seeders.
+    | This legacy SQL path is retained only for exceptional manual import
+    | workflows when explicitly set by environment.
     |
     */
 
-    'schema_dump_path' => env('INSTALL_SCHEMA_DUMP_PATH') ?: database_path('schema/install.sql'),
+    'schema_dump_path' => env('INSTALL_SCHEMA_DUMP_PATH'),
 ];

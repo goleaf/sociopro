@@ -10,7 +10,7 @@ This file summarizes the reviewable senior-quality slice landed for the broad mo
 - Laravel: 13.18.0.
 - Composer: 2.9.5.
 - Node / npm: Node 22.22.3 / npm 10.9.8.
-- Frontend: Laravel Mix / Webpack, not Vite.
+- Frontend: Vite with SCSS.
 - Database: SQLite local/test default; production-oriented schema still comes from `database/schema/install.sql` plus additive migrations.
 - Tests/tools: PHPUnit 12, Laravel Pint, Larastan/PHPStan, Rector, ESLint, Stylelint, Prettier.
 - CI: GitHub Actions workflow at `.github/workflows/ci.yml`.
@@ -33,7 +33,7 @@ This file summarizes the reviewable senior-quality slice landed for the broad mo
   - `composer quality:cache`
   - `composer ci`
 - npm scripts now expose `npm run quality`.
-- CI runs Composer validation/audit, Pint, PHPStan/Larastan, PHPUnit, cache smoke checks, route list, migration fresh, ESLint, Stylelint, Prettier check, and Mix production build.
+- CI runs Composer validation/audit, Pint, PHPStan/Larastan, PHPUnit, cache smoke checks, route list, migration fresh, ESLint, Stylelint, Prettier check, and frontend production build.
 
 ## Backend Architecture Changes
 
@@ -50,7 +50,7 @@ This file summarizes the reviewable senior-quality slice landed for the broad mo
 ## Frontend Changes
 
 - No visual UI redesign was introduced.
-- Frontend build documentation now reflects Laravel Mix / Webpack, not Vite.
+- Frontend build documentation now reflects Vite and the shared SCSS entrypoint.
 - PR and workflow docs require Blade accessibility and escaped-output review for frontend changes.
 
 ## Security Improvements
@@ -102,7 +102,7 @@ This file summarizes the reviewable senior-quality slice landed for the broad mo
 - CSP still allows temporary legacy compatibility sources such as `'unsafe-inline'`, `'unsafe-eval'`, and broad HTTPS provider access.
 - Payment callback signature and idempotency coverage remains incomplete.
 - Legacy install SQL remains part of the schema baseline.
-- Full npm dev dependency audit remains tied to Laravel Mix/Webpack-era packages; runtime audit should still be reviewed before release.
+- Full npm dependency audit should be reviewed after build-tool or browser dependency changes; runtime audit remains part of release review.
 
 See `docs/known-technical-debt.md` for the priority register.
 
@@ -116,5 +116,5 @@ See `docs/known-technical-debt.md` for the priority register.
 6. Design a private media access layer for non-public attachments before moving any public file contract.
 7. Produce a schema comparison between `database/schema/install.sql`, migrations, and production database structure.
 8. Migrate one legacy admin module from inline controller validation to Form Request + action + policy.
-9. Plan a Mix-to-Vite migration with asset manifest, Blade directive, CI, and rollback coverage.
+9. Continue moving legacy public theme/vendor scripts into Vite-managed modules one route at a time.
 10. Add a restore-test automation plan for database plus public/private media artifacts.

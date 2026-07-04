@@ -20,7 +20,7 @@ Ownership means responsibility for review and safety, not exclusive permission. 
 | Owner area | Primary responsibility | Typical reviewer focus |
 | --- | --- | --- |
 | Backend | Laravel application behavior, controllers, models, actions, queries, mail, providers, middleware | Behavior preservation, authorization, validation, Eloquent usage, service boundaries |
-| Frontend | Blade views, Laravel Mix entrypoints, public theme assets, accessibility | Escaped output, no Blade queries, accessibility, asset compatibility, UI regressions |
+| Frontend | Blade views, Vite/SCSS entrypoints, public theme assets, accessibility | Escaped output, no Blade queries, accessibility, asset compatibility, UI regressions |
 | Database | Schema, seed/import flow, factories, model-table contracts | Migration safety, indexes, dump compatibility, data integrity, rollback |
 | DevOps | Runtime config, Composer/npm/build, cache/deploy entrypoints, server bootstrap | Dependency safety, environment config, build/deploy commands, cache behavior |
 | Security | Auth, middleware, policies/gates, secrets, payment/provider boundaries, upload boundaries | Access control, secret handling, mass assignment, raw SQL, CSRF, callbacks |
@@ -77,13 +77,12 @@ Primary paths:
 - `resources/views/**`
 - `resources/js/app.js`
 - `resources/js/bootstrap.js`
-- `resources/css/app.css`
-- `webpack.mix.js`
+- `resources/scss/app.scss`
+- `vite.config.js`
+- `postcss.config.cjs`
 - `public/assets/frontend/**`
 - `public/assets/backend/**`
 - `public/assets/payment/**`
-- `public/css/app.css`
-- `public/js/app.js`
 - `public/js/share.js`
 
 High-risk frontend files:
@@ -101,7 +100,7 @@ High-risk frontend files:
 Frontend files that should not be modified casually:
 
 - Compiled/vendor-like public bundles such as Bootstrap, Summernote, CKEditor, DataTables, Plyr, Leaflet, and bundled addon assets. Treat these as vendor upgrades or build artifacts with explicit review.
-- `public/css/app.css`, `public/js/app.js`, and `public/js/share.js` unless the build process and source changes are understood.
+- `public/js/share.js` unless the build process and source changes are understood.
 - Blade templates that currently contain queries, provider configuration, inline scripts, or route calls to optional addon routes.
 - Payment provider views under `resources/views/payment/**`.
 
@@ -161,7 +160,8 @@ Primary paths:
 - `composer.lock`
 - `package.json`
 - `package-lock.json`
-- `webpack.mix.js`
+- `vite.config.js`
+- `postcss.config.cjs`
 - `phpunit.xml`
 - `pint.json`
 - `.env.example`
@@ -179,7 +179,7 @@ High-risk DevOps files:
 
 - `composer.json` and `composer.lock`: PHP dependency graph, package discovery, autoloaded helpers.
 - `package.json` and `package-lock.json`: frontend build/dependency graph.
-- `webpack.mix.js`: current build tool entrypoint; Vite is not currently installed.
+- `vite.config.js`: current build tool entrypoint.
 - `.env.example`: public environment contract.
 - `config/app.php`: providers, aliases, helper-loaded package behavior.
 - `config/database.php`, `config/filesystems.php`, `config/mail.php`, `config/services.php`, `config/session.php`, `config/queue.php`, `config/sanctum.php`: runtime integration/security behavior.
@@ -190,13 +190,13 @@ DevOps files that should not be modified casually:
 - Lock files unless the task is explicitly a dependency/build update.
 - `.env.example` without matching `config()` usage and documentation.
 - Runtime config files without cache/deploy verification notes.
-- `webpack.mix.js` without verifying asset build output expectations.
+- `vite.config.js` or `postcss.config.cjs` without verifying asset build output expectations.
 - `phpunit.xml` without understanding test database and environment effects.
 
 DevOps review requirements:
 
 - Dependency changes require `composer validate --strict` or relevant npm build/audit checks when safe.
-- Build-tool changes require `npm run production` when feasible.
+- Build-tool changes require `npm run build` when feasible.
 - Config/cache-sensitive changes require deployment notes for `config:cache`, `route:cache`, `view:cache`, and cache clearing.
 
 ## Security Ownership
@@ -392,9 +392,9 @@ These files require a clear task, tests or verification, and owner-aware review:
 - Security/runtime files: `app/Http/Kernel.php`, `app/Http/Middleware/**`, `app/Providers/AuthServiceProvider.php`, `app/Providers/RouteServiceProvider.php`, `app/Providers/ViewServiceProvider.php`.
 - Payment/provider files: `app/Models/payment_gateway/**`, `config/paypal.php`, `resources/views/payment/**`, `routes/payment.php`.
 - Database bootstrap files: `database/schema/install.sql`, `database/seeders/DatabaseSeeder.php`, `database/migrations/**`, install actions under `app/Actions/Install/**`.
-- Dependency/build files: `composer.json`, `composer.lock`, `package.json`, `package-lock.json`, `webpack.mix.js`, `phpunit.xml`, `pint.json`.
+- Dependency/build files: `composer.json`, `composer.lock`, `package.json`, `package-lock.json`, `vite.config.js`, `postcss.config.cjs`, `phpunit.xml`, `pint.json`.
 - Runtime config: `.env.example`, `config/app.php`, `config/database.php`, `config/filesystems.php`, `config/mail.php`, `config/services.php`, `config/session.php`, `config/queue.php`, `config/sanctum.php`.
-- Public/vendor-like assets: Bootstrap, Summernote, CKEditor, DataTables, Plyr, Leaflet, paid-content/fundraiser bundles, compiled `public/css/app.css`, compiled `public/js/app.js`.
+- Public/vendor-like assets: Bootstrap, Summernote, CKEditor, DataTables, Plyr, Leaflet, paid-content/fundraiser bundles, and standalone `public/js/share.js`.
 - Project contracts: `AGENTS.md`, `docs/project-standards-bible.md`, `docs/refactor-definition-of-done.md`, `docs/risk-register.md`, `docs/module-inventory.md`, `docs/architecture-map.md`.
 
 ## Multi-Owner Review Rules
@@ -404,7 +404,7 @@ Use multi-owner review when a change crosses boundaries:
 - Backend + Security: any authorization, account state, admin, API, payment, upload, route method, or callback change.
 - Backend + Database: models, scopes, relationships, migrations, SQL dump import, seeders, table mappings.
 - Frontend + Security: Blade actions, forms, unescaped output, provider config exposure, admin visibility, payment views.
-- Frontend + DevOps: Mix/Webpack changes, compiled assets, public vendor/theme bundles.
+- Frontend + DevOps: Vite/build changes, generated assets, public vendor/theme bundles.
 - DevOps + Security: config, `.env.example`, services, mail, filesystem, session, queue, Sanctum, CORS.
 - Testing + any owner: tests changed to match behavior changes, especially where regressions are possible.
 - Shared Architecture + any owner: routes, providers, helpers, view models, or docs that affect multiple modules.

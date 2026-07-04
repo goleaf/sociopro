@@ -26,7 +26,7 @@ class StorePostMediaFilesAction
                 $fileType = 'image';
             }
 
-            $createdAt = time();
+            $createdAt = now()->toDateTimeString();
             $mediaFileData = [
                 'user_id' => $user->id,
                 'post_id' => $postId,

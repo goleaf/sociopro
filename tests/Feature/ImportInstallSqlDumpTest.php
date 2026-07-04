@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Jobs\ImportInstallSqlDumpJob;
 use App\Models\User;
 use Illuminate\Database\SQLiteConnection;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -38,6 +39,7 @@ class ImportInstallSqlDumpTest extends TestCase
         Config::set('database.connections.sqlite.database', $this->databasePath);
 
         DB::purge('sqlite');
+        Artisan::call('migrate:fresh', ['--force' => true]);
     }
 
     protected function tearDown(): void

@@ -22,8 +22,8 @@ This document inventories the business modules and feature surfaces found in the
 - Events/listeners: no custom `app/Events` or `app/Listeners` directories detected. `EventServiceProvider` only maps Laravel's `Registered` event to email verification notification.
 - Policies: no `app/Policies` directory detected and `AuthServiceProvider` has no policy mappings.
 - Services: no `app/Services` directory detected.
-- Frontend build: Laravel Mix / Webpack. `resources/js/app.js`, `resources/js/bootstrap.js`, and `resources/css/app.css` are the build entrypoints. No `vite.config.*` exists.
-- SCSS: no `resources/scss` or `resources/sass` directory exists. Legacy SCSS lives under `public/assets/backend/css`, `public/assets/backend/sass/_base.zip`, and fundraiser public asset folders.
+- Frontend build: Vite with SCSS. `resources/js/app.js`, `resources/js/bootstrap.js`, and `resources/scss/app.scss` are the first-party build entrypoints.
+- SCSS: `resources/scss/app.scss` is the first-party compiled style entrypoint. Legacy SCSS/CSS also remains under `public/assets/backend/css`, `public/assets/backend/sass/_base.zip`, and fundraiser public asset folders.
 - Shared frontend assets: Bootstrap, jQuery, SweetAlert2, CKEditor/Summernote, DataTables, Owl Carousel, Venobox, Plyr, Leaflet, Tagify, rich text/date/time picker assets, uploader scripts, toaster assets, and addon-specific paid-content/fundraiser bundles.
 
 ## Module Summary
@@ -64,7 +64,7 @@ This document inventories the business modules and feature surfaces found in the
 - Migrations: legacy lookup index migration covers several API-heavy tables; no API-specific migrations.
 - Views: none directly; JSON response surface.
 - JS: none directly.
-- SCSS: none.
+- SCSS: none directly; shared compiled styles enter through `resources/scss/app.scss`.
 - Jobs: none.
 - Events/listeners: uses Laravel auth `Registered` event in signup flow; no module-specific custom event/listener.
 - Policies: none.
@@ -82,7 +82,7 @@ This document inventories the business modules and feature surfaces found in the
 - Migrations: lookup indexes for `account_active_requests`; no user-table migration in source.
 - Views: `resources/views/auth/*`, `resources/views/frontend/disable_view.blade.php`, `resources/views/backend/admin/users/*`.
 - JS: shared auth/frontend/backend scripts only; no module-specific source entrypoint.
-- SCSS: auth uses public frontend/authentication theme assets; no tracked `resources/scss`.
+- SCSS: auth uses public frontend/authentication theme assets plus the shared Vite SCSS entrypoint.
 - Jobs: none.
 - Events/listeners: Laravel `Registered` event to email verification notification.
 - Policies: none.

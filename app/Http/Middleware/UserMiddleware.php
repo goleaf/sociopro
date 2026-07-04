@@ -2,8 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\UserAccountStatus;
-use App\Enums\UserRole;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -22,9 +20,8 @@ class UserMiddleware
             return redirect()->route('login');
         }
 
-        $isActiveGeneralUser = $user->user_role === UserRole::General->value
-            && (int) $user->status === UserAccountStatus::Active->value;
-        $isAdmin = $user->user_role === UserRole::Admin->value;
+        $isActiveGeneralUser = $user->isGeneralUser() && $user->hasActiveAccount();
+        $isAdmin = $user->isAdmin();
 
         if ($isActiveGeneralUser || $isAdmin) {
             return $next($request);

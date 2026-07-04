@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Actions\Install\CheckInstallRequirements;
 use App\Actions\Install\ConfigureDatabase;
 use App\Actions\Install\FinalizeInstallation;
-use App\Actions\Install\ImportInstallSqlDump;
 use App\Actions\Install\PrepareDatabaseConnection;
 use App\Http\Requests\Install\FinalizeInstallationRequest;
 use App\Http\Requests\Install\PrepareDatabaseConnectionRequest;
@@ -15,6 +14,7 @@ use DateTimeZone;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 class InstallController extends Controller
@@ -142,20 +142,19 @@ class InstallController extends Controller
         return view('install.install');
     }
 
-    public function confirmInstall(ImportInstallSqlDump $importInstallSqlDump)
+    public function confirmInstall()
     {
-        // run sql
-        $this->importInstallSql($importInstallSqlDump);
+        // Bootstrap schema through Laravel migrations + seeders.
+        $this->runInstallBootstrap();
 
         // redirect to admin creation page
         return redirect()->route('install.finalizing');
     }
 
-    private function importInstallSql(ImportInstallSqlDump $importInstallSqlDump): void
+    private function runInstallBootstrap(): void
     {
         $this->configureDatabase();
-
-        $importInstallSqlDump->handle((string) config('install.schema_dump_path'));
+        Artisan::call('migrate:fresh', ['--force' => true, '--seed' => true]);
     }
 
     private function configureDatabase(): void

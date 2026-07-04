@@ -2,14 +2,14 @@
 
 Generated: 2026-07-02
 
-These standards define the foundation for future refactors in this Laravel project. The current stack is Laravel 13, PHP `^8.3`, PHPUnit 12, Laravel Pint, Larastan/PHPStan level 1, Laravel Mix/Webpack, ESLint, Stylelint, and Prettier. Do not add incompatible tools without first proving they support the installed versions.
+These standards define the foundation for future refactors in this Laravel project. The current stack is Laravel 13, PHP `^8.3`, PHPUnit 12, Laravel Pint, Larastan/PHPStan level 1, Vite, SCSS, ESLint, Stylelint, and Prettier. Do not add incompatible tools without first proving they support the installed versions.
 
 ## Required Gates
 
 - Run `composer quality` before committing changes that touch PHP, Blade, configuration, tests, or frontend assets.
 - Run `composer ci` before larger refactor or release work after installing both Composer and npm dependencies.
 - Run `npm run quality` directly when only frontend source changed.
-- Keep `vendor/bin/pint --test`, `composer analyse`, `php artisan test`, `npm run lint`, `npm run stylelint`, `npm run format:check`, and `npm run production` passing.
+- Keep `vendor/bin/pint --test`, `composer analyse`, `php artisan test`, `npm run lint`, `npm run stylelint`, `npm run format:check`, and `npm run build` passing.
 - Do not hide failing checks. If a legacy issue cannot be fixed safely in the current scope, document it in `docs/quality-known-failures.md`.
 
 ## Behavior And Testing
@@ -61,7 +61,7 @@ These standards define the foundation for future refactors in this Laravel proje
 - Avoid deep specificity, ID selectors for styling, and new `!important` rules.
 - Keep JavaScript in ES modules when practical. Avoid globals, inline handlers, `eval`, `Function`, unsafe `innerHTML`, `console.log`, and `debugger`.
 - AJAX and fetch calls must include CSRF for web routes and handle loading, success, validation, and network failure states.
-- This project uses Laravel Mix/Webpack. Do not assume Vite is available unless a dedicated migration adds it.
+- First-party compiled assets use Vite. Do not reintroduce Laravel Mix/Webpack.
 
 ## Repository Hygiene
 
@@ -69,4 +69,4 @@ These standards define the foundation for future refactors in this Laravel proje
 - Stage only files that belong to the task.
 - Preserve `.gitkeep` and `.gitignore` placeholders required for Laravel storage/cache directories.
 - Do not commit generated caches, local uploads, logs, `.env` files, or dependency directories.
-- Existing tracked compiled assets under `public/css`, `public/js`, and `public/mix-manifest.json` are a legacy deployment contract. Do not remove them without a deployment plan.
+- Vite build output under `public/build` is generated and ignored by git. Keep deploy packaging responsible for running `npm run build` or publishing a build artifact.

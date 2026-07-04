@@ -43,6 +43,6 @@ class EnsureValidApiBearerToken
 
     private function unauthorized(): JsonResponse
     {
-        return ApiErrorResponse::authentication(transportStatus: Response::HTTP_OK);
+        return ApiErrorResponse::authentication();
     }
 }

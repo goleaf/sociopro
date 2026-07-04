@@ -47,6 +47,22 @@ class RouteAuditTest extends TestCase
         }
     }
 
+    public function test_registered_controller_routes_resolve_to_callable_handlers(): void
+    {
+        foreach (Route::getRoutes() as $route) {
+            $action = $route->getActionName();
+
+            if (! str_contains($action, '@')) {
+                continue;
+            }
+
+            [$class, $method] = explode('@', $action, 2);
+
+            $this->assertTrue(class_exists($class), "{$route->methods()[0]} {$route->uri()} references missing controller {$class}.");
+            $this->assertTrue(method_exists($class, $method), "{$route->methods()[0]} {$route->uri()} references missing handler {$class}::{$method}.");
+        }
+    }
+
     public function test_clear_cache_route_requires_admin_authentication(): void
     {
         $this->get(route('system.clear-cache'))

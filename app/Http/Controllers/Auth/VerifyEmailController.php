@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Account\ActivateUserAccountAction;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Verified;
@@ -10,6 +11,8 @@ use Illuminate\Http\RedirectResponse;
 
 class VerifyEmailController extends Controller
 {
+    public function __construct(private readonly ActivateUserAccountAction $activateUserAccount) {}
+
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
@@ -17,6 +20,7 @@ class VerifyEmailController extends Controller
         }
 
         if ($request->user()->markEmailAsVerified()) {
+            $this->activateUserAccount->handle($request->user());
             event(new Verified($request->user()));
         }
 

@@ -135,7 +135,7 @@ Risk labels describe implementation risk:
 - [ ] **High risk**: Update forms for destructive actions to use CSRF-protected methods matching route changes.
 - [ ] **Medium risk**: Replace repeated Blade fragments with anonymous or class-based components for buttons, cards, modals, media rows, alerts, and empty states.
 - [ ] **Medium risk**: Ensure controllers pass preloaded view data, DTOs, or ViewModels instead of letting views pull models directly.
-- [ ] **Medium risk**: Audit frontend dependency vulnerabilities caused by Laravel Mix/Webpack and plan migration to supported tooling.
+- [ ] **Medium risk**: Audit frontend dependency vulnerabilities and legacy public assets now that first-party assets use Vite.
 - [ ] **Medium risk**: Add explicit empty states with `@forelse` where lists can be empty.
 - [ ] **Small risk**: Use named routes for all internal links and form actions.
 - [ ] **Small risk**: Add view tests for high-risk pages after moving query logic out of Blade.
