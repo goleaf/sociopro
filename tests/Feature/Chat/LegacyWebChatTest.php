@@ -107,16 +107,21 @@ class LegacyWebChatTest extends TestCase
             'id' => $thread->id,
             'sender_id' => $sender->id,
             'reciver_id' => $receiver->id,
+            'receiver_id' => $receiver->id,
             'chatcenter' => 'chat',
+            'chat_center' => 'chat',
         ]);
 
         $this->assertDatabaseHas('chats', [
             'id' => $chat->id,
             'sender_id' => $sender->id,
             'reciver_id' => $receiver->id,
+            'receiver_id' => $receiver->id,
             'message' => 'First legacy message',
             'message_thrade' => $thread->id,
+            'message_thread_id' => $thread->id,
             'chatcenter' => 'chat',
+            'chat_center' => 'chat',
             'thumbsup' => 1,
             'file' => '1',
         ]);
@@ -170,9 +175,12 @@ class LegacyWebChatTest extends TestCase
         $this->assertDatabaseHas('chats', [
             'sender_id' => $receiver->id,
             'reciver_id' => $sender->id,
+            'receiver_id' => $sender->id,
             'message' => 'Second direction',
             'message_thrade' => $thread->id,
+            'message_thread_id' => $thread->id,
             'chatcenter' => 'chat',
+            'chat_center' => 'chat',
         ]);
     }
 

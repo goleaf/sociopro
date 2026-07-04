@@ -19,18 +19,22 @@ class MessageThreadFactory extends Factory
     public function definition(): array
     {
         return [
-            'sender_id' => User::factory(),
-            'receiver_id' => User::factory(),
-            'chat_center' => 'chat',
+            MessageThread::SENDER_ID_COLUMN => User::factory(),
+            MessageThread::LEGACY_RECEIVER_ID_COLUMN => User::factory(),
+            MessageThread::RECEIVER_ID_COLUMN => fn (array $attributes): mixed => $attributes[MessageThread::LEGACY_RECEIVER_ID_COLUMN],
+            MessageThread::LEGACY_CHAT_CENTER_COLUMN => 'chat',
+            MessageThread::CHAT_CENTER_COLUMN => 'chat',
         ];
     }
 
     public function between(User $sender, User $receiver): static
     {
         return $this->state([
-            'sender_id' => $sender->id,
-            'receiver_id' => $receiver->id,
-            'chat_center' => 'chat',
+            MessageThread::SENDER_ID_COLUMN => $sender->id,
+            MessageThread::LEGACY_RECEIVER_ID_COLUMN => $receiver->id,
+            MessageThread::RECEIVER_ID_COLUMN => $receiver->id,
+            MessageThread::LEGACY_CHAT_CENTER_COLUMN => 'chat',
+            MessageThread::CHAT_CENTER_COLUMN => 'chat',
         ]);
     }
 }

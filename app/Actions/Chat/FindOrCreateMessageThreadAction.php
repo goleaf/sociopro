@@ -20,7 +20,9 @@ class FindOrCreateMessageThreadAction
         return MessageThread::create([
             MessageThread::SENDER_ID_COLUMN => $sender->id,
             MessageThread::LEGACY_RECEIVER_ID_COLUMN => $receiver->id,
+            MessageThread::RECEIVER_ID_COLUMN => $receiver->id,
             MessageThread::LEGACY_CHAT_CENTER_COLUMN => $chatCenter,
+            MessageThread::CHAT_CENTER_COLUMN => $chatCenter,
         ]);
     }
 }

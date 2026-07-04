@@ -20,8 +20,11 @@ class StoreChatMessageAction
         $chat = new Chat;
         $chat->setAttribute(Chat::SENDER_ID_COLUMN, $sender->id);
         $chat->setAttribute(Chat::LEGACY_RECEIVER_ID_COLUMN, $receiver->id);
+        $chat->setAttribute(Chat::RECEIVER_ID_COLUMN, $receiver->id);
         $chat->setAttribute(Chat::LEGACY_MESSAGE_THREAD_ID_COLUMN, $messageThread->id);
+        $chat->setAttribute(Chat::MESSAGE_THREAD_ID_COLUMN, $messageThread->id);
         $chat->setAttribute(Chat::LEGACY_CHAT_CENTER_COLUMN, $chatCenter);
+        $chat->setAttribute(Chat::CHAT_CENTER_COLUMN, $chatCenter);
         $chat->message = $message;
         $chat->thumbsup = $thumbsup;
         $chat->file = $file;

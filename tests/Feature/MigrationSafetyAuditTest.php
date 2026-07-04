@@ -87,6 +87,82 @@ class MigrationSafetyAuditTest extends TestCase
         $this->assertIndexesExist($this->expectedLegacyRelationshipIndexes());
     }
 
+    public function test_clean_chat_thread_columns_are_backfilled_idempotently_and_reversible(): void
+    {
+        $migration = require database_path('migrations/2026_07_04_120000_add_clean_chat_thread_columns_for_legacy_compatibility.php');
+
+        $migration->down();
+        $this->assertFalse(Schema::hasColumn('message_thrades', 'receiver_id'));
+        $this->assertFalse(Schema::hasColumn('message_thrades', 'chat_center'));
+        $this->assertFalse(Schema::hasColumn('chats', 'message_thread_id'));
+        $this->assertFalse(Schema::hasColumn('chats', 'receiver_id'));
+        $this->assertFalse(Schema::hasColumn('chats', 'chat_center'));
+
+        $threadId = DB::table('message_thrades')->insertGetId([
+            'sender_id' => 101,
+            'reciver_id' => 202,
+            'chatcenter' => 'marketplace',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $chatId = DB::table('chats')->insertGetId([
+            'message_thrade' => $threadId,
+            'sender_id' => 101,
+            'reciver_id' => 202,
+            'message' => 'Legacy only chat row',
+            'thumbsup' => 0,
+            'file' => '1',
+            'chatcenter' => 'marketplace',
+            'read_status' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $migration->up();
+        $migration->up();
+
+        $this->assertIndexesExist($this->expectedCleanChatCompatibilityIndexes());
+
+        $thread = DB::table('message_thrades')->where('id', $threadId)->first();
+        $chat = DB::table('chats')->where('id', $chatId)->first();
+
+        $this->assertSame(202, (int) $thread->receiver_id);
+        $this->assertSame('marketplace', $thread->chat_center);
+        $this->assertSame($threadId, (int) $chat->message_thread_id);
+        $this->assertSame(202, (int) $chat->receiver_id);
+        $this->assertSame('marketplace', $chat->chat_center);
+
+        DB::table('message_thrades')->where('id', $threadId)->update([
+            'receiver_id' => 303,
+            'chat_center' => 'preserved-thread-center',
+        ]);
+        DB::table('chats')->where('id', $chatId)->update([
+            'message_thread_id' => 404,
+            'receiver_id' => 505,
+            'chat_center' => 'preserved-chat-center',
+        ]);
+
+        $migration->up();
+
+        $thread = DB::table('message_thrades')->where('id', $threadId)->first();
+        $chat = DB::table('chats')->where('id', $chatId)->first();
+
+        $this->assertSame(303, (int) $thread->receiver_id);
+        $this->assertSame('preserved-thread-center', $thread->chat_center);
+        $this->assertSame(404, (int) $chat->message_thread_id);
+        $this->assertSame(505, (int) $chat->receiver_id);
+        $this->assertSame('preserved-chat-center', $chat->chat_center);
+
+        $migration->down();
+        $migration->down();
+
+        $this->assertFalse(Schema::hasColumn('message_thrades', 'receiver_id'));
+        $this->assertFalse(Schema::hasColumn('message_thrades', 'chat_center'));
+        $this->assertFalse(Schema::hasColumn('chats', 'message_thread_id'));
+        $this->assertFalse(Schema::hasColumn('chats', 'receiver_id'));
+        $this->assertFalse(Schema::hasColumn('chats', 'chat_center'));
+    }
+
     public function test_query_pattern_coverage_indexes_are_present_and_reversible(): void
     {
         $migration = require database_path('migrations/2026_07_02_140000_add_query_pattern_coverage_indexes.php');
@@ -749,6 +825,24 @@ class MigrationSafetyAuditTest extends TestCase
             ],
             'posts' => [
                 'posts_publisher_privacy_created_post_idx' => ['publisher', 'publisher_id', 'privacy', 'created_at', 'post_id'],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, array<string, list<string>>>
+     */
+    private function expectedCleanChatCompatibilityIndexes(): array
+    {
+        return [
+            'message_thrades' => [
+                'message_thrades_receiver_id_idx' => ['receiver_id'],
+                'message_thrades_sender_receiver_clean_idx' => ['sender_id', 'receiver_id'],
+            ],
+            'chats' => [
+                'chats_message_thread_id_idx' => ['message_thread_id'],
+                'chats_receiver_id_idx' => ['receiver_id'],
+                'chats_sender_receiver_clean_idx' => ['sender_id', 'receiver_id'],
             ],
         ];
     }

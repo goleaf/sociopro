@@ -15,9 +15,38 @@ because they are still part of the live database contract.
 - Chat receiver column: `chats.reciver_id`
 - Chat center column: `chats.chatcenter`
 
-The PHP models currently expose canonical aliases such as `receiver_id`,
-`message_thread_id`, and `chat_center`, but those aliases still write to the
-legacy database columns above.
+## Clean Compatibility Columns
+
+The schema now has nullable clean compatibility columns alongside the legacy
+columns:
+
+- `message_thrades.receiver_id`
+- `message_thrades.chat_center`
+- `chats.message_thread_id`
+- `chats.receiver_id`
+- `chats.chat_center`
+
+The additive migration
+`2026_07_04_120000_add_clean_chat_thread_columns_for_legacy_compatibility.php`
+backfills clean columns from legacy columns without overwriting existing clean
+values. The test dump in `database/schema/install.sql` includes these columns
+because the test bootstrap imports the dump as the base schema before feature
+tests exercise chat writes.
+
+No table rename has happened yet. The table remains `message_thrades`.
+
+## Dual-Write And Read Fallback
+
+New chat/thread writes populate both legacy and clean columns:
+
+- `reciver_id` and `receiver_id`
+- `chatcenter` and `chat_center`
+- `message_thrade` and `message_thread_id`
+
+Model accessors and query scopes prefer the clean columns when they are present
+and fall back to the legacy columns for older rows. This allows old mobile/API
+clients and legacy rows to continue working while new code can use canonical
+names internally.
 
 ## Internal Refactor Seams
 
@@ -28,11 +57,16 @@ the constants instead of repeating raw column strings:
 - `MessageThread::TABLE`
 - `MessageThread::SENDER_ID_COLUMN`
 - `MessageThread::LEGACY_RECEIVER_ID_COLUMN`
+- `MessageThread::RECEIVER_ID_COLUMN`
 - `MessageThread::LEGACY_CHAT_CENTER_COLUMN`
+- `MessageThread::CHAT_CENTER_COLUMN`
 - `Chat::LEGACY_MESSAGE_THREAD_ID_COLUMN`
+- `Chat::MESSAGE_THREAD_ID_COLUMN`
 - `Chat::SENDER_ID_COLUMN`
 - `Chat::LEGACY_RECEIVER_ID_COLUMN`
+- `Chat::RECEIVER_ID_COLUMN`
 - `Chat::LEGACY_CHAT_CENTER_COLUMN`
+- `Chat::CHAT_CENTER_COLUMN`
 - `Chat::READ_STATUS_COLUMN`
 
 The models now expose relationship and scope seams for refactors while keeping
@@ -40,9 +74,11 @@ legacy persistence unchanged:
 
 - `MessageThread::sender()`, `receiver()`, and `messages()`
 - `Chat::messageThread()`, `sender()`, `receiver()`, and `mediaFiles()`
-- `MessageThread::betweenUsers(...)` with legacy-compatible
+- `MessageThread::betweenUsers(...)` with clean-column preference and
+  legacy-column fallback; legacy-compatible
   `betweenParticipants(...)` retained
-- `Chat::forThread(...)` and `betweenUsers(...)` with legacy-compatible
+- `Chat::forThread(...)`, `unreadForReceiver(...)`, and `betweenUsers(...)`
+  with clean-column preference and legacy-column fallback; legacy-compatible
   `forMessageThread(...)` and `betweenParticipants(...)` retained
 
 The web chat save path now delegates thread and message persistence to focused
@@ -199,9 +235,11 @@ an explicit compatibility plan before they are removed.
 Recommended sequence:
 
 1. Keep the characterization tests green.
-2. Add a compatibility migration for canonical columns where needed.
-3. Backfill canonical fields from legacy fields.
-4. Update write paths to write both old and new columns temporarily.
-5. Migrate reads to prefer canonical names with legacy fallback.
+2. Backfill production clean columns from legacy fields.
+3. Monitor dual writes and add production checks for mismatched old/new values.
+4. Switch reads to clean columns only after mismatch monitoring is clean.
+5. Plan either a `message_thrades` -> `message_threads` table rename or a
+   compatibility table/view strategy.
 6. Deprecate old API parameter names and payload keys with compatibility aliases.
-7. Remove legacy names only after production data and clients are verified.
+7. Drop legacy columns only in a later major/deployment step after production
+   data and clients are verified.

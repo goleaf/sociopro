@@ -22,46 +22,46 @@ class ChatFactory extends Factory
     public function definition(): array
     {
         return [
-            'message_thrade' => MessageThread::factory(),
-            'reciver_id' => User::factory(),
-            'sender_id' => User::factory(),
+            Chat::MESSAGE_THREAD_ID_COLUMN => MessageThread::factory(),
+            Chat::RECEIVER_ID_COLUMN => User::factory(),
+            Chat::SENDER_ID_COLUMN => User::factory(),
             'message' => $this->faker->sentence(),
             'thumbsup' => 0,
             'file' => '0',
             'react' => null,
             'reply_id' => null,
-            'chatcenter' => 'chat',
-            'read_status' => 0,
+            Chat::CHAT_CENTER_COLUMN => 'chat',
+            Chat::READ_STATUS_COLUMN => 0,
         ];
     }
 
     public function forThread(MessageThread $thread): static
     {
         return $this->state(fn (): array => [
-            'message_thrade' => $thread->id,
-            'chatcenter' => $thread->chat_center,
+            Chat::MESSAGE_THREAD_ID_COLUMN => $thread->id,
+            Chat::CHAT_CENTER_COLUMN => $thread->chat_center,
         ]);
     }
 
     public function fromTo(User $sender, User $receiver): static
     {
         return $this->state(fn (): array => [
-            'sender_id' => $sender->id,
-            'reciver_id' => $receiver->id,
+            Chat::SENDER_ID_COLUMN => $sender->id,
+            Chat::RECEIVER_ID_COLUMN => $receiver->id,
         ]);
     }
 
     public function read(): static
     {
         return $this->state(fn (): array => [
-            'read_status' => 1,
+            Chat::READ_STATUS_COLUMN => 1,
         ]);
     }
 
     public function unread(): static
     {
         return $this->state(fn (): array => [
-            'read_status' => 0,
+            Chat::READ_STATUS_COLUMN => 0,
         ]);
     }
 

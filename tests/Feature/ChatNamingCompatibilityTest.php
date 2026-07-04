@@ -33,7 +33,9 @@ class ChatNamingCompatibilityTest extends TestCase
             'id' => $messageThread->id,
             'sender_id' => $sender->id,
             'reciver_id' => $receiver->id,
+            'receiver_id' => $receiver->id,
             'chatcenter' => 'marketplace',
+            'chat_center' => 'marketplace',
         ]);
         $this->assertTrue(
             MessageThread::query()
@@ -66,8 +68,11 @@ class ChatNamingCompatibilityTest extends TestCase
         $this->assertDatabaseHas('chats', [
             'id' => $chat->id,
             'message_thrade' => $messageThread->id,
+            'message_thread_id' => $messageThread->id,
             'reciver_id' => $receiver->id,
+            'receiver_id' => $receiver->id,
             'chatcenter' => 'marketplace',
+            'chat_center' => 'marketplace',
         ]);
         $this->assertTrue(
             Chat::query()
@@ -104,12 +109,16 @@ class ChatNamingCompatibilityTest extends TestCase
         $this->assertDatabaseHas('message_thrades', [
             'sender_id' => $sender->id,
             'reciver_id' => $receiver->id,
+            'receiver_id' => $receiver->id,
             'chatcenter' => 'chat',
+            'chat_center' => 'chat',
         ]);
         $this->assertDatabaseHas('chats', [
             'sender_id' => $sender->id,
             'reciver_id' => $receiver->id,
+            'receiver_id' => $receiver->id,
             'chatcenter' => 'chat',
+            'chat_center' => 'chat',
             'message' => 'Hello with canonical receiver id',
         ]);
     }

@@ -207,7 +207,9 @@ CREATE TABLE `categories` (
 CREATE TABLE `chats` (
   `id` int(11) NOT NULL,
   `message_thrade` int(11) DEFAULT NULL,
+  `message_thread_id` int(11) DEFAULT NULL,
   `reciver_id` int(11) DEFAULT NULL,
+  `receiver_id` int(11) DEFAULT NULL,
   `sender_id` int(11) DEFAULT NULL,
   `message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `thumbsup` tinyint(1) NOT NULL DEFAULT '0',
@@ -215,6 +217,7 @@ CREATE TABLE `chats` (
   `react` text,
   `reply_id` int(11) DEFAULT NULL,
   `chatcenter` text,
+  `chat_center` text,
   `read_status` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -1304,8 +1307,10 @@ CREATE TABLE `media_files` (
 CREATE TABLE `message_thrades` (
   `id` int(11) NOT NULL,
   `reciver_id` int(11) DEFAULT NULL,
+  `receiver_id` int(11) DEFAULT NULL,
   `sender_id` int(11) DEFAULT NULL,
   `chatcenter` text,
+  `chat_center` text,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -1819,7 +1824,10 @@ ALTER TABLE `categories`
 -- Indexes for table `chats`
 --
 ALTER TABLE `chats`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `chats_message_thread_id_idx` (`message_thread_id`),
+  ADD KEY `chats_receiver_id_idx` (`receiver_id`),
+  ADD KEY `chats_sender_receiver_clean_idx` (`sender_id`,`receiver_id`);
 
 --
 -- Indexes for table `comments`
@@ -1910,7 +1918,9 @@ ALTER TABLE `media_files`
 -- Indexes for table `message_thrades`
 --
 ALTER TABLE `message_thrades`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `message_thrades_receiver_id_idx` (`receiver_id`),
+  ADD KEY `message_thrades_sender_receiver_clean_idx` (`sender_id`,`receiver_id`);
 
 --
 -- Indexes for table `migrations`

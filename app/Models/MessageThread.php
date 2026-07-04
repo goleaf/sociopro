@@ -19,7 +19,11 @@ class MessageThread extends Model
 
     public const LEGACY_RECEIVER_ID_COLUMN = 'reciver_id';
 
+    public const RECEIVER_ID_COLUMN = 'receiver_id';
+
     public const LEGACY_CHAT_CENTER_COLUMN = 'chatcenter';
+
+    public const CHAT_CENTER_COLUMN = 'chat_center';
 
     protected $table = self::TABLE;
 
@@ -29,9 +33,9 @@ class MessageThread extends Model
     protected $fillable = [
         self::SENDER_ID_COLUMN,
         self::LEGACY_RECEIVER_ID_COLUMN,
+        self::RECEIVER_ID_COLUMN,
         self::LEGACY_CHAT_CENTER_COLUMN,
-        'receiver_id',
-        'chat_center',
+        self::CHAT_CENTER_COLUMN,
     ];
 
     /**
@@ -41,6 +45,7 @@ class MessageThread extends Model
     {
         return [
             self::LEGACY_RECEIVER_ID_COLUMN => 'integer',
+            self::RECEIVER_ID_COLUMN => 'integer',
             self::SENDER_ID_COLUMN => 'integer',
         ];
     }
@@ -50,10 +55,16 @@ class MessageThread extends Model
         return $query->where(function (Builder $query) use ($firstUserId, $secondUserId): void {
             $query->where(function (Builder $query) use ($firstUserId, $secondUserId): void {
                 $query->where(self::SENDER_ID_COLUMN, $firstUserId)
-                    ->where(self::LEGACY_RECEIVER_ID_COLUMN, $secondUserId);
+                    ->where(function (Builder $query) use ($secondUserId): void {
+                        $query->where(self::RECEIVER_ID_COLUMN, $secondUserId)
+                            ->orWhere(self::LEGACY_RECEIVER_ID_COLUMN, $secondUserId);
+                    });
             })->orWhere(function (Builder $query) use ($firstUserId, $secondUserId): void {
                 $query->where(self::SENDER_ID_COLUMN, $secondUserId)
-                    ->where(self::LEGACY_RECEIVER_ID_COLUMN, $firstUserId);
+                    ->where(function (Builder $query) use ($firstUserId): void {
+                        $query->where(self::RECEIVER_ID_COLUMN, $firstUserId)
+                            ->orWhere(self::LEGACY_RECEIVER_ID_COLUMN, $firstUserId);
+                    });
             });
         });
     }
@@ -67,6 +78,7 @@ class MessageThread extends Model
     {
         return $query->where(function (Builder $query) use ($userId): void {
             $query->where(self::SENDER_ID_COLUMN, $userId)
+                ->orWhere(self::RECEIVER_ID_COLUMN, $userId)
                 ->orWhere(self::LEGACY_RECEIVER_ID_COLUMN, $userId);
         });
     }
@@ -95,21 +107,58 @@ class MessageThread extends Model
         return $this->hasMany(Chat::class, Chat::LEGACY_MESSAGE_THREAD_ID_COLUMN);
     }
 
+    public function setAttribute($key, $value)
+    {
+        if ($key === self::LEGACY_CHAT_CENTER_COLUMN) {
+            $this->attributes[self::LEGACY_CHAT_CENTER_COLUMN] = $value;
+            $this->attributes[self::CHAT_CENTER_COLUMN] = $value;
+
+            return $this;
+        }
+
+        return parent::setAttribute($key, $value);
+    }
+
     protected function receiverId(): Attribute
     {
         return Attribute::make(
-            get: fn (mixed $value, array $attributes): ?int => isset($attributes['reciver_id'])
-                ? (int) $attributes['reciver_id']
-                : null,
-            set: fn (mixed $value): array => ['reciver_id' => $value],
+            get: fn (mixed $value, array $attributes): ?int => isset($attributes[self::RECEIVER_ID_COLUMN])
+                ? (int) $attributes[self::RECEIVER_ID_COLUMN]
+                : (isset($attributes[self::LEGACY_RECEIVER_ID_COLUMN])
+                    ? (int) $attributes[self::LEGACY_RECEIVER_ID_COLUMN]
+                    : null),
+            set: fn (mixed $value): array => [
+                self::RECEIVER_ID_COLUMN => $value,
+                self::LEGACY_RECEIVER_ID_COLUMN => $value,
+            ],
+        );
+    }
+
+    protected function reciverId(): Attribute
+    {
+        return Attribute::make(
+            get: fn (mixed $value, array $attributes): ?int => isset($attributes[self::LEGACY_RECEIVER_ID_COLUMN])
+                ? (int) $attributes[self::LEGACY_RECEIVER_ID_COLUMN]
+                : (isset($attributes[self::RECEIVER_ID_COLUMN])
+                    ? (int) $attributes[self::RECEIVER_ID_COLUMN]
+                    : null),
+            set: fn (mixed $value): array => [
+                self::LEGACY_RECEIVER_ID_COLUMN => $value,
+                self::RECEIVER_ID_COLUMN => $value,
+            ],
         );
     }
 
     protected function chatCenter(): Attribute
     {
         return Attribute::make(
-            get: fn (mixed $value, array $attributes): ?string => $attributes['chatcenter'] ?? null,
-            set: fn (mixed $value): array => ['chatcenter' => $value],
+            get: fn (mixed $value, array $attributes): ?string => $attributes[self::CHAT_CENTER_COLUMN]
+                ?? $attributes[self::LEGACY_CHAT_CENTER_COLUMN]
+                ?? null,
+            set: fn (mixed $value): array => [
+                self::CHAT_CENTER_COLUMN => $value,
+                self::LEGACY_CHAT_CENTER_COLUMN => $value,
+            ],
         );
     }
 }
