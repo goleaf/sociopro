@@ -1,4 +1,4 @@
-import { changedPaths, git, hookContext, isApplicationPath, isDocumentationPath, limitLines, readHookPayload } from './hook-lib.mjs';
+import { changedPaths, docsRequiredForPaths, git, hookContext, isDocumentationPath, isRuntimeCodePath, limitLines, readHookPayload, staleDocWarningsForText } from './hook-lib.mjs';
 
 await readHookPayload();
 
@@ -17,16 +17,17 @@ for (const line of diff.split('\n')) {
     }
 
     const added = line.slice(1);
+    const runtimeCode = isRuntimeCodePath(currentFile);
 
-    if (/\b(dd|dump|ray|var_dump|print_r)\s*\(|console\.log\s*\(|\bdebugger\b/.test(added)) {
+    if (runtimeCode && /\b(dd|dump|ray|var_dump|print_r)\s*\(|console\.log\s*\(|\bdebugger\b/.test(added)) {
         findings.push(`${currentFile}: debug output added`);
     }
 
-    if (!currentFile.startsWith('config/') && /\benv\s*\(/.test(added)) {
+    if (runtimeCode && !currentFile.startsWith('config/') && /\benv\s*\(/.test(added)) {
         findings.push(`${currentFile}: env() outside config added`);
     }
 
-    if (/^(app|routes|resources)\//.test(currentFile) && /\bDB::(select|statement|raw|unprepared)\s*\(/.test(added)) {
+    if (runtimeCode && /^(app|routes|resources)\//.test(currentFile) && /\bDB::(select|statement|raw|unprepared)\s*\(/.test(added)) {
         findings.push(`${currentFile}: forbidden DB raw/select/statement/unprepared added`);
     }
 
@@ -34,25 +35,30 @@ for (const line of diff.split('\n')) {
         findings.push(`${currentFile}: Blade query/business-logic hotspot added`);
     }
 
-    if (/\$request->all\s*\(\)/.test(added)) {
+    if (runtimeCode && /\$request->all\s*\(\)/.test(added)) {
         findings.push(`${currentFile}: request()->all style input access added`);
     }
 
-    if (/\$guarded\s*=\s*\[\s*\]/.test(added)) {
+    if (runtimeCode && /\$guarded\s*=\s*\[\s*\]/.test(added)) {
         findings.push(`${currentFile}: guarded = [] added`);
     }
 
-    if (/::all\s*\(\)/.test(added)) {
+    if (runtimeCode && /::all\s*\(\)/.test(added)) {
         findings.push(`${currentFile}: unbounded ::all() added`);
+    }
+
+    if (currentFile.endsWith('.md')) {
+        for (const warning of staleDocWarningsForText(added)) {
+            findings.push(`${currentFile}: historical/stale baseline wording added (${warning})`);
+        }
     }
 }
 
 const changed = changedPaths();
-const applicationChanged = changed.some((path) => isApplicationPath(path));
 const documentationChanged = changed.some((path) => isDocumentationPath(path) && path.endsWith('.md'));
 
-if (applicationChanged && !documentationChanged) {
-    findings.push('Documentation drift check: app/config/route/database/test/tooling files changed, but no tracked Markdown doc changed. If the change affects behavior, operations, security, commands, or agent rules, update docs in the same slice.');
+if (docsRequiredForPaths(changed) && !documentationChanged) {
+    findings.push('Documentation drift check: changed paths require a tracked Markdown update in the same slice.');
 }
 
 if (findings.length === 0) {

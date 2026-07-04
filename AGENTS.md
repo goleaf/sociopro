@@ -9,12 +9,14 @@ These instructions apply to the entire repository. Follow them for every code, t
 - Frontend build is Vite with SCSS entrypoints. Do not reintroduce Laravel Mix/Webpack.
 - Installed quality tools include PHPUnit, Pint, Larastan/PHPStan, Rector, ESLint, Stylelint, and Prettier. Verify dependency files before changing versions or invoking optional tools.
 - Canonical project docs: `docs/project-standards-bible.md`, `docs/coding-standards.md`, `docs/code-quality-standards.md`, `docs/local-quality-commands.md`, `docs/refactor-audit.md`, `docs/refactor-checklist.md`, `docs/enterprise-refactor-rulebook.md`, and `docs/refactor-roadmap-unreal.md`.
+- Agent guardrails are centralized in `.agents/agent-routing.json`, `.codex/hooks.json`, `.githooks/`, and `scripts/agent-hooks/`. Run `npm run agent:hooks:smoke` after changing any of them.
 
 ## Project Detection Rules
 
 Before changing files, agents must inspect the live checkout:
 
 - Run or inspect `git status --short --branch`.
+- Read the task-start routing context from the active hook output when available; otherwise inspect `.agents/agent-routing.json` and `.agents/subagents/README.md` manually.
 - Read `composer.json`, `composer.lock`, `package.json`, lock files, `vite.config.*`, `postcss.config.*`, `phpunit.xml`, `pint.json`, and relevant config files.
 - Detect Laravel, PHP, PHPUnit, Pint, Node, npm, build tool, database drivers, queue/cache drivers, and installed static-analysis/linting tools from repository files, not memory.
 - Inspect relevant routes, controllers, Form Requests, policies, models, migrations, jobs, services/actions, Blade views, tests, and docs before editing.
@@ -125,6 +127,14 @@ npm run format:check
 
 After cache verification commands, clear generated local caches if they create artifacts that should not be committed.
 
+Agent guardrail changes require:
+
+```bash
+npm run agent:hooks:smoke
+git diff --check
+php artisan test
+```
+
 ## Git and Commit Rules
 
 - Keep commits small, atomic, and scoped to one concern.
@@ -141,6 +151,7 @@ After cache verification commands, clear generated local caches if they create a
 - Stage only files that belong to the task.
 - Inspect `git diff --cached --stat` and `git diff --cached --name-only` before committing.
 - Scan staged diffs for secrets before committing.
+- Keep local Git hooks enabled with `git config core.hooksPath .githooks`; they enforce staged-diff and Conventional Commit checks.
 - Do not include unrelated user changes.
 - Do not force push or rewrite shared history unless explicitly instructed.
 - Push only after the intended commit is at `HEAD` and verification has completed.

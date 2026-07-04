@@ -5,6 +5,10 @@ Every subagent must obey `AGENTS.md`, inspect the live checkout, preserve legacy
 behavior unless a tested bug/security fix says otherwise, and report exact
 verification results.
 
+Routing metadata lives in `.agents/agent-routing.json`. Claude-compatible
+wrappers live in `.claude/agents/` and point back to these briefs so each role
+has one authoritative instruction body.
+
 ## Recommended Routing
 
 | Task signal | Subagent |

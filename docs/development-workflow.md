@@ -15,6 +15,10 @@ Generated: 2026-07-02
 - Keep commits scoped and reviewable.
 - Stage only files that belong to the task.
 - Before commit, inspect `git diff --cached --stat`, `git diff --cached --name-only`, and staged diffs for secrets.
+- Enable local repository hooks with `git config core.hooksPath .githooks`.
+  The pre-commit hook blocks protected paths, secret-like values, raw DB APIs,
+  Blade query hotspots, and missing documentation for behavior/tooling slices.
+  The commit-msg hook enforces the Conventional Commit shape.
 
 ## Local Setup
 
@@ -48,6 +52,7 @@ Tests must use factories and fakes, avoid production IDs, avoid real external se
 ## Quality Checks
 
 ```bash
+npm run agent:hooks:smoke
 composer validate --strict --no-interaction
 composer audit --no-interaction
 composer quality
@@ -93,7 +98,7 @@ rm -f "$tmp_db"
 
 ## Adding Frontend Components
 
-- Blade remains server-side rendered. Do not introduce React, Vue, Inertia, or Vite without a dedicated migration.
+- Blade remains server-side rendered. Use the existing Vite pipeline; do not introduce React, Vue, Inertia, or Laravel Mix/Webpack without a dedicated migration.
 - Keep Blade presentation-only; preload data in controllers/view models.
 - Use escaped output by default.
 - Prefer components for repeated UI.

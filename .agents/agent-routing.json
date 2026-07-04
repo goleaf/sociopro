@@ -1,0 +1,144 @@
+{
+    "version": 1,
+    "updated": "2026-07-04",
+    "sourceOfTruthDocs": [
+        "AGENTS.md",
+        "docs/project-standards-bible.md",
+        "docs/coding-standards.md",
+        "docs/code-quality-standards.md",
+        "docs/local-quality-commands.md",
+        "docs/refactor-definition-of-done.md",
+        "docs/refactor-checklist.md",
+        "docs/refactor-roadmap-unreal.md",
+        "docs/quality-known-failures.md"
+    ],
+    "historicalDocWarnings": [
+        "Laravel 9",
+        "Laravel Mix",
+        "Webpack",
+        "PHP 8.1",
+        "PHP 8.2",
+        "Filament is not installed",
+        "no app/Jobs directory detected",
+        "no app/Policies directory detected",
+        "no app/Services directory detected"
+    ],
+    "subagents": {
+        "repo-steward": {
+            "brief": ".agents/subagents/repo-steward.md",
+            "claudeAgent": ".claude/agents/repo-steward.md",
+            "signals": ["scope", "status", "branch", "dirty", "commit", "push", "release", "unknown"],
+            "docs": ["AGENTS.md", "docs/project-standards-bible.md", "docs/local-quality-commands.md", "docs/refactor-roadmap-unreal.md"],
+            "checks": ["git status --short --branch", "git diff --check"]
+        },
+        "api-contract-guardian": {
+            "brief": ".agents/subagents/api-contract-guardian.md",
+            "claudeAgent": ".claude/agents/api-contract-guardian.md",
+            "signals": ["api", "sanctum", "json", "endpoint", "token", "resource", "pagination", "idempotency"],
+            "paths": ["routes/api.php", "app/Http/Controllers/ApiController.php", "app/Http/Resources/**", "app/Http/Requests/**", "tests/Feature/Api/**"],
+            "docs": ["docs/api-versioning.md", "docs/api-error-format.md", "docs/api-http-contract-audit.md", "docs/api-contract-test-plan.md", "docs/api-marketplace.md"],
+            "checks": ["php artisan test tests/Feature/Api", "php artisan test"]
+        },
+        "frontend-blade-accessibility-guardian": {
+            "brief": ".agents/subagents/frontend-blade-accessibility-guardian.md",
+            "claudeAgent": ".claude/agents/frontend-blade-accessibility-guardian.md",
+            "signals": ["blade", "view", "frontend", "scss", "css", "javascript", "vite", "ui", "accessibility", "a11y"],
+            "paths": ["resources/views/**", "resources/scss/**", "resources/js/**", "vite.config.js", "postcss.config.cjs", "DESIGN.md"],
+            "docs": ["DESIGN.md", "docs/frontend-standards.md", "docs/blade-component-guide.md", "docs/assets-and-vite.md", "docs/performance-improvements.md"],
+            "checks": ["npm run build", "npm run quality"]
+        },
+        "database-query-migration-guardian": {
+            "brief": ".agents/subagents/database-query-migration-guardian.md",
+            "claudeAgent": ".claude/agents/database-query-migration-guardian.md",
+            "signals": ["migration", "schema", "database", "index", "query", "eloquent", "performance", "n+1", "sql"],
+            "paths": ["database/migrations/**", "database/seeders/**", "database/factories/**", "app/Models/**", "app/Queries/**"],
+            "docs": ["docs/database-standards.md", "docs/database-indexes.md", "docs/migration-audit.md", "docs/zero-downtime-migration-plan.md", "docs/zero-downtime-migrations.md"],
+            "checks": ["php artisan test tests/Feature/MigrationSafetyAuditTest.php", "vendor/bin/pint --test", "php artisan test"]
+        },
+        "security-payment-guardian": {
+            "brief": ".agents/subagents/security-payment-guardian.md",
+            "claudeAgent": ".claude/agents/security-payment-guardian.md",
+            "signals": ["security", "auth", "policy", "secret", "webhook", "payment", "upload", "csrf", "idor", "session", "cookie"],
+            "paths": ["app/Http/Middleware/**", "app/Policies/**", "app/Services/**Payment**", "app/Http/Controllers/*Payment*", "config/session.php", "config/services.php"],
+            "docs": ["docs/security-audit.md", "docs/security-hardening.md", "docs/upload-download-audit.md", "docs/webhook-audit.md", "docs/session-cookie-security.md", "docs/server-side-url-fetch-audit.md", "docs/production-exposure-audit.md"],
+            "checks": ["php artisan test tests/Feature/SecurityHardeningTest.php", "php artisan test tests/Feature/PaymentWebhookSecurityTest.php", "php artisan test"]
+        },
+        "quality-release-guardian": {
+            "brief": ".agents/subagents/quality-release-guardian.md",
+            "claudeAgent": ".claude/agents/quality-release-guardian.md",
+            "signals": ["test", "phpunit", "pint", "phpstan", "rector", "quality", "ci", "build", "lint", "cache"],
+            "paths": ["tests/**", "phpunit.xml", "pint.json", "phpstan.neon", "rector.php", ".github/workflows/**", "composer.json", "package.json"],
+            "docs": ["docs/local-quality-commands.md", "docs/code-quality-standards.md", "docs/quality-known-failures.md", "docs/test-audit.md", "docs/deployment-checklist.md"],
+            "checks": ["git diff --check", "vendor/bin/pint --test", "php artisan test", "npm run quality"]
+        },
+        "documentation-context-curator": {
+            "brief": ".agents/subagents/documentation-context-curator.md",
+            "claudeAgent": ".claude/agents/documentation-context-curator.md",
+            "signals": ["doc", "readme", "audit", "standard", "agent", "hook", "subagent", "prompt", "markdown"],
+            "paths": ["AGENTS.md", "README.md", "PRODUCT.md", "DESIGN.md", "docs/**", ".agents/**", ".codex/**", ".claude/agents/**", "scripts/agent-hooks/**"],
+            "docs": ["AGENTS.md", "docs/project-standards-bible.md", "docs/architecture-map.md", "docs/refactor-roadmap-unreal.md", "docs/quality-known-failures.md"],
+            "checks": ["git diff --check", "node scripts/agent-hooks/smoke.mjs"]
+        },
+        "laravel-architecture-refactorer": {
+            "brief": ".agents/subagents/laravel-architecture-refactorer.md",
+            "claudeAgent": ".claude/agents/laravel-architecture-refactorer.md",
+            "signals": ["controller", "action", "service", "form request", "policy", "resource", "job", "event", "listener", "refactor"],
+            "paths": ["app/Http/Controllers/**", "app/Actions/**", "app/Services/**", "app/Http/Requests/**", "app/Policies/**", "app/Jobs/**"],
+            "docs": ["docs/architecture-map.md", "docs/architecture.md", "docs/code-ownership-map.md", "docs/refactor-checklist.md", "docs/enterprise-refactor-rulebook.md"],
+            "checks": ["vendor/bin/pint --test", "php artisan test"]
+        },
+        "design-system-guardian": {
+            "brief": ".agents/subagents/design-system-guardian.md",
+            "claudeAgent": ".claude/agents/design-system-guardian.md",
+            "signals": ["design", "visual", "polish", "component", "brand", "layout", "auth ui"],
+            "paths": ["DESIGN.md", "PRODUCT.md", "resources/views/**", "resources/scss/**"],
+            "docs": ["DESIGN.md", "PRODUCT.md", "docs/frontend-standards.md"],
+            "checks": ["npm run build"]
+        }
+    },
+    "requiredChecksByPath": [
+        {
+            "pattern": "^(app|routes|config|database|tests)/|composer\\.json|composer\\.lock|phpunit\\.xml|pint\\.json|phpstan\\.neon|rector\\.php",
+            "checks": ["vendor/bin/pint --test", "php artisan test"]
+        },
+        {
+            "pattern": "^database/migrations/",
+            "checks": ["php artisan test tests/Feature/MigrationSafetyAuditTest.php", "php artisan test"]
+        },
+        {
+            "pattern": "^resources/(js|scss)/|^resources/views/|package\\.json|package-lock\\.json|vite\\.config\\.js|postcss\\.config\\.cjs|DESIGN\\.md",
+            "checks": ["npm run build"]
+        },
+        {
+            "pattern": "^(AGENTS\\.md|README\\.md|PRODUCT\\.md|DESIGN\\.md|docs/|\\.agents/|\\.codex/|\\.claude/agents/|scripts/agent-hooks/|\\.githooks/)",
+            "checks": ["git diff --check", "node scripts/agent-hooks/smoke.mjs"]
+        },
+        {
+            "pattern": "^\\.github/workflows/",
+            "checks": ["composer validate --strict", "npm run build"]
+        }
+    ],
+    "documentationRequiredForPath": [
+        "^(app|routes|config|database)/",
+        "^resources/views/",
+        "^resources/(js|scss)/",
+        "^composer\\.(json|lock)$",
+        "^package(-lock)?\\.json$",
+        "^vite\\.config\\.js$",
+        "^postcss\\.config\\.cjs$",
+        "^\\.github/workflows/",
+        "^scripts/agent-hooks/",
+        "^\\.codex/",
+        "^\\.githooks/"
+    ],
+    "protectedPathPatterns": [
+        "^\\.env($|\\.)",
+        "^storage/",
+        "^vendor/",
+        "^node_modules/",
+        "^public/build/",
+        "^bootstrap/cache/",
+        "^database/.*\\.sqlite",
+        "\\.(key|pem|p12|sql|dump|bak|backup)$"
+    ]
+}

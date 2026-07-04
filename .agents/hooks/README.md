@@ -5,6 +5,8 @@ They are intentionally conservative: they inspect, remind, and optionally block,
 but they do not rewrite application code, stage unrelated files, or push without
 verification.
 
+Shared routing and enforcement rules live in `.agents/agent-routing.json`.
+
 ## Installed Hooks
 
 | Hook | Event | Script | Purpose |
@@ -14,6 +16,14 @@ verification.
 | Post-edit guard | `PostToolUse` on edits | `scripts/agent-hooks/post-edit-guard.mjs` | Scans added diff lines for debug code, raw DB calls, Blade queries, unsafe `env()`, `$request->all()`, `$guarded = []`, and doc drift. |
 | Guarded publish | `Stop` | `scripts/agent-hooks/guarded-publish.mjs` | Reminds the agent to verify, stage only intended files, commit, and push. Can block dirty final states when strict mode is enabled. |
 | Impeccable UI detector | `PostToolUse` on edits | `.agents/skills/impeccable/scripts/hook.mjs` | Existing design/UI detector for UI-relevant file edits. |
+| Git pre-commit guard | Git `pre-commit` | `.githooks/pre-commit` | Blocks staged protected paths, secret-like values, debug code, raw DB APIs, Blade query hotspots, stale-doc wording, and missing docs for behavior/tooling slices. |
+| Git commit message guard | Git `commit-msg` | `.githooks/commit-msg` | Enforces Conventional Commit subjects and blocks agent-internal commit wording. |
+
+Enable the Git hooks in this checkout:
+
+```bash
+git config core.hooksPath .githooks
+```
 
 ## Strict Publication Mode
 
@@ -50,6 +60,9 @@ node --check scripts/agent-hooks/task-start.mjs
 node --check scripts/agent-hooks/pre-tool-guard.mjs
 node --check scripts/agent-hooks/post-edit-guard.mjs
 node --check scripts/agent-hooks/guarded-publish.mjs
+node --check scripts/agent-hooks/staged-diff-guard.mjs
+node --check scripts/agent-hooks/commit-msg-guard.mjs
+npm run agent:hooks:smoke
 printf '{}' | node scripts/agent-hooks/task-start.mjs
 printf '{"tool_input":{"command":"git add ."}}' | node scripts/agent-hooks/pre-tool-guard.mjs
 printf '{}' | node scripts/agent-hooks/post-edit-guard.mjs

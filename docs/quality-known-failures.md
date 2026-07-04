@@ -8,7 +8,7 @@ There are no accepted failing quality gates at the time this file was created. D
 
 | Command | Status | Notes |
 | --- | --- | --- |
-| `php artisan test` | Failing on 2026-07-04 | Local full-suite run during the agent-hooks slice ended with 19 failed and 1066 passed tests. Failures are outside the hook/doc changes and are recorded below for focused follow-up. |
+| `php artisan test` | Failing on 2026-07-04 | Latest local full-suite run during the second agent-hooks slice ended with 19 failed and 1066 passed tests. Failures are outside the hook/doc changes and are recorded below for focused follow-up. |
 | `composer ci` | Passing on 2026-07-02 | Runs Composer validation/audit, Pint, Larastan/PHPStan, 496 PHPUnit tests, npm quality, Mix production build, and Laravel cache smoke checks. |
 | `php artisan test tests/Feature/ProductionExposureAuditTest.php` | Passing on 2026-07-02 | Confirms debug defaults, absent debug tools, public artifact cleanup, install dump location, and Apache deny rules. |
 | `npm audit --omit=dev --audit-level=moderate` | Passing on 2026-07-02 | Production Node dependency audit found no vulnerabilities. |
@@ -18,7 +18,7 @@ There are no accepted failing quality gates at the time this file was created. D
 ### 2026-07-04 - Full PHPUnit Suite
 
 - Exact command: `php artisan test`
-- Result: 19 failed, 1066 passed, 22438 assertions, duration 32.02s.
+- Result: 19 failed, 1066 passed, 22446 assertions, duration 30.11s on the second agent-hooks slice. The previous hook slice also failed with the same 19 failing test families.
 - Short output summary:
   - `Tests\Feature\AddonPackageImportTest`: 8 failures. Several addon import cases throw `RuntimeException` with "You have to update your main application's version." or "It looks like you are skipping a version."; the unsafe nested zip case expected "Addon package contains an unsafe path." but saw the version exception first.
   - `Tests\Feature\AuthBadgeBlogControllerTest::badge payment configuration builds checkout details`: expected badge price `23`, got `null`.

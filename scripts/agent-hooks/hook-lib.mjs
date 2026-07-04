@@ -89,6 +89,22 @@ export function changedPaths() {
     return statusEntries().map((entry) => entry.path);
 }
 
+export function stagedPaths() {
+    const output = git(['diff', '--cached', '--name-only', '--diff-filter=ACMR']);
+
+    return output ? output.split('\n').filter(Boolean) : [];
+}
+
+export function stagedDiff(paths = []) {
+    const args = ['diff', '--cached', '--unified=0'];
+
+    if (paths.length > 0) {
+        args.push('--', ...paths);
+    }
+
+    return git(args);
+}
+
 export function markdownFiles() {
     const output = git(['ls-files', '*.md']);
 
@@ -111,6 +127,13 @@ export function isDocumentationPath(path) {
 export function isApplicationPath(path) {
     return /^(app|routes|resources|config|database|tests)\//.test(path)
         || ['composer.json', 'composer.lock', 'package.json', 'package-lock.json', 'vite.config.js', 'postcss.config.cjs', 'phpunit.xml', 'pint.json', 'phpstan.neon', 'rector.php'].includes(path);
+}
+
+export function isRuntimeCodePath(path) {
+    return /^(app|routes|config|database|tests)\//.test(path)
+        || /^resources\/views\/.*\.blade\.php$/.test(path)
+        || /^resources\/js\/.*\.js$/.test(path)
+        || path.endsWith('.php');
 }
 
 export function stackSummary() {
@@ -139,6 +162,117 @@ export function stackSummary() {
         npmLockfile: packageLock.lockfileVersion ? `v${packageLock.lockfileVersion}` : 'unknown',
         frontendScripts: Object.keys(packageJson.scripts || {}).join(', ') || 'none',
     };
+}
+
+export function agentRouting() {
+    return readJson('.agents/agent-routing.json', {
+        sourceOfTruthDocs: [
+            'AGENTS.md',
+            'docs/project-standards-bible.md',
+            'docs/coding-standards.md',
+            'docs/local-quality-commands.md',
+        ],
+        historicalDocWarnings: [],
+        subagents: {
+            'repo-steward': {
+                brief: '.agents/subagents/repo-steward.md',
+                signals: ['unknown'],
+                docs: ['AGENTS.md', 'docs/project-standards-bible.md'],
+                checks: ['git diff --check'],
+            },
+        },
+        requiredChecksByPath: [],
+        documentationRequiredForPath: [],
+        protectedPathPatterns: [],
+    });
+}
+
+export function unique(values) {
+    return [...new Set(values.filter(Boolean))];
+}
+
+export function patternMatchesPath(pattern, path) {
+    try {
+        return new RegExp(pattern).test(path);
+    } catch {
+        return false;
+    }
+}
+
+export function globMatchesPath(glob, path) {
+    const escaped = glob
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*\*/g, '__DOUBLE_STAR__')
+        .replace(/\*/g, '[^/]*');
+
+    return new RegExp(`^${escaped.replace(/__DOUBLE_STAR__/g, '.*')}$`).test(path);
+}
+
+export function selectSubagents(prompt = '', paths = []) {
+    const routing = agentRouting();
+    const selected = [];
+    const text = prompt.toLowerCase();
+
+    for (const [name, config] of Object.entries(routing.subagents || {})) {
+        const signalHit = (config.signals || []).some((signal) => text.includes(signal.toLowerCase()));
+        const pathHit = (config.paths || []).some((pattern) => paths.some((path) => (
+            pattern.includes('*') ? globMatchesPath(pattern, path) : path === pattern || path.startsWith(`${pattern.replace(/\/$/, '')}/`)
+        )));
+
+        if (signalHit || pathHit) {
+            selected.push(name);
+        }
+    }
+
+    return selected.length > 0 ? unique(selected) : ['repo-steward'];
+}
+
+export function docsForSubagents(subagents = []) {
+    const routing = agentRouting();
+    const docs = [...(routing.sourceOfTruthDocs || [])];
+
+    for (const name of subagents) {
+        docs.push(...(routing.subagents?.[name]?.docs || []));
+    }
+
+    return unique(docs);
+}
+
+export function checksForPaths(paths = []) {
+    const routing = agentRouting();
+    const checks = ['git diff --check'];
+
+    for (const path of paths) {
+        for (const rule of routing.requiredChecksByPath || []) {
+            if (patternMatchesPath(rule.pattern, path)) {
+                checks.push(...(rule.checks || []));
+            }
+        }
+    }
+
+    return unique(checks);
+}
+
+export function docsRequiredForPaths(paths = []) {
+    const routing = agentRouting();
+
+    return paths.some((path) => (routing.documentationRequiredForPath || []).some((pattern) => patternMatchesPath(pattern, path)));
+}
+
+export function protectedPaths(paths = []) {
+    const routing = agentRouting();
+
+    return paths.filter((path) => (routing.protectedPathPatterns || []).some((pattern) => patternMatchesPath(pattern, path)));
+}
+
+export function staleDocWarningsForText(text = '') {
+    const routing = agentRouting();
+
+    if (/\b(do not|don't|never|avoid|removed|historical|stale|old|current .* wins|live checkout)\b/i.test(text)) {
+        return [];
+    }
+
+    return (routing.historicalDocWarnings || []).filter((pattern) => text.includes(pattern));
 }
 
 export function hookContext(message, hookEventName = 'PostToolUse') {

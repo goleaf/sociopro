@@ -15,7 +15,8 @@
         "format:check": "prettier --check \"resources/**/*.{js,scss}\"",
         "stylelint": "stylelint \"resources/scss/**/*.scss\"",
         "audit:prod": "npm audit --omit=dev --audit-level=moderate",
-        "quality": "npm run lint && npm run stylelint && npm run format:check && npm run audit:prod && npm run build"
+        "quality": "npm run lint && npm run stylelint && npm run format:check && npm run audit:prod && npm run build",
+        "agent:hooks:smoke": "node scripts/agent-hooks/smoke.mjs"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.11",

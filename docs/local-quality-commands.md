@@ -38,6 +38,7 @@ composer quality:cache
 ## Frontend Commands
 
 ```bash
+npm run agent:hooks:smoke
 npm run lint
 npm run lint:fix
 npm run stylelint
@@ -51,6 +52,8 @@ npm run quality
 - `npm run audit:prod` audits production Node dependencies only.
 - `npm run build` builds Vite assets into `public/build`.
 - `public/build` is generated output and is ignored by git.
+- `npm run agent:hooks:smoke` validates project-local agent hook scripts,
+  `.codex/hooks.json`, and `.agents/agent-routing.json`.
 
 ## Full Local Gates
 
