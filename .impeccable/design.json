@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-04T00:00:00+03:00",
+  "title": "Design System: Sociopro",
+  "extensions": {
+    "colorMeta": {
+      "primary-purple": {
+        "role": "primary",
+        "displayName": "Public Action Purple",
+        "canonical": "#5a2ff9",
+        "tonalRamp": ["oklch(18% 0.10 295)", "oklch(28% 0.16 295)", "oklch(40% 0.22 295)", "oklch(52% 0.26 295)", "oklch(62% 0.20 295)", "oklch(74% 0.14 295)", "oklch(86% 0.08 295)", "oklch(95% 0.03 295)"]
+      },
+      "primary-purple-soft": {
+        "role": "primary",
+        "displayName": "Soft Purple Wash",
+        "canonical": "#dfd9f6",
+        "tonalRamp": ["oklch(18% 0.05 295)", "oklch(30% 0.06 295)", "oklch(42% 0.07 295)", "oklch(56% 0.07 295)", "oklch(68% 0.06 295)", "oklch(80% 0.05 295)", "oklch(90% 0.035 295)", "oklch(96% 0.02 295)"]
+      },
+      "action-orange": {
+        "role": "secondary",
+        "displayName": "Auth Accent Orange",
+        "canonical": "#ff7856",
+        "tonalRamp": ["oklch(20% 0.08 35)", "oklch(32% 0.12 35)", "oklch(46% 0.16 35)", "oklch(60% 0.19 35)", "oklch(70% 0.15 35)", "oklch(80% 0.10 35)", "oklch(90% 0.06 35)", "oklch(96% 0.03 35)"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "White Surface",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#101010", "#343a40", "#6c757d", "#949494", "#c4c4c4", "#dedede", "#f3f3f3", "#ffffff"]
+      },
+      "backend-info": {
+        "role": "secondary",
+        "displayName": "Admin Action Blue",
+        "canonical": "#00a3ff",
+        "tonalRamp": ["oklch(18% 0.07 235)", "oklch(30% 0.10 235)", "oklch(44% 0.13 235)", "oklch(58% 0.16 235)", "oklch(70% 0.13 235)", "oklch(82% 0.09 235)", "oklch(91% 0.05 235)", "oklch(97% 0.02 235)"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Backend Display",
+        "purpose": "Major backend dashboard headings only."
+      },
+      "headline": {
+        "displayName": "Product Headline",
+        "purpose": "Auth headings, page titles, and large widget headings."
+      },
+      "title": {
+        "displayName": "Card Title",
+        "purpose": "Widget titles, card headings, and compact section headers."
+      },
+      "body": {
+        "displayName": "Product Body",
+        "purpose": "Posts, forms, helper text, and modal content."
+      },
+      "label": {
+        "displayName": "Control Label",
+        "purpose": "Form labels, nav items, buttons, table labels, and metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "admin-soft-panel",
+        "value": "0 5px 20px rgba(0, 0, 0, .06)",
+        "purpose": "Soft grouping for backend settings, payment, and subscription panels."
+      },
+      {
+        "name": "flat-feed-card",
+        "value": "none",
+        "purpose": "Default public feed cards and media cards at rest."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-standard",
+        "value": "150ms ease-out",
+        "purpose": "Hover, focus, active, and dropdown state changes."
+      },
+      {
+        "name": "legacy-hover",
+        "value": "all 0.4s ease",
+        "purpose": "Existing backend link hover behavior; do not extend it to complex layout motion."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "576px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "992px" },
+      { "name": "xl", "value": "1200px" },
+      { "name": "xxl", "value": "1400px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Public Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Purple pill action for logged-in public social workflows.",
+      "html": "<button class=\"ds-btn-primary\">Post update</button>",
+      "css": ".ds-btn-primary { background: #5a2ff9; color: #fff; border: 0; border-radius: 50px; padding: 10px 32px; font: 600 14px/1.25 system-ui, -apple-system, Segoe UI, sans-serif; cursor: pointer; transition: background-color 150ms ease-out, transform 150ms ease-out; } .ds-btn-primary:hover { background: #4929c2; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid #5a2ff9; outline-offset: 2px; }"
+    },
+    {
+      "name": "Auth Accent Button",
+      "kind": "button",
+      "refersTo": "button-auth-accent",
+      "description": "Warm orange login/register action from the auth split screen.",
+      "html": "<button class=\"ds-btn-auth\">Log In</button>",
+      "css": ".ds-btn-auth { background: #ff7856; color: #fff; border: 1px solid #ff7856; border-radius: 5px; padding: 10px 32px; font: 600 18px/1.25 system-ui, -apple-system, Segoe UI, sans-serif; cursor: pointer; transition: background-color 150ms ease-out, border-color 150ms ease-out; } .ds-btn-auth:hover { background: #e86445; border-color: #e86445; } .ds-btn-auth:focus-visible { outline: 2px solid #5a2ff9; outline-offset: 2px; }"
+    },
+    {
+      "name": "Rounded Field",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Soft public input used for search, chat, comments, and product forms.",
+      "html": "<label class=\"ds-field\"><span>Search</span><input placeholder=\"Search\" /></label>",
+      "css": ".ds-field { display: grid; gap: 5px; color: #101010; font: 500 14px/1.25 system-ui, -apple-system, Segoe UI, sans-serif; } .ds-field input { background: #f3f3f3; color: #212529; border: 0; border-radius: 50px; padding: 10px 20px; font: 400 16px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; } .ds-field input::placeholder { color: #949494; opacity: 1; } .ds-field input:focus-visible { outline: 2px solid #5a2ff9; outline-offset: 2px; }"
+    },
+    {
+      "name": "Feed Card",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Flat white public content card for posts, media, widgets, and sidebar modules.",
+      "html": "<article class=\"ds-feed-card\"><h3>Community update</h3><p>White surface, compact padding, and clear text hierarchy.</p></article>",
+      "css": ".ds-feed-card { background: #fff; color: #212529; border: 1px solid #dedede; border-radius: 5px; padding: 20px; max-width: 360px; font-family: system-ui, -apple-system, Segoe UI, sans-serif; } .ds-feed-card h3 { color: #101010; margin: 0 0 10px; font-size: 18px; line-height: 1.25; font-weight: 600; } .ds-feed-card p { color: #212529; margin: 0; font-size: 16px; line-height: 1.5; }"
+    },
+    {
+      "name": "Sidebar Navigation Item",
+      "kind": "nav",
+      "refersTo": "nav-sidebar-item",
+      "description": "Compact icon-plus-label item for the logged-in module navigation.",
+      "html": "<a class=\"ds-nav-item ds-nav-item-active\" href=\"#\"><span class=\"ds-nav-icon\">#</span><span>Timeline</span></a>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 10px; color: #101010; text-decoration: none; border-radius: 5px; font: 500 15px/1.25 system-ui, -apple-system, Segoe UI, sans-serif; transition: background-color 150ms ease-out, color 150ms ease-out; } .ds-nav-item:hover, .ds-nav-item-active { background: #dfd9f6; color: #5a2ff9; } .ds-nav-item:focus-visible { outline: 2px solid #5a2ff9; outline-offset: 2px; } .ds-nav-icon { width: 25px; height: 25px; display: inline-grid; place-items: center; border-radius: 50%; background: #fff; color: #5a2ff9; }"
+    },
+    {
+      "name": "Admin Soft Panel",
+      "kind": "card",
+      "refersTo": "admin-panel",
+      "description": "Light backend management panel with Poppins typography and soft elevation.",
+      "html": "<section class=\"ds-admin-panel\"><h3>Payments</h3><p>Compact backend panel for settings and reports.</p></section>",
+      "css": ".ds-admin-panel { background: #fff; color: #181c32; border-radius: 5px; padding: 18px; box-shadow: 0 5px 20px rgba(0, 0, 0, .06); font-family: Poppins, system-ui, -apple-system, Segoe UI, sans-serif; } .ds-admin-panel h3 { margin: 0 0 10px; color: #181c32; font-size: 24px; line-height: 1.25; font-weight: 600; } .ds-admin-panel p { margin: 0; color: #6c6c6c; font-size: 16px; line-height: 25px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Reliable Community Console",
+    "overview": "Sociopro is a task-heavy social product, not a brand showcase. Its design system should feel like a familiar community console: posts, sidebars, cards, forms, tables, badges, and controls are recognizable first, expressive second. The app can carry personality through the purple/orange accent vocabulary and rounded social controls, but the interface earns trust through consistency, readable density, and clear state handling.",
+    "keyCharacteristics": [
+      "Dense social-app layout with left navigation, central content, and right contextual panels.",
+      "Purple is the main public action color; blue is mostly an admin/dashboard action color.",
+      "Surfaces stay white or very light gray, with borders and subtle shadows doing practical separation.",
+      "Rounded social controls are common, but cards remain modestly rounded.",
+      "Form states, auth controls, payment controls, and destructive actions must be explicit."
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Per Surface Rule",
+        "body": "A single screen can emphasize public purple, auth orange, or admin blue, but not all three as competing primary actions.",
+        "section": "colors"
+      },
+      {
+        "name": "The White Card Contract",
+        "body": "Cards and widgets rest on white or near-white surfaces. If a panel becomes colorful, it must communicate a status or selected state, not decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Familiar Sans Rule",
+        "body": "Product labels, buttons, tables, and navigation stay in the existing sans vocabulary. Do not introduce decorative fonts into task surfaces.",
+        "section": "typography"
+      },
+      {
+        "name": "The Dense Legibility Rule",
+        "body": "Dense screens are allowed, but text smaller than 14px needs a specific metadata or badge reason.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Until Needed Rule",
+        "body": "Default content cards are flat. Add shadow only for admin grouping, hover affordance, or overlays that need separation.",
+        "section": "elevation"
+      },
+      {
+        "name": "The No Ghost Card Rule",
+        "body": "Do not combine a thin border with a large decorative blur. Pick a border or a small functional shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use Public Action Purple for primary public social actions and Admin Action Blue for backend management actions.",
+      "Do keep Blade components and views presentation-only; new UI should consume prepared data and not query in templates.",
+      "Do use white cards on light gray surfaces for feeds, sidebars, auth, and dashboard panels.",
+      "Do preserve Bootstrap-compatible markup, forms, dropdowns, modals, offcanvas navigation, and table conventions unless a replacement is deliberately designed.",
+      "Do show clear focus, hover, disabled, loading, empty, validation, and destructive states.",
+      "Do keep dense screens readable with 14px minimum control text, 16px body text, and 15-20px card padding."
+    ],
+    "donts": [
+      "Don't make the product feel like a generic SaaS landing page or AI-generated marketing template.",
+      "Don't use glassmorphism, neon gradients, decorative grid backgrounds, or novelty motion as the default app language.",
+      "Don't add gradient text, large side-stripe card borders, decorative blur-heavy ghost cards, or oversized 32px-plus card radii.",
+      "Don't mix public purple, auth orange, and admin blue as equal primary actions on one screen.",
+      "Don't hide security, authorization, destructive actions, disabled states, or validation errors behind subtle styling.",
+      "Don't introduce a new visual dialect for one module when a Bootstrap-compatible card, button, form, table, modal, or offcanvas pattern already exists."
+    ]
+  }
+}
