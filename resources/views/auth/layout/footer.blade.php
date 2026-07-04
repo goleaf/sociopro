@@ -16,14 +16,25 @@
         <script>
             'use strict';
 
-            $( document ).ready(function() {
-                $('#exampleCheck1').change(function() {
-                    if(this.checked) {
-                        $('#submit').removeClass("disabled");
-                    }else{
-                        $('#submit').addClass("disabled");
+            document.addEventListener('DOMContentLoaded', function() {
+                var termsCheckbox = document.getElementById('exampleCheck1');
+                var submitButton = document.getElementById('submit');
+                var syncTermsSubmitState = function() {
+                    if (! termsCheckbox || ! submitButton) {
+                        return;
                     }
-                });
+
+                    var acceptedTerms = termsCheckbox.checked;
+
+                    submitButton.classList.toggle('disabled', ! acceptedTerms);
+                    submitButton.disabled = ! acceptedTerms;
+                    submitButton.setAttribute('aria-disabled', acceptedTerms ? 'false' : 'true');
+                };
+
+                if (termsCheckbox) {
+                    termsCheckbox.addEventListener('change', syncTermsSubmitState);
+                    syncTermsSubmitState();
+                }
 
                 document.querySelectorAll('[data-password-toggle-target]').forEach(function(toggleButton) {
                     var passwordToggleInput = document.getElementById(toggleButton.getAttribute('data-password-toggle-target'));
@@ -47,8 +58,11 @@
                     });
                 });
 
-                var timezone = moment.tz.guess();
-                $('#timezone').val(timezone);
+                var timezoneInput = document.getElementById('timezone');
+
+                if (timezoneInput && window.moment && window.moment.tz) {
+                    timezoneInput.value = window.moment.tz.guess();
+                }
             });
         </script>
     </body>

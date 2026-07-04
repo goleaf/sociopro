@@ -228,6 +228,7 @@ class DateTimeValidationTest extends TestCase
             'email' => 'date-user@example.test',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'check1' => 'on',
         ], $overrides);
     }
 

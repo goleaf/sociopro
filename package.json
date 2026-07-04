@@ -18,7 +18,7 @@
         "quality": "npm run lint && npm run stylelint && npm run format:check && npm run audit:prod && npm run build"
     },
     "devDependencies": {
-        "@tailwindcss/forms": "^0.4.0",
+        "@tailwindcss/forms": "^0.5.11",
         "alpinejs": "^3.4.2",
         "autoprefixer": "^10.4.2",
         "axios": "^1.18.1",

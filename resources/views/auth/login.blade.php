@@ -1,16 +1,16 @@
 @include('auth.layout.header')
 
 <!-- Main Start -->
-<main class="main my-4 p-5">
+<main class="main auth-entry-main my-4 p-5">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-6">
-                <div class="login-img">
+                <div class="login-img auth-visual-frame">
                     <img class="img-fluid" src="{{ asset('assets/frontend/images/login.png') }} " alt="">
                 </div>
             </div>
             <div class="col-lg-6">
-                <div class="login-txt ms-s ms-lg-5">
+                <div class="login-txt auth-panel ms-s ms-lg-5">
 
                     @if($message = Session::get('error_message'))
                         <div class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -20,32 +20,40 @@
                     @endif
 
                     <h3>{{get_phrase('Login')}}</h3>
+                    <p class="text-muted mb-4">
+                        {{ get_phrase('Welcome back. Sign in to continue to your timeline, messages, groups, and account tools.') }}
+                    </p>
+                    <ul class="auth-value-list" aria-label="{{ get_phrase('Account shortcuts') }}">
+                        <li>{{ get_phrase('Timeline') }}</li>
+                        <li>{{ get_phrase('Messages') }}</li>
+                        <li>{{ get_phrase('Groups') }}</li>
+                    </ul>
                        
 
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
             
                        
-                        <div class="form-group form-email">
-                            <label for="login-email">{{get_phrase('Email')}}</label>
-                            <input id="login-email" type="email" name="email" value="{{ old('email') }}" placeholder="{{get_phrase('Enter your email address')}}">
-                        </div>
-                        <p class="text-danger">{{ $errors->first('email') }}</p>
-                        <div class="form-group form-pass password-toggle-field">
-                            <label for="login-password">{{get_phrase('Password')}}</label>
-                            <input id="login-password" type="password" name="password" placeholder="{{get_phrase('Your password')}}" autocomplete="current-password">
-                            <button
-                                type="button"
-                                class="password-toggle-button"
-                                data-password-toggle-target="login-password"
-                                data-show-label="{{ get_phrase('Show password') }}"
-                                data-hide-label="{{ get_phrase('Hide password') }}"
-                                aria-label="{{ get_phrase('Show password') }}"
-                                aria-pressed="false"
-                            >
-                                <i class="fas fa-eye" aria-hidden="true"></i>
-                            </button>
-                        </div>
+                        <x-ui.auth-text-field
+                            id="login-email"
+                            type="email"
+                            name="email"
+                            icon="form-email"
+                            :label="get_phrase('Email')"
+                            :placeholder="get_phrase('Enter your email address')"
+                            :error="$errors->first('email')"
+                            autocomplete="email"
+                            autocapitalize="none"
+                            inputmode="email"
+                        />
+                        <x-ui.auth-password-field
+                            id="login-password"
+                            name="password"
+                            :label="get_phrase('Password')"
+                            :placeholder="get_phrase('Your password')"
+                            :error="$errors->first('password')"
+                            autocomplete="current-password"
+                        />
             
                         <!-- Remember Me -->
                         <div class="mb-3 form-check">
@@ -53,7 +61,9 @@
                             <label class="form-check-label" for="remember_me">{{ get_phrase('Remember me') }}</label>
                           </div>
 
-                        <input class="btn btn-primary my-3" type="submit" name="submit" id="submit" value="Log In">
+                        <x-ui.button variant="auth-primary" type="submit" name="submit" id="submit" class="my-3">
+                            {{ get_phrase('Log In') }}
+                        </x-ui.button>
 
                         
                         <div class="flex items-center justify-end mt-2">

@@ -192,6 +192,7 @@ Buttons are Bootstrap-compatible and action-specific. Public primary actions are
 - **Primary:** Public purple background with white text, compact padding around 10px 32px, medium label weight.
 - **Hover / Focus:** Darken to deep purple or preserve the semantic color, with visible focus outline. Never remove focus without replacement.
 - **Secondary / Ghost / Tertiary:** Use transparent or white backgrounds with clear borders; do not use low-contrast gray text for actionable labels.
+- **Reusable Blade component:** Use `<x-ui.button>` for new Blade buttons that should stay aligned with the extracted variants. Supported variants are `public-primary`, `public-secondary`, `backend-primary`, and `auth-primary`; use `block` for full-width actions and `size="sm"` / `size="lg"` for Bootstrap-compatible sizing.
 
 ### Chips
 
@@ -217,6 +218,7 @@ Inputs are practical, high-contrast controls with rounded social styling.
 - **Style:** Public search and message inputs use soft gray or transparent backgrounds with rounded-pill shape. Auth inputs use transparent backgrounds with a 2px strong gray border and icon-leading spacing.
 - **Focus:** Purple focus outline or border shift. Password toggle buttons must preserve a visible focus state.
 - **Error / Disabled:** Error text uses semantic red and appears directly after the field. Disabled controls must look disabled and not rely only on pointer events.
+- **Reusable Blade components:** Use `<x-ui.auth-text-field>` for auth text/email/name fields and `<x-ui.auth-password-field>` for auth password fields with the shared accessible reveal control. Keep the shared footer script as the single behavior owner for password toggles.
 
 ### Navigation
 
