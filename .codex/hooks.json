@@ -1,5 +1,43 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Shell|exec_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-$PWD}/scripts/agent-hooks/pre-tool-guard.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Checking shell safety"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-$PWD}/scripts/agent-hooks/task-start.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Loading Sociopro agent context"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-$PWD}/scripts/agent-hooks/task-start.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Routing Sociopro task context"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|apply_patch",
@@ -9,6 +47,29 @@
             "command": "node \"/Users/andrejprus/.agents/skills/impeccable/scripts/hook.mjs\"",
             "timeout": 5,
             "statusMessage": "Checking UI changes"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-$PWD}/scripts/agent-hooks/post-edit-guard.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Checking Sociopro standards"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR:-$PWD}/scripts/agent-hooks/guarded-publish.mjs\"",
+            "timeout": 10,
+            "statusMessage": "Checking publication readiness"
           }
         ]
       }
